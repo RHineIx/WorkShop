@@ -53,7 +53,6 @@ async function handleFormSubmit(e) {
             category: document.getElementById('item-category').value,
             quantity: parseInt(document.getElementById('item-quantity').value, 10) || 0,
             alertLevel: parseInt(document.getElementById('item-alert-level').value, 10) || 5,
-            // Read all four price fields
             costPriceIqd: parseFloat(document.getElementById('item-cost-price-iqd').value) || 0,
             sellPriceIqd: parseFloat(document.getElementById('item-sell-price-iqd').value) || 0,
             costPriceUsd: parseFloat(document.getElementById('item-cost-price-usd').value) || 0,
@@ -121,13 +120,13 @@ async function handleImageCleanup() {
 
 function setupEventListeners() {
     const elements = ui.getDOMElements();
+    let quantityInterval = null;
 
     // Header Controls
     elements.themeToggleBtn.addEventListener('click', () => ui.setTheme(document.body.classList.contains('theme-light') ? 'dark' : 'light'));
     elements.addItemBtn.addEventListener('click', () => ui.openItemModal());
     elements.syncSettingsBtn.addEventListener('click', ui.populateSyncModal);
     
-    // NEW: Currency Toggle Button
     elements.currencyToggleBtn.addEventListener('click', () => {
         appState.activeCurrency = appState.activeCurrency === 'IQD' ? 'USD' : 'IQD';
         localStorage.setItem('inventoryAppCurrency', appState.activeCurrency);
@@ -145,24 +144,53 @@ function setupEventListeners() {
 
     // Details Modal
     elements.closeDetailsModalBtn.addEventListener('click', () => elements.detailsModal.close());
-    elements.detailsDecreaseBtn.addEventListener('click', async () => {
-        const item = appState.inventory.find(i => i.id === appState.currentItemId);
-        if (item && item.quantity > 0) {
-            item.quantity--;
-            elements.detailsQuantityValue.textContent = item.quantity;
-            ui.renderInventory();
-            await api.saveToGitHub();
+    
+    // --- NEW: Press and Hold Logic for Quantity Buttons ---
+    const stopQuantityChange = () => {
+        if (quantityInterval) {
+            clearInterval(quantityInterval);
+            quantityInterval = null;
+            api.saveToGitHub(); // Save the final result only once
         }
+    };
+
+    const startQuantityChange = (action) => {
+        action(); // Perform action once immediately
+        quantityInterval = setInterval(action, 100); // Then repeat every 100ms
+    };
+
+    // Increase Button Events
+    elements.detailsIncreaseBtn.addEventListener('mousedown', () => {
+        startQuantityChange(() => {
+            const item = appState.inventory.find(i => i.id === appState.currentItemId);
+            if (item) {
+                item.quantity++;
+                elements.detailsQuantityValue.textContent = item.quantity;
+                ui.renderInventory();
+            }
+        });
     });
-    elements.detailsIncreaseBtn.addEventListener('click', async () => {
-        const item = appState.inventory.find(i => i.id === appState.currentItemId);
-        if (item) {
-            item.quantity++;
-            elements.detailsQuantityValue.textContent = item.quantity;
-            ui.renderInventory();
-            await api.saveToGitHub();
-        }
+
+    // Decrease Button Events
+    elements.detailsDecreaseBtn.addEventListener('mousedown', () => {
+        startQuantityChange(() => {
+            const item = appState.inventory.find(i => i.id === appState.currentItemId);
+            if (item && item.quantity > 0) {
+                item.quantity--;
+                elements.detailsQuantityValue.textContent = item.quantity;
+                ui.renderInventory();
+            } else {
+                stopQuantityChange(); // Stop if quantity reaches 0
+            }
+        });
     });
+
+    // Universal release events to stop the interval
+    ['mouseup', 'mouseleave', 'touchend'].forEach(eventType => {
+        elements.detailsIncreaseBtn.addEventListener(eventType, stopQuantityChange);
+        elements.detailsDecreaseBtn.addEventListener(eventType, stopQuantityChange);
+    });
+
     elements.detailsEditBtn.addEventListener('click', () => {
         elements.detailsModal.close();
         ui.openItemModal(appState.currentItemId);
@@ -251,21 +279,16 @@ function setupEventListeners() {
 
 // --- INITIALIZATION ---
 
-/**
- * Initializes the application.
- */
 async function initializeApp() {
     console.log('Initializing Inventory Management App...');
     setupEventListeners();
     loadConfig();
 
-    // Load saved theme and currency preferences
     const savedTheme = localStorage.getItem('inventoryAppTheme') || 'light';
     const savedCurrency = localStorage.getItem('inventoryAppCurrency') || 'IQD';
     appState.activeCurrency = savedCurrency;
     ui.setTheme(savedTheme);
-    ui.updateCurrencyDisplay(); // Set initial currency display
-
+    
     if (appState.syncConfig) {
         ui.showStatus('جاري مزامنة البيانات...', 'syncing');
         try {
@@ -283,6 +306,9 @@ async function initializeApp() {
     } else {
         loadLocalInventory();
     }
+    
+    // Initial UI setup
+    ui.updateCurrencyDisplay();
     ui.renderInventory();
     console.log('App Initialized Successfully.');
 }

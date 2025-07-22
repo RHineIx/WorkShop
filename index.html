@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>إدارة مخزون ورشة المفاتيح</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -57,7 +57,7 @@
         <section class="inventory-container">
             <div class="inventory-header">
                 <h2>قائمة المنتجات</h2>
-                <input type="text" id="search-bar" placeholder="ابحث عن منتج بالاسم أو SKU...">
+                <input type="text" id="search-bar" placeholder="ابحث بالاسم أو الرمز...">
             </div>
             <div id="inventory-grid" class="inventory-grid">
                 </div>
@@ -136,7 +136,7 @@
 
             <label for="item-sku">SKU (رقم المنتج - يستخدم للباركود)</label>
             <div class="sku-container">
-                <input type="text" id="item-sku" required readonly>
+                <input type="text" id="item-sku" required>
                 <button type="button" id="regenerate-sku-btn" class="icon-btn" title="توليد SKU جديد" aria-label="توليد SKU جديد">
                     <span class="material-symbols-outlined">refresh</span>
                 </button>

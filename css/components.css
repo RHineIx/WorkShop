@@ -299,12 +299,6 @@ dialog::backdrop {
     margin-bottom: 0 !important;
 }
 
-input:read-only {
-    background-color: var(--bg-color);
-    cursor: not-allowed;
-    opacity: 0.8;
-}
-
 /* --- Buttons --- */
 .modal-actions {
     margin-top: var(--spacing-lg);
@@ -473,7 +467,6 @@ input:read-only {
     margin-bottom: var(--spacing-md);
 }
 
-/* NEW: Styles for the price grid */
 .details-price-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -539,6 +532,9 @@ input:read-only {
     color: var(--text-primary);
     cursor: pointer;
     font-size: 22px;
+    /* Add these two lines to prevent text selection */
+    user-select: none;
+    -webkit-user-select: none; /* For Safari */
 }
 
 .details-notes {
