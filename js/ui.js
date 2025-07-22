@@ -3,7 +3,7 @@ import { appState } from './state.js';
 import { fetchImageWithAuth } from './api.js';
 import { sanitizeHTML, generateUniqueSKU } from './utils.js';
 
-// Get all DOM elements once and export them for other modules to use
+// Get all DOM elements once to be used throughout this module
 const elements = {
     // Main Layout
     inventoryGrid: document.getElementById('inventory-grid'),
@@ -62,11 +62,20 @@ const elements = {
     closeBarcodeBtn: document.getElementById('close-barcode-btn'),
 };
 
+/**
+ * Exports the collected DOM elements for use in other modules (primarily main.js).
+ * @returns {Object} The elements object.
+ */
 export function getDOMElements() {
     return elements;
 }
 
-// ... (The rest of the ui.js file is the same as the last version)
+/**
+ * Displays a status message at the bottom of the screen.
+ * @param {string} message The text to display.
+ * @param {'syncing'|'success'|'error'} type The type of message, for styling.
+ * @param {number} duration How long the message should be visible in milliseconds.
+ */
 export const showStatus = (message, type, duration = 3000) => {
     elements.statusIndicator.textContent = message;
     elements.statusIndicator.className = `status-indicator ${type} show`;
@@ -77,9 +86,14 @@ export const showStatus = (message, type, duration = 3000) => {
     }
 };
 
+/**
+ * Renders the product cards in the main grid based on the current state.
+ */
 export const renderInventory = () => {
     elements.inventoryGrid.innerHTML = '';
     let filteredInventory = [...appState.inventory];
+
+    // Apply filters
     if (appState.activeFilter === 'low_stock') {
         filteredInventory = filteredInventory.filter(item => item.quantity <= item.alertLevel);
     }
@@ -91,13 +105,14 @@ export const renderInventory = () => {
         );
     }
 
+    // Render cards or empty state message
     if (filteredInventory.length === 0) {
         elements.inventoryGrid.innerHTML = '<p class="empty-state">لا توجد منتجات تطابق بحثك...</p>';
     } else {
         filteredInventory.forEach(item => {
             const card = document.createElement('div');
             card.className = 'product-card';
-            card.dataset.id = item.id; 
+            card.dataset.id = item.id;
             if (item.quantity <= item.alertLevel) {
                 card.classList.add('low-stock');
             }
@@ -110,7 +125,7 @@ export const renderInventory = () => {
                     <div class="card-name">${sanitizeHTML(item.name)}</div>
                     <div class="card-footer">
                         <div class="card-price">${sanitizeHTML(String(item.sellPrice))} د.ع</div>
-                        <button class="card-details-btn">+</button>
+                        <button class="card-details-btn" aria-label="عرض التفاصيل">+</button>
                     </div>
                 </div>`;
             elements.inventoryGrid.appendChild(card);
@@ -125,17 +140,31 @@ export const renderInventory = () => {
     updateStats();
 };
 
+/**
+ * Updates the statistic cards with the latest inventory counts.
+ */
 export const updateStats = () => {
     elements.totalItemsStat.textContent = appState.inventory.length;
     elements.lowStockStat.textContent = appState.inventory.filter(item => item.quantity <= item.alertLevel).length;
 };
 
+/**
+ * Sets the color theme for the application.
+ * @param {'light'|'dark'} themeName The name of the theme to apply.
+ */
 export const setTheme = (themeName) => {
     document.body.className = `theme-${themeName}`;
     elements.themeToggleBtn.querySelector('.material-symbols-outlined').textContent = themeName === 'dark' ? 'dark_mode' : 'light_mode';
     localStorage.setItem('inventoryAppTheme', themeName);
 };
 
+
+// --- MODAL UI FUNCTIONS ---
+
+/**
+ * Populates and opens the details modal for a given item.
+ * @param {string} itemId The ID of the item to display.
+ */
 export const openDetailsModal = (itemId) => {
     const item = appState.inventory.find(i => i.id === itemId);
     if (!item) return;
@@ -148,7 +177,7 @@ export const openDetailsModal = (itemId) => {
     if (item.imagePath) {
         elements.detailsImage.style.display = 'block';
         elements.detailsImagePlaceholder.style.display = 'none';
-        elements.detailsImage.src = '';
+        elements.detailsImage.src = ''; // Clear previous image to prevent flicker
         fetchImageWithAuth(item.imagePath).then(blobUrl => {
             if (blobUrl) elements.detailsImage.src = blobUrl;
         });
@@ -159,6 +188,10 @@ export const openDetailsModal = (itemId) => {
     elements.detailsModal.showModal();
 };
 
+/**
+ * Opens the Add/Edit item modal. Populates it with item data if an ID is provided.
+ * @param {string|null} itemId The ID of the item to edit, or null to add a new item.
+ */
 export const openItemModal = (itemId = null) => {
     elements.itemForm.reset();
     appState.selectedImageFile = null;
@@ -167,7 +200,7 @@ export const openItemModal = (itemId = null) => {
     elements.imagePlaceholder.style.display = 'flex';
     elements.regenerateSkuBtn.style.display = 'none';
 
-    if (itemId) {
+    if (itemId) { // Editing an existing item
         const item = appState.inventory.find(i => i.id === itemId);
         if (item) {
             elements.modalTitle.textContent = "تعديل منتج";
@@ -190,7 +223,7 @@ export const openItemModal = (itemId = null) => {
                 });
             }
         }
-    } else {
+    } else { // Adding a new item
         elements.modalTitle.textContent = "إضافة منتج جديد";
         elements.itemIdInput.value = '';
         const existingSkus = new Set(appState.inventory.map(item => item.sku));
@@ -200,10 +233,14 @@ export const openItemModal = (itemId = null) => {
     elements.itemModal.showModal();
 };
 
+/**
+ * Opens the barcode modal and generates a barcode for the given item.
+ * @param {string} itemId The ID of the item to generate a barcode for.
+ */
 export const openBarcodeModal = (itemId) => {
     const item = appState.inventory.find(i => i.id === itemId);
     if (item && item.sku) {
-        appState.currentItemId = item.id; // Set current item for download
+        appState.currentItemId = item.id;
         elements.barcodeItemName.textContent = item.name;
         try {
             JsBarcode(elements.barcodeSvg, item.sku, {
@@ -211,6 +248,7 @@ export const openBarcodeModal = (itemId) => {
             });
             elements.barcodeModal.showModal();
         } catch (error) {
+            console.error("Barcode generation error:", error);
             alert("خطأ في إنشاء الباركود. تأكد من أن SKU صالح.");
         }
     } else {
@@ -218,6 +256,9 @@ export const openBarcodeModal = (itemId) => {
     }
 };
 
+/**
+ * Triggers the download of the currently displayed barcode as a PNG image.
+ */
 export const downloadBarcode = () => {
     const item = appState.inventory.find(i => i.id === appState.currentItemId);
     if (!item) return;
@@ -249,6 +290,9 @@ export const downloadBarcode = () => {
     img.src = url;
 };
 
+/**
+ * Populates the sync modal with saved configuration data and displays it.
+ */
 export const populateSyncModal = () => {
     if (appState.syncConfig) {
         elements.githubUsernameInput.value = appState.syncConfig.username;

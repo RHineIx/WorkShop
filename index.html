@@ -58,16 +58,16 @@
                 <input type="text" id="search-bar" placeholder="ابحث عن منتج بالاسم أو SKU...">
             </div>
             <div id="inventory-grid" class="inventory-grid">
-            </div>
+                </div>
         </section>
     </main>
 
     <dialog id="details-modal">
         <div class="details-modal-content">
-            <button id="close-details-modal-btn" class="close-modal-btn"><span class="material-symbols-outlined">close</span></button>
+            <button id="close-details-modal-btn" class="close-modal-btn" aria-label="إغلاق"><span class="material-symbols-outlined">close</span></button>
             <div class="details-layout">
                 <div class="details-image-container">
-                    <img id="details-image" src="" alt="Product Image">
+                    <img id="details-image" src="" alt="صورة المنتج">
                     <div id="details-image-placeholder" class="item-image-details">
                         <span class="material-symbols-outlined">key</span>
                     </div>
@@ -79,9 +79,9 @@
                     <div class="details-quantity">
                         <span>الكمية:</span>
                         <div class="quantity-controls">
-                            <button class="quantity-btn" id="details-decrease-btn">-</button>
+                            <button class="quantity-btn" id="details-decrease-btn" aria-label="إنقاص الكمية">-</button>
                             <span class="quantity-value" id="details-quantity-value"></span>
-                            <button class="quantity-btn" id="details-increase-btn">+</button>
+                            <button class="quantity-btn" id="details-increase-btn" aria-label="زيادة الكمية">+</button>
                         </div>
                     </div>
                     <div class="details-notes">
@@ -116,7 +116,7 @@
             <label for="item-sku">SKU (رقم المنتج - يستخدم للباركود)</label>
             <div class="sku-container">
                 <input type="text" id="item-sku" required readonly>
-                <button type="button" id="regenerate-sku-btn" class="icon-btn" title="توليد SKU جديد">
+                <button type="button" id="regenerate-sku-btn" class="icon-btn" title="توليد SKU جديد" aria-label="توليد SKU جديد">
                     <span class="material-symbols-outlined">refresh</span>
                 </button>
             </div>
@@ -196,6 +196,7 @@
     <div id="status-indicator" class="status-indicator"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    
     <script type="module" src="js/main.js"></script>
 </body>
 </html>

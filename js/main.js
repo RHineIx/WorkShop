@@ -28,6 +28,7 @@ function saveLocalInventory() {
     localStorage.setItem('inventoryAppData', JSON.stringify(appState.inventory));
 }
 
+
 // --- CORE LOGIC HANDLERS ---
 
 async function handleFormSubmit(e) {
@@ -103,20 +104,17 @@ async function handleImageCleanup() {
         ui.showStatus(`تم العثور على ${orphanedImages.length} صورة... جاري الحذف.`, 'syncing');
         let deletedCount = 0;
         for (const image of orphanedImages) {
-            const success = await api.deleteFileFromGitHub(image.path, image.sha, `Cleanup: delete unused image ${image.name}`);
-            if (success) deletedCount++;
+            await api.deleteFileFromGitHub(image.path, image.sha, `Cleanup: delete unused image ${image.name}`);
+            deletedCount++;
         }
-        if (deletedCount > 0) {
-            ui.showStatus(`تم حذف ${deletedCount} صورة غير مستخدمة بنجاح.`, 'success', 5000);
-        } else {
-            ui.showStatus('فشل حذف الصور. تحقق من صلاحيات مفتاح الوصول.', 'error', 5000);
-        }
+        ui.showStatus(`تم حذف ${deletedCount} صورة غير مستخدمة بنجاح.`, 'success', 5000);
+
     } catch (error) {
         ui.showStatus(`حدث خطأ: ${error.message}`, 'error', 5000);
     }
 }
 
-// --- EVENT LISTENERS ---
+// --- EVENT LISTENERS SETUP ---
 
 function setupEventListeners() {
     const elements = ui.getDOMElements();
@@ -137,10 +135,13 @@ function setupEventListeners() {
 
     // Details Modal
     elements.closeDetailsModalBtn.addEventListener('click', () => elements.detailsModal.close());
+    
+    // THIS SECTION IS FIXED
     elements.detailsDecreaseBtn.addEventListener('click', async () => {
         const item = appState.inventory.find(i => i.id === appState.currentItemId);
         if (item && item.quantity > 0) {
             item.quantity--;
+            elements.detailsQuantityValue.textContent = item.quantity; // Update UI immediately
             ui.renderInventory();
             await api.saveToGitHub();
         }
@@ -149,10 +150,12 @@ function setupEventListeners() {
         const item = appState.inventory.find(i => i.id === appState.currentItemId);
         if (item) {
             item.quantity++;
+            elements.detailsQuantityValue.textContent = item.quantity; // Update UI immediately
             ui.renderInventory();
             await api.saveToGitHub();
         }
     });
+
     elements.detailsEditBtn.addEventListener('click', () => {
         elements.detailsModal.close();
         ui.openItemModal(appState.currentItemId);

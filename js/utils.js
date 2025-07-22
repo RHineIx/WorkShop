@@ -1,9 +1,10 @@
 // js/utils.js
 
 /**
- * Sanitizes a string to prevent XSS attacks by converting HTML special characters.
- * @param {string} str The string to sanitize.
- * @returns {string} The sanitized string.
+ * Sanitizes a string to prevent XSS attacks by converting HTML special characters
+ * into their corresponding entities.
+ * @param {string} str The potentially unsafe string to sanitize.
+ * @returns {string} A safe string with HTML characters encoded.
  */
 export const sanitizeHTML = (str) => {
     const temp = document.createElement('div');
@@ -12,8 +13,8 @@ export const sanitizeHTML = (str) => {
 };
 
 /**
- * Generates a random SKU string.
- * @returns {string} A random SKU like "KEY-A1B2C3D4".
+ * Generates a random, non-unique SKU string in the format "KEY-XXXXXXXX".
+ * @returns {string} A randomly generated SKU.
  */
 const generateSKU = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -25,9 +26,10 @@ const generateSKU = () => {
 };
 
 /**
- * Generates a SKU and ensures it's unique within the provided list of existing SKUs.
- * @param {Set<string>} existingSkus - A Set of SKUs that are already in use.
- * @returns {string} A unique SKU.
+ * Generates a SKU and ensures it is unique by checking against a Set of existing SKUs.
+ * It will continue generating SKUs until a unique one is found.
+ * @param {Set<string>} existingSkus - A Set containing all SKUs that are currently in use.
+ * @returns {string} A guaranteed unique SKU.
  */
 export const generateUniqueSKU = (existingSkus) => {
     let newSku;

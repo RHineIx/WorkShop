@@ -1,5 +1,6 @@
 /* css/_base.css */
 
+/* --- Global Reset & Box Sizing --- */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -10,6 +11,7 @@ html {
     -webkit-text-size-adjust: 100%;
 }
 
+/* --- Body Defaults --- */
 body {
     font-family: var(--font-family);
     background-color: var(--bg-color);
@@ -17,7 +19,7 @@ body {
     transition: background-color var(--transition-speed) ease;
 }
 
-/* Base styles for responsive media */
+/* --- Print Styles --- */
 @media print {
     body,
     .modal-actions,

@@ -1,8 +1,9 @@
 /* css/_layout.css */
 
+/* --- Header Layout --- */
 .page-controls {
     background-color: var(--surface-color);
-    padding: 10px 15px;
+    padding: var(--spacing-sm) var(--spacing-md);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -13,8 +14,9 @@
     box-shadow: var(--shadow-light);
 }
 
+/* --- Main Content Layout --- */
 .main-container {
-    padding: 15px;
+    padding: var(--spacing-md);
     max-width: 1200px;
     margin: 0 auto;
 }
@@ -22,26 +24,23 @@
 .stats-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    margin-bottom: 20px;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
 }
 
 .inventory-header {
-    margin-bottom: 20px;
+    margin-bottom: var(--spacing-lg);
 }
 
 .inventory-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
+    gap: var(--spacing-md);
 }
 
-/* Larger Screen Adjustments (Desktop) */
-@media (min-width: 640px) {
-    .control-button .btn-text {
-        display: inline;
-    }
 
+/* --- Responsive Adjustments --- */
+@media (min-width: 640px) {
     .inventory-header {
         display: flex;
         justify-content: space-between;
@@ -54,7 +53,7 @@
 
     .inventory-grid {
         grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-        gap: 20px;
+        gap: var(--spacing-lg);
     }
 
     .details-layout {
@@ -64,19 +63,19 @@
 
     .details-image-container {
         width: 45%;
-        position: sticky;
         top: 0;
     }
 
     .details-info-container {
         width: 55%;
-        padding: 30px;
+        padding: var(--spacing-lg);
     }
 
     .form-row {
         flex-direction: row;
-        gap: 15px; /* Add gap for desktop view */
+        gap: var(--spacing-md);
     }
+    
     .form-row .form-group input {
         margin-bottom: 0;
     }
