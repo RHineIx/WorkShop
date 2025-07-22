@@ -1,0 +1,89 @@
+/* css/_layout.css */
+
+.page-controls {
+    background-color: var(--surface-color);
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-light);
+}
+
+.main-container {
+    padding: 15px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.stats-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.inventory-header {
+    margin-bottom: 20px;
+}
+
+.inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+/* Larger Screen Adjustments (Desktop) */
+@media (min-width: 640px) {
+    .control-button .btn-text {
+        display: inline;
+    }
+
+    .inventory-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    #search-bar {
+        width: 350px;
+    }
+
+    .inventory-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 20px;
+    }
+
+    .details-layout {
+        flex-direction: row;
+        align-items: flex-start;
+    }
+
+    .details-image-container {
+        width: 45%;
+        position: sticky;
+        top: 0;
+    }
+
+    .details-info-container {
+        width: 55%;
+        padding: 30px;
+    }
+
+    .form-row {
+        flex-direction: row;
+        gap: 15px; /* Add gap for desktop view */
+    }
+    .form-row .form-group input {
+        margin-bottom: 0;
+    }
+}
+
+@media (min-width: 1024px) {
+    .inventory-grid {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    }
+}

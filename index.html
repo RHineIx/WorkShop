@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة مخزون ورشة المفاتيح</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-light">
+
+    <header class="page-controls">
+        <div class="control-group">
+            <h1 class="app-title">إدارة المخزون</h1>
+        </div>
+        <div class="control-group">
+             <button id="add-item-btn" title="إضافة منتج جديد" class="control-button primary-action">
+                <span class="material-symbols-outlined">add</span>
+                <span class="btn-text">إضافة منتج</span>
+            </button>
+             <button id="sync-settings-btn" title="إعدادات المزامنة" class="control-button">
+                <span class="material-symbols-outlined">cloud_sync</span>
+             </button>
+             <button id="theme-toggle-btn" title="تبديل الثيم" class="control-button">
+                <span class="material-symbols-outlined">light_mode</span>
+             </button>
+        </div>
+    </header>
+    
+    <main class="main-container">
+
+        <section id="stats-cards" class="stats-container">
+             <div class="stat-card">
+                <div class="card-icon"><span class="material-symbols-outlined">inventory_2</span></div>
+                <div class="card-details">
+                    <div class="card-title">إجمالي المنتجات</div>
+                    <div id="total-items-stat" class="card-value">0</div>
+                </div>
+            </div>
+            <div class="stat-card low-stock-alert">
+                <div class="card-icon"><span class="material-symbols-outlined">warning</span></div>
+                <div class="card-details">
+                    <div class="card-title">تنبيهات انخفاض المخزون</div>
+                    <div id="low-stock-stat" class="card-value">0</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="inventory-container">
+            <div class="inventory-header">
+                <h2>قائمة المنتجات</h2>
+                <input type="text" id="search-bar" placeholder="ابحث عن منتج بالاسم أو SKU...">
+            </div>
+            <div id="inventory-grid" class="inventory-grid">
+                </div>
+        </section>
+    </main>
+
+    <dialog id="details-modal">
+        <div class="details-modal-content">
+            <button id="close-details-modal-btn" class="close-modal-btn"><span class="material-symbols-outlined">close</span></button>
+            <div class="details-layout">
+                <div class="details-image-container">
+                    <img id="details-image" src="" alt="Product Image">
+                    <div id="details-image-placeholder" class="item-image-details">
+                        <span class="material-symbols-outlined">key</span>
+                    </div>
+                </div>
+                <div class="details-info-container">
+                    <h2 id="details-name"></h2>
+                    <p id="details-sku" class="details-sku"></p>
+                    <div id="details-price" class="details-price"></div>
+                    <div class="details-quantity">
+                        <span>الكمية:</span>
+                        <div class="quantity-controls">
+                            <button class="quantity-btn" id="details-decrease-btn">-</button>
+                            <span class="quantity-value" id="details-quantity-value"></span>
+                            <button class="quantity-btn" id="details-increase-btn">+</button>
+                        </div>
+                    </div>
+                    <div class="details-notes">
+                        <h3><span class="material-symbols-outlined">notes</span> ملاحظات</h3>
+                        <p id="details-notes-content"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="details-actions">
+                <button id="details-edit-btn" class="action-btn-details"><span class="material-symbols-outlined">edit</span> تعديل</button>
+                <button id="details-barcode-btn" class="action-btn-details"><span class="material-symbols-outlined">qr_code_2</span> باركود</button>
+                <button id="details-delete-btn" class="action-btn-details danger"><span class="material-symbols-outlined">delete</span> حذف</button>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog id="item-modal">
+        <form id="item-form">
+            <h3 id="modal-title">إضافة منتج جديد</h3>
+            <input type="hidden" id="item-id">
+            <div class="image-upload-container">
+                <label>صورة المنتج</label>
+                <div class="image-preview-wrapper">
+                    <img id="image-preview" src="#" alt="معاينة الصورة" class="image-preview-hidden">
+                    <div id="image-placeholder" class="item-image">
+                        <span class="material-symbols-outlined">key</span>
+                    </div>
+                </div>
+                <input type="file" id="item-image-upload" accept="image/*">
+            </div>
+            <label for="item-sku">SKU (رقم المنتج - يستخدم للباركود)</label>
+            <input type="text" id="item-sku" required>
+            <label for="item-sku">SKU (رقم المنتج - يستخدم للباركود)</label>
+            <div class="sku-container">
+                <input type="text" id="item-sku" required readonly>
+                <button type="button" id="regenerate-sku-btn" class="icon-btn" title="توليد SKU جديد">
+                    <span class="material-symbols-outlined">refresh</span>
+                </button>
+            </div>
+            <label for="item-category">الفئة</label>
+            <input type="text" id="item-category">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="item-quantity">الكمية</label>
+                    <input type="number" id="item-quantity" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="item-alert-level">حد التنبيه</label>
+                    <input type="number" id="item-alert-level" value="5" min="0">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="item-cost-price">سعر التكلفة</label>
+                    <input type="number" id="item-cost-price" step="0.01" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="item-sell-price">سعر البيع</label>
+                    <input type="number" id="item-sell-price" step="0.01" min="0">
+                </div>
+            </div>
+            <label for="item-notes">ملاحظات</label>
+            <textarea id="item-notes" rows="3"></textarea>
+            <div class="modal-actions">
+                <button type="submit" id="save-item-btn">حفظ</button>
+                <button type="button" id="cancel-item-btn">إلغاء</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="sync-modal">
+        <form id="sync-form">
+            <h3>إعدادات المزامنة السحابية</h3>
+            <p>
+                سيتم حفظ بياناتك في ملف <code>inventory.json</code> داخل مستودع GitHub خاص.
+                <a href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens" target="_blank">كيفية إنشاء مفتاح وصول شخصي (PAT)</a>.
+            </p>
+            <label for="github-username">اسم المستخدم في GitHub</label>
+            <input type="text" id="github-username" required placeholder="e.g., my-username">
+            <label for="github-repo">اسم المستودع (Repository)</label>
+            <input type="text" id="github-repo" required placeholder="e.g., key-inventory-data">
+            <label for="github-pat">مفتاح الوصول الشخصي (Personal Access Token)</label>
+            <input type="password" id="github-pat" required placeholder="يبدأ بـ ghp_...">
+            <div class="modal-actions">
+                <button type="submit">حفظ الإعدادات</button>
+                <button type="button" id="cancel-sync-btn">إلغاء</button>
+            </div>
+
+            <button type="button" id="cleanup-images-btn" class="cleanup-btn">
+                <span class="material-symbols-outlined">cleaning_services</span>
+                تنظيف الصور غير المستخدمة
+            </button>
+        </form>
+    </dialog>
+
+    <dialog id="barcode-modal">
+        <div class="barcode-modal-content">
+            <h3 id="barcode-item-name"></h3>
+            <div id="barcode-display">
+                <svg id="barcode-svg"></svg>
+            </div>
+            <div class="modal-actions">
+                <button id="download-barcode-btn" class="primary-action"><span class="material-symbols-outlined">download</span> تنزيل PNG</button>
+                <button id="close-barcode-btn" type="button">إغلاق</button>
+            </div>
+        </div>
+    </dialog>
+
+    <div id="status-indicator" class="status-indicator"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+/* css/_variables.css */
+
+:root {
+    --font-family: 'Cairo', sans-serif;
+    --border-radius-sm: 8px;
+    --border-radius-md: 16px;
+    --transition-speed: 0.25s;
+    --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.05);
+    --shadow-strong: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* Light Theme Colors */
+body.theme-light {
+    --bg-color: #f4f7f9;
+    --surface-color: #ffffff;
+    --border-color: #e2e8f0;
+    --text-primary: #1a202c;
+    --text-secondary: #718096;
+    --accent-color: #2a69c7;
+    --accent-color-hover: #2558a5;
+    --danger-color: #e53e3e;
+    --low-stock-bg: #feebc8;
+}
+
+/* Dark Theme Colors */
+body.theme-dark {
+    --bg-color: #121212;
+    --surface-color: #1e1e1e;
+    --border-color: #333333;
+    --text-primary: #e0e0e0;
+    --text-secondary: #888888;
+    --accent-color: #58a6ff;
+    --accent-color-hover: #7bbdff;
+    --danger-color: #fc8181;
+    --low-stock-bg: #4a361d;
+}
