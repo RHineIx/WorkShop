@@ -7,7 +7,7 @@ It imports the modular CSS files in the correct order to respect the cascade.
 
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
 
-@import '_variables.css';
-@import '_base.css';
-@import '_layout.css';
-@import '_components.css';
+@import 'variables.css';
+@import 'base.css';
+@import 'layout.css';
+@import 'components.css';
