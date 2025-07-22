@@ -1,6 +1,5 @@
 // js/api.js
 import { appState } from './state.js';
-import { showStatus } from './ui.js';
 
 // --- UTILITY FUNCTIONS FOR API ---
 
@@ -52,64 +51,47 @@ export const fetchImageWithAuth = async (path) => {
 
 export const uploadImageToGitHub = async (file) => {
     if (!appState.syncConfig) {
-        showStatus('يجب إعداد المزامنة أولاً لرفع الصور.', 'error');
-        return null;
+        throw new Error('يجب إعداد المزامنة أولاً لرفع الصور.');
     }
-    showStatus('جاري رفع الصورة...', 'syncing');
-    try {
-        const base64content = await toBase64(file);
-        const { username, repo, pat } = appState.syncConfig;
-        const fileName = `img_${Date.now()}_${file.name.replace(/\s/g, '_')}`;
-        const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/images/${fileName}`;
-        const response = await fetch(apiUrl, {
-            method: 'PUT',
-            headers: { 'Authorization': `token ${pat}` },
-            body: JSON.stringify({ message: `Upload image: ${fileName}`, content: base64content })
-        });
-        if (!response.ok) throw new Error(`Image upload failed: ${response.statusText}`);
-        const data = await response.json();
-        showStatus('تم رفع الصورة بنجاح!', 'success');
-        return data.content.path;
-    } catch (error) {
-        console.error("Image Upload Error:", error);
-        showStatus(`فشل رفع الصورة: ${error.message}`, 'error', 5000);
-        return null;
-    }
+    const base64content = await toBase64(file);
+    const { username, repo, pat } = appState.syncConfig;
+    const fileName = `img_${Date.now()}_${file.name.replace(/\s/g, '_')}`;
+    const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/images/${fileName}`;
+    const response = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: { 'Authorization': `token ${pat}` },
+        body: JSON.stringify({ message: `Upload image: ${fileName}`, content: base64content })
+    });
+    if (!response.ok) throw new Error(`Image upload failed: ${response.statusText}`);
+    const data = await response.json();
+    return data.content.path;
 };
 
 export const fetchFromGitHub = async () => {
     if (!appState.syncConfig) return null;
     const { username, repo, pat } = appState.syncConfig;
     const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/inventory.json`;
-    showStatus('جاري مزامنة البيانات...', 'syncing');
-    try {
-        const response = await fetch(apiUrl, { headers: { 'Authorization': `token ${pat}` } });
-        if (response.status === 404) {
-            showStatus('ملف inventory.json غير موجود. سيتم إنشاؤه عند الحفظ.', 'error');
-            return { inventory: [], sha: null };
-        }
-        if (!response.ok) {
-            throw new Error(`Failed to fetch data: ${response.statusText}`);
-        }
-        const data = await response.json();
-        const decodedContent = decodeURIComponent(escape(window.atob(data.content)));
-        showStatus('تمت المزامنة بنجاح!', 'success');
-        return { inventory: JSON.parse(decodedContent), sha: data.sha };
-    } catch (error) {
-        console.error("GitHub Fetch Error:", error);
-        showStatus(`خطأ في المزامنة: ${error.message}`, 'error', 5000);
-        return null;
+    
+    const response = await fetch(apiUrl, { headers: { 'Authorization': `token ${pat}` } });
+    if (response.status === 404) {
+        console.log('inventory.json not found. A new one will be created on save.');
+        return { inventory: [], sha: null };
     }
+    if (!response.ok) {
+        throw new Error(`Failed to fetch data: ${response.statusText}`);
+    }
+    const data = await response.json();
+    const decodedContent = decodeURIComponent(escape(window.atob(data.content)));
+    return { inventory: JSON.parse(decodedContent), sha: data.sha };
 };
 
 export const saveToGitHub = async () => {
     if (!appState.syncConfig || appState.isSyncing) return;
     appState.isSyncing = true;
-    const { username, repo, pat } = appState.syncConfig;
-    const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/inventory.json`;
-    showStatus('جاري حفظ التغييرات...', 'syncing');
-
+    
     try {
+        const { username, repo, pat } = appState.syncConfig;
+        const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/inventory.json`;
         const content = btoa(unescape(encodeURIComponent(JSON.stringify(appState.inventory, null, 2))));
         const body = {
             message: `Update inventory data - ${new Date().toISOString()}`,
@@ -124,10 +106,6 @@ export const saveToGitHub = async () => {
         if (!response.ok) throw new Error(`Failed to save: ${response.statusText}`);
         const data = await response.json();
         appState.fileSha = data.content.sha;
-        showStatus('تم حفظ التغييرات في السحابة!', 'success');
-    } catch (error) {
-        console.error("GitHub Save Error:", error);
-        showStatus(`فشل الحفظ: ${error.message}`, 'error', 5000);
     } finally {
         appState.isSyncing = false;
     }
@@ -137,21 +115,12 @@ export const deleteFileFromGitHub = async (path, sha, message) => {
     if (!appState.syncConfig) return false;
     const { username, repo, pat } = appState.syncConfig;
     const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
-    try {
-        const response = await fetch(apiUrl, {
-            method: 'DELETE',
-            headers: { 'Authorization': `token ${pat}` },
-            body: JSON.stringify({ message, sha })
-        });
-        if (!response.ok) {
-            console.error(`Failed to delete ${path}: ${response.statusText}`);
-            return false;
-        }
-        return true;
-    } catch (error) {
-        console.error(`Error deleting file ${path}:`, error);
-        return false;
-    }
+    const response = await fetch(apiUrl, {
+        method: 'DELETE',
+        headers: { 'Authorization': `token ${pat}` },
+        body: JSON.stringify({ message, sha })
+    });
+    return response.ok;
 };
 
 export const getGitHubDirectoryListing = async (path) => {
@@ -162,5 +131,6 @@ export const getGitHubDirectoryListing = async (path) => {
         if (response.status === 404) return []; // Folder not found is not an error
         throw new Error('فشل الوصول إلى مجلد الصور.');
     }
-    return await response.json();
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
 };

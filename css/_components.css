@@ -155,6 +155,7 @@
     flex-grow: 1;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2; /* Add this line */
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -226,15 +227,9 @@ dialog::backdrop {
 
 #item-form,
 #sync-form,
-.details-modal-content,
 .barcode-modal-content {
     overflow-y: auto;
     padding: 20px;
-}
-
-.details-layout {
-    flex-grow: 1;
-    overflow-y: auto;
 }
 
 #item-form h3,
@@ -371,21 +366,47 @@ input:read-only {
     color: white;
 }
 
-/* --- Details Modal Components --- */
+/* ============================================
+--- Details Modal Components (FIXED SECTION) ---
+============================================
+*/
 #details-modal {
     max-width: 800px;
 }
 
+/* This is the main content wrapper inside the details modal */
 .details-modal-content {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    /* Let the flex children control the height. Remove fixed height. */
+    /* Let this container be flexible within the dialog. */
+    flex-grow: 1;
+    overflow: hidden; /* This container does not scroll. */
+}
+
+/* The layout for image and info, which will scroll if needed */
+.details-layout {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; /* THIS is the primary scrollable area. */
+    flex-grow: 1; /* Allows this section to take up available space. */
+}
+
+/* The footer with action buttons */
+.details-actions {
+    padding: 15px;
+    border-top: 1px solid var(--border-color);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+    background-color: var(--surface-color);
+    flex-shrink: 0; /* Prevents the footer from shrinking. */
 }
 
 .close-modal-btn {
     position: absolute;
     top: 15px;
-    left: 15px;
+    left: 15px; /* Use 'right' for LTR languages */
     z-index: 10;
     width: 36px;
     height: 36px;
@@ -398,11 +419,6 @@ input:read-only {
     align-items: center;
     justify-content: center;
     backdrop-filter: blur(4px);
-}
-
-.details-layout {
-    display: flex;
-    flex-direction: column;
 }
 
 .details-image-container {
@@ -502,16 +518,6 @@ input:read-only {
     color: var(--text-secondary);
     line-height: 1.6;
     white-space: pre-wrap;
-}
-
-.details-actions {
-    padding: 15px;
-    border-top: 1px solid var(--border-color);
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    gap: 10px;
-    background-color: var(--surface-color);
-    flex-shrink: 0;
 }
 
 .action-btn-details {

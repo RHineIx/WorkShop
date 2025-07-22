@@ -3,9 +3,22 @@ import { appState } from './state.js';
 import { fetchImageWithAuth } from './api.js';
 import { sanitizeHTML, generateUniqueSKU } from './utils.js';
 
-// Get all DOM elements once
+// Get all DOM elements once and export them for other modules to use
 const elements = {
+    // Main Layout
     inventoryGrid: document.getElementById('inventory-grid'),
+    searchBar: document.getElementById('search-bar'),
+    statsContainer: document.getElementById('stats-cards'),
+    totalItemsStat: document.getElementById('total-items-stat'),
+    lowStockStat: document.getElementById('low-stock-stat'),
+    statusIndicator: document.getElementById('status-indicator'),
+    
+    // Header
+    themeToggleBtn: document.getElementById('theme-toggle-btn'),
+    addItemBtn: document.getElementById('add-item-btn'),
+    syncSettingsBtn: document.getElementById('sync-settings-btn'),
+
+    // Details Modal
     detailsModal: document.getElementById('details-modal'),
     closeDetailsModalBtn: document.getElementById('close-details-modal-btn'),
     detailsImage: document.getElementById('details-image'),
@@ -14,30 +27,46 @@ const elements = {
     detailsSku: document.getElementById('details-sku'),
     detailsPrice: document.getElementById('details-price'),
     detailsQuantityValue: document.getElementById('details-quantity-value'),
+    detailsDecreaseBtn: document.getElementById('details-decrease-btn'),
+    detailsIncreaseBtn: document.getElementById('details-increase-btn'),
+    detailsNotesContent: document.getElementById('details-notes-content'),
+    detailsEditBtn: document.getElementById('details-edit-btn'),
+    detailsBarcodeBtn: document.getElementById('details-barcode-btn'),
+    detailsDeleteBtn: document.getElementById('details-delete-btn'),
+
+    // Add/Edit Modal
     itemModal: document.getElementById('item-modal'),
     itemForm: document.getElementById('item-form'),
+    cancelItemBtn: document.getElementById('cancel-item-btn'),
     modalTitle: document.getElementById('modal-title'),
     itemIdInput: document.getElementById('item-id'),
+    imageUploadInput: document.getElementById('item-image-upload'),
     imagePreview: document.getElementById('image-preview'),
     imagePlaceholder: document.getElementById('image-placeholder'),
-    themeToggleBtn: document.getElementById('theme-toggle-btn'),
-    totalItemsStat: document.getElementById('total-items-stat'),
-    lowStockStat: document.getElementById('low-stock-stat'),
+    regenerateSkuBtn: document.getElementById('regenerate-sku-btn'),
+
+    // Sync Modal
     syncModal: document.getElementById('sync-modal'),
+    syncForm: document.getElementById('sync-form'),
+    cancelSyncBtn: document.getElementById('cancel-sync-btn'),
     githubUsernameInput: document.getElementById('github-username'),
     githubRepoInput: document.getElementById('github-repo'),
     githubPatInput: document.getElementById('github-pat'),
+    cleanupImagesBtn: document.getElementById('cleanup-images-btn'),
+    
+    // Barcode Modal
     barcodeModal: document.getElementById('barcode-modal'),
     barcodeItemName: document.getElementById('barcode-item-name'),
     barcodeSvg: document.getElementById('barcode-svg'),
-    statusIndicator: document.getElementById('status-indicator'),
-    regenerateSkuBtn: document.getElementById('regenerate-sku-btn'),
+    downloadBarcodeBtn: document.getElementById('download-barcode-btn'),
+    closeBarcodeBtn: document.getElementById('close-barcode-btn'),
 };
 
 export function getDOMElements() {
     return elements;
 }
 
+// ... (The rest of the ui.js file is the same as the last version)
 export const showStatus = (message, type, duration = 3000) => {
     elements.statusIndicator.textContent = message;
     elements.statusIndicator.className = `status-indicator ${type} show`;
@@ -68,7 +97,7 @@ export const renderInventory = () => {
         filteredInventory.forEach(item => {
             const card = document.createElement('div');
             card.className = 'product-card';
-            card.dataset.id = item.id; // Set dataset for event delegation
+            card.dataset.id = item.id; 
             if (item.quantity <= item.alertLevel) {
                 card.classList.add('low-stock');
             }
@@ -106,8 +135,6 @@ export const setTheme = (themeName) => {
     elements.themeToggleBtn.querySelector('.material-symbols-outlined').textContent = themeName === 'dark' ? 'dark_mode' : 'light_mode';
     localStorage.setItem('inventoryAppTheme', themeName);
 };
-
-// --- MODAL UI FUNCTIONS ---
 
 export const openDetailsModal = (itemId) => {
     const item = appState.inventory.find(i => i.id === itemId);
@@ -176,6 +203,7 @@ export const openItemModal = (itemId = null) => {
 export const openBarcodeModal = (itemId) => {
     const item = appState.inventory.find(i => i.id === itemId);
     if (item && item.sku) {
+        appState.currentItemId = item.id; // Set current item for download
         elements.barcodeItemName.textContent = item.name;
         try {
             JsBarcode(elements.barcodeSvg, item.sku, {

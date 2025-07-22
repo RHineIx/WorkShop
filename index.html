@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="theme-light">
 
@@ -23,6 +23,7 @@
                 <span class="material-symbols-outlined">add</span>
                 <span class="btn-text">إضافة منتج</span>
             </button>
+        
              <button id="sync-settings-btn" title="إعدادات المزامنة" class="control-button">
                 <span class="material-symbols-outlined">cloud_sync</span>
              </button>
@@ -57,7 +58,7 @@
                 <input type="text" id="search-bar" placeholder="ابحث عن منتج بالاسم أو SKU...">
             </div>
             <div id="inventory-grid" class="inventory-grid">
-                </div>
+            </div>
         </section>
     </main>
 
@@ -111,8 +112,7 @@
                 </div>
                 <input type="file" id="item-image-upload" accept="image/*">
             </div>
-            <label for="item-sku">SKU (رقم المنتج - يستخدم للباركود)</label>
-            <input type="text" id="item-sku" required>
+
             <label for="item-sku">SKU (رقم المنتج - يستخدم للباركود)</label>
             <div class="sku-container">
                 <input type="text" id="item-sku" required readonly>
@@ -120,8 +120,13 @@
                     <span class="material-symbols-outlined">refresh</span>
                 </button>
             </div>
+
+            <label for="item-name">اسم المنتج</label>
+            <input type="text" id="item-name" required>
+            
             <label for="item-category">الفئة</label>
             <input type="text" id="item-category">
+            
             <div class="form-row">
                 <div class="form-group">
                     <label for="item-quantity">الكمية</label>
@@ -168,7 +173,6 @@
                 <button type="submit">حفظ الإعدادات</button>
                 <button type="button" id="cancel-sync-btn">إلغاء</button>
             </div>
-
             <button type="button" id="cleanup-images-btn" class="cleanup-btn">
                 <span class="material-symbols-outlined">cleaning_services</span>
                 تنظيف الصور غير المستخدمة
@@ -192,6 +196,6 @@
     <div id="status-indicator" class="status-indicator"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-    <script type="module" src="/js/main.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>
