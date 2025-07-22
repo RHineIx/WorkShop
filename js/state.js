@@ -6,7 +6,9 @@
  * We export it so other modules can import and use it as the single source of truth.
  */
 export const appState = {
-    /** @type {Array<Object>} The main list of all inventory items. */
+    /** * @type {Array<Object>} The main list of all inventory items.
+     * Each item now has: costPriceIqd, sellPriceIqd, costPriceUsd, sellPriceUsd.
+     */
     inventory: [],
 
     /** @type {'all' | 'low_stock'} The currently active filter for the inventory grid. */
@@ -17,6 +19,9 @@ export const appState = {
 
     /** @type {string|null} The ID of the item currently being viewed in the details modal. */
     currentItemId: null,
+    
+    /** @type {'IQD' | 'USD'} The currently selected currency for display. */
+    activeCurrency: 'IQD',
 
     /** @type {Object|null} Configuration for GitHub sync { username, repo, pat }. */
     syncConfig: null,

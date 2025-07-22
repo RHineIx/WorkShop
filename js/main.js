@@ -53,8 +53,11 @@ async function handleFormSubmit(e) {
             category: document.getElementById('item-category').value,
             quantity: parseInt(document.getElementById('item-quantity').value, 10) || 0,
             alertLevel: parseInt(document.getElementById('item-alert-level').value, 10) || 5,
-            costPrice: parseFloat(document.getElementById('item-cost-price').value) || 0,
-            sellPrice: parseFloat(document.getElementById('item-sell-price').value) || 0,
+            // Read all four price fields
+            costPriceIqd: parseFloat(document.getElementById('item-cost-price-iqd').value) || 0,
+            sellPriceIqd: parseFloat(document.getElementById('item-sell-price-iqd').value) || 0,
+            costPriceUsd: parseFloat(document.getElementById('item-cost-price-usd').value) || 0,
+            sellPriceUsd: parseFloat(document.getElementById('item-sell-price-usd').value) || 0,
             notes: document.getElementById('item-notes').value,
             imagePath: imagePath,
         };
@@ -123,6 +126,13 @@ function setupEventListeners() {
     elements.themeToggleBtn.addEventListener('click', () => ui.setTheme(document.body.classList.contains('theme-light') ? 'dark' : 'light'));
     elements.addItemBtn.addEventListener('click', () => ui.openItemModal());
     elements.syncSettingsBtn.addEventListener('click', ui.populateSyncModal);
+    
+    // NEW: Currency Toggle Button
+    elements.currencyToggleBtn.addEventListener('click', () => {
+        appState.activeCurrency = appState.activeCurrency === 'IQD' ? 'USD' : 'IQD';
+        localStorage.setItem('inventoryAppCurrency', appState.activeCurrency);
+        ui.updateCurrencyDisplay();
+    });
 
     // Main Grid Interaction
     elements.inventoryGrid.addEventListener('click', (e) => {
@@ -135,13 +145,11 @@ function setupEventListeners() {
 
     // Details Modal
     elements.closeDetailsModalBtn.addEventListener('click', () => elements.detailsModal.close());
-    
-    // THIS SECTION IS FIXED
     elements.detailsDecreaseBtn.addEventListener('click', async () => {
         const item = appState.inventory.find(i => i.id === appState.currentItemId);
         if (item && item.quantity > 0) {
             item.quantity--;
-            elements.detailsQuantityValue.textContent = item.quantity; // Update UI immediately
+            elements.detailsQuantityValue.textContent = item.quantity;
             ui.renderInventory();
             await api.saveToGitHub();
         }
@@ -150,12 +158,11 @@ function setupEventListeners() {
         const item = appState.inventory.find(i => i.id === appState.currentItemId);
         if (item) {
             item.quantity++;
-            elements.detailsQuantityValue.textContent = item.quantity; // Update UI immediately
+            elements.detailsQuantityValue.textContent = item.quantity;
             ui.renderInventory();
             await api.saveToGitHub();
         }
     });
-
     elements.detailsEditBtn.addEventListener('click', () => {
         elements.detailsModal.close();
         ui.openItemModal(appState.currentItemId);
@@ -244,12 +251,20 @@ function setupEventListeners() {
 
 // --- INITIALIZATION ---
 
+/**
+ * Initializes the application.
+ */
 async function initializeApp() {
     console.log('Initializing Inventory Management App...');
     setupEventListeners();
     loadConfig();
+
+    // Load saved theme and currency preferences
     const savedTheme = localStorage.getItem('inventoryAppTheme') || 'light';
+    const savedCurrency = localStorage.getItem('inventoryAppCurrency') || 'IQD';
+    appState.activeCurrency = savedCurrency;
     ui.setTheme(savedTheme);
+    ui.updateCurrencyDisplay(); // Set initial currency display
 
     if (appState.syncConfig) {
         ui.showStatus('جاري مزامنة البيانات...', 'syncing');
@@ -258,7 +273,7 @@ async function initializeApp() {
             if (data) {
                 appState.inventory = data.inventory;
                 appState.fileSha = data.sha;
-                saveLocalInventory(); // Save fetched data locally
+                saveLocalInventory();
                 ui.showStatus('تمت المزامنة بنجاح!', 'success');
             }
         } catch(error) {

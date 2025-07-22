@@ -17,6 +17,7 @@ const elements = {
     themeToggleBtn: document.getElementById('theme-toggle-btn'),
     addItemBtn: document.getElementById('add-item-btn'),
     syncSettingsBtn: document.getElementById('sync-settings-btn'),
+    currencyToggleBtn: document.getElementById('currency-toggle-btn'),
 
     // Details Modal
     detailsModal: document.getElementById('details-modal'),
@@ -25,7 +26,6 @@ const elements = {
     detailsImagePlaceholder: document.getElementById('details-image-placeholder'),
     detailsName: document.getElementById('details-name'),
     detailsSku: document.getElementById('details-sku'),
-    detailsPrice: document.getElementById('details-price'),
     detailsQuantityValue: document.getElementById('details-quantity-value'),
     detailsDecreaseBtn: document.getElementById('details-decrease-btn'),
     detailsIncreaseBtn: document.getElementById('details-increase-btn'),
@@ -33,6 +33,11 @@ const elements = {
     detailsEditBtn: document.getElementById('details-edit-btn'),
     detailsBarcodeBtn: document.getElementById('details-barcode-btn'),
     detailsDeleteBtn: document.getElementById('details-delete-btn'),
+    // New Price Elements
+    detailsCostIqd: document.getElementById('details-cost-iqd'),
+    detailsSellIqd: document.getElementById('details-sell-iqd'),
+    detailsCostUsd: document.getElementById('details-cost-usd'),
+    detailsSellUsd: document.getElementById('details-sell-usd'),
 
     // Add/Edit Modal
     itemModal: document.getElementById('item-modal'),
@@ -93,7 +98,6 @@ export const renderInventory = () => {
     elements.inventoryGrid.innerHTML = '';
     let filteredInventory = [...appState.inventory];
 
-    // Apply filters
     if (appState.activeFilter === 'low_stock') {
         filteredInventory = filteredInventory.filter(item => item.quantity <= item.alertLevel);
     }
@@ -105,7 +109,6 @@ export const renderInventory = () => {
         );
     }
 
-    // Render cards or empty state message
     if (filteredInventory.length === 0) {
         elements.inventoryGrid.innerHTML = '<p class="empty-state">لا توجد منتجات تطابق بحثك...</p>';
     } else {
@@ -116,6 +119,11 @@ export const renderInventory = () => {
             if (item.quantity <= item.alertLevel) {
                 card.classList.add('low-stock');
             }
+            
+            const isIQD = appState.activeCurrency === 'IQD';
+            const price = isIQD ? (item.sellPriceIqd || 0) : (item.sellPriceUsd || 0);
+            const symbol = isIQD ? 'د.ع' : '$';
+
             const placeholder = `<div class="card-image-placeholder"><span class="material-symbols-outlined">key</span></div>`;
             card.innerHTML = `
                 <div class="card-image-container">
@@ -124,7 +132,7 @@ export const renderInventory = () => {
                 <div class="card-info">
                     <div class="card-name">${sanitizeHTML(item.name)}</div>
                     <div class="card-footer">
-                        <div class="card-price">${sanitizeHTML(String(item.sellPrice))} د.ع</div>
+                        <div class="card-price">${sanitizeHTML(String(price))} ${symbol}</div>
                         <button class="card-details-btn" aria-label="عرض التفاصيل">+</button>
                     </div>
                 </div>`;
@@ -158,6 +166,18 @@ export const setTheme = (themeName) => {
     localStorage.setItem('inventoryAppTheme', themeName);
 };
 
+/**
+ * Updates the currency toggle button text and re-renders the UI.
+ */
+export const updateCurrencyDisplay = () => {
+    const isIQD = appState.activeCurrency === 'IQD';
+    elements.currencyToggleBtn.textContent = isIQD ? 'د.ع' : '$';
+    renderInventory();
+
+    if (elements.detailsModal.open && appState.currentItemId) {
+        openDetailsModal(appState.currentItemId); // Re-run to update the price grid
+    }
+};
 
 // --- MODAL UI FUNCTIONS ---
 
@@ -169,15 +189,22 @@ export const openDetailsModal = (itemId) => {
     const item = appState.inventory.find(i => i.id === itemId);
     if (!item) return;
     appState.currentItemId = itemId;
+
     elements.detailsName.textContent = item.name;
     elements.detailsSku.textContent = `SKU: ${sanitizeHTML(item.sku || 'N/A')}`;
-    elements.detailsPrice.textContent = `${sanitizeHTML(String(item.sellPrice))} د.ع`;
     elements.detailsQuantityValue.textContent = item.quantity;
+    
+    // Populate the new price grid
+    elements.detailsCostIqd.textContent = `${sanitizeHTML(String(item.costPriceIqd || 0))} د.ع`;
+    elements.detailsSellIqd.textContent = `${sanitizeHTML(String(item.sellPriceIqd || 0))} د.ع`;
+    elements.detailsCostUsd.textContent = `$${sanitizeHTML(String(item.costPriceUsd || 0))}`;
+    elements.detailsSellUsd.textContent = `$${sanitizeHTML(String(item.sellPriceUsd || 0))}`;
+    
     elements.detailsNotesContent.textContent = item.notes || 'لا توجد ملاحظات.';
     if (item.imagePath) {
         elements.detailsImage.style.display = 'block';
         elements.detailsImagePlaceholder.style.display = 'none';
-        elements.detailsImage.src = ''; // Clear previous image to prevent flicker
+        elements.detailsImage.src = '';
         fetchImageWithAuth(item.imagePath).then(blobUrl => {
             if (blobUrl) elements.detailsImage.src = blobUrl;
         });
@@ -210,8 +237,10 @@ export const openItemModal = (itemId = null) => {
             document.getElementById('item-category').value = item.category;
             document.getElementById('item-quantity').value = item.quantity;
             document.getElementById('item-alert-level').value = item.alertLevel;
-            document.getElementById('item-cost-price').value = item.costPrice;
-            document.getElementById('item-sell-price').value = item.sellPrice;
+            document.getElementById('item-cost-price-iqd').value = item.costPriceIqd || 0;
+            document.getElementById('item-sell-price-iqd').value = item.sellPriceIqd || 0;
+            document.getElementById('item-cost-price-usd').value = item.costPriceUsd || 0;
+            document.getElementById('item-sell-price-usd').value = item.sellPriceUsd || 0;
             document.getElementById('item-notes').value = item.notes;
             if (item.imagePath) {
                 fetchImageWithAuth(item.imagePath).then(blobUrl => {

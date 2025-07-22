@@ -23,8 +23,15 @@
     cursor: pointer;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: var(--spacing-sm);
     transition: all var(--transition-speed) ease;
+}
+
+#currency-toggle-btn {
+    font-weight: bold;
+    min-width: 48px;
+    font-size: 16px;
 }
 
 .control-button .btn-text {
@@ -297,14 +304,6 @@ input:read-only {
     cursor: not-allowed;
     opacity: 0.8;
 }
-#sync-form p a {
-    color: var(--accent-color);
-    font-weight: bold;
-}
-
-#sync-form p a:hover {
-    text-decoration: none;
-}
 
 /* --- Buttons --- */
 .modal-actions {
@@ -436,13 +435,12 @@ input:read-only {
     flex-shrink: 0;
 }
 
-/* THIS SECTION IS FIXED */
 #details-image {
     width: 100%;
     height: auto;
     display: block;
-    max-height: 40vh; /* Limit the maximum height to 40% of the viewport height */
-    object-fit: contain; /* Ensure the image fits within the bounds without being cropped */
+    max-height: 40vh;
+    object-fit: contain;
 }
 
 .item-image-details {
@@ -475,12 +473,42 @@ input:read-only {
     margin-bottom: var(--spacing-md);
 }
 
-.details-price {
-    font-size: 26px;
-    font-weight: bold;
-    color: var(--accent-color);
+/* NEW: Styles for the price grid */
+.details-price-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
     margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
 }
+
+.price-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.price-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.price-value {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.price-value.iqd {
+    color: var(--accent-color);
+}
+
+.price-value.usd {
+    color: var(--secondary-currency-color);
+}
+
 
 .details-quantity {
     display: flex;
@@ -680,22 +708,33 @@ input:read-only {
 .status-indicator.error {
     background-color: var(--danger-color);
 }
+
 /* --- Global Scrollbar Styling --- */
-/* This works on Chrome, Edge, Safari, and other WebKit-based browsers */
 *::-webkit-scrollbar {
-    width: 8px; /* Makes the scrollbar thinner */
+    width: 10px;
 }
 
 *::-webkit-scrollbar-track {
-    background: transparent; /* Makes the track background invisible */
+    background: transparent;
 }
 
 *::-webkit-scrollbar-thumb {
-    background-color: var(--border-color); /* Uses a theme color for the handle */
-    border-radius: var(--border-radius-md); /* Rounds the handle */
-    border: 2px solid var(--surface-color); /* Adds a nice padding effect around the handle */
+    background-color: var(--border-color);
+    border-radius: var(--border-radius-md);
+    border: 2px solid var(--surface-color);
 }
 
 *::-webkit-scrollbar-thumb:hover {
-    background-color: var(--text-secondary); /* Changes color on hover */
+    background-color: var(--text-secondary);
+}
+
+/* --- Link Styling --- */
+#sync-form p a {
+    color: var(--accent-color);
+    font-weight: bold;
+    text-decoration: none;
+}
+
+#sync-form p a:hover {
+    text-decoration: underline;
 }
