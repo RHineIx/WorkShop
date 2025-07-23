@@ -878,3 +878,82 @@ color: white;
     color: white;
     font-weight: 700;
 }
+
+/* --- View Toggling Buttons --- */
+.app-title.active-view-btn,
+#dashboard-toggle-btn.active-view-btn {
+    color: var(--accent-color);
+    font-weight: 700;
+}
+.app-title {
+    cursor: pointer;
+}
+
+/* --- Dashboard --- */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+}
+.time-filter-controls {
+    display: flex;
+    gap: var(--spacing-sm);
+    background-color: var(--bg-color);
+    padding: 4px;
+    border-radius: var(--border-radius-sm);
+}
+.time-filter-btn {
+    padding: 6px 12px;
+    border: none;
+    background-color: transparent;
+    color: var(--text-secondary);
+    font-weight: 500;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-speed) ease;
+}
+.time-filter-btn.active {
+    background-color: var(--surface-color);
+    color: var(--text-primary);
+    font-weight: 700;
+    box-shadow: var(--shadow-light);
+}
+.stat-card.profit .card-icon .material-symbols-outlined {
+    color: #38A169; /* Green for profit */
+}
+
+.bestsellers-container {
+    margin-top: var(--spacing-lg);
+    background-color: var(--surface-color);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+}
+.bestsellers-container h3 {
+    margin-bottom: var(--spacing-md);
+}
+.bestsellers-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+.bestseller-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm);
+    background-color: var(--bg-color);
+    border-radius: var(--border-radius-sm);
+}
+.bestseller-name {
+    font-weight: 500;
+}
+.bestseller-count {
+    font-weight: 700;
+    color: var(--accent-color);
+    background-color: var(--surface-color);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+}
