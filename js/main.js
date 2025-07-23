@@ -301,15 +301,26 @@ function setupEventListeners() {
         appState.searchTerm = e.target.value;
         ui.renderInventory();
     });
+
+    // --- MODIFIED: Stat Cards Click Listener ---
     elements.statsContainer.addEventListener('click', (e) => {
         const card = e.target.closest('.stat-card');
         if (!card) return;
+
+        // Clear search term for any card click
+        appState.searchTerm = '';
+        elements.searchBar.value = '';
+
         if (card.classList.contains('low-stock-alert')) {
-            appState.searchTerm = '';
-            elements.searchBar.value = '';
+            // Toggle low stock filter
             appState.activeFilter = (appState.activeFilter === 'low_stock') ? 'all' : 'low_stock';
-            ui.renderInventory();
+        } else {
+            // Reset all filters for "Total Items" card click
+            appState.activeFilter = 'all';
+            appState.selectedCategory = 'all';
+            ui.renderCategoryFilter(); // Re-render to update active category
         }
+        ui.renderInventory();
     });
 
     // Category Filter Listeners
