@@ -118,29 +118,23 @@ export const fetchFromGitHub = async () => {
  * @throws {Error} If the save operation fails.
  */
 export const saveToGitHub = async () => {
-    if (!appState.syncConfig || appState.isSyncing) return;
-    appState.isSyncing = true;
-    
-    try {
-        const { username, repo, pat } = appState.syncConfig;
-        const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/inventory.json`;
-        const content = btoa(unescape(encodeURIComponent(JSON.stringify(appState.inventory, null, 2))));
-        const body = {
-            message: `Update inventory data - ${new Date().toISOString()}`,
-            content: content,
-            sha: appState.fileSha,
-        };
-        const response = await fetch(apiUrl, {
-            method: 'PUT',
-            headers: { 'Authorization': `token ${pat}` },
-            body: JSON.stringify(body)
-        });
-        if (!response.ok) throw new Error(`Failed to save inventory: ${response.statusText}`);
-        const data = await response.json();
-        appState.fileSha = data.content.sha;
-    } finally {
-        appState.isSyncing = false;
-    }
+    if (!appState.syncConfig) return;
+    const { username, repo, pat } = appState.syncConfig;
+    const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/inventory.json`;
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(appState.inventory, null, 2))));
+    const body = {
+        message: `Update inventory data - ${new Date().toISOString()}`,
+        content: content,
+        sha: appState.fileSha,
+    };
+    const response = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: { 'Authorization': `token ${pat}` },
+        body: JSON.stringify(body)
+    });
+    if (!response.ok) throw new Error(`Failed to save inventory: ${response.statusText}`);
+    const data = await response.json();
+    appState.fileSha = data.content.sha;
 };
 
 /**
@@ -172,29 +166,23 @@ export const fetchSales = async () => {
  * @throws {Error} If the save operation fails.
  */
 export const saveSales = async () => {
-    if (!appState.syncConfig || appState.isSyncing) return;
-    appState.isSyncing = true;
-    
-    try {
-        const { username, repo, pat } = appState.syncConfig;
-        const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/sales.json`;
-        const content = btoa(unescape(encodeURIComponent(JSON.stringify(appState.sales, null, 2))));
-        const body = {
-            message: `Update sales data - ${new Date().toISOString()}`,
-            content: content,
-            sha: appState.salesFileSha,
-        };
-        const response = await fetch(apiUrl, {
-            method: 'PUT',
-            headers: { 'Authorization': `token ${pat}` },
-            body: JSON.stringify(body)
-        });
-        if (!response.ok) throw new Error(`Failed to save sales: ${response.statusText}`);
-        const data = await response.json();
-        appState.salesFileSha = data.content.sha;
-    } finally {
-        appState.isSyncing = false;
-    }
+    if (!appState.syncConfig) return;
+    const { username, repo, pat } = appState.syncConfig;
+    const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/sales.json`;
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(appState.sales, null, 2))));
+    const body = {
+        message: `Update sales data - ${new Date().toISOString()}`,
+        content: content,
+        sha: appState.salesFileSha,
+    };
+    const response = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: { 'Authorization': `token ${pat}` },
+        body: JSON.stringify(body)
+    });
+    if (!response.ok) throw new Error(`Failed to save sales: ${response.statusText}`);
+    const data = await response.json();
+    appState.salesFileSha = data.content.sha;
 };
 
 /**

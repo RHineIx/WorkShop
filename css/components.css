@@ -316,6 +316,14 @@ input[type=number] {
     gap: var(--spacing-sm);
     flex-shrink: 0;
 }
+#save-item-btn {
+background-color: var(--accent-color); 
+color: white;
+}
+#save-item-btn:hover {
+    background-color: var(--accent-color-hover);
+}
+
 
 .modal-actions button {
     padding: 10px 15px;
@@ -343,6 +351,14 @@ input[type=number] {
 }
 .modal-actions button[type="button"]:hover {
     background-color: var(--bg-color);
+}
+
+.modal-actions button[type="submit"] {
+    background-color: var(--accent-color); 
+    color: white;
+}
+.modal-actions button[type="submit"]:hover {
+    background-color: var(--accent-color-hover);
 }
 
 .icon-btn {
@@ -766,24 +782,15 @@ input[type=number] {
 .status-indicator.error {
     background-color: var(--danger-color);
 }
-
-/* --- Global Scrollbar Styling --- */
+/* --- Hide Scrollbar --- */
 *::-webkit-scrollbar {
-    width: 10px;
-}
-
-*::-webkit-scrollbar-track {
+    display: none;
+    width: 0 !important;
     background: transparent;
 }
 
-*::-webkit-scrollbar-thumb {
-    background-color: var(--border-color);
-    border-radius: var(--border-radius-md);
-    border: 2px solid var(--surface-color);
-}
-
-*::-webkit-scrollbar-thumb:hover {
-    background-color: var(--text-secondary);
+* {
+    scrollbar-width: none; /* Firefox */
 }
 
 /* --- Link Styling --- */

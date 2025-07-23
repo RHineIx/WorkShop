@@ -105,16 +105,25 @@ async function handleSaleFormSubmit(e) {
         return;
     }
     
+    if (appState.isSyncing) {
+        ui.showStatus('المزامنة جارية بالفعل...', 'error', 1500);
+        saveButton.disabled = false;
+        return;
+    }
+    
     if (item.quantity <= 0) {
         ui.showStatus('لا يمكن بيع المنتج، الكمية صفر.', 'error');
         saveButton.disabled = false;
         return;
     }
 
+    appState.isSyncing = true;
+    ui.showStatus('جاري تسجيل البيع...', 'syncing');
+
     // 1. Decrease quantity
     item.quantity--;
 
-    // 2. Create a sales record with the new details
+    // 2. Create a sales record
     const saleRecord = {
         saleId: `sale_${Date.now()}`,
         itemId: item.id,
@@ -130,23 +139,21 @@ async function handleSaleFormSubmit(e) {
     };
     appState.sales.push(saleRecord);
 
-    // 3. Save both inventory and sales data
-    ui.showStatus('جاري تسجيل البيع...', 'syncing');
     try {
-        await Promise.all([
-            api.saveToGitHub(),
-            api.saveSales()
-        ]);
+        // 3. Save inventory first, then save sales
+        await api.saveToGitHub();
+        await api.saveSales();
         ui.showStatus('تم تسجيل البيع بنجاح!', 'success');
     } catch (error) {
         ui.showStatus(`فشل تسجيل البيع: ${error.message}`, 'error', 5000);
-        // Revert changes if save fails
+        // Revert changes in state if save fails
         item.quantity++;
         appState.sales.pop();
     } finally {
         // 4. Update the UI
         ui.getDOMElements().saleModal.close();
         ui.renderInventory();
+        appState.isSyncing = false;
         saveButton.disabled = false;
     }
 }
