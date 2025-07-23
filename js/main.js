@@ -40,6 +40,7 @@ async function handleFormSubmit(e) {
     const itemId = document.getElementById('item-id').value;
     const existingItem = appState.inventory.find(i => i.id === itemId);
     let imagePath = existingItem ? existingItem.imagePath : null;
+
     try {
         if (appState.selectedImageFile) {
             imagePath = await api.uploadImageToGitHub(appState.selectedImageFile);
@@ -59,6 +60,7 @@ async function handleFormSubmit(e) {
             notes: document.getElementById('item-notes').value,
             imagePath: imagePath,
         };
+
         if (itemId) {
             const index = appState.inventory.findIndex(i => i.id === itemId);
             if (index !== -1) appState.inventory[index] = itemData;
@@ -69,10 +71,6 @@ async function handleFormSubmit(e) {
         ui.renderInventory();
         await api.saveToGitHub();
         ui.showStatus('تم حفظ التغييرات في السحابة!', 'success');
-        ui.showBrowserNotification('حفظ المخزون', {
-            body: `تم حفظ ${itemData.name} بنجاح إلى السحابة.`,
-            icon: 'assets/save-icon.png' // يمكنك إضافة أيقونة هنا
-        });
 
         ui.getDOMElements().itemModal.close();
         if (appState.currentItemId === itemData.id) {
@@ -80,10 +78,6 @@ async function handleFormSubmit(e) {
         }
     } catch (error) {
         ui.showStatus(`فشل الحفظ: ${error.message}`, 'error', 5000);
-        ui.showBrowserNotification('خطأ في الحفظ!', {
-            body: `فشل حفظ المنتج: ${error.message}`,
-            icon: 'assets/error-icon.png'
-        });
     } finally {
         saveButton.disabled = false;
     }
@@ -92,10 +86,6 @@ async function handleFormSubmit(e) {
 async function handleImageCleanup() {
     if (!appState.syncConfig) {
         ui.showStatus('يرجى إعداد المزامنة أولاً.', 'error');
-        ui.showBrowserNotification('خطأ في التنظيف', {
-            body: 'يرجى إعداد المزامنة أولاً لتنظيف الصور.',
-            icon: 'assets/error-icon.png'
-        });
         return;
     }
     if (!confirm('هل أنت متأكد من رغبتك في حذف جميع الصور غير المستخدمة نهائياً من المستودع؟ لا يمكن التراجع عن هذا الإجراء.')) {
@@ -104,14 +94,12 @@ async function handleImageCleanup() {
     ui.showStatus('جاري البحث عن الصور غير المستخدمة...', 'syncing');
     try {
         const allRepoImages = await api.getGitHubDirectoryListing('images');
+        
         const usedImages = new Set(appState.inventory.map(item => item.imagePath).filter(Boolean));
         const orphanedImages = allRepoImages.filter(repoImage => !usedImages.has(repoImage.path));
+        
         if (orphanedImages.length === 0) {
             ui.showStatus('لا توجد صور غير مستخدمة ليتم حذفها.', 'success');
-            ui.showBrowserNotification('تنظيف الصور', {
-                body: 'لا توجد صور غير مستخدمة ليتم حذفها.',
-                icon: 'assets/success-icon.png'
-            });
             return;
         }
         
@@ -122,16 +110,9 @@ async function handleImageCleanup() {
             deletedCount++;
         }
         ui.showStatus(`تم حذف ${deletedCount} صورة غير مستخدمة بنجاح.`, 'success', 5000);
-        ui.showBrowserNotification('تنظيف الصور', {
-            body: `تم حذف ${deletedCount} صورة غير مستخدمة بنجاح.`,
-            icon: 'assets/success-icon.png'
-        });
+
     } catch (error) {
         ui.showStatus(`حدث خطأ: ${error.message}`, 'error', 5000);
-        ui.showBrowserNotification('خطأ في التنظيف', {
-            body: `حدث خطأ أثناء تنظيف الصور: ${error.message}`,
-            icon: 'assets/error-icon.png'
-        });
     }
 }
 
@@ -140,15 +121,18 @@ async function handleImageCleanup() {
 function setupEventListeners() {
     const elements = ui.getDOMElements();
     let quantityInterval = null;
+
     // Header Controls
     elements.themeToggleBtn.addEventListener('click', () => ui.setTheme(document.body.classList.contains('theme-light') ? 'dark' : 'light'));
     elements.addItemBtn.addEventListener('click', () => ui.openItemModal());
     elements.syncSettingsBtn.addEventListener('click', ui.populateSyncModal);
+    
     elements.currencyToggleBtn.addEventListener('click', () => {
         appState.activeCurrency = appState.activeCurrency === 'IQD' ? 'USD' : 'IQD';
         localStorage.setItem('inventoryAppCurrency', appState.activeCurrency);
         ui.updateCurrencyDisplay();
     });
+
     // Main Grid Interaction
     elements.inventoryGrid.addEventListener('click', (e) => {
         const button = e.target.closest('.card-details-btn');
@@ -157,8 +141,10 @@ function setupEventListeners() {
             if (card) ui.openDetailsModal(card.dataset.id);
         }
     });
+
     // Details Modal
     elements.closeDetailsModalBtn.addEventListener('click', () => elements.detailsModal.close());
+    
     // --- NEW: Press and Hold Logic for Quantity Buttons ---
     const stopQuantityChange = () => {
         if (quantityInterval) {
@@ -167,6 +153,7 @@ function setupEventListeners() {
             api.saveToGitHub(); // Save the final result only once
         }
     };
+
     const startQuantityChange = (action) => {
         action(); // Perform action once immediately
         quantityInterval = setInterval(action, 100); // Then repeat every 100ms
@@ -183,6 +170,7 @@ function setupEventListeners() {
             }
         });
     });
+
     // Decrease Button Events
     elements.detailsDecreaseBtn.addEventListener('mousedown', () => {
         startQuantityChange(() => {
@@ -196,11 +184,13 @@ function setupEventListeners() {
             }
         });
     });
+
     // Universal release events to stop the interval
     ['mouseup', 'mouseleave', 'touchend'].forEach(eventType => {
         elements.detailsIncreaseBtn.addEventListener(eventType, stopQuantityChange);
         elements.detailsDecreaseBtn.addEventListener(eventType, stopQuantityChange);
     });
+
     elements.detailsEditBtn.addEventListener('click', () => {
         elements.detailsModal.close();
         ui.openItemModal(appState.currentItemId);
@@ -211,10 +201,6 @@ function setupEventListeners() {
             elements.detailsModal.close();
             ui.renderInventory();
             await api.saveToGitHub();
-            ui.showBrowserNotification('حذف منتج', {
-                body: 'تم حذف المنتج بنجاح.',
-                icon: 'assets/delete-icon.png'
-            });
         }
     });
     elements.detailsBarcodeBtn.addEventListener('click', () => ui.openBarcodeModal(appState.currentItemId));
@@ -237,6 +223,7 @@ function setupEventListeners() {
         }
         ui.renderInventory();
     });
+
     // Modals
     elements.cancelItemBtn.addEventListener('click', () => elements.itemModal.close());
     elements.itemForm.addEventListener('submit', handleFormSubmit);
@@ -253,6 +240,7 @@ function setupEventListeners() {
             reader.readAsDataURL(file);
         }
     });
+
     elements.cancelSyncBtn.addEventListener('click', () => elements.syncModal.close());
     elements.syncForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -271,18 +259,11 @@ function setupEventListeners() {
                 appState.inventory = data.inventory;
                 appState.fileSha = data.sha;
                 saveLocalInventory();
+                ui.renderInventory();
                 ui.showStatus('تمت المزامنة بنجاح!', 'success');
-                ui.showBrowserNotification('مزامنة ناجحة', {
-                    body: 'تمت مزامنة بيانات المخزون بنجاح مع GitHub.',
-                    icon: 'assets/sync-success-icon.png'
-                });
             }
         } catch(error) {
              ui.showStatus(`خطأ في المزامنة: ${error.message}`, 'error', 5000);
-             ui.showBrowserNotification('خطأ في المزامنة', {
-                body: `حدث خطأ أثناء مزامنة البيانات: ${error.message}`,
-                icon: 'assets/sync-error-icon.png'
-            });
              loadLocalInventory();
              ui.renderInventory();
         }
@@ -302,18 +283,12 @@ async function initializeApp() {
     console.log('Initializing Inventory Management App...');
     setupEventListeners();
     loadConfig();
+
     const savedTheme = localStorage.getItem('inventoryAppTheme') || 'light';
     const savedCurrency = localStorage.getItem('inventoryAppCurrency') || 'IQD';
     appState.activeCurrency = savedCurrency;
     ui.setTheme(savedTheme);
-
-    // Request notification permission on app initialization
-    const notificationPermission = await ui.requestNotificationPermission();
-    if (notificationPermission === 'denied') {
-        console.warn('تم رفض إذن الإشعارات من قبل المستخدم.');
-        ui.showStatus('تم رفض إذن الإشعارات. لن تتمكن من تلقي إشعارات المتصفح.', 'error', 7000);
-    }
-
+    
     if (appState.syncConfig) {
         ui.showStatus('جاري مزامنة البيانات...', 'syncing');
         try {
@@ -323,17 +298,9 @@ async function initializeApp() {
                 appState.fileSha = data.sha;
                 saveLocalInventory();
                 ui.showStatus('تمت المزامنة بنجاح!', 'success');
-                ui.showBrowserNotification('مزامنة ناجحة', {
-                    body: 'تم تحميل بيانات المخزون من GitHub بنجاح.',
-                    icon: 'assets/sync-success-icon.png'
-                });
             }
         } catch(error) {
             ui.showStatus(`خطأ في المزامنة: ${error.message}`, 'error', 5000);
-            ui.showBrowserNotification('خطأ في المزامنة', {
-                body: `حدث خطأ أثناء المزامنة الأولية: ${error.message}`,
-                icon: 'assets/sync-error-icon.png'
-            });
             loadLocalInventory();
         }
     } else {
