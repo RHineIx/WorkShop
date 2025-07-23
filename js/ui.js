@@ -72,6 +72,10 @@ const elements = {
     barcodeSvg: document.getElementById('barcode-svg'),
     downloadBarcodeBtn: document.getElementById('download-barcode-btn'),
     closeBarcodeBtn: document.getElementById('close-barcode-btn'),
+    //search bar
+    searchContainer: document.getElementById('search-container'),
+    categoryFilterBtn: document.getElementById('category-filter-btn'),
+    categoryFilterDropdown: document.getElementById('category-filter-dropdown'),
 };
 
 /**
