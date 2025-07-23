@@ -803,3 +803,78 @@ color: white;
 #sync-form p a:hover {
     text-decoration: underline;
 }
+
+/* --- Search & Category Filter --- */
+.search-container {
+    position: relative;
+    width: 100%; /* Take full width on mobile */
+}
+
+@media (min-width: 640px) {
+    .search-container {
+        width: 350px; /* Specific width on larger screens */
+    }
+}
+
+#search-bar {
+    /* Add padding to make space for the icon button inside */
+    padding-left: 48px; 
+}
+
+.category-filter-toggle-btn {
+    position: absolute;
+    left: 8px; /* Position button on the left for RTL */
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    background-color: transparent;
+    border-radius: var(--border-radius-sm);
+}
+
+.category-filter-toggle-btn:hover {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    transform: translateY(-50%) scale(1.1); /* Add a subtle hover effect */
+    box-shadow: none;
+}
+
+.category-dropdown {
+    display: none; /* Hidden by default */
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 100%;
+    background-color: var(--surface-color);
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-strong);
+    z-index: 200;
+    max-height: 250px;
+    overflow-y: auto;
+    padding: var(--spacing-sm);
+}
+
+.category-dropdown.show {
+    display: block; /* Show the dropdown */
+}
+
+.category-item {
+    padding: 10px 12px;
+    cursor: pointer;
+    border-radius: var(--border-radius-sm);
+    font-weight: 500;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.2s ease;
+}
+
+.category-item:hover {
+    background-color: var(--bg-color);
+}
+
+.category-item.active {
+    background-color: var(--accent-color);
+    color: white;
+    font-weight: 700;
+}
