@@ -9,6 +9,12 @@ export const appState = {
     /** * @type {Array<Object>} The main list of all inventory items. */
     inventory: [],
 
+    /** @type {'inventory' | 'dashboard'} The currently active view. */
+    currentView: 'inventory',
+
+    /** @type {'today' | 'week' | 'month'} The time period for the dashboard. */
+    dashboardPeriod: 'today',
+
     /** @type {Array<Object>} A new list to store sales records. */
     sales: [],
 
