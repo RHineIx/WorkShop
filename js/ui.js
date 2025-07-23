@@ -5,6 +5,15 @@ import { sanitizeHTML, generateUniqueSKU } from './utils.js';
 
 // Get all DOM elements once to be used throughout this module
 const elements = {
+       
+    inventoryToggleBtn: document.getElementById('inventory-toggle-btn'),
+    dashboardToggleBtn: document.getElementById('dashboard-toggle-btn'),
+    inventoryViewContainer: document.getElementById('inventory-view-container'),
+    dashboardViewContainer: document.getElementById('dashboard-view-container'),
+    timeFilterControls: document.getElementById('time-filter-controls'),
+    totalSalesStat: document.getElementById('total-sales-stat'),
+    totalProfitStat: document.getElementById('total-profit-stat'),
+    bestsellersList: document.getElementById('bestsellers-list'),
     // Main Layout
     inventoryGrid: document.getElementById('inventory-grid'),
     searchBar: document.getElementById('search-bar'),
