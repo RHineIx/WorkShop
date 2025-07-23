@@ -82,6 +82,11 @@
     }
 }
 
+/* --- View Toggling --- */
+.view-hidden {
+    display: none;
+}
+
 @media (min-width: 1024px) {
     .inventory-grid {
         grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
