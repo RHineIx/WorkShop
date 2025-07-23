@@ -12,6 +12,9 @@ const elements = {
     totalItemsStat: document.getElementById('total-items-stat'),
     lowStockStat: document.getElementById('low-stock-stat'),
     statusIndicator: document.getElementById('status-indicator'),
+    searchContainer: document.getElementById('search-container'),
+    categoryFilterBtn: document.getElementById('category-filter-btn'),
+    categoryFilterDropdown: document.getElementById('category-filter-dropdown'),
     
     // Header
     themeToggleBtn: document.getElementById('theme-toggle-btn'),
@@ -48,7 +51,6 @@ const elements = {
     imagePreview: document.getElementById('image-preview'),
     imagePlaceholder: document.getElementById('image-placeholder'),
     regenerateSkuBtn: document.getElementById('regenerate-sku-btn'),
-    itemSupplier: document.getElementById('item-supplier'),
 
     // Sale Modal
     saleModal: document.getElementById('sale-modal'),
@@ -65,17 +67,13 @@ const elements = {
     githubRepoInput: document.getElementById('github-repo'),
     githubPatInput: document.getElementById('github-pat'),
     cleanupImagesBtn: document.getElementById('cleanup-images-btn'),
-    
+     
     // Barcode Modal
     barcodeModal: document.getElementById('barcode-modal'),
     barcodeItemName: document.getElementById('barcode-item-name'),
     barcodeSvg: document.getElementById('barcode-svg'),
     downloadBarcodeBtn: document.getElementById('download-barcode-btn'),
     closeBarcodeBtn: document.getElementById('close-barcode-btn'),
-    //search bar
-    searchContainer: document.getElementById('search-container'),
-    categoryFilterBtn: document.getElementById('category-filter-btn'),
-    categoryFilterDropdown: document.getElementById('category-filter-dropdown'),
 };
 
 /**
@@ -84,6 +82,36 @@ const elements = {
  */
 export function getDOMElements() {
     return elements;
+}
+
+/**
+ * Renders the category filter dropdown based on available categories in the inventory.
+ */
+export function renderCategoryFilter() {
+    const categories = [...new Set(appState.inventory.map(item => item.category).filter(Boolean))];
+    elements.categoryFilterDropdown.innerHTML = ''; // Clear previous items
+
+    // Add 'Show All' option
+    const allItem = document.createElement('div');
+    allItem.className = 'category-item';
+    allItem.textContent = 'عرض الكل';
+    allItem.dataset.category = 'all';
+    if (appState.selectedCategory === 'all') {
+        allItem.classList.add('active');
+    }
+    elements.categoryFilterDropdown.appendChild(allItem);
+
+    // Add each unique category
+    categories.forEach(category => {
+        const categoryItem = document.createElement('div');
+        categoryItem.className = 'category-item';
+        categoryItem.textContent = sanitizeHTML(category);
+        categoryItem.dataset.category = category;
+        if (appState.selectedCategory === category) {
+            categoryItem.classList.add('active');
+        }
+        elements.categoryFilterDropdown.appendChild(categoryItem);
+    });
 }
 
 /**
@@ -108,27 +136,27 @@ export const renderInventory = () => {
 
     // --- FILTERING LOGIC ---
     // 1. Filter by Low Stock Alert (if active)
-    [cite_start]if (appState.activeFilter === 'low_stock') { [cite: 324, 345]
-        [cite_start]filteredInventory = filteredInventory.filter(item => item.quantity <= item.alertLevel); [cite: 345]
+    if (appState.activeFilter === 'low_stock') {
+        filteredInventory = filteredInventory.filter(item => item.quantity <= item.alertLevel);
     }
-
-    // 2. NEW: Filter by selected category
+    
+    // 2. Filter by selected category
     if (appState.selectedCategory && appState.selectedCategory !== 'all') {
         filteredInventory = filteredInventory.filter(item => item.category === appState.selectedCategory);
     }
 
     // 3. Filter by search term
-    [cite_start]if (appState.searchTerm) { [cite: 325, 346]
-        [cite_start]const lowerCaseSearch = appState.searchTerm.toLowerCase(); [cite: 346]
+    if (appState.searchTerm) {
+        const lowerCaseSearch = appState.searchTerm.toLowerCase();
         filteredInventory = filteredInventory.filter(item =>
             item.name.toLowerCase().includes(lowerCaseSearch) ||
             (item.sku && item.sku.toLowerCase().includes(lowerCaseSearch))
-        [cite_start]); [cite: 347]
+        );
     }
 
     // --- RENDERING LOGIC ---
     if (filteredInventory.length === 0) {
-        [cite_start]elements.inventoryGrid.innerHTML = '<p class="empty-state">لا توجد منتجات تطابق بحثك...</p>'; [cite: 348]
+        elements.inventoryGrid.innerHTML = '<p class="empty-state">لا توجد منتجات تطابق بحثك...</p>';
     } else {
         filteredInventory.forEach(item => {
             const card = document.createElement('div');
@@ -162,6 +190,7 @@ export const renderInventory = () => {
                     </div>
                 </div>`;
             elements.inventoryGrid.appendChild(card);
+            
             if (item.imagePath) {
                 const imgElement = card.querySelector('.card-image');
                 fetchImageWithAuth(item.imagePath).then(blobUrl => {
@@ -204,36 +233,6 @@ export const updateCurrencyDisplay = () => {
 };
 
 // --- MODAL UI FUNCTIONS ---
-
-/**
- * Renders the category filter dropdown based on available categories in the inventory.
- */
-export function renderCategoryFilter() {
-    const categories = [...new Set(appState.inventory.map(item => item.category).filter(Boolean))];
-    elements.categoryFilterDropdown.innerHTML = ''; // Clear previous items
-
-    // Add 'Show All' option
-    const allItem = document.createElement('div');
-    allItem.className = 'category-item';
-    allItem.textContent = 'عرض الكل';
-    allItem.dataset.category = 'all';
-    if (appState.selectedCategory === 'all') {
-        allItem.classList.add('active');
-    }
-    elements.categoryFilterDropdown.appendChild(allItem);
-
-    // Add each unique category
-    categories.forEach(category => {
-        const categoryItem = document.createElement('div');
-        categoryItem.className = 'category-item';
-        categoryItem.textContent = sanitizeHTML(category);
-        categoryItem.dataset.category = category;
-        if (appState.selectedCategory === category) {
-            categoryItem.classList.add('active');
-        }
-        elements.categoryFilterDropdown.appendChild(categoryItem);
-    });
-}
 
 /**
  * Populates and opens the details modal for a given item.
@@ -323,7 +322,6 @@ export const openSaleModal = (itemId) => {
     elements.saleForm.reset();
     elements.saleItemIdInput.value = item.id;
     elements.saleItemName.textContent = item.name;
-    
     // Set date to today in YYYY-MM-DD format
     const today = new Date();
     const year = today.getFullYear();
@@ -333,8 +331,6 @@ export const openSaleModal = (itemId) => {
 
     elements.saleModal.showModal();
 };
-
-
 
 /**
  * Opens the barcode modal and generates a barcode for the given item.
