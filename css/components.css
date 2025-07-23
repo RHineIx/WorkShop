@@ -295,7 +295,19 @@ input:read-only {
     cursor: not-allowed;
     opacity: 0.8;
 }
+/* --- Hide number input spinners for a cleaner look --- */
+/* For Chrome, Safari, Edge, Opera */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
 
+/* For Firefox */
+input[type=number] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
 /* --- Buttons --- */
 .modal-actions {
     margin-top: var(--spacing-lg);
@@ -363,7 +375,18 @@ input:read-only {
 .sell-btn:hover {
     background-color: var(--accent-color-hover);
 }
-
+/* Utility class to hide elements visually but keep them accessible */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
 /* Secondary action button on the card (Details) */
 .details-btn {
     background-color: var(--surface-color);
@@ -656,28 +679,26 @@ input:read-only {
     font-size: 50px;
 }
 
-#item-image-upload {
-    font-size: 14px;
-    width: 100%;
-    margin-top: var(--spacing-sm);
-}
-
-#item-image-upload::file-selector-button {
-    font-family: var(--font-family);
-    padding: var(--spacing-sm) 12px;
-    border-radius: var(--border-radius-sm);
-    border: 1px solid var(--border-color);
+/* New styles for the custom button */
+.custom-file-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
     background-color: var(--surface-color);
-    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-secondary);
     cursor: pointer;
-    transition: background-color var(--transition-speed);
-    margin-inline-end: var(--spacing-sm);
+    font-weight: 500;
+    transition: all var(--transition-speed) ease;
 }
 
-#item-image-upload::file-selector-button:hover {
+.custom-file-upload-btn:hover {
     background-color: var(--bg-color);
+    color: var(--text-primary);
+    border-color: var(--accent-color);
 }
-
 /* --- Barcode Modal --- */
 #barcode-modal {
     max-width: 320px;

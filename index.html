@@ -113,7 +113,7 @@
             </div>
             <div class="details-actions">
                 <button id="details-edit-btn" class="action-btn-details"><span class="material-symbols-outlined">edit</span> تعديل</button>
-                <button id="details-barcode-btn" class="action-btn-details"><span class="material-symbols-outlined">barcode</span> باركود</button>
+                <button id="details-barcode-btn" class="action-btn-details"><span class="material-symbols-outlined">qr_code_2</span> باركود</button>
                 <button id="details-delete-btn" class="action-btn-details danger"><span class="material-symbols-outlined">delete</span> حذف</button>
             </div>
         </div>
@@ -123,20 +123,22 @@
         <form id="item-form">
             <h3 id="modal-title">إضافة منتج جديد</h3>
             <input type="hidden" id="item-id">
+
             <div class="image-upload-container">
-                <label>صورة المنتج</label>
                 <div class="image-preview-wrapper">
                     <img id="image-preview" src="#" alt="معاينة الصورة" class="image-preview-hidden">
-                    <div id="image-placeholder" class="item-image">
-                        <span class="material-symbols-outlined">key</span>
-                    </div>
+                    <div id="image-placeholder"><span class="material-symbols-outlined">key</span></div>
                 </div>
-                <input type="file" id="item-image-upload" accept="image/*">
+                <input type="file" id="item-image-upload" accept="image/*" class="visually-hidden">
+                <label for="item-image-upload" class="custom-file-upload-btn">
+                    <span class="material-symbols-outlined">upload_file</span>
+                    <span>اختر صورة</span>
+                </label>
             </div>
 
             <label for="item-sku">SKU (رقم المنتج - يستخدم للباركود)</label>
             <div class="sku-container">
-                <input type="text" id="item-sku" required readonly>
+                <input type="text" id="item-sku" required>
                 <button type="button" id="regenerate-sku-btn" class="icon-btn" title="توليد SKU جديد" aria-label="توليد SKU جديد">
                     <span class="material-symbols-outlined">refresh</span>
                 </button>
