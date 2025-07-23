@@ -1,13 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="166" height="32" viewBox="0 0 166 32" fill="none">
-  <!-- الخلفية الكاملة -->
+  <title>Open in GitIngest Button</title>
   <rect x="0" y="0" width="166" height="32" rx="6" fill="#0F1418"/>
   
-  <!-- القسم الأخضر على اليسار -->
   <rect x="0" y="0" width="32" height="32" rx="6" fill="#4CD489"/>
 
-  <!-- الأيقونة داخل القسم الأخضر -->
-  <image x="6" y="6" width="20" height="20" href="https://getumbrel.github.io/umbrel-apps-gallery/gitingest/icon.svg" />
+  <image x="6" y="6" width="20" height="20" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2Utd2lkdGg9IjEuNSIgY29sb3I9IiNmZmZmZmYiPjxwYXRoIGQ9Ik0xMi4zNTMgMTNMMTQgMTUuNW0wIDBsMS42NDcgMi41TTE0IDE1LjVsMS42NDctMi41TTE0IDE1LjVMMTIuMzUzIDE4bTUuMzUzLTVoMS42NDdtMCAwSDIxbS0xLjY0NyAwdjVNNyAxM2gxLjY0N20wIDBoMS42NDdtLTEuNjQ3IDB2NU0xNSAyMmgtNC4yNzNjLTMuMjYgMC00Ljg5MiAwLTYuMDI0LS43OThhNC4xIDQuMSAwIDAgMS0uODU1LS44MDVDMyAxOS4zMzEgMyAxNy43OTcgMyAxNC43Mjd2LTIuNTQ1YzAtMi45NjMgMC00LjQ0NS40NjktNS42MjhjLjc1NC0xLjkwMyAyLjM0OC0zLjQwMyA0LjM3LTQuMTEzQzkuMDk1IDIgMTAuNjY4IDIgMTMuODE4IDJjMS43OTggMCAyLjY5OCAwIDMuNDE2LjI1MmMxLjE1NS40MDYgMi4wNjYgMS4yNjMgMi40OTcgMi4zNUMyMCA1LjI3OCAyMCA2LjEyNSAyMCA3LjgxOFYxMCIvPjxwYXRoIGQ9Ik0zIDEyYTMuMzMzIDMuMzMzIDAgMCAxIDMuMzMzLTMuMzMzYy42NjYgMCAxLjQ1MS4xMTYgMi4wOTgtLjA1N0ExLjY3IDEuNjcgMCAwIDAgOS42MSA3LjQzYy4xNzMtLjY0Ny4wNTctMS40MzIuMDU3LTIuMDk4QTMuMzMzIDMuMzMzIDAgMCAxIDEzIDIiLz48L2c+PC9zdmc+" />
 
-  <!-- النص -->
   <text x="42" y="21" fill="white" font-size="13" font-family="Segoe UI, sans-serif">Open in GitIngest</text>
 </svg>
