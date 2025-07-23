@@ -18,6 +18,9 @@ export const appState = {
     /** @type {string} The current search term entered by the user. */
     searchTerm: '',
 
+    /** @type {string} The currently selected category for filtering. 'all' means no filter. */
+    selectedCategory: 'all',
+
     /** @type {string|null} The ID of the item currently being viewed in the details modal. */
     currentItemId: null,
     
