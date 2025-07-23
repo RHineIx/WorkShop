@@ -6,10 +6,11 @@
  * We export it so other modules can import and use it as the single source of truth.
  */
 export const appState = {
-    /** * @type {Array<Object>} The main list of all inventory items.
-     * Each item now has: costPriceIqd, sellPriceIqd, costPriceUsd, sellPriceUsd.
-     */
+    /** * @type {Array<Object>} The main list of all inventory items. */
     inventory: [],
+
+    /** @type {Array<Object>} A new list to store sales records. */
+    sales: [],
 
     /** @type {'all' | 'low_stock'} The currently active filter for the inventory grid. */
     activeFilter: 'all',
@@ -28,6 +29,9 @@ export const appState = {
 
     /** @type {string|null} The SHA hash of the inventory.json file, required for updates. */
     fileSha: null,
+
+    /** @type {string|null} The SHA hash of the new sales.json file. */
+    salesFileSha: null,
 
     /** @type {boolean} A flag to prevent multiple concurrent sync operations. */
     isSyncing: false,

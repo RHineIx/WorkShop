@@ -17,15 +17,20 @@ function saveConfig() {
     localStorage.setItem('inventoryAppSyncConfig', JSON.stringify(appState.syncConfig));
 }
 
-function loadLocalInventory() {
-    const saved = localStorage.getItem('inventoryAppData');
-    if (saved) {
-        appState.inventory = JSON.parse(saved);
+function loadLocalData() {
+    const savedInventory = localStorage.getItem('inventoryAppData');
+    if (savedInventory) {
+        appState.inventory = JSON.parse(savedInventory);
+    }
+    const savedSales = localStorage.getItem('salesAppData');
+    if(savedSales) {
+        appState.sales = JSON.parse(savedSales);
     }
 }
 
-function saveLocalInventory() {
+function saveLocalData() {
     localStorage.setItem('inventoryAppData', JSON.stringify(appState.inventory));
+    localStorage.setItem('salesAppData', JSON.stringify(appState.sales));
 }
 
 
@@ -80,6 +85,7 @@ async function handleFormSubmit(e) {
         ui.showStatus(`فشل الحفظ: ${error.message}`, 'error', 5000);
     } finally {
         saveButton.disabled = false;
+        appState.selectedImageFile = null;
     }
 }
 
@@ -94,7 +100,6 @@ async function handleImageCleanup() {
     ui.showStatus('جاري البحث عن الصور غير المستخدمة...', 'syncing');
     try {
         const allRepoImages = await api.getGitHubDirectoryListing('images');
-        
         const usedImages = new Set(appState.inventory.map(item => item.imagePath).filter(Boolean));
         const orphanedImages = allRepoImages.filter(repoImage => !usedImages.has(repoImage.path));
         
@@ -110,7 +115,6 @@ async function handleImageCleanup() {
             deletedCount++;
         }
         ui.showStatus(`تم حذف ${deletedCount} صورة غير مستخدمة بنجاح.`, 'success', 5000);
-
     } catch (error) {
         ui.showStatus(`حدث خطأ: ${error.message}`, 'error', 5000);
     }
@@ -126,7 +130,6 @@ function setupEventListeners() {
     elements.themeToggleBtn.addEventListener('click', () => ui.setTheme(document.body.classList.contains('theme-light') ? 'dark' : 'light'));
     elements.addItemBtn.addEventListener('click', () => ui.openItemModal());
     elements.syncSettingsBtn.addEventListener('click', ui.populateSyncModal);
-    
     elements.currencyToggleBtn.addEventListener('click', () => {
         appState.activeCurrency = appState.activeCurrency === 'IQD' ? 'USD' : 'IQD';
         localStorage.setItem('inventoryAppCurrency', appState.activeCurrency);
@@ -134,32 +137,75 @@ function setupEventListeners() {
     });
 
     // Main Grid Interaction
-    elements.inventoryGrid.addEventListener('click', (e) => {
-        const button = e.target.closest('.card-details-btn');
-        if (button) {
-            const card = e.target.closest('.product-card');
-            if (card) ui.openDetailsModal(card.dataset.id);
+    elements.inventoryGrid.addEventListener('click', async (e) => {
+        const detailsBtn = e.target.closest('.details-btn');
+        const sellBtn = e.target.closest('.sell-btn');
+        const card = e.target.closest('.product-card');
+
+        if (!card) return;
+        const itemId = card.dataset.id;
+        const item = appState.inventory.find(i => i.id === itemId);
+        if (!item) return;
+
+        if (detailsBtn) {
+            ui.openDetailsModal(itemId);
+        }
+
+        if (sellBtn) {
+            if (item.quantity > 0) {
+                // 1. Decrease quantity
+                item.quantity--;
+
+                // 2. Create a sales record
+                const saleRecord = {
+                    saleId: `sale_${Date.now()}`,
+                    itemId: item.id,
+                    itemName: item.name,
+                    quantitySold: 1,
+                    sellPriceIqd: item.sellPriceIqd || 0,
+                    costPriceIqd: item.costPriceIqd || 0,
+                    sellPriceUsd: item.sellPriceUsd || 0,
+                    costPriceUsd: item.costPriceUsd || 0,
+                    timestamp: new Date().toISOString()
+                };
+                appState.sales.push(saleRecord);
+
+                // 3. Save both inventory and sales data
+                ui.showStatus('جاري تسجيل البيع...', 'syncing');
+                try {
+                    await Promise.all([
+                        api.saveToGitHub(),
+                        api.saveSales()
+                    ]);
+                    ui.showStatus('تم تسجيل البيع بنجاح!', 'success');
+                } catch (error) {
+                    ui.showStatus(`فشل تسجيل البيع: ${error.message}`, 'error', 5000);
+                    // Revert changes if save fails
+                    item.quantity++;
+                    appState.sales.pop();
+                }
+
+                // 4. Update the UI
+                ui.renderInventory();
+            } else {
+                ui.showStatus('لا يمكن بيع المنتج، الكمية صفر.', 'error');
+            }
         }
     });
 
     // Details Modal
     elements.closeDetailsModalBtn.addEventListener('click', () => elements.detailsModal.close());
-    
-    // --- NEW: Press and Hold Logic for Quantity Buttons ---
     const stopQuantityChange = () => {
         if (quantityInterval) {
             clearInterval(quantityInterval);
             quantityInterval = null;
-            api.saveToGitHub(); // Save the final result only once
+            api.saveToGitHub();
         }
     };
-
     const startQuantityChange = (action) => {
-        action(); // Perform action once immediately
-        quantityInterval = setInterval(action, 100); // Then repeat every 100ms
+        action();
+        quantityInterval = setInterval(action, 100);
     };
-
-    // Increase Button Events
     elements.detailsIncreaseBtn.addEventListener('mousedown', () => {
         startQuantityChange(() => {
             const item = appState.inventory.find(i => i.id === appState.currentItemId);
@@ -170,8 +216,6 @@ function setupEventListeners() {
             }
         });
     });
-
-    // Decrease Button Events
     elements.detailsDecreaseBtn.addEventListener('mousedown', () => {
         startQuantityChange(() => {
             const item = appState.inventory.find(i => i.id === appState.currentItemId);
@@ -180,17 +224,14 @@ function setupEventListeners() {
                 elements.detailsQuantityValue.textContent = item.quantity;
                 ui.renderInventory();
             } else {
-                stopQuantityChange(); // Stop if quantity reaches 0
+                stopQuantityChange();
             }
         });
     });
-
-    // Universal release events to stop the interval
     ['mouseup', 'mouseleave', 'touchend'].forEach(eventType => {
         elements.detailsIncreaseBtn.addEventListener(eventType, stopQuantityChange);
         elements.detailsDecreaseBtn.addEventListener(eventType, stopQuantityChange);
     });
-
     elements.detailsEditBtn.addEventListener('click', () => {
         elements.detailsModal.close();
         ui.openItemModal(appState.currentItemId);
@@ -240,7 +281,6 @@ function setupEventListeners() {
             reader.readAsDataURL(file);
         }
     });
-
     elements.cancelSyncBtn.addEventListener('click', () => elements.syncModal.close());
     elements.syncForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -251,22 +291,7 @@ function setupEventListeners() {
         };
         saveConfig();
         elements.syncModal.close();
-        
-        ui.showStatus('جاري مزامنة البيانات...', 'syncing');
-        try {
-            const data = await api.fetchFromGitHub();
-            if (data) {
-                appState.inventory = data.inventory;
-                appState.fileSha = data.sha;
-                saveLocalInventory();
-                ui.renderInventory();
-                ui.showStatus('تمت المزامنة بنجاح!', 'success');
-            }
-        } catch(error) {
-             ui.showStatus(`خطأ في المزامنة: ${error.message}`, 'error', 5000);
-             loadLocalInventory();
-             ui.renderInventory();
-        }
+        await initializeApp();
     });
 
     elements.closeBarcodeBtn.addEventListener('click', () => elements.barcodeModal.close());
@@ -283,7 +308,6 @@ async function initializeApp() {
     console.log('Initializing Inventory Management App...');
     setupEventListeners();
     loadConfig();
-
     const savedTheme = localStorage.getItem('inventoryAppTheme') || 'light';
     const savedCurrency = localStorage.getItem('inventoryAppCurrency') || 'IQD';
     appState.activeCurrency = savedCurrency;
@@ -292,24 +316,30 @@ async function initializeApp() {
     if (appState.syncConfig) {
         ui.showStatus('جاري مزامنة البيانات...', 'syncing');
         try {
-            const data = await api.fetchFromGitHub();
-            if (data) {
-                appState.inventory = data.inventory;
-                appState.fileSha = data.sha;
-                saveLocalInventory();
-                ui.showStatus('تمت المزامنة بنجاح!', 'success');
+            const [inventoryResult, salesResult] = await Promise.all([
+                api.fetchFromGitHub(),
+                api.fetchSales()
+            ]);
+
+            if (inventoryResult) {
+                appState.inventory = inventoryResult.data;
+                appState.fileSha = inventoryResult.sha;
             }
+            if (salesResult) {
+                appState.sales = salesResult.data;
+                appState.salesFileSha = salesResult.sha;
+            }
+            saveLocalData();
+            ui.showStatus('تمت المزامنة بنجاح!', 'success');
         } catch(error) {
             ui.showStatus(`خطأ في المزامنة: ${error.message}`, 'error', 5000);
-            loadLocalInventory();
+            loadLocalData();
         }
     } else {
-        loadLocalInventory();
+        loadLocalData();
     }
     
-    // Initial UI setup
     ui.updateCurrencyDisplay();
-    ui.renderInventory();
     console.log('App Initialized Successfully.');
 }
 

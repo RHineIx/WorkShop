@@ -41,7 +41,6 @@ const toBase64 = file => new Promise((resolve, reject) => {
 
 /**
  * Fetches an image from the GitHub repo and returns a local Blob URL.
- * Caches the result to avoid redundant fetches.
  * @param {string} path The full path to the image file in the repo.
  * @returns {Promise<string|null>} A promise that resolves with the Blob URL or null on failure.
  */
@@ -92,7 +91,7 @@ export const uploadImageToGitHub = async (file) => {
 
 /**
  * Fetches the main inventory.json file from the repo.
- * @returns {Promise<{inventory: Array<Object>, sha: string}>} A promise that resolves with the inventory data and file SHA.
+ * @returns {Promise<{data: Array<Object>, sha: string}>} A promise that resolves with the inventory data and file SHA.
  * @throws {Error} If the fetch fails for reasons other than 404.
  */
 export const fetchFromGitHub = async () => {
@@ -103,19 +102,18 @@ export const fetchFromGitHub = async () => {
     const response = await fetch(apiUrl, { headers: { 'Authorization': `token ${pat}` } });
     if (response.status === 404) {
         console.log('inventory.json not found. A new one will be created on save.');
-        return { inventory: [], sha: null };
+        return { data: [], sha: null };
     }
     if (!response.ok) {
-        throw new Error(`Failed to fetch data: ${response.statusText}`);
+        throw new Error(`Failed to fetch inventory data: ${response.statusText}`);
     }
     const data = await response.json();
     const decodedContent = decodeURIComponent(escape(window.atob(data.content)));
-    return { inventory: JSON.parse(decodedContent), sha: data.sha };
+    return { data: JSON.parse(decodedContent), sha: data.sha };
 };
 
 /**
  * Saves the current appState.inventory to the inventory.json file in the repo.
- * This function handles both creating and updating the file.
  * @returns {Promise<void>}
  * @throws {Error} If the save operation fails.
  */
@@ -137,9 +135,63 @@ export const saveToGitHub = async () => {
             headers: { 'Authorization': `token ${pat}` },
             body: JSON.stringify(body)
         });
-        if (!response.ok) throw new Error(`Failed to save: ${response.statusText}`);
+        if (!response.ok) throw new Error(`Failed to save inventory: ${response.statusText}`);
         const data = await response.json();
         appState.fileSha = data.content.sha;
+    } finally {
+        appState.isSyncing = false;
+    }
+};
+
+/**
+ * NEW: Fetches the sales.json file from the repo.
+ * @returns {Promise<{data: Array<Object>, sha: string}>} A promise that resolves with the sales data and file SHA.
+ * @throws {Error} If the fetch fails for reasons other than 404.
+ */
+export const fetchSales = async () => {
+    if (!appState.syncConfig) return null;
+    const { username, repo, pat } = appState.syncConfig;
+    const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/sales.json`;
+
+    const response = await fetch(apiUrl, { headers: { 'Authorization': `token ${pat}` } });
+    if (response.status === 404) {
+        console.log('sales.json not found. A new one will be created on save.');
+        return { data: [], sha: null };
+    }
+    if (!response.ok) {
+        throw new Error(`Failed to fetch sales data: ${response.statusText}`);
+    }
+    const data = await response.json();
+    const decodedContent = decodeURIComponent(escape(window.atob(data.content)));
+    return { data: JSON.parse(decodedContent), sha: data.sha };
+};
+
+/**
+ * NEW: Saves the current appState.sales to the sales.json file in the repo.
+ * @returns {Promise<void>}
+ * @throws {Error} If the save operation fails.
+ */
+export const saveSales = async () => {
+    if (!appState.syncConfig || appState.isSyncing) return;
+    appState.isSyncing = true;
+    
+    try {
+        const { username, repo, pat } = appState.syncConfig;
+        const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/sales.json`;
+        const content = btoa(unescape(encodeURIComponent(JSON.stringify(appState.sales, null, 2))));
+        const body = {
+            message: `Update sales data - ${new Date().toISOString()}`,
+            content: content,
+            sha: appState.salesFileSha,
+        };
+        const response = await fetch(apiUrl, {
+            method: 'PUT',
+            headers: { 'Authorization': `token ${pat}` },
+            body: JSON.stringify(body)
+        });
+        if (!response.ok) throw new Error(`Failed to save sales: ${response.statusText}`);
+        const data = await response.json();
+        appState.salesFileSha = data.content.sha;
     } finally {
         appState.isSyncing = false;
     }

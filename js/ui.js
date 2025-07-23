@@ -33,7 +33,6 @@ const elements = {
     detailsEditBtn: document.getElementById('details-edit-btn'),
     detailsBarcodeBtn: document.getElementById('details-barcode-btn'),
     detailsDeleteBtn: document.getElementById('details-delete-btn'),
-    // New Price Elements
     detailsCostIqd: document.getElementById('details-cost-iqd'),
     detailsSellIqd: document.getElementById('details-sell-iqd'),
     detailsCostUsd: document.getElementById('details-cost-usd'),
@@ -49,6 +48,7 @@ const elements = {
     imagePreview: document.getElementById('image-preview'),
     imagePlaceholder: document.getElementById('image-placeholder'),
     regenerateSkuBtn: document.getElementById('regenerate-sku-btn'),
+    itemSupplier: document.getElementById('item-supplier'),
 
     // Sync Modal
     syncModal: document.getElementById('sync-modal'),
@@ -97,7 +97,6 @@ export const showStatus = (message, type, duration = 3000) => {
 export const renderInventory = () => {
     elements.inventoryGrid.innerHTML = '';
     let filteredInventory = [...appState.inventory];
-
     if (appState.activeFilter === 'low_stock') {
         filteredInventory = filteredInventory.filter(item => item.quantity <= item.alertLevel);
     }
@@ -133,7 +132,15 @@ export const renderInventory = () => {
                     <div class="card-name">${sanitizeHTML(item.name)}</div>
                     <div class="card-footer">
                         <div class="card-price">${sanitizeHTML(String(price))} ${symbol}</div>
-                        <button class="card-details-btn" aria-label="عرض التفاصيل">+</button>
+                        
+                        <div class="card-actions">
+                            <button class="icon-btn sell-btn" title="بيع قطعة واحدة" aria-label="بيع قطعة واحدة">
+                                <span class="material-symbols-outlined">shopping_cart</span>
+                            </button>
+                            <button class="icon-btn details-btn" title="عرض التفاصيل" aria-label="عرض التفاصيل">
+                                <span class="material-symbols-outlined">more_vert</span>
+                            </button>
+                        </div>
                     </div>
                 </div>`;
             elements.inventoryGrid.appendChild(card);
@@ -183,7 +190,6 @@ export const updateCurrencyDisplay = () => {
 
 /**
  * Populates and opens the details modal for a given item.
- * @param {string} itemId The ID of the item to display.
  */
 export const openDetailsModal = (itemId) => {
     const item = appState.inventory.find(i => i.id === itemId);
@@ -193,8 +199,6 @@ export const openDetailsModal = (itemId) => {
     elements.detailsName.textContent = item.name;
     elements.detailsSku.textContent = `SKU: ${sanitizeHTML(item.sku || 'N/A')}`;
     elements.detailsQuantityValue.textContent = item.quantity;
-    
-    // Populate the new price grid
     elements.detailsCostIqd.textContent = `${sanitizeHTML(String(item.costPriceIqd || 0))} د.ع`;
     elements.detailsSellIqd.textContent = `${sanitizeHTML(String(item.sellPriceIqd || 0))} د.ع`;
     elements.detailsCostUsd.textContent = `$${sanitizeHTML(String(item.costPriceUsd || 0))}`;
@@ -216,8 +220,7 @@ export const openDetailsModal = (itemId) => {
 };
 
 /**
- * Opens the Add/Edit item modal. Populates it with item data if an ID is provided.
- * @param {string|null} itemId The ID of the item to edit, or null to add a new item.
+ * Opens the Add/Edit item modal.
  */
 export const openItemModal = (itemId = null) => {
     elements.itemForm.reset();
@@ -264,7 +267,6 @@ export const openItemModal = (itemId = null) => {
 
 /**
  * Opens the barcode modal and generates a barcode for the given item.
- * @param {string} itemId The ID of the item to generate a barcode for.
  */
 export const openBarcodeModal = (itemId) => {
     const item = appState.inventory.find(i => i.id === itemId);
