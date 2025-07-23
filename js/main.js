@@ -44,7 +44,8 @@ async function handleItemFormSubmit(e) {
 
     const itemId = document.getElementById('item-id').value;
     const existingItem = appState.inventory.find(i => i.id === itemId);
-    let imagePath = existingItem ? existingItem.imagePath : null;
+    let imagePath = existingItem ?
+        existingItem.imagePath : null;
 
     try {
         if (appState.selectedImageFile) {
@@ -65,7 +66,6 @@ async function handleItemFormSubmit(e) {
             notes: document.getElementById('item-notes').value,
             imagePath: imagePath,
         };
-
         if (itemId) {
             const index = appState.inventory.findIndex(i => i.id === itemId);
             if (index !== -1) appState.inventory[index] = itemData;
@@ -74,6 +74,7 @@ async function handleItemFormSubmit(e) {
         }
         
         ui.renderInventory();
+        ui.renderCategoryFilter(); // Update categories if a new one was added
         await api.saveToGitHub();
         ui.showStatus('تم حفظ التغييرات في السحابة!', 'success');
 
@@ -98,7 +99,6 @@ async function handleSaleFormSubmit(e) {
     const saleDate = document.getElementById('sale-date').value;
     const saleNotes = document.getElementById('sale-notes').value;
     const item = appState.inventory.find(i => i.id === itemId);
-
     if (!item) {
         ui.showStatus('خطأ: المنتج غير موجود.', 'error');
         saveButton.disabled = false;
@@ -119,7 +119,6 @@ async function handleSaleFormSubmit(e) {
 
     appState.isSyncing = true;
     ui.showStatus('جاري تسجيل البيع...', 'syncing');
-
     // 1. Decrease quantity
     item.quantity--;
 
@@ -172,7 +171,6 @@ async function handleImageCleanup() {
         const allRepoImages = await api.getGitHubDirectoryListing('images');
         const usedImages = new Set(appState.inventory.map(item => item.imagePath).filter(Boolean));
         const orphanedImages = allRepoImages.filter(repoImage => !usedImages.has(repoImage.path));
-        
         if (orphanedImages.length === 0) {
             ui.showStatus('لا توجد صور غير مستخدمة ليتم حذفها.', 'success');
             return;
@@ -195,7 +193,7 @@ async function handleImageCleanup() {
 function setupEventListeners() {
     const elements = ui.getDOMElements();
     let quantityInterval = null;
-
+    
     // Header Controls
     elements.themeToggleBtn.addEventListener('click', () => ui.setTheme(document.body.classList.contains('theme-light') ? 'dark' : 'light'));
     elements.addItemBtn.addEventListener('click', () => ui.openItemModal());
@@ -223,7 +221,7 @@ function setupEventListeners() {
             ui.openSaleModal(itemId);
         }
     });
-
+    
     // Details Modal
     elements.closeDetailsModalBtn.addEventListener('click', () => elements.detailsModal.close());
     const stopQuantityChange = () => {
@@ -296,13 +294,36 @@ function setupEventListeners() {
         ui.renderInventory();
     });
 
+    // --- NEW: Category Filter Listeners ---
+    elements.categoryFilterBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent the document click listener from firing immediately
+        elements.categoryFilterDropdown.classList.toggle('show');
+    });
+
+    elements.categoryFilterDropdown.addEventListener('click', (e) => {
+        const categoryItem = e.target.closest('.category-item');
+        if (categoryItem) {
+            appState.selectedCategory = categoryItem.dataset.category;
+            ui.renderInventory();
+            ui.renderCategoryFilter(); // Re-render to update the 'active' class
+            elements.categoryFilterDropdown.classList.remove('show');
+        }
+    });
+
+    // Close dropdown if clicked outside
+    document.addEventListener('click', (e) => {
+        if (!elements.searchContainer.contains(e.target)) {
+            elements.categoryFilterDropdown.classList.remove('show');
+        }
+    });
+    // --- End of New Listeners ---
+
     // Modals
     elements.itemForm.addEventListener('submit', handleItemFormSubmit);
     elements.cancelItemBtn.addEventListener('click', () => elements.itemModal.close());
     
     elements.saleForm.addEventListener('submit', handleSaleFormSubmit);
     elements.cancelSaleBtn.addEventListener('click', () => elements.saleModal.close());
-
     elements.imageUploadInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -343,12 +364,10 @@ async function initializeApp() {
     console.log('Initializing Inventory Management App...');
     setupEventListeners();
     loadConfig();
-    
     const savedTheme = localStorage.getItem('inventoryAppTheme') || 'light';
     const savedCurrency = localStorage.getItem('inventoryAppCurrency') || 'IQD';
     appState.activeCurrency = savedCurrency;
     ui.setTheme(savedTheme);
-    
     if (appState.syncConfig) {
         ui.showStatus('جاري مزامنة البيانات...', 'syncing');
         try {
@@ -356,7 +375,6 @@ async function initializeApp() {
                 api.fetchFromGitHub(),
                 api.fetchSales()
             ]);
-
             if (inventoryResult) {
                 appState.inventory = inventoryResult.data;
                 appState.fileSha = inventoryResult.sha;
@@ -375,7 +393,8 @@ async function initializeApp() {
         loadLocalData();
     }
     
-    ui.updateCurrencyDisplay();
+    ui.renderCategoryFilter(); // Build the category list
+    ui.updateCurrencyDisplay(); // This will call renderInventory()
     console.log('App Initialized Successfully.');
 }
 
