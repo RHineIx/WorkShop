@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="166" height="32" viewBox="0 0 166 32" fill="none">
+  <!-- الخلفية الكاملة -->
+  <rect x="0" y="0" width="166" height="32" rx="6" fill="#0F1418"/>
+  
+  <!-- القسم الأخضر على اليسار -->
+  <rect x="0" y="0" width="32" height="32" rx="6" fill="#4CD489"/>
+
+  <!-- الأيقونة داخل القسم الأخضر -->
+  <image x="6" y="6" width="20" height="20" href="https://getumbrel.github.io/umbrel-apps-gallery/gitingest/icon.svg" />
+
+  <!-- النص -->
+  <text x="42" y="21" fill="white" font-size="13" font-family="Segoe UI, sans-serif">Open in GitIngest</text>
+</svg>
