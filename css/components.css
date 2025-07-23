@@ -224,6 +224,7 @@ dialog::backdrop {
 
 #item-form,
 #sync-form,
+#sale-form,
 .barcode-modal-content {
     overflow-y: auto;
     padding: var(--spacing-lg);
@@ -231,6 +232,7 @@ dialog::backdrop {
 
 #item-form h3,
 #sync-form h3,
+#sale-form h3,
 .barcode-modal-content h3 {
     margin-bottom: var(--spacing-lg);
     text-align: center;
@@ -240,7 +242,8 @@ dialog::backdrop {
 
 /* --- Forms & Inputs --- */
 #item-form label,
-#sync-form label {
+#sync-form label,
+#sale-form label {
     margin-bottom: var(--spacing-sm);
     display: block;
     font-size: 14px;
@@ -250,7 +253,9 @@ dialog::backdrop {
 
 #item-form input,
 #item-form textarea,
-#sync-form input {
+#sync-form input,
+#sale-form input,
+#sale-form textarea {
     width: 100%;
     padding: 12px;
     font-family: var(--font-family);
@@ -285,6 +290,12 @@ dialog::backdrop {
     margin-bottom: 0 !important;
 }
 
+input:read-only {
+    background-color: var(--bg-color);
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
 /* --- Buttons --- */
 .modal-actions {
     margin-top: var(--spacing-lg);
@@ -306,11 +317,11 @@ dialog::backdrop {
     gap: var(--spacing-sm);
 }
 
-.modal-actions button[type="submit"] {
+.modal-actions button.primary-action {
     background-color: var(--accent-color);
     color: white;
 }
-.modal-actions button[type="submit"]:hover {
+.modal-actions button.primary-action:hover {
     background-color: var(--accent-color-hover);
 }
 
@@ -325,23 +336,24 @@ dialog::backdrop {
 .icon-btn {
     width: 36px;
     height: 36px;
-    padding: var(--spacing-sm);
-    border: 1px solid var(--border-color);
-    border-radius: 50%; /* Make card buttons round */
+    padding: 0; /* Let flexbox center the icon */
+    border: 1px solid transparent;
+    border-radius: var(--border-radius-sm); /* Changed from round to rounded square */
     background-color: var(--surface-color);
     color: var(--text-primary);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all var(--transition-speed);
+    transition: all var(--transition-speed) ease;
 }
 
 .icon-btn:hover {
-    background-color: var(--bg-color);
-    transform: scale(1.1);
+    transform: translateY(-2px); /* Softer hover effect */
+    box-shadow: var(--shadow-strong);
 }
 
+/* Primary action button on the card (Sell) */
 .sell-btn {
     background-color: var(--accent-color);
     border-color: var(--accent-color);
@@ -352,6 +364,17 @@ dialog::backdrop {
     background-color: var(--accent-color-hover);
 }
 
+/* Secondary action button on the card (Details) */
+.details-btn {
+    background-color: var(--surface-color);
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+}
+
+.details-btn:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+}
 
 .cleanup-btn {
     width: 100%;
@@ -501,7 +524,6 @@ dialog::backdrop {
 .price-value.usd {
     color: var(--secondary-currency-color);
 }
-
 
 .details-quantity {
     display: flex;
@@ -672,6 +694,26 @@ dialog::backdrop {
     max-width: 100%;
     height: auto;
 }
+
+/* --- Sale Modal Specifics --- */
+#sale-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.sale-item-name-display {
+    display: block;
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--accent-color);
+    background-color: var(--bg-color);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-sm);
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+}
+
 
 /* --- Status Indicator --- */
 .status-indicator {

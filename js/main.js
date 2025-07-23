@@ -36,7 +36,7 @@ function saveLocalData() {
 
 // --- CORE LOGIC HANDLERS ---
 
-async function handleFormSubmit(e) {
+async function handleItemFormSubmit(e) {
     e.preventDefault();
     const saveButton = document.getElementById('save-item-btn');
     saveButton.disabled = true;
@@ -89,6 +89,69 @@ async function handleFormSubmit(e) {
     }
 }
 
+async function handleSaleFormSubmit(e) {
+    e.preventDefault();
+    const saveButton = document.getElementById('confirm-sale-btn');
+    saveButton.disabled = true;
+
+    const itemId = document.getElementById('sale-item-id').value;
+    const saleDate = document.getElementById('sale-date').value;
+    const saleNotes = document.getElementById('sale-notes').value;
+    const item = appState.inventory.find(i => i.id === itemId);
+
+    if (!item) {
+        ui.showStatus('خطأ: المنتج غير موجود.', 'error');
+        saveButton.disabled = false;
+        return;
+    }
+    
+    if (item.quantity <= 0) {
+        ui.showStatus('لا يمكن بيع المنتج، الكمية صفر.', 'error');
+        saveButton.disabled = false;
+        return;
+    }
+
+    // 1. Decrease quantity
+    item.quantity--;
+
+    // 2. Create a sales record with the new details
+    const saleRecord = {
+        saleId: `sale_${Date.now()}`,
+        itemId: item.id,
+        itemName: item.name,
+        quantitySold: 1,
+        sellPriceIqd: item.sellPriceIqd || 0,
+        costPriceIqd: item.costPriceIqd || 0,
+        sellPriceUsd: item.sellPriceUsd || 0,
+        costPriceUsd: item.costPriceUsd || 0,
+        saleDate: saleDate,
+        notes: saleNotes,
+        timestamp: new Date().toISOString()
+    };
+    appState.sales.push(saleRecord);
+
+    // 3. Save both inventory and sales data
+    ui.showStatus('جاري تسجيل البيع...', 'syncing');
+    try {
+        await Promise.all([
+            api.saveToGitHub(),
+            api.saveSales()
+        ]);
+        ui.showStatus('تم تسجيل البيع بنجاح!', 'success');
+    } catch (error) {
+        ui.showStatus(`فشل تسجيل البيع: ${error.message}`, 'error', 5000);
+        // Revert changes if save fails
+        item.quantity++;
+        appState.sales.pop();
+    } finally {
+        // 4. Update the UI
+        ui.getDOMElements().saleModal.close();
+        ui.renderInventory();
+        saveButton.disabled = false;
+    }
+}
+
+
 async function handleImageCleanup() {
     if (!appState.syncConfig) {
         ui.showStatus('يرجى إعداد المزامنة أولاً.', 'error');
@@ -137,59 +200,20 @@ function setupEventListeners() {
     });
 
     // Main Grid Interaction
-    elements.inventoryGrid.addEventListener('click', async (e) => {
+    elements.inventoryGrid.addEventListener('click', (e) => {
         const detailsBtn = e.target.closest('.details-btn');
         const sellBtn = e.target.closest('.sell-btn');
         const card = e.target.closest('.product-card');
 
         if (!card) return;
         const itemId = card.dataset.id;
-        const item = appState.inventory.find(i => i.id === itemId);
-        if (!item) return;
-
+        
         if (detailsBtn) {
             ui.openDetailsModal(itemId);
         }
 
         if (sellBtn) {
-            if (item.quantity > 0) {
-                // 1. Decrease quantity
-                item.quantity--;
-
-                // 2. Create a sales record
-                const saleRecord = {
-                    saleId: `sale_${Date.now()}`,
-                    itemId: item.id,
-                    itemName: item.name,
-                    quantitySold: 1,
-                    sellPriceIqd: item.sellPriceIqd || 0,
-                    costPriceIqd: item.costPriceIqd || 0,
-                    sellPriceUsd: item.sellPriceUsd || 0,
-                    costPriceUsd: item.costPriceUsd || 0,
-                    timestamp: new Date().toISOString()
-                };
-                appState.sales.push(saleRecord);
-
-                // 3. Save both inventory and sales data
-                ui.showStatus('جاري تسجيل البيع...', 'syncing');
-                try {
-                    await Promise.all([
-                        api.saveToGitHub(),
-                        api.saveSales()
-                    ]);
-                    ui.showStatus('تم تسجيل البيع بنجاح!', 'success');
-                } catch (error) {
-                    ui.showStatus(`فشل تسجيل البيع: ${error.message}`, 'error', 5000);
-                    // Revert changes if save fails
-                    item.quantity++;
-                    appState.sales.pop();
-                }
-
-                // 4. Update the UI
-                ui.renderInventory();
-            } else {
-                ui.showStatus('لا يمكن بيع المنتج، الكمية صفر.', 'error');
-            }
+            ui.openSaleModal(itemId);
         }
     });
 
@@ -266,8 +290,12 @@ function setupEventListeners() {
     });
 
     // Modals
+    elements.itemForm.addEventListener('submit', handleItemFormSubmit);
     elements.cancelItemBtn.addEventListener('click', () => elements.itemModal.close());
-    elements.itemForm.addEventListener('submit', handleFormSubmit);
+    
+    elements.saleForm.addEventListener('submit', handleSaleFormSubmit);
+    elements.cancelSaleBtn.addEventListener('click', () => elements.saleModal.close());
+
     elements.imageUploadInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -308,6 +336,7 @@ async function initializeApp() {
     console.log('Initializing Inventory Management App...');
     setupEventListeners();
     loadConfig();
+    
     const savedTheme = localStorage.getItem('inventoryAppTheme') || 'light';
     const savedCurrency = localStorage.getItem('inventoryAppCurrency') || 'IQD';
     appState.activeCurrency = savedCurrency;

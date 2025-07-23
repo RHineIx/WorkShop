@@ -113,7 +113,7 @@
             </div>
             <div class="details-actions">
                 <button id="details-edit-btn" class="action-btn-details"><span class="material-symbols-outlined">edit</span> تعديل</button>
-                <button id="details-barcode-btn" class="action-btn-details"><span class="material-symbols-outlined">qr_code_2</span> باركود</button>
+                <button id="details-barcode-btn" class="action-btn-details"><span class="material-symbols-outlined">barcode</span> باركود</button>
                 <button id="details-delete-btn" class="action-btn-details danger"><span class="material-symbols-outlined">delete</span> حذف</button>
             </div>
         </div>
@@ -136,7 +136,7 @@
 
             <label for="item-sku">SKU (رقم المنتج - يستخدم للباركود)</label>
             <div class="sku-container">
-                <input type="text" id="item-sku" required>
+                <input type="text" id="item-sku" required readonly>
                 <button type="button" id="regenerate-sku-btn" class="icon-btn" title="توليد SKU جديد" aria-label="توليد SKU جديد">
                     <span class="material-symbols-outlined">refresh</span>
                 </button>
@@ -226,10 +226,30 @@
         </div>
     </dialog>
 
+    <dialog id="sale-modal">
+        <form id="sale-form">
+            <h3>تأكيد عملية البيع</h3>
+            <input type="hidden" id="sale-item-id">
+            
+            <p>هل أنت متأكد من بيع قطعة واحدة من:</p>
+            <strong id="sale-item-name" class="sale-item-name-display"></strong>
+            
+            <label for="sale-date">تاريخ البيع</label>
+            <input type="date" id="sale-date" required>
+            
+            <label for="sale-notes">ملاحظات على البيع</label>
+            <textarea id="sale-notes" rows="3"></textarea>
+            
+            <div class="modal-actions">
+                <button type="submit" id="confirm-sale-btn" class="primary-action">تأكيد البيع</button>
+                <button type="button" id="cancel-sale-btn">إلغاء</button>
+            </div>
+        </form>
+    </dialog>
+
     <div id="status-indicator" class="status-indicator"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-    
     <script type="module" src="js/main.js"></script>
 </body>
 </html>

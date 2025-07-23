@@ -50,6 +50,13 @@ const elements = {
     regenerateSkuBtn: document.getElementById('regenerate-sku-btn'),
     itemSupplier: document.getElementById('item-supplier'),
 
+    // Sale Modal
+    saleModal: document.getElementById('sale-modal'),
+    saleForm: document.getElementById('sale-form'),
+    saleItemIdInput: document.getElementById('sale-item-id'),
+    saleItemName: document.getElementById('sale-item-name'),
+    cancelSaleBtn: document.getElementById('cancel-sale-btn'),
+
     // Sync Modal
     syncModal: document.getElementById('sync-modal'),
     syncForm: document.getElementById('sync-form'),
@@ -77,9 +84,6 @@ export function getDOMElements() {
 
 /**
  * Displays a status message at the bottom of the screen.
- * @param {string} message The text to display.
- * @param {'syncing'|'success'|'error'} type The type of message, for styling.
- * @param {number} duration How long the message should be visible in milliseconds.
  */
 export const showStatus = (message, type, duration = 3000) => {
     elements.statusIndicator.textContent = message;
@@ -132,7 +136,6 @@ export const renderInventory = () => {
                     <div class="card-name">${sanitizeHTML(item.name)}</div>
                     <div class="card-footer">
                         <div class="card-price">${sanitizeHTML(String(price))} ${symbol}</div>
-                        
                         <div class="card-actions">
                             <button class="icon-btn sell-btn" title="بيع قطعة واحدة" aria-label="بيع قطعة واحدة">
                                 <span class="material-symbols-outlined">shopping_cart</span>
@@ -165,7 +168,6 @@ export const updateStats = () => {
 
 /**
  * Sets the color theme for the application.
- * @param {'light'|'dark'} themeName The name of the theme to apply.
  */
 export const setTheme = (themeName) => {
     document.body.className = `theme-${themeName}`;
@@ -182,7 +184,7 @@ export const updateCurrencyDisplay = () => {
     renderInventory();
 
     if (elements.detailsModal.open && appState.currentItemId) {
-        openDetailsModal(appState.currentItemId); // Re-run to update the price grid
+        openDetailsModal(appState.currentItemId);
     }
 };
 
@@ -264,6 +266,30 @@ export const openItemModal = (itemId = null) => {
     }
     elements.itemModal.showModal();
 };
+
+/**
+ * NEW: Opens and populates the "Confirm Sale" modal.
+ * @param {string} itemId The ID of the item to be sold.
+ */
+export const openSaleModal = (itemId) => {
+    const item = appState.inventory.find(i => i.id === itemId);
+    if (!item) return;
+
+    elements.saleForm.reset();
+    elements.saleItemIdInput.value = item.id;
+    elements.saleItemName.textContent = item.name;
+    
+    // Set date to today in YYYY-MM-DD format
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    document.getElementById('sale-date').value = `${year}-${month}-${day}`;
+
+    elements.saleModal.showModal();
+};
+
+
 
 /**
  * Opens the barcode modal and generates a barcode for the given item.
