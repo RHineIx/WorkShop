@@ -151,7 +151,10 @@ async function handleSaleFormSubmit(e) {
     } finally {
         // 4. Update the UI
         ui.getDOMElements().saleModal.close();
-        ui.renderInventory();
+        ui.renderInventory(); // Update inventory view regardless
+        if(appState.currentView === 'dashboard') {
+            ui.renderDashboard(); // Also update dashboard if it's the active view
+        }
         appState.isSyncing = false;
         saveButton.disabled = false;
     }
@@ -202,6 +205,23 @@ function setupEventListeners() {
         appState.activeCurrency = appState.activeCurrency === 'IQD' ? 'USD' : 'IQD';
         localStorage.setItem('inventoryAppCurrency', appState.activeCurrency);
         ui.updateCurrencyDisplay();
+    });
+
+    // --- View Toggling ---
+    elements.inventoryToggleBtn.addEventListener('click', () => ui.toggleView('inventory'));
+    elements.dashboardToggleBtn.addEventListener('click', () => ui.toggleView('dashboard'));
+
+    // --- Dashboard Time Filter ---
+    elements.timeFilterControls.addEventListener('click', (e) => {
+        const button = e.target.closest('.time-filter-btn');
+        if (button) {
+            appState.dashboardPeriod = button.dataset.period;
+            // Update active class
+            elements.timeFilterControls.querySelector('.active').classList.remove('active');
+            button.classList.add('active');
+            // Re-render dashboard
+            ui.renderDashboard();
+        }
     });
 
     // Main Grid Interaction
@@ -284,39 +304,33 @@ function setupEventListeners() {
     elements.statsContainer.addEventListener('click', (e) => {
         const card = e.target.closest('.stat-card');
         if (!card) return;
-        appState.searchTerm = '';
-        elements.searchBar.value = '';
         if (card.classList.contains('low-stock-alert')) {
-             appState.activeFilter = (appState.activeFilter === 'low_stock') ? 'all' : 'low_stock';
-        } else {
-            appState.activeFilter = 'all';
+            appState.searchTerm = '';
+            elements.searchBar.value = '';
+            appState.activeFilter = (appState.activeFilter === 'low_stock') ? 'all' : 'low_stock';
+            ui.renderInventory();
         }
-        ui.renderInventory();
     });
 
-    // --- NEW: Category Filter Listeners ---
+    // Category Filter Listeners
     elements.categoryFilterBtn.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent the document click listener from firing immediately
+        e.stopPropagation();
         elements.categoryFilterDropdown.classList.toggle('show');
     });
-
     elements.categoryFilterDropdown.addEventListener('click', (e) => {
         const categoryItem = e.target.closest('.category-item');
         if (categoryItem) {
             appState.selectedCategory = categoryItem.dataset.category;
             ui.renderInventory();
-            ui.renderCategoryFilter(); // Re-render to update the 'active' class
+            ui.renderCategoryFilter();
             elements.categoryFilterDropdown.classList.remove('show');
         }
     });
-
-    // Close dropdown if clicked outside
     document.addEventListener('click', (e) => {
         if (!elements.searchContainer.contains(e.target)) {
             elements.categoryFilterDropdown.classList.remove('show');
         }
     });
-    // --- End of New Listeners ---
 
     // Modals
     elements.itemForm.addEventListener('submit', handleItemFormSubmit);
@@ -393,8 +407,8 @@ async function initializeApp() {
         loadLocalData();
     }
     
-    ui.renderCategoryFilter(); // Build the category list
-    ui.updateCurrencyDisplay(); // This will call renderInventory()
+    ui.renderCategoryFilter();
+    ui.updateCurrencyDisplay();
     console.log('App Initialized Successfully.');
 }
 
