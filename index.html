@@ -57,10 +57,17 @@
         <section class="inventory-container">
             <div class="inventory-header">
                 <h2>قائمة المنتجات</h2>
-                <input type="text" id="search-bar" placeholder="ابحث بالاسم أو الرمز...">
-            </div>
-            <div id="inventory-grid" class="inventory-grid">
+                <div id="search-container" class="search-container">
+                    <input type="text" id="search-bar" placeholder="ابحث بالاسم أو الرمز...">
+                    <button id="category-filter-btn" class="icon-btn category-filter-toggle-btn" title="تصفية حسب الفئة" aria-label="تصفية حسب الفئة">
+                        <span class="material-symbols-outlined">filter_list</span>
+                    </button>
+                    <div id="category-filter-dropdown" class="category-dropdown">
+                        </div>
                 </div>
+                </div>
+            <div id="inventory-grid" class="inventory-grid">
+                 </div>
         </section>
     </main>
 
