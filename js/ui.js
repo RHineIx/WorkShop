@@ -97,6 +97,7 @@ export const showStatus = (message, type, duration = 3000) => {
 export const renderInventory = () => {
     elements.inventoryGrid.innerHTML = '';
     let filteredInventory = [...appState.inventory];
+
     if (appState.activeFilter === 'low_stock') {
         filteredInventory = filteredInventory.filter(item => item.quantity <= item.alertLevel);
     }
@@ -161,8 +162,7 @@ export const updateStats = () => {
  */
 export const setTheme = (themeName) => {
     document.body.className = `theme-${themeName}`;
-    elements.themeToggleBtn.querySelector('.material-symbols-outlined').textContent = themeName === 'dark' ?
-    'dark_mode' : 'light_mode';
+    elements.themeToggleBtn.querySelector('.material-symbols-outlined').textContent = themeName === 'dark' ? 'dark_mode' : 'light_mode';
     localStorage.setItem('inventoryAppTheme', themeName);
 };
 
@@ -171,8 +171,7 @@ export const setTheme = (themeName) => {
  */
 export const updateCurrencyDisplay = () => {
     const isIQD = appState.activeCurrency === 'IQD';
-    elements.currencyToggleBtn.textContent = isIQD ?
-    'د.ع' : '$';
+    elements.currencyToggleBtn.textContent = isIQD ? 'د.ع' : '$';
     renderInventory();
 
     if (elements.detailsModal.open && appState.currentItemId) {
@@ -194,6 +193,7 @@ export const openDetailsModal = (itemId) => {
     elements.detailsName.textContent = item.name;
     elements.detailsSku.textContent = `SKU: ${sanitizeHTML(item.sku || 'N/A')}`;
     elements.detailsQuantityValue.textContent = item.quantity;
+    
     // Populate the new price grid
     elements.detailsCostIqd.textContent = `${sanitizeHTML(String(item.costPriceIqd || 0))} د.ع`;
     elements.detailsSellIqd.textContent = `${sanitizeHTML(String(item.sellPriceIqd || 0))} د.ع`;
@@ -216,8 +216,7 @@ export const openDetailsModal = (itemId) => {
 };
 
 /**
- * Opens the Add/Edit item modal.
- * Populates it with item data if an ID is provided.
+ * Opens the Add/Edit item modal. Populates it with item data if an ID is provided.
  * @param {string|null} itemId The ID of the item to edit, or null to add a new item.
  */
 export const openItemModal = (itemId = null) => {
@@ -330,54 +329,4 @@ export const populateSyncModal = () => {
         elements.githubPatInput.value = appState.syncConfig.pat;
     }
     elements.syncModal.showModal();
-};
-
-/**
- * Requests notification permission from the user.
- * Stores the permission status in appState to avoid repeated prompts.
- * @returns {Promise<NotificationPermission>} A promise that resolves with the permission status.
- */
-export const requestNotificationPermission = async () => {
-    if (!('Notification' in window)) {
-        console.warn('المتصفح لا يدعم إشعارات سطح المكتب.');
-        return 'unsupported';
-    }
-
-    if (Notification.permission === 'granted') {
-        return 'granted';
-    }
-
-    if (Notification.permission !== 'denied') {
-        const permission = await Notification.requestPermission();
-        return permission;
-    }
-
-    return Notification.permission; // 'denied'
-};
-
-/**
- * Displays a browser desktop notification.
- * This function should only be called after permission is granted.
- * @param {string} title The title of the notification.
- * @param {Object} [options] Options for the notification (body, icon, etc.).
- * @param {number} [duration=5000] Duration in milliseconds after which the notification will close (if supported by OS).
- */
-export const showBrowserNotification = (title, options = {}, duration = 5000) => {
-    if (Notification.permission === 'granted') {
-        const notification = new Notification(title, options);
-
-        if (duration > 0) {
-            setTimeout(() => {
-                notification.close();
-            }, duration);
-        }
-
-        // Optional: Add click handler
-        notification.onclick = () => {
-            window.focus(); // Bring the app window to front
-            // You could also open a specific modal or navigate here
-        };
-    } else {
-        console.warn('لا يوجد إذن لعرض الإشعارات.');
-    }
 };
