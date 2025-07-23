@@ -105,19 +105,30 @@ export const showStatus = (message, type, duration = 3000) => {
 export const renderInventory = () => {
     elements.inventoryGrid.innerHTML = '';
     let filteredInventory = [...appState.inventory];
-    if (appState.activeFilter === 'low_stock') {
-        filteredInventory = filteredInventory.filter(item => item.quantity <= item.alertLevel);
+
+    // --- FILTERING LOGIC ---
+    // 1. Filter by Low Stock Alert (if active)
+    [cite_start]if (appState.activeFilter === 'low_stock') { [cite: 324, 345]
+        [cite_start]filteredInventory = filteredInventory.filter(item => item.quantity <= item.alertLevel); [cite: 345]
     }
-    if (appState.searchTerm) {
-        const lowerCaseSearch = appState.searchTerm.toLowerCase();
+
+    // 2. NEW: Filter by selected category
+    if (appState.selectedCategory && appState.selectedCategory !== 'all') {
+        filteredInventory = filteredInventory.filter(item => item.category === appState.selectedCategory);
+    }
+
+    // 3. Filter by search term
+    [cite_start]if (appState.searchTerm) { [cite: 325, 346]
+        [cite_start]const lowerCaseSearch = appState.searchTerm.toLowerCase(); [cite: 346]
         filteredInventory = filteredInventory.filter(item =>
             item.name.toLowerCase().includes(lowerCaseSearch) ||
             (item.sku && item.sku.toLowerCase().includes(lowerCaseSearch))
-        );
+        [cite_start]); [cite: 347]
     }
 
+    // --- RENDERING LOGIC ---
     if (filteredInventory.length === 0) {
-        elements.inventoryGrid.innerHTML = '<p class="empty-state">لا توجد منتجات تطابق بحثك...</p>';
+        [cite_start]elements.inventoryGrid.innerHTML = '<p class="empty-state">لا توجد منتجات تطابق بحثك...</p>'; [cite: 348]
     } else {
         filteredInventory.forEach(item => {
             const card = document.createElement('div');
@@ -193,6 +204,36 @@ export const updateCurrencyDisplay = () => {
 };
 
 // --- MODAL UI FUNCTIONS ---
+
+/**
+ * Renders the category filter dropdown based on available categories in the inventory.
+ */
+export function renderCategoryFilter() {
+    const categories = [...new Set(appState.inventory.map(item => item.category).filter(Boolean))];
+    elements.categoryFilterDropdown.innerHTML = ''; // Clear previous items
+
+    // Add 'Show All' option
+    const allItem = document.createElement('div');
+    allItem.className = 'category-item';
+    allItem.textContent = 'عرض الكل';
+    allItem.dataset.category = 'all';
+    if (appState.selectedCategory === 'all') {
+        allItem.classList.add('active');
+    }
+    elements.categoryFilterDropdown.appendChild(allItem);
+
+    // Add each unique category
+    categories.forEach(category => {
+        const categoryItem = document.createElement('div');
+        categoryItem.className = 'category-item';
+        categoryItem.textContent = sanitizeHTML(category);
+        categoryItem.dataset.category = category;
+        if (appState.selectedCategory === category) {
+            categoryItem.classList.add('active');
+        }
+        elements.categoryFilterDropdown.appendChild(categoryItem);
+    });
+}
 
 /**
  * Populates and opens the details modal for a given item.
