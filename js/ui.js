@@ -5,15 +5,6 @@ import { sanitizeHTML, generateUniqueSKU } from './utils.js';
 
 // Get all DOM elements once to be used throughout this module
 const elements = {
-       
-    inventoryToggleBtn: document.getElementById('inventory-toggle-btn'),
-    dashboardToggleBtn: document.getElementById('dashboard-toggle-btn'),
-    inventoryViewContainer: document.getElementById('inventory-view-container'),
-    dashboardViewContainer: document.getElementById('dashboard-view-container'),
-    timeFilterControls: document.getElementById('time-filter-controls'),
-    totalSalesStat: document.getElementById('total-sales-stat'),
-    totalProfitStat: document.getElementById('total-profit-stat'),
-    bestsellersList: document.getElementById('bestsellers-list'),
     // Main Layout
     inventoryGrid: document.getElementById('inventory-grid'),
     searchBar: document.getElementById('search-bar'),
@@ -30,6 +21,18 @@ const elements = {
     addItemBtn: document.getElementById('add-item-btn'),
     syncSettingsBtn: document.getElementById('sync-settings-btn'),
     currencyToggleBtn: document.getElementById('currency-toggle-btn'),
+    inventoryToggleBtn: document.getElementById('inventory-toggle-btn'),
+    dashboardToggleBtn: document.getElementById('dashboard-toggle-btn'),
+
+    // View Containers
+    inventoryViewContainer: document.getElementById('inventory-view-container'),
+    dashboardViewContainer: document.getElementById('dashboard-view-container'),
+
+    // Dashboard Elements
+    timeFilterControls: document.getElementById('time-filter-controls'),
+    totalSalesStat: document.getElementById('total-sales-stat'),
+    totalProfitStat: document.getElementById('total-profit-stat'),
+    bestsellersList: document.getElementById('bestsellers-list'),
 
     // Details Modal
     detailsModal: document.getElementById('details-modal'),
@@ -137,6 +140,92 @@ export const showStatus = (message, type, duration = 3000) => {
 };
 
 /**
+ * Toggles between the main inventory view and the dashboard view.
+ * @param {'inventory' | 'dashboard'} viewToShow The view to display.
+ */
+export const toggleView = (viewToShow) => {
+    appState.currentView = viewToShow;
+    const isInventory = viewToShow === 'inventory';
+
+    elements.inventoryViewContainer.classList.toggle('view-hidden', !isInventory);
+    elements.dashboardViewContainer.classList.toggle('view-hidden', isInventory);
+
+    elements.inventoryToggleBtn.classList.toggle('active-view-btn', isInventory);
+    elements.dashboardToggleBtn.classList.toggle('active-view-btn', !isInventory);
+
+    if (!isInventory) {
+        renderDashboard();
+    }
+};
+
+/**
+ * Renders the dashboard with stats for the current period.
+ */
+export const renderDashboard = () => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    let startDate;
+    switch (appState.dashboardPeriod) {
+        case 'week':
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() - 6); // Last 7 days including today
+            break;
+        case 'month':
+            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            break;
+        case 'today':
+        default:
+            startDate = today;
+            break;
+    }
+
+    const filteredSales = appState.sales.filter(sale => {
+        const saleDate = new Date(sale.saleDate);
+        return saleDate >= startDate && saleDate <= now;
+    });
+    
+    // Calculate Stats
+    const isIQD = appState.activeCurrency === 'IQD';
+    const totalSales = filteredSales.reduce((sum, sale) => sum + (isIQD ? sale.sellPriceIqd : sale.sellPriceUsd), 0);
+    const totalCost = filteredSales.reduce((sum, sale) => sum + (isIQD ? sale.costPriceIqd : sale.costPriceUsd), 0);
+    const totalProfit = totalSales - totalCost;
+    const symbol = isIQD ? 'د.ع' : '$';
+
+    elements.totalSalesStat.textContent = `${totalSales.toLocaleString()} ${symbol}`;
+    elements.totalProfitStat.textContent = `${totalProfit.toLocaleString()} ${symbol}`;
+
+    // Calculate Best Sellers for the period
+    const itemSales = {};
+    filteredSales.forEach(sale => {
+        itemSales[sale.itemId] = (itemSales[sale.itemId] || 0) + sale.quantitySold;
+    });
+
+    const sortedBestsellers = Object.entries(itemSales)
+        .map(([itemId, count]) => {
+            const item = appState.inventory.find(i => i.id === itemId);
+            return { name: item ? item.name : 'منتج محذوف', count };
+        })
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5); // Top 5
+
+    elements.bestsellersList.innerHTML = '';
+    if (sortedBestsellers.length > 0) {
+        sortedBestsellers.forEach(item => {
+            const li = document.createElement('div');
+            li.className = 'bestseller-item';
+            li.innerHTML = `
+                <span class="bestseller-name">${sanitizeHTML(item.name)}</span>
+                <span class="bestseller-count">بيع ${item.count}</span>
+            `;
+            elements.bestsellersList.appendChild(li);
+        });
+    } else {
+        elements.bestsellersList.innerHTML = '<p>لا توجد مبيعات في هذه الفترة.</p>';
+    }
+};
+
+/**
  * Renders the product cards in the main grid based on the current state.
  */
 export const renderInventory = () => {
@@ -144,17 +233,12 @@ export const renderInventory = () => {
     let filteredInventory = [...appState.inventory];
 
     // --- FILTERING LOGIC ---
-    // 1. Filter by Low Stock Alert (if active)
     if (appState.activeFilter === 'low_stock') {
         filteredInventory = filteredInventory.filter(item => item.quantity <= item.alertLevel);
     }
-    
-    // 2. Filter by selected category
     if (appState.selectedCategory && appState.selectedCategory !== 'all') {
         filteredInventory = filteredInventory.filter(item => item.category === appState.selectedCategory);
     }
-
-    // 3. Filter by search term
     if (appState.searchTerm) {
         const lowerCaseSearch = appState.searchTerm.toLowerCase();
         filteredInventory = filteredInventory.filter(item =>
@@ -234,10 +318,14 @@ export const setTheme = (themeName) => {
 export const updateCurrencyDisplay = () => {
     const isIQD = appState.activeCurrency === 'IQD';
     elements.currencyToggleBtn.textContent = isIQD ? 'د.ع' : '$';
-    renderInventory();
-
-    if (elements.detailsModal.open && appState.currentItemId) {
-        openDetailsModal(appState.currentItemId);
+    
+    if (appState.currentView === 'inventory') {
+        renderInventory();
+        if (elements.detailsModal.open && appState.currentItemId) {
+            openDetailsModal(appState.currentItemId);
+        }
+    } else {
+        renderDashboard();
     }
 };
 
@@ -321,7 +409,7 @@ export const openItemModal = (itemId = null) => {
 };
 
 /**
- * NEW: Opens and populates the "Confirm Sale" modal.
+ * Opens and populates the "Confirm Sale" modal.
  * @param {string} itemId The ID of the item to be sold.
  */
 export const openSaleModal = (itemId) => {
