@@ -100,7 +100,7 @@ export function getDOMElements() {
  * Renders the category filter dropdown based on available categories in the inventory.
  */
 export function renderCategoryFilter() {
-    const categories = [...new Set(appState.inventory.map(item => item.category).filter(Boolean))];
+    const categories = [...new Set(appState.inventory.items.map(item => item.category).filter(Boolean))];
     elements.categoryFilterDropdown.innerHTML = ''; // Clear previous items
 
     // Add 'Show All' option
@@ -232,7 +232,7 @@ export const renderDashboard = () => {
 
     const sortedBestsellers = Object.entries(itemSales)
         .map(([itemId, count]) => {
-            const item = appState.inventory.find(i => i.id === itemId);
+            const item = appState.inventory.items.find(i => i.id === itemId);
             return { name: item ? item.name : 'منتج محذوف', count };
         })
         .sort((a, b) => b.count - a.count)
@@ -259,7 +259,7 @@ export const renderDashboard = () => {
  */
 export const renderInventory = () => {
     elements.inventoryGrid.innerHTML = '';
-    let filteredInventory = [...appState.inventory];
+    let filteredInventory = [...appState.inventory.items];
 
     // --- FILTERING LOGIC ---
     if (appState.activeFilter === 'low_stock') {
@@ -334,8 +334,8 @@ export const renderInventory = () => {
  * Updates the statistic cards with the latest inventory counts.
  */
 export const updateStats = () => {
-    elements.totalItemsStat.textContent = appState.inventory.length;
-    elements.lowStockStat.textContent = appState.inventory.filter(item => item.quantity <= item.alertLevel).length;
+    elements.totalItemsStat.textContent = appState.inventory.items.length;
+    elements.lowStockStat.textContent = appState.inventory.items.filter(item => item.quantity <= item.alertLevel).length;
 };
 
 /**
@@ -370,7 +370,7 @@ export const updateCurrencyDisplay = () => {
  * Populates and opens the details modal for a given item.
  */
 export const openDetailsModal = (itemId) => {
-    const item = appState.inventory.find(i => i.id === itemId);
+    const item = appState.inventory.items.find(i => i.id === itemId);
     if (!item) return;
     appState.currentItemId = itemId;
 
@@ -409,7 +409,7 @@ export const openItemModal = (itemId = null) => {
     elements.regenerateSkuBtn.style.display = 'none';
 
     if (itemId) { // Editing an existing item
-        const item = appState.inventory.find(i => i.id === itemId);
+        const item = appState.inventory.items.find(i => i.id === itemId);
         if (item) {
             elements.modalTitle.textContent = "تعديل منتج";
             elements.itemIdInput.value = item.id;
@@ -436,7 +436,7 @@ export const openItemModal = (itemId = null) => {
     } else { // Adding a new item
         elements.modalTitle.textContent = "إضافة منتج جديد";
         elements.itemIdInput.value = '';
-        const existingSkus = new Set(appState.inventory.map(item => item.sku));
+        const existingSkus = new Set(appState.inventory.items.map(item => item.sku));
         document.getElementById('item-sku').value = generateUniqueSKU(existingSkus);
         elements.regenerateSkuBtn.style.display = 'flex';
     }
@@ -448,7 +448,7 @@ export const openItemModal = (itemId = null) => {
  * @param {string} itemId The ID of the item to be sold.
  */
 export const openSaleModal = (itemId) => {
-    const item = appState.inventory.find(i => i.id === itemId);
+    const item = appState.inventory.items.find(i => i.id === itemId);
     if (!item) return;
 
     elements.saleForm.reset();
@@ -468,7 +468,7 @@ export const openSaleModal = (itemId) => {
  * Opens the barcode modal and generates a barcode for the given item.
  */
 export const openBarcodeModal = (itemId) => {
-    const item = appState.inventory.find(i => i.id === itemId);
+    const item = appState.inventory.items.find(i => i.id === itemId);
     if (item && item.sku) {
         appState.currentItemId = item.id;
         elements.barcodeItemName.textContent = item.name;
@@ -490,7 +490,7 @@ export const openBarcodeModal = (itemId) => {
  * Triggers the download of the currently displayed barcode as a PNG image.
  */
 export const downloadBarcode = () => {
-    const item = appState.inventory.find(i => i.id === appState.currentItemId);
+    const item = appState.inventory.items.find(i => i.id === appState.currentItemId);
     if (!item) return;
     const svg = elements.barcodeSvg;
     const serializer = new XMLSerializer();
