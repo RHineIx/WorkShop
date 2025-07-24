@@ -957,3 +957,22 @@ color: white;
     border-radius: 12px;
     font-size: 12px;
 }
+/* --- Quantity Badge on Product Card --- */
+.quantity-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px; /* Top-left for RTL layout */
+    padding: 4px 8px;
+    border-radius: 12px; /* Pill shape */
+    background-color: var(--accent-color); /* Blue by default */
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    z-index: 5;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Modifier for low stock state */
+.quantity-badge.low-stock {
+    background-color: var(--danger-color); /* Red for low stock */
+}
