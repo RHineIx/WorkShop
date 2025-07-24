@@ -6,8 +6,14 @@
  * We export it so other modules can import and use it as the single source of truth.
  */
 export const appState = {
-    /** * @type {Array<Object>} The main list of all inventory items. */
-    inventory: [],
+    /** * @type {{items: Array<Object>, lastArchiveTimestamp: string|null}} 
+     * The main inventory data, now an object containing the items array 
+     * and metadata like the last archive timestamp.
+     */
+    inventory: {
+        items: [],
+        lastArchiveTimestamp: null
+    },
 
     /** @type {'inventory' | 'dashboard'} The currently active view. */
     currentView: 'inventory',
