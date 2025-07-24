@@ -21,7 +21,13 @@ function saveConfig() {
 function loadLocalData() {
     const savedInventory = localStorage.getItem('inventoryAppData');
     if (savedInventory) {
-        appState.inventory = JSON.parse(savedInventory);
+        let parsedData = JSON.parse(savedInventory);
+        // Backward compatibility for old local data structure
+        if (Array.isArray(parsedData)) {
+            appState.inventory = { items: parsedData, lastArchiveTimestamp: null };
+        } else {
+            appState.inventory = parsedData;
+        }
     }
     const savedSales = localStorage.getItem('salesAppData');
     if(savedSales) {
@@ -43,15 +49,19 @@ async function handleSaleFormSubmit(e) {
     saveButton.disabled = true;
 
     const itemId = document.getElementById('sale-item-id').value;
-    const item = appState.inventory.find(i => i.id === itemId);
+    const item = appState.inventory.items.find(i => i.id === itemId);
 
-    if (!item || item.quantity <= 0) {
-        ui.showStatus('خطأ: لا يمكن بيع المنتج.', 'error', { duration: 5000 });
+    if (!item) {
+        ui.showStatus('خطأ: المنتج غير موجود.', 'error', { duration: 5000 });
+        saveButton.disabled = false;
+        return;
+    }
+    if (item.quantity <= 0) {
+        ui.showStatus('لا يمكن بيع المنتج، الكمية صفر.', 'error', { duration: 5000 });
         saveButton.disabled = false;
         return;
     }
 
-    // 1. Apply change locally first
     ui.showStatus('جاري تسجيل البيع...', 'syncing');
     item.quantity--;
     const saleRecord = {
@@ -71,15 +81,12 @@ async function handleSaleFormSubmit(e) {
     ui.renderInventory();
 
     try {
-        // 2. Attempt to save the data
         await api.saveToGitHub();
         await api.saveSales();
         saveLocalData();
         ui.showStatus('تم تسجيل البيع بنجاح!', 'success');
         ui.getDOMElements().saleModal.close();
-
     } catch (error) {
-        // 3. Handle errors gracefully
         if (error instanceof ConflictError) {
             ui.showStatus(
                 'البيانات غير محدّثة. يرجى تحديث الصفحة والمحاولة مرة أخرى.',
@@ -89,7 +96,6 @@ async function handleSaleFormSubmit(e) {
         } else {
             ui.showStatus(`فشل تسجيل البيع: ${error.message}`, 'error', { duration: 5000 });
         }
-
         item.quantity++;
         appState.sales.pop();
         ui.renderInventory();
@@ -107,12 +113,16 @@ async function handleItemFormSubmit(e) {
     saveButton.disabled = true;
     ui.showStatus('جاري الحفظ...', 'syncing');
 
-    const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
+    const originalInventoryState = JSON.parse(JSON.stringify(appState.inventory));
     const itemId = document.getElementById('item-id').value;
-    const existingItem = appState.inventory.find(i => i.id === itemId);
-    let imagePath = existingItem ? existingItem.imagePath : null;
-
+    
     try {
+        let imagePath = null;
+        if(itemId){
+            const existingItem = appState.inventory.items.find(i => i.id === itemId);
+            if(existingItem) imagePath = existingItem.imagePath;
+        }
+
         if (appState.selectedImageFile) {
             imagePath = await api.uploadImageToGitHub(appState.selectedImageFile);
         }
@@ -132,11 +142,11 @@ async function handleItemFormSubmit(e) {
             imagePath: imagePath,
         };
         
-        const index = appState.inventory.findIndex(i => i.id === itemId);
+        const index = appState.inventory.items.findIndex(i => i.id === itemId);
         if (index !== -1) {
-            appState.inventory[index] = itemData;
+            appState.inventory.items[index] = itemData;
         } else {
-            appState.inventory.push(itemData);
+            appState.inventory.items.push(itemData);
         }
         
         ui.renderInventory();
@@ -152,7 +162,7 @@ async function handleItemFormSubmit(e) {
             ui.openDetailsModal(itemData.id);
         }
     } catch (error) {
-        appState.inventory = originalInventory;
+        appState.inventory = originalInventoryState;
         ui.renderInventory();
         if (error instanceof ConflictError) {
             ui.showStatus(
@@ -181,7 +191,7 @@ async function handleImageCleanup() {
     ui.showStatus('جاري البحث عن الصور غير المستخدمة...', 'syncing');
     try {
         const allRepoImages = await api.getGitHubDirectoryListing('images');
-        const usedImages = new Set(appState.inventory.map(item => item.imagePath).filter(Boolean));
+        const usedImages = new Set(appState.inventory.items.map(item => item.imagePath).filter(Boolean));
         const orphanedImages = allRepoImages.filter(repoImage => !usedImages.has(repoImage.path));
         
         if (orphanedImages.length === 0) {
@@ -241,11 +251,13 @@ async function handleManualArchive() {
         }
 
         appState.sales = salesByMonth[currentMonthKey] || [];
+        
+        appState.inventory.lastArchiveTimestamp = new Date().toLocaleString('ar-EG');
+        
         await api.saveSales();
+        await api.saveToGitHub(); // Save inventory to persist the new timestamp
         saveLocalData();
         
-        const archiveDate = new Date().toLocaleString('ar-EG');
-        localStorage.setItem('lastArchiveTimestamp', archiveDate);
         updateLastArchiveDateDisplay();
 
         ui.showStatus(`تمت أرشفة ${archivesToCreate.length} شهر من السجلات بنجاح.`, 'success', { duration: 5000 });
@@ -257,7 +269,7 @@ async function handleManualArchive() {
 }
 
 function updateLastArchiveDateDisplay() {
-    const lastArchiveDate = localStorage.getItem('lastArchiveTimestamp');
+    const lastArchiveDate = appState.inventory.lastArchiveTimestamp;
     const displayElement = document.getElementById('last-archive-date-display');
     if (lastArchiveDate) {
         displayElement.textContent = `آخر أرشفة: ${lastArchiveDate}`;
@@ -285,7 +297,7 @@ async function openArchiveBrowser() {
 
         listContainer.innerHTML = '';
         files
-            .sort((a,b) => b.name.localeCompare(a.name)) // Sort descending
+            .sort((a,b) => b.name.localeCompare(a.name))
             .forEach(file => {
                 const item = document.createElement('div');
                 item.className = 'archive-item';
@@ -305,7 +317,6 @@ function setupEventListeners() {
     const elements = ui.getDOMElements();
     let quantityInterval = null;
     
-    // Header Controls & View Toggling
     elements.themeToggleBtn.addEventListener('click', () => ui.setTheme(document.body.classList.contains('theme-light') ? 'dark' : 'light'));
     elements.addItemBtn.addEventListener('click', () => ui.openItemModal());
     elements.syncSettingsBtn.addEventListener('click', ui.populateSyncModal);
@@ -317,7 +328,6 @@ function setupEventListeners() {
     elements.inventoryToggleBtn.addEventListener('click', () => ui.toggleView('inventory'));
     elements.dashboardToggleBtn.addEventListener('click', () => ui.toggleView('dashboard'));
 
-    // Dashboard Time Filter
     elements.timeFilterControls.addEventListener('click', (e) => {
         const button = e.target.closest('.time-filter-btn');
         if (button) {
@@ -328,7 +338,6 @@ function setupEventListeners() {
         }
     });
 
-    // Main Grid Interaction
     elements.inventoryGrid.addEventListener('click', (e) => {
         const detailsBtn = e.target.closest('.details-btn');
         const sellBtn = e.target.closest('.sell-btn');
@@ -341,7 +350,6 @@ function setupEventListeners() {
         if (sellBtn) ui.openSaleModal(itemId);
     });
     
-    // Details Modal
     elements.closeDetailsModalBtn.addEventListener('click', () => elements.detailsModal.close());
     const stopQuantityChange = async () => {
         if (quantityInterval) {
@@ -359,7 +367,7 @@ function setupEventListeners() {
         quantityInterval = setInterval(action, 100);
     };
     elements.detailsIncreaseBtn.addEventListener('mousedown', () => startQuantityChange(() => {
-        const item = appState.inventory.find(i => i.id === appState.currentItemId);
+        const item = appState.inventory.items.find(i => i.id === appState.currentItemId);
         if (item) {
             item.quantity++;
             elements.detailsQuantityValue.textContent = item.quantity;
@@ -367,7 +375,7 @@ function setupEventListeners() {
         }
     }));
     elements.detailsDecreaseBtn.addEventListener('mousedown', () => startQuantityChange(() => {
-        const item = appState.inventory.find(i => i.id === appState.currentItemId);
+        const item = appState.inventory.items.find(i => i.id === appState.currentItemId);
         if (item && item.quantity > 0) {
             item.quantity--;
             elements.detailsQuantityValue.textContent = item.quantity;
@@ -387,7 +395,7 @@ function setupEventListeners() {
     elements.detailsDeleteBtn.addEventListener('click', async () => {
         if (confirm('هل أنت متأكد من رغبتك في حذف هذا المنتج؟')) {
             const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
-            appState.inventory = appState.inventory.filter(item => item.id !== appState.currentItemId);
+            appState.inventory.items = appState.inventory.items.filter(item => item.id !== appState.currentItemId);
             elements.detailsModal.close();
             ui.renderInventory();
             try {
@@ -402,7 +410,6 @@ function setupEventListeners() {
     elements.detailsBarcodeBtn.addEventListener('click', () => ui.openBarcodeModal(appState.currentItemId));
     elements.downloadBarcodeBtn.addEventListener('click', () => ui.downloadBarcode());
     
-    // Search and Filter
     elements.searchBar.addEventListener('input', (e) => {
         appState.searchTerm = e.target.value;
         ui.renderInventory();
@@ -422,7 +429,6 @@ function setupEventListeners() {
         ui.renderInventory();
     });
 
-    // Category Filter
     elements.categoryFilterBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         elements.categoryFilterDropdown.classList.toggle('show');
@@ -442,7 +448,6 @@ function setupEventListeners() {
         }
     });
 
-    // Modals
     elements.itemForm.addEventListener('submit', handleItemFormSubmit);
     elements.cancelItemBtn.addEventListener('click', () => elements.itemModal.close());
     elements.saleForm.addEventListener('submit', handleSaleFormSubmit);
@@ -473,13 +478,11 @@ function setupEventListeners() {
         await initializeApp();
     });
 
-    // Maintenance & Archive Buttons
     elements.closeBarcodeBtn.addEventListener('click', () => elements.barcodeModal.close());
     elements.cleanupImagesBtn.addEventListener('click', handleImageCleanup);
     document.getElementById('manual-archive-btn').addEventListener('click', handleManualArchive);
     document.getElementById('view-archives-btn').addEventListener('click', openArchiveBrowser);
     
-    // Archive Browser Modal Listeners
     const archiveBrowserModal = document.getElementById('archive-browser-modal');
     document.getElementById('close-archive-browser-btn').addEventListener('click', () => archiveBrowserModal.close());
     document.getElementById('archive-list-container').addEventListener('click', async (e) => {
@@ -510,7 +513,7 @@ function setupEventListeners() {
     });
 
     elements.regenerateSkuBtn.addEventListener('click', () => {
-        const existingSkus = new Set(appState.inventory.map(item => item.sku));
+        const existingSkus = new Set(appState.inventory.items.map(item => item.sku));
         document.getElementById('item-sku').value = generateUniqueSKU(existingSkus);
     });
 }
@@ -521,11 +524,12 @@ async function initializeApp() {
     console.log('Initializing Inventory Management App...');
     setupEventListeners();
     loadConfig();
-    updateLastArchiveDateDisplay();
+    
     const savedTheme = localStorage.getItem('inventoryAppTheme') || 'light';
     const savedCurrency = localStorage.getItem('inventoryAppCurrency') || 'IQD';
     appState.activeCurrency = savedCurrency;
     ui.setTheme(savedTheme);
+
     if (appState.syncConfig) {
         ui.showStatus('جاري مزامنة البيانات...', 'syncing');
         try {
@@ -552,6 +556,7 @@ async function initializeApp() {
         loadLocalData();
     }
     
+    updateLastArchiveDateDisplay();
     ui.renderCategoryFilter();
     ui.updateCurrencyDisplay();
     ui.renderInventory();
