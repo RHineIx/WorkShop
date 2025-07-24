@@ -2,6 +2,7 @@
 import { appState } from './state.js';
 import { generateUniqueSKU } from './utils.js';
 import * as api from './api.js';
+import { ConflictError } from './api.js'; // Import the custom error
 import * as ui from './ui.js';
 
 // --- LOCAL STORAGE & CONFIG ---
@@ -36,16 +37,84 @@ function saveLocalData() {
 
 // --- CORE LOGIC HANDLERS ---
 
+/**
+ * Wrapper function to handle saving data with automatic conflict resolution.
+ * It will retry a specified number of times if a ConflictError is caught.
+ * @param {number} maxRetries - The maximum number of times to retry.
+ */
+async function saveDataWithConflictResolution(maxRetries = 3) {
+    let attempts = 0;
+    while (attempts < maxRetries) {
+        try {
+            await api.saveToGitHub();
+            await api.saveSales();
+            saveLocalData(); // Save to local storage on successful sync
+            return; // Exit successfully
+        } catch (error) {
+            if (error instanceof ConflictError) {
+                attempts++;
+                ui.showStatus(`Conflict detected. Re-syncing and retrying... (${attempts}/${maxRetries})`, 'syncing');
+
+                // Fetch the latest data from the server
+                const [inventoryResult, salesResult] = await Promise.all([
+                    api.fetchFromGitHub(),
+                    api.fetchSales()
+                ]);
+
+                // This is the core of the conflict resolution.
+                // We assume the user's intended changes are still valid and re-apply them
+                // to the latest version of the data.
+                // For this app, the "last intended change" is always the last item in the sales array
+                // and the corresponding quantity decrease in the inventory.
+
+                const serverInventory = inventoryResult.data;
+                const serverSales = salesResult.data;
+                appState.fileSha = inventoryResult.sha;
+                appState.salesFileSha = salesResult.sha;
+
+                const lastUnsavedSale = appState.sales[appState.sales.length - 1];
+                if(lastUnsavedSale){
+                    const itemToUpdate = serverInventory.find(i => i.id === lastUnsavedSale.itemId);
+                    const localItemState = appState.inventory.find(i => i.id === lastUnsavedSale.itemId);
+
+                    if (itemToUpdate && localItemState) {
+                        // Re-apply the user's change to the fresh server data
+                        itemToUpdate.quantity = localItemState.quantity;
+                    }
+
+                    // Update the state with the merged data
+                    appState.inventory = serverInventory;
+                    appState.sales = [...serverSales, lastUnsavedSale];
+                } else {
+                    // If there's no sale, just update to the latest server state
+                    appState.inventory = serverInventory;
+                    appState.sales = serverSales;
+                }
+
+            } else {
+                // For any other error, fail immediately
+                throw error;
+            }
+        }
+    }
+    // If all retries fail, throw a final error
+    throw new Error('Failed to save data after multiple retries.');
+}
+
+
 async function handleItemFormSubmit(e) {
     e.preventDefault();
     const saveButton = document.getElementById('save-item-btn');
     saveButton.disabled = true;
-    ui.showStatus('جاري الحفظ...', 'syncing');
+    ui.showStatus('Saving...', 'syncing');
 
     const itemId = document.getElementById('item-id').value;
     const existingItem = appState.inventory.find(i => i.id === itemId);
     let imagePath = existingItem ?
         existingItem.imagePath : null;
+
+    // Hold original state in case of failure
+    const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
 
     try {
         if (appState.selectedImageFile) {
@@ -66,6 +135,7 @@ async function handleItemFormSubmit(e) {
             notes: document.getElementById('item-notes').value,
             imagePath: imagePath,
         };
+        
         if (itemId) {
             const index = appState.inventory.findIndex(i => i.id === itemId);
             if (index !== -1) appState.inventory[index] = itemData;
@@ -75,15 +145,20 @@ async function handleItemFormSubmit(e) {
         
         ui.renderInventory();
         ui.renderCategoryFilter();
-        await api.saveToGitHub();
-        ui.showStatus('تم حفظ التغييرات في السحابة!', 'success');
-
+        
+        await saveDataWithConflictResolution();
+        
+        ui.showStatus('Changes saved to the cloud!', 'success');
         ui.getDOMElements().itemModal.close();
+
         if (appState.currentItemId === itemData.id) {
             ui.openDetailsModal(itemData.id);
         }
     } catch (error) {
-        ui.showStatus(`فشل الحفظ: ${error.message}`, 'error', 5000);
+        ui.showStatus(`Save failed: ${error.message}`, 'error', 5000);
+        // Revert to original state on failure
+        appState.inventory = originalInventory;
+        ui.renderInventory();
     } finally {
         saveButton.disabled = false;
         appState.selectedImageFile = null;
@@ -98,29 +173,25 @@ async function handleSaleFormSubmit(e) {
     const itemId = document.getElementById('sale-item-id').value;
     const saleDate = document.getElementById('sale-date').value;
     const saleNotes = document.getElementById('sale-notes').value;
-    const item = appState.inventory.find(i => i.id === itemId);
-    if (!item) {
-        ui.showStatus('خطأ: المنتج غير موجود.', 'error');
+    const itemIndex = appState.inventory.findIndex(i => i.id === itemId);
+
+    if (itemIndex === -1) {
+        ui.showStatus('Error: Product not found.', 'error');
         saveButton.disabled = false;
         return;
     }
-    
-    if (appState.isSyncing) {
-        ui.showStatus('المزامنة جارية بالفعل...', 'error', 1500);
-        saveButton.disabled = false;
-        return;
-    }
-    
+
+    const item = appState.inventory[itemIndex];
     if (item.quantity <= 0) {
-        ui.showStatus('لا يمكن بيع المنتج، الكمية صفر.', 'error');
+        ui.showStatus('Cannot sell item, quantity is zero.', 'error');
         saveButton.disabled = false;
         return;
     }
-
-    appState.isSyncing = true;
-    ui.showStatus('جاري تسجيل البيع...', 'syncing');
+    
+    ui.showStatus('Processing sale...', 'syncing');
+    
+    // Apply change locally first
     item.quantity--;
-
     const saleRecord = {
         saleId: `sale_${Date.now()}`,
         itemId: item.id,
@@ -135,22 +206,24 @@ async function handleSaleFormSubmit(e) {
         timestamp: new Date().toISOString()
     };
     appState.sales.push(saleRecord);
+    
+    // Update UI immediately for better UX
+    ui.renderInventory();
 
     try {
-        await api.saveToGitHub();
-        await api.saveSales();
-        ui.showStatus('تم تسجيل البيع بنجاح!', 'success');
+        await saveDataWithConflictResolution();
+        ui.showStatus('Sale recorded successfully!', 'success');
+        ui.getDOMElements().saleModal.close();
     } catch (error) {
-        ui.showStatus(`فشل تسجيل البيع: ${error.message}`, 'error', 5000);
+        ui.showStatus(`Sale failed: ${error.message}`, 'error', 5000);
+        // Revert local changes on final failure
         item.quantity++;
         appState.sales.pop();
-    } finally {
-        ui.getDOMElements().saleModal.close();
         ui.renderInventory();
+    } finally {
         if(appState.currentView === 'dashboard') {
             ui.renderDashboard();
         }
-        appState.isSyncing = false;
         saveButton.disabled = false;
     }
 }
@@ -158,31 +231,32 @@ async function handleSaleFormSubmit(e) {
 
 async function handleImageCleanup() {
     if (!appState.syncConfig) {
-        ui.showStatus('يرجى إعداد المزامنة أولاً.', 'error');
+        ui.showStatus('Please configure sync settings first.', 'error');
         return;
     }
-    if (!confirm('هل أنت متأكد من رغبتك في حذف جميع الصور غير المستخدمة نهائياً من المستودع؟ لا يمكن التراجع عن هذا الإجراء.')) {
+    if (!confirm('Are you sure you want to permanently delete all unused images from the repository? This action cannot be undone.')) {
         return;
     }
-    ui.showStatus('جاري البحث عن الصور غير المستخدمة...', 'syncing');
+    ui.showStatus('Scanning for unused images...', 'syncing');
     try {
         const allRepoImages = await api.getGitHubDirectoryListing('images');
         const usedImages = new Set(appState.inventory.map(item => item.imagePath).filter(Boolean));
         const orphanedImages = allRepoImages.filter(repoImage => !usedImages.has(repoImage.path));
+        
         if (orphanedImages.length === 0) {
-            ui.showStatus('لا توجد صور غير مستخدمة ليتم حذفها.', 'success');
+            ui.showStatus('No unused images found to delete.', 'success');
             return;
         }
         
-        ui.showStatus(`تم العثور على ${orphanedImages.length} صورة... جاري الحذف.`, 'syncing');
+        ui.showStatus(`Found ${orphanedImages.length} images... Deleting.`, 'syncing');
         let deletedCount = 0;
         for (const image of orphanedImages) {
             await api.deleteFileFromGitHub(image.path, image.sha, `Cleanup: delete unused image ${image.name}`);
             deletedCount++;
         }
-        ui.showStatus(`تم حذف ${deletedCount} صورة غير مستخدمة بنجاح.`, 'success', 5000);
+        ui.showStatus(`Successfully deleted ${deletedCount} unused images.`, 'success', 5000);
     } catch (error) {
-        ui.showStatus(`حدث خطأ: ${error.message}`, 'error', 5000);
+        ui.showStatus(`An error occurred: ${error.message}`, 'error', 5000);
     }
 }
 
@@ -218,7 +292,7 @@ async function runAutomaticArchive() {
             return;
         }
 
-        ui.showStatus('جاري أرشفة البيانات القديمة تلقائياً...', 'syncing');
+        ui.showStatus('Automatically archiving old data...', 'syncing');
         for (const [monthKey, salesData] of archivesToCreate) {
             const path = `archives/sales_${monthKey}.json`;
             const content = JSON.stringify(salesData, null, 2);
@@ -229,11 +303,11 @@ async function runAutomaticArchive() {
         await api.saveSales();
         saveLocalData();
         localStorage.setItem('lastArchiveCheck', currentMonthKey);
-        ui.showStatus(`تمت أرشفة ${archivesToCreate.length} شهر من السجلات بنجاح.`, 'success', 5000);
+        ui.showStatus(`Successfully archived records for ${archivesToCreate.length} months.`, 'success', 5000);
 
     } catch (error) {
         console.error('Automatic archive failed:', error);
-        ui.showStatus('فشلت الأرشفة التلقائية.', 'error', 5000);
+        ui.showStatus('Automatic archiving failed.', 'error', 5000);
     }
 }
 
@@ -242,14 +316,14 @@ async function openArchiveBrowser() {
     const listContainer = document.getElementById('archive-list-container');
     const detailsContainer = document.getElementById('archive-details-container');
 
-    listContainer.innerHTML = '<p>جاري تحميل قائمة الأرشيف...</p>';
-    detailsContainer.innerHTML = '<p>اختر شهراً من القائمة أعلاه لعرض تفاصيله.</p>';
+    listContainer.innerHTML = '<p>Loading archive list...</p>';
+    detailsContainer.innerHTML = '<p>Select a month from the list above to view its details.</p>';
     modal.showModal();
 
     try {
         const files = await api.getGitHubDirectoryListing('archives');
         if (files.length === 0) {
-            listContainer.innerHTML = '<p>لا يوجد أرشيف لعرضه.</p>';
+            listContainer.innerHTML = '<p>No archives available to display.</p>';
             return;
         }
 
@@ -264,7 +338,7 @@ async function openArchiveBrowser() {
                 listContainer.appendChild(item);
             });
     } catch (error) {
-        listContainer.innerHTML = `<p style="color: var(--danger-color);">فشل تحميل الأرشيف: ${error.message}</p>`;
+        listContainer.innerHTML = `<p style="color: var(--danger-color);">Failed to load archives: ${error.message}</p>`;
     }
 }
 
@@ -317,7 +391,9 @@ function setupEventListeners() {
         if (quantityInterval) {
             clearInterval(quantityInterval);
             quantityInterval = null;
-            api.saveToGitHub();
+            saveDataWithConflictResolution().catch(error => {
+                 ui.showStatus(`Sync failed: ${error.message}`, 'error', 5000);
+            });
         }
     };
     const startQuantityChange = (action) => {
@@ -351,11 +427,11 @@ function setupEventListeners() {
         ui.openItemModal(appState.currentItemId);
     });
     elements.detailsDeleteBtn.addEventListener('click', async () => {
-        if (confirm('هل أنت متأكد من رغبتك في حذف هذا المنتج؟')) {
+        if (confirm('Are you sure you want to delete this product?')) {
             appState.inventory = appState.inventory.filter(item => item.id !== appState.currentItemId);
             elements.detailsModal.close();
             ui.renderInventory();
-            await api.saveToGitHub();
+            await saveDataWithConflictResolution();
         }
     });
     elements.detailsBarcodeBtn.addEventListener('click', () => ui.openBarcodeModal(appState.currentItemId));
@@ -451,11 +527,11 @@ function setupEventListeners() {
         item.classList.add('active');
         
         const detailsContainer = document.getElementById('archive-details-container');
-        detailsContainer.innerHTML = '<p>جاري تحميل البيانات...</p>';
+        detailsContainer.innerHTML = '<p>Loading data...</p>';
         try {
             const data = await api.fetchGitHubFile(item.dataset.path);
-            const symbol = appState.activeCurrency === 'IQD' ? 'د.ع' : '$';
-            let tableHTML = `<table class="archive-table"><thead><tr><th>المنتج</th><th>الكمية</th><th>السعر</th><th>التاريخ</th></tr></thead><tbody>`;
+            const symbol = appState.activeCurrency === 'IQD' ? 'IQD' : '$';
+            let tableHTML = `<table class="archive-table"><thead><tr><th>Product</th><th>Qty</th><th>Price</th><th>Date</th></tr></thead><tbody>`;
             data.forEach(sale => {
                 const price = appState.activeCurrency === 'IQD' ? sale.sellPriceIqd : sale.sellPriceUsd;
                 tableHTML += `<tr><td>${sale.itemName}</td><td>${sale.quantitySold}</td><td>${price.toLocaleString()} ${symbol}</td><td>${sale.saleDate}</td></tr>`;
@@ -463,7 +539,7 @@ function setupEventListeners() {
             tableHTML += '</tbody></table>';
             detailsContainer.innerHTML = tableHTML;
         } catch (error) {
-            detailsContainer.innerHTML = `<p style="color: var(--danger-color);">فشل تحميل الملف: ${error.message}</p>`;
+            detailsContainer.innerHTML = `<p style="color: var(--danger-color);">Failed to load file: ${error.message}</p>`;
         }
     });
 
@@ -484,7 +560,7 @@ async function initializeApp() {
     appState.activeCurrency = savedCurrency;
     ui.setTheme(savedTheme);
     if (appState.syncConfig) {
-        ui.showStatus('جاري مزامنة البيانات...', 'syncing');
+        ui.showStatus('Syncing data...', 'syncing');
         try {
             const [inventoryResult, salesResult] = await Promise.all([
                 api.fetchFromGitHub(),
@@ -499,13 +575,13 @@ async function initializeApp() {
                 appState.salesFileSha = salesResult.sha;
             }
             saveLocalData();
-            ui.showStatus('تمت المزامنة بنجاح!', 'success');
+            ui.showStatus('Sync successful!', 'success');
 
             // Run automatic archive check after successful sync
             await runAutomaticArchive();
 
         } catch(error) {
-            ui.showStatus(`خطأ في المزامنة: ${error.message}`, 'error', 5000);
+            ui.showStatus(`Sync error: ${error.message}`, 'error', 5000);
             loadLocalData();
         }
     } else {
@@ -514,6 +590,7 @@ async function initializeApp() {
     
     ui.renderCategoryFilter();
     ui.updateCurrencyDisplay();
+    ui.renderInventory();
     console.log('App Initialized Successfully.');
 }
 
