@@ -292,8 +292,19 @@
             <h3>تأكيد عملية البيع</h3>
             <input type="hidden" id="sale-item-id">
             
-            <p>هل أنت متأكد من بيع قطعة واحدة من:</p>
+            <p>تأكيد تفاصيل البيع للمنتج التالي:</p>
             <strong id="sale-item-name" class="sale-item-name-display"></strong>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="sale-quantity">الكمية المباعة</label>
+                    <input type="number" id="sale-quantity" value="1" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="sale-price">سعر البيع للقطعة (بالعملة الحالية)</label>
+                    <input type="number" id="sale-price" step="250" min="0">
+                </div>
+            </div>
             
              <label for="sale-date">تاريخ البيع</label>
             <input type="date" id="sale-date" required>
