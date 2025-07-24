@@ -454,6 +454,19 @@ export const openSaleModal = (itemId) => {
     elements.saleForm.reset();
     elements.saleItemIdInput.value = item.id;
     elements.saleItemName.textContent = item.name;
+
+    const saleQuantityInput = document.getElementById('sale-quantity');
+    const salePriceInput = document.getElementById('sale-price');
+
+    const isIQD = appState.activeCurrency === 'IQD';
+    const price = isIQD ? (item.sellPriceIqd || 0) : (item.sellPriceUsd || 0);
+
+    salePriceInput.value = price;
+    salePriceInput.step = isIQD ? '250' : '0.01';
+    
+    saleQuantityInput.value = 1;
+    saleQuantityInput.max = item.quantity;
+
     // Set date to today in YYYY-MM-DD format
     const today = new Date();
     const year = today.getFullYear();
