@@ -255,7 +255,9 @@ export const renderInventory = () => {
             const card = document.createElement('div');
             card.className = 'product-card';
             card.dataset.id = item.id;
-            if (item.quantity <= item.alertLevel) {
+            
+            const isLowStock = item.quantity <= item.alertLevel;
+            if (isLowStock) {
                 card.classList.add('low-stock');
             }
             
@@ -264,8 +266,12 @@ export const renderInventory = () => {
             const symbol = isIQD ? 'د.ع' : '$';
 
             const placeholder = `<div class="card-image-placeholder"><span class="material-symbols-outlined">key</span></div>`;
+            
             card.innerHTML = `
                 <div class="card-image-container">
+                    <div class="quantity-badge ${isLowStock ? 'low-stock' : ''}">
+                        متبقي ${item.quantity}
+                    </div>
                     ${item.imagePath ? `<img class="card-image" alt="${sanitizeHTML(item.name)}">` : placeholder}
                 </div>
                 <div class="card-info">
