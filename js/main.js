@@ -50,28 +50,33 @@ async function handleSaleFormSubmit(e) {
 
     const itemId = document.getElementById('sale-item-id').value;
     const item = appState.inventory.items.find(i => i.id === itemId);
+    const quantityToSell = parseInt(document.getElementById('sale-quantity').value, 10);
+    const salePrice = parseFloat(document.getElementById('sale-price').value);
 
-    if (!item) {
-        ui.showStatus('خطأ: المنتج غير موجود.', 'error', { duration: 5000 });
+    if (!item || quantityToSell <= 0) {
+        ui.showStatus('خطأ: يرجى إدخال كمية صحيحة.', 'error', { duration: 5000 });
         saveButton.disabled = false;
         return;
     }
-    if (item.quantity <= 0) {
-        ui.showStatus('لا يمكن بيع المنتج، الكمية صفر.', 'error', { duration: 5000 });
+    if (item.quantity < quantityToSell) {
+        ui.showStatus(`لا يمكن بيع هذه الكمية، المتبقي: ${item.quantity} فقط.`, 'error', { duration: 5000 });
         saveButton.disabled = false;
         return;
     }
 
     ui.showStatus('جاري تسجيل البيع...', 'syncing');
-    item.quantity--;
+    item.quantity -= quantityToSell;
+
+    const isIQD = appState.activeCurrency === 'IQD';
+
     const saleRecord = {
         saleId: `sale_${Date.now()}`,
         itemId: item.id,
         itemName: item.name,
-        quantitySold: 1,
-        sellPriceIqd: item.sellPriceIqd || 0,
+        quantitySold: quantityToSell,
+        sellPriceIqd: isIQD ? salePrice : item.sellPriceIqd,
         costPriceIqd: item.costPriceIqd || 0,
-        sellPriceUsd: item.sellPriceUsd || 0,
+        sellPriceUsd: !isIQD ? salePrice : item.sellPriceUsd,
         costPriceUsd: item.costPriceUsd || 0,
         saleDate: document.getElementById('sale-date').value,
         notes: document.getElementById('sale-notes').value,
@@ -96,7 +101,7 @@ async function handleSaleFormSubmit(e) {
         } else {
             ui.showStatus(`فشل تسجيل البيع: ${error.message}`, 'error', { duration: 5000 });
         }
-        item.quantity++;
+        item.quantity += quantityToSell; // Revert quantity
         appState.sales.pop();
         ui.renderInventory();
     } finally {
@@ -251,7 +256,6 @@ async function handleManualArchive() {
         }
 
         appState.sales = salesByMonth[currentMonthKey] || [];
-        
         appState.inventory.lastArchiveTimestamp = new Date().toLocaleString('ar-EG');
         
         await api.saveSales();
