@@ -37,92 +37,72 @@ function saveLocalData() {
 
 // --- CORE LOGIC HANDLERS ---
 
-/**
- * Wrapper function to handle saving data with automatic conflict resolution.
- * It will retry a specified number of times if a ConflictError is caught.
- * @param {number} maxRetries - The maximum number of times to retry.
- */
-async function saveDataWithConflictResolution(maxRetries = 3) {
-    let attempts = 0;
-    // Store the initial state before the first attempt to correctly re-apply changes
-    const originalLocalInventory = JSON.parse(JSON.stringify(appState.inventory));
-    const originalLocalSales = JSON.parse(JSON.stringify(appState.sales));
+async function handleSaleFormSubmit(e) {
+    e.preventDefault();
+    const saveButton = document.getElementById('confirm-sale-btn');
+    saveButton.disabled = true;
 
-    while (attempts < maxRetries) {
-        try {
-            // Attempt to save the current state
-            await api.saveToGitHub();
-            await api.saveSales();
-            saveLocalData(); // Save to local storage on successful sync
-            return; // Exit successfully
-        } catch (error) {
-            if (error instanceof ConflictError) {
-                attempts++;
-                ui.showStatus(`تم اكتشاف تحديث آخر، جاري المزامنة والمحاولة مجدداً... (${attempts}/${maxRetries})`, 'syncing');
+    const itemId = document.getElementById('sale-item-id').value;
+    const item = appState.inventory.find(i => i.id === itemId);
 
-                // Fetch the latest data from the server
-                const [inventoryResult, salesResult] = await Promise.all([
-                    api.fetchFromGitHub(),
-                    api.fetchSales()
-                ]);
-
-                const serverInventory = inventoryResult.data;
-                const serverSales = salesResult.data;
-                appState.fileSha = inventoryResult.sha;
-                appState.salesFileSha = salesResult.sha;
-
-                // --- THE CORRECTED MERGE LOGIC ---
-                // Get the change that the user just tried to make from the original state
-                const lastAttemptedSale = originalLocalSales[originalLocalSales.length - 1];
-                
-                // This logic is for sales operations
-                if (lastAttemptedSale && originalLocalSales.length > appState.sales.length) {
-                     const itemToUpdate = serverInventory.find(i => i.id === lastAttemptedSale.itemId);
-                     if (itemToUpdate) {
-                        // **THE FIX**: Re-apply the *operation* (e.g., selling 1 item)
-                        // to the fresh data from the server.
-                        itemToUpdate.quantity -= lastAttemptedSale.quantitySold;
-                     }
-                     // Re-build the state with the correctly merged data before retrying
-                     appState.inventory = serverInventory;
-                     appState.sales = [...serverSales, lastAttemptedSale];
-                } else {
-                    // This logic handles non-sale updates, like editing an item's details or quantity.
-                    // It finds what item was changed locally and applies that whole item's data to the server's data.
-                    let changedItem = null;
-                     for(let i=0; i<originalLocalInventory.length; i++) {
-                        if(JSON.stringify(originalLocalInventory[i]) !== JSON.stringify(appState.inventory[i])) {
-                            changedItem = appState.inventory[i];
-                            break;
-                        }
-                     }
-                    if(changedItem){
-                        const itemIndexOnServer = serverInventory.findIndex(i => i.id === changedItem.id);
-                        if(itemIndexOnServer !== -1){
-                            serverInventory[itemIndexOnServer] = changedItem;
-                        } else {
-                             // Item was newly created, add it
-                             serverInventory.push(changedItem);
-                        }
-                    }
-                    appState.inventory = serverInventory;
-                    appState.sales = serverSales;
-                }
-                
-            } else {
-                // For any other error, fail immediately and revert
-                appState.inventory = originalLocalInventory;
-                appState.sales = originalLocalSales;
-                throw error;
-            }
-        }
+    if (!item || item.quantity <= 0) {
+        ui.showStatus('خطأ: لا يمكن بيع المنتج.', 'error', { duration: 5000 });
+        saveButton.disabled = false;
+        return;
     }
-    // If all retries fail, revert and throw a final error
-    appState.inventory = originalLocalInventory;
-    appState.sales = originalLocalSales;
-    throw new Error('فشل تحديث البيانات بعد عدة محاولات.');
-}
 
+    // 1. Apply change locally first
+    ui.showStatus('جاري تسجيل البيع...', 'syncing');
+    item.quantity--;
+    const saleRecord = {
+        saleId: `sale_${Date.now()}`,
+        itemId: item.id,
+        itemName: item.name,
+        quantitySold: 1,
+        sellPriceIqd: item.sellPriceIqd || 0,
+        costPriceIqd: item.costPriceIqd || 0,
+        sellPriceUsd: item.sellPriceUsd || 0,
+        costPriceUsd: item.costPriceUsd || 0,
+        saleDate: document.getElementById('sale-date').value,
+        notes: document.getElementById('sale-notes').value,
+        timestamp: new Date().toISOString()
+    };
+    appState.sales.push(saleRecord);
+    ui.renderInventory();
+
+    try {
+        // 2. Attempt to save the data
+        await api.saveToGitHub();
+        await api.saveSales();
+        saveLocalData();
+        ui.showStatus('تم تسجيل البيع بنجاح!', 'success');
+        ui.getDOMElements().saleModal.close();
+
+    } catch (error) {
+        // 3. Handle errors gracefully
+        if (error instanceof ConflictError) {
+            // Display the error with the refresh button
+            ui.showStatus(
+                'البيانات غير محدّثة. يرجى تحديث الصفحة والمحاولة مرة أخرى.',
+                'error',
+                { showRefreshButton: true }
+            );
+        } else {
+            // For any other network or server error
+            ui.showStatus(`فشل تسجيل البيع: ${error.message}`, 'error', { duration: 5000 });
+        }
+
+        // **Crucially, revert the local changes on any failure**
+        item.quantity++;
+        appState.sales.pop();
+        ui.renderInventory();
+    } finally {
+        if(appState.currentView === 'dashboard') {
+            ui.renderDashboard();
+        }
+        saveButton.disabled = false;
+    }
+}
 
 async function handleItemFormSubmit(e) {
     e.preventDefault();
@@ -130,11 +110,11 @@ async function handleItemFormSubmit(e) {
     saveButton.disabled = true;
     ui.showStatus('جاري الحفظ...', 'syncing');
 
+    const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
     const itemId = document.getElementById('item-id').value;
     const existingItem = appState.inventory.find(i => i.id === itemId);
-    let imagePath = existingItem ?
-        existingItem.imagePath : null;
-    
+    let imagePath = existingItem ? existingItem.imagePath : null;
+
     try {
         if (appState.selectedImageFile) {
             imagePath = await api.uploadImageToGitHub(appState.selectedImageFile);
@@ -155,9 +135,9 @@ async function handleItemFormSubmit(e) {
             imagePath: imagePath,
         };
         
-        if (itemId) {
-            const index = appState.inventory.findIndex(i => i.id === itemId);
-            if (index !== -1) appState.inventory[index] = itemData;
+        const index = appState.inventory.findIndex(i => i.id === itemId);
+        if (index !== -1) {
+            appState.inventory[index] = itemData;
         } else {
             appState.inventory.push(itemData);
         }
@@ -165,89 +145,37 @@ async function handleItemFormSubmit(e) {
         ui.renderInventory();
         ui.renderCategoryFilter();
         
-        await saveDataWithConflictResolution();
+        await api.saveToGitHub();
+        saveLocalData();
         
-        ui.showStatus('تم حفظ التغييرات في السحابة!', 'success');
+        ui.showStatus('تم حفظ التغييرات بنجاح!', 'success');
         ui.getDOMElements().itemModal.close();
 
         if (appState.currentItemId === itemData.id) {
             ui.openDetailsModal(itemData.id);
         }
     } catch (error) {
-        ui.showStatus(`فشل الحفظ: ${error.message}`, 'error', 5000);
-        // Reverting is handled by the conflict resolution function
+        appState.inventory = originalInventory;
         ui.renderInventory();
+        if (error instanceof ConflictError) {
+            ui.showStatus(
+                'خطأ: قام مستخدم آخر بتحديث البيانات. يرجى التحديث.',
+                'error',
+                { showRefreshButton: true }
+            );
+        } else {
+            ui.showStatus(`فشل الحفظ: ${error.message}`, 'error', { duration: 5000 });
+        }
     } finally {
         saveButton.disabled = false;
         appState.selectedImageFile = null;
     }
 }
 
-async function handleSaleFormSubmit(e) {
-    e.preventDefault();
-    const saveButton = document.getElementById('confirm-sale-btn');
-    saveButton.disabled = true;
-
-    const itemId = document.getElementById('sale-item-id').value;
-    const saleDate = document.getElementById('sale-date').value;
-    const saleNotes = document.getElementById('sale-notes').value;
-    const itemIndex = appState.inventory.findIndex(i => i.id === itemId);
-
-    if (itemIndex === -1) {
-        ui.showStatus('خطأ: المنتج غير موجود.', 'error');
-        saveButton.disabled = false;
-        return;
-    }
-
-    const item = appState.inventory[itemIndex];
-    if (item.quantity <= 0) {
-        ui.showStatus('لا يمكن بيع المنتج، الكمية صفر.', 'error');
-        saveButton.disabled = false;
-        return;
-    }
-    
-    ui.showStatus('جاري تسجيل البيع...', 'syncing');
-    
-    // Apply change locally first
-    item.quantity--;
-    const saleRecord = {
-        saleId: `sale_${Date.now()}`,
-        itemId: item.id,
-        itemName: item.name,
-        quantitySold: 1,
-        sellPriceIqd: item.sellPriceIqd || 0,
-        costPriceIqd: item.costPriceIqd || 0,
-        sellPriceUsd: item.sellPriceUsd || 0,
-        costPriceUsd: item.costPriceUsd || 0,
-        saleDate: saleDate,
-        notes: saleNotes,
-        timestamp: new Date().toISOString()
-    };
-    appState.sales.push(saleRecord);
-    
-    // Update UI immediately for better UX
-    ui.renderInventory();
-
-    try {
-        await saveDataWithConflictResolution();
-        ui.showStatus('تم تسجيل البيع بنجاح!', 'success');
-        ui.getDOMElements().saleModal.close();
-    } catch (error) {
-        ui.showStatus(`فشل تسجيل البيع: ${error.message}`, 'error', 5000);
-        // The conflict resolution function handles reverting state.
-        ui.renderInventory();
-    } finally {
-        if(appState.currentView === 'dashboard') {
-            ui.renderDashboard();
-        }
-        saveButton.disabled = false;
-    }
-}
-
 
 async function handleImageCleanup() {
     if (!appState.syncConfig) {
-        ui.showStatus('يرجى إعداد المزامنة أولاً.', 'error');
+        ui.showStatus('يرجى إعداد المزامنة أولاً.', 'error', { duration: 5000 });
         return;
     }
     if (!confirm('هل أنت متأكد من رغبتك في حذف جميع الصور غير المستخدمة نهائياً من المستودع؟ لا يمكن التراجع عن هذا الإجراء.')) {
@@ -270,9 +198,9 @@ async function handleImageCleanup() {
             await api.deleteFileFromGitHub(image.path, image.sha, `Cleanup: delete unused image ${image.name}`);
             deletedCount++;
         }
-        ui.showStatus(`تم حذف ${deletedCount} صورة غير مستخدمة بنجاح.`, 'success', 5000);
+        ui.showStatus(`تم حذف ${deletedCount} صورة غير مستخدمة بنجاح.`, 'success', { duration: 5000 });
     } catch (error) {
-        ui.showStatus(`حدث خطأ: ${error.message}`, 'error', 5000);
+        ui.showStatus(`حدث خطأ: ${error.message}`, 'error', { duration: 5000 });
     }
 }
 
@@ -319,11 +247,11 @@ async function runAutomaticArchive() {
         await api.saveSales();
         saveLocalData();
         localStorage.setItem('lastArchiveCheck', currentMonthKey);
-        ui.showStatus(`تمت أرشفة ${archivesToCreate.length} شهر من السجلات بنجاح.`, 'success', 5000);
+        ui.showStatus(`تمت أرشفة ${archivesToCreate.length} شهر من السجلات بنجاح.`, 'success', { duration: 5000 });
 
     } catch (error) {
         console.error('Automatic archive failed:', error);
-        ui.showStatus('فشلت الأرشفة التلقائية.', 'error', 5000);
+        ui.showStatus('فشلت الأرشفة التلقائية.', 'error', { duration: 5000 });
     }
 }
 
@@ -403,13 +331,15 @@ function setupEventListeners() {
     
     // Details Modal
     elements.closeDetailsModalBtn.addEventListener('click', () => elements.detailsModal.close());
-    const stopQuantityChange = () => {
+    const stopQuantityChange = async () => {
         if (quantityInterval) {
             clearInterval(quantityInterval);
             quantityInterval = null;
-            saveDataWithConflictResolution().catch(error => {
-                 ui.showStatus(`فشل المزامنة: ${error.message}`, 'error', 5000);
-            });
+            try {
+                await api.saveToGitHub();
+            } catch (error) {
+                 ui.showStatus(`فشل المزامنة: ${error.message}`, 'error', { duration: 5000 });
+            }
         }
     };
     const startQuantityChange = (action) => {
@@ -444,10 +374,17 @@ function setupEventListeners() {
     });
     elements.detailsDeleteBtn.addEventListener('click', async () => {
         if (confirm('هل أنت متأكد من رغبتك في حذف هذا المنتج؟')) {
+            const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
             appState.inventory = appState.inventory.filter(item => item.id !== appState.currentItemId);
             elements.detailsModal.close();
             ui.renderInventory();
-            await saveDataWithConflictResolution();
+            try {
+                await api.saveToGitHub();
+            } catch(error) {
+                appState.inventory = originalInventory;
+                ui.renderInventory();
+                ui.showStatus('فشل الحذف، ربما قام مستخدم آخر بتحديث البيانات.', 'error', { showRefreshButton: true });
+            }
         }
     });
     elements.detailsBarcodeBtn.addEventListener('click', () => ui.openBarcodeModal(appState.currentItemId));
@@ -597,7 +534,7 @@ async function initializeApp() {
             await runAutomaticArchive();
 
         } catch(error) {
-            ui.showStatus(`خطأ في المزامنة: ${error.message}`, 'error', 5000);
+            ui.showStatus(`خطأ في المزامنة: ${error.message}`, 'error', { duration: 5000 });
             loadLocalData();
         }
     } else {

@@ -128,11 +128,40 @@ export function renderCategoryFilter() {
 
 /**
  * Displays a status message at the bottom of the screen.
+ * Can now optionally include a refresh button.
+ * @param {string} message The message to display.
+ * @param {string} type The type of status (e.g., 'success', 'error', 'syncing').
+ * @param {object} options Optional parameters { duration: number, showRefreshButton: boolean }.
  */
-export const showStatus = (message, type, duration = 3000) => {
-    elements.statusIndicator.textContent = message;
+export const showStatus = (message, type, options = {}) => {
+    const { duration = 3000, showRefreshButton = false } = options;
+
+    // Clear previous content
+    elements.statusIndicator.innerHTML = '';
+
+    // Create message element
+    const messageSpan = document.createElement('span');
+    messageSpan.textContent = message;
+    elements.statusIndicator.appendChild(messageSpan);
+
+    if (showRefreshButton) {
+        // Create refresh button
+        const refreshButton = document.createElement('button');
+        refreshButton.textContent = 'تحديث';
+        refreshButton.className = 'status-refresh-btn';
+        
+        // Add click event to reload the page
+        refreshButton.onclick = () => {
+            location.reload();
+        };
+        
+        elements.statusIndicator.appendChild(refreshButton);
+    }
+
     elements.statusIndicator.className = `status-indicator ${type} show`;
-    if (type !== 'syncing') {
+
+    // Do not auto-hide if a refresh button is present, as it requires user action
+    if (type !== 'syncing' && !showRefreshButton) {
         setTimeout(() => {
             elements.statusIndicator.classList.remove('show');
         }, duration);
