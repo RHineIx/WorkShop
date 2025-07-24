@@ -784,6 +784,27 @@ color: white;
     z-index: 1000;
     transition: bottom 0.5s ease-in-out;
     box-shadow: var(--shadow-strong);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.status-refresh-btn {
+    padding: 6px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    background-color: rgba(0, 0, 0, 0.2);
+    color: white;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    font-weight: bold;
+    font-family: var(--font-family);
+    transition: background-color 0.2s ease;
+    white-space: nowrap;
+}
+
+.status-refresh-btn:hover {
+    background-color: rgba(0, 0, 0, 0.4);
 }
 
 .status-indicator.show {
@@ -1060,27 +1081,17 @@ color: white;
 .archive-table th {
     font-weight: 700;
 }
-/* --- Status Indicator Button --- */
-.status-indicator {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px; /* Add space between message and button */
+
+/* --- Maintenance Actions Text & Divider --- */
+.last-archive-text {
+    font-size: 12px;
+    text-align: center;
+    color: var(--text-secondary);
+    margin: 4px 0;
 }
 
-.status-refresh-btn {
-    padding: 6px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    background-color: rgba(0, 0, 0, 0.2);
-    color: white;
-    border-radius: var(--border-radius-sm);
-    cursor: pointer;
-    font-weight: bold;
-    font-family: var(--font-family);
-    transition: background-color 0.2s ease;
-    white-space: nowrap; /* Prevent button text from wrapping */
-}
-
-.status-refresh-btn:hover {
-    background-color: rgba(0, 0, 0, 0.4);
+.maintenance-divider {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: var(--spacing-sm) 0;
 }

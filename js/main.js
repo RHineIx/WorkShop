@@ -81,18 +81,15 @@ async function handleSaleFormSubmit(e) {
     } catch (error) {
         // 3. Handle errors gracefully
         if (error instanceof ConflictError) {
-            // Display the error with the refresh button
             ui.showStatus(
                 'البيانات غير محدّثة. يرجى تحديث الصفحة والمحاولة مرة أخرى.',
                 'error',
                 { showRefreshButton: true }
             );
         } else {
-            // For any other network or server error
             ui.showStatus(`فشل تسجيل البيع: ${error.message}`, 'error', { duration: 5000 });
         }
 
-        // **Crucially, revert the local changes on any failure**
         item.quantity++;
         appState.sales.pop();
         ui.renderInventory();
@@ -206,54 +203,69 @@ async function handleImageCleanup() {
 
 // --- Archive Feature Handlers ---
 
-async function runAutomaticArchive() {
+async function handleManualArchive() {
     if (!appState.syncConfig || !appState.sales || appState.sales.length === 0) {
+        ui.showStatus('لا توجد بيانات للمزامنة أو الأرشفة.', 'error', { duration: 4000 });
         return;
     }
-    console.log('Running automatic archive check...');
+
+    const now = new Date();
+    const currentMonthKey = `${now.getFullYear()}_${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    const salesByMonth = appState.sales.reduce((acc, sale) => {
+        const saleDate = new Date(sale.saleDate);
+        const monthKey = `${saleDate.getFullYear()}_${String(saleDate.getMonth() + 1).padStart(2, '0')}`;
+        if (!acc[monthKey]) acc[monthKey] = [];
+        acc[monthKey].push(sale);
+        return acc;
+    }, {});
+
+    const archivesToCreate = Object.entries(salesByMonth).filter(([key]) => key !== currentMonthKey);
+
+    if (archivesToCreate.length === 0) {
+        ui.showStatus('لا توجد مبيعات من الشهور السابقة لأرشفتها.', 'success');
+        return;
+    }
+
+    if (!confirm(`سيتم أرشفة المبيعات لـ ${archivesToCreate.length} شهر. هل أنت متأكد؟`)) {
+        return;
+    }
+    
+    ui.showStatus('جاري أرشفة البيانات...', 'syncing');
+
     try {
-        const now = new Date();
-        const currentMonthKey = `${now.getFullYear()}_${String(now.getMonth() + 1).padStart(2, '0')}`;
-        const lastCheck = localStorage.getItem('lastArchiveCheck');
-
-        if (lastCheck === currentMonthKey) {
-            console.log('Archive check already performed for this month.');
-            return;
-        }
-        
-        const salesByMonth = appState.sales.reduce((acc, sale) => {
-            const saleDate = new Date(sale.saleDate);
-            const monthKey = `${saleDate.getFullYear()}_${String(saleDate.getMonth() + 1).padStart(2, '0')}`;
-            if (!acc[monthKey]) acc[monthKey] = [];
-            acc[monthKey].push(sale);
-            return acc;
-        }, {});
-
-        const archivesToCreate = Object.entries(salesByMonth).filter(([key]) => key !== currentMonthKey);
-        if (archivesToCreate.length === 0) {
-            localStorage.setItem('lastArchiveCheck', currentMonthKey);
-            console.log('No old sales to archive.');
-            return;
-        }
-
-        ui.showStatus('جاري أرشفة البيانات القديمة تلقائياً...', 'syncing');
         for (const [monthKey, salesData] of archivesToCreate) {
             const path = `archives/sales_${monthKey}.json`;
             const content = JSON.stringify(salesData, null, 2);
-            await api.createGitHubFile(path, content, `Auto-archive sales for ${monthKey}`);
+            await api.createGitHubFile(path, content, `Manual archive for ${monthKey}`);
         }
 
         appState.sales = salesByMonth[currentMonthKey] || [];
         await api.saveSales();
         saveLocalData();
-        localStorage.setItem('lastArchiveCheck', currentMonthKey);
+        
+        const archiveDate = new Date().toLocaleString('ar-EG');
+        localStorage.setItem('lastArchiveTimestamp', archiveDate);
+        updateLastArchiveDateDisplay();
+
         ui.showStatus(`تمت أرشفة ${archivesToCreate.length} شهر من السجلات بنجاح.`, 'success', { duration: 5000 });
 
     } catch (error) {
-        console.error('Automatic archive failed:', error);
-        ui.showStatus('فشلت الأرشفة التلقائية.', 'error', { duration: 5000 });
+        console.error('Manual archive failed:', error);
+        ui.showStatus(`فشلت عملية الأرشفة: ${error.message}`, 'error', { duration: 5000 });
     }
 }
+
+function updateLastArchiveDateDisplay() {
+    const lastArchiveDate = localStorage.getItem('lastArchiveTimestamp');
+    const displayElement = document.getElementById('last-archive-date-display');
+    if (lastArchiveDate) {
+        displayElement.textContent = `آخر أرشفة: ${lastArchiveDate}`;
+    } else {
+        displayElement.textContent = 'آخر أرشفة: لم تتم بعد';
+    }
+}
+
 
 async function openArchiveBrowser() {
     const modal = document.getElementById('archive-browser-modal');
@@ -464,7 +476,8 @@ function setupEventListeners() {
     // Maintenance & Archive Buttons
     elements.closeBarcodeBtn.addEventListener('click', () => elements.barcodeModal.close());
     elements.cleanupImagesBtn.addEventListener('click', handleImageCleanup);
-    document.getElementById('archive-sales-btn').addEventListener('click', openArchiveBrowser);
+    document.getElementById('manual-archive-btn').addEventListener('click', handleManualArchive);
+    document.getElementById('view-archives-btn').addEventListener('click', openArchiveBrowser);
     
     // Archive Browser Modal Listeners
     const archiveBrowserModal = document.getElementById('archive-browser-modal');
@@ -508,6 +521,7 @@ async function initializeApp() {
     console.log('Initializing Inventory Management App...');
     setupEventListeners();
     loadConfig();
+    updateLastArchiveDateDisplay();
     const savedTheme = localStorage.getItem('inventoryAppTheme') || 'light';
     const savedCurrency = localStorage.getItem('inventoryAppCurrency') || 'IQD';
     appState.activeCurrency = savedCurrency;
@@ -529,9 +543,6 @@ async function initializeApp() {
             }
             saveLocalData();
             ui.showStatus('تمت المزامنة بنجاح!', 'success');
-
-            // Run automatic archive check after successful sync
-            await runAutomaticArchive();
 
         } catch(error) {
             ui.showStatus(`خطأ في المزامنة: ${error.message}`, 'error', { duration: 5000 });

@@ -256,13 +256,19 @@
                 <button type="button" id="cancel-sync-btn">إلغاء</button>
             </div>
             <div class="maintenance-actions">
+                <button type="button" id="manual-archive-btn" class="cleanup-btn archive-btn">
+                    <span class="material-symbols-outlined">archive</span>
+                    أرشفة المبيعات القديمة
+                </button>
+                <p id="last-archive-date-display" class="last-archive-text">آخر أرشفة: لم تتم بعد</p>
+                <hr class="maintenance-divider">
+                <button type="button" id="view-archives-btn" class="cleanup-btn archive-btn">
+                    <span class="material-symbols-outlined">inventory</span>
+                    عرض أرشيف المبيعات
+                </button>
                 <button type="button" id="cleanup-images-btn" class="cleanup-btn">
                     <span class="material-symbols-outlined">cleaning_services</span>
                     تنظيف الصور غير المستخدمة
-                </button>
-                <button type="button" id="archive-sales-btn" class="cleanup-btn archive-btn">
-                    <span class="material-symbols-outlined">archive</span>
-                    عرض أرشيف المبيعات
                 </button>
             </div>
         </form>
