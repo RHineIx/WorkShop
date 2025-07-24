@@ -1,6 +1,18 @@
 // js/api.js
 import { appState } from './state.js';
 
+// --- Custom Error for Handling Race Conditions ---
+/**
+ * Custom error class to identify when a file update fails due to a
+ * version mismatch (409 Conflict from GitHub API).
+ */
+export class ConflictError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = 'ConflictError';
+    }
+}
+
 // --- Internal API Helper Functions ---
 
 /**
@@ -72,7 +84,7 @@ export const fetchImageWithAuth = async (path) => {
  */
 export const uploadImageToGitHub = async (file) => {
     if (!appState.syncConfig) {
-        throw new Error('يجب إعداد المزامنة أولاً لرفع الصور.');
+        throw new Error('Sync must be configured to upload images.');
     }
     const base64content = await toBase64(file);
     const { username, repo, pat } = appState.syncConfig;
@@ -113,7 +125,8 @@ export const fetchFromGitHub = async () => {
 /**
  * Saves the current appState.inventory to the inventory.json file in the repo.
  * @returns {Promise<void>}
- * @throws {Error} If the save operation fails.
+ * @throws {Error} If the save operation fails for a generic reason.
+ * @throws {ConflictError} If the save operation fails due to a 409 conflict.
  */
 export const saveToGitHub = async () => {
     if (!appState.syncConfig) return;
@@ -130,6 +143,11 @@ export const saveToGitHub = async () => {
         headers: { 'Authorization': `token ${pat}` },
         body: JSON.stringify(body)
     });
+
+    if (response.status === 409) {
+        throw new ConflictError('Inventory file has been updated by another source.');
+    }
+
     if (!response.ok) throw new Error(`Failed to save inventory: ${response.statusText}`);
     const data = await response.json();
     appState.fileSha = data.content.sha;
@@ -160,21 +178,21 @@ export const fetchSales = async () => {
 /**
  * Saves the current appState.sales to the sales.json file in the repo.
  * @returns {Promise<void>}
- * @throws {Error} If the save operation fails.
+ * @throws {Error} If the save operation fails for a generic reason.
+ * @throws {ConflictError} If the save operation fails due to a 409 conflict.
  */
 export const saveSales = async () => {
     if (!appState.syncConfig) return;
     const { username, repo, pat } = appState.syncConfig;
     const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/sales.json`;
-    
-    // Fetch the latest SHA before saving to prevent conflicts
+
     try {
         const remoteFile = await fetch(apiUrl, { headers: { 'Authorization': `token ${pat}` } });
         if(remoteFile.ok) {
             const fileData = await remoteFile.json();
             appState.salesFileSha = fileData.sha;
         } else {
-             appState.salesFileSha = null; // File doesn't exist, so we create it
+             appState.salesFileSha = null;
         }
     } catch(e) {
         appState.salesFileSha = null;
@@ -184,17 +202,24 @@ export const saveSales = async () => {
     const body = {
         message: `Update sales data - ${new Date().toISOString()}`,
         content: content,
-        sha: appState.salesFileSha, // Use latest SHA
+        sha: appState.salesFileSha,
     };
     const response = await fetch(apiUrl, {
         method: 'PUT',
         headers: { 'Authorization': `token ${pat}` },
         body: JSON.stringify(body)
     });
+
+    if (response.status === 409) {
+        throw new ConflictError('Sales file has been updated by another source.');
+    }
+
     if (!response.ok) throw new Error(`Failed to save sales: ${response.statusText}`);
     const data = await response.json();
     appState.salesFileSha = data.content.sha;
 };
+
+// --- Other API functions (deleteFileFromGitHub, getGitHubDirectoryListing, etc.) remain unchanged ---
 
 /**
  * Deletes a file from the GitHub repository.
@@ -232,7 +257,7 @@ export const getGitHubDirectoryListing = async (path) => {
     const response = await fetch(apiUrl, { headers: { 'Authorization': `token ${pat}` } });
     if (!response.ok) {
         if (response.status === 404) return [];
-        throw new Error('فشل الوصول إلى المجلد المحدد.');
+        throw new Error('Failed to access the specified folder.');
     }
     const data = await response.json();
     return Array.isArray(data) ? data : [];
@@ -252,13 +277,11 @@ export const createGitHubFile = async (path, content, message) => {
     const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
     
     const base64Content = btoa(unescape(encodeURIComponent(content)));
-
     const response = await fetch(apiUrl, {
         method: 'PUT',
         headers: { 'Authorization': `token ${pat}` },
         body: JSON.stringify({ message, content: base64Content })
     });
-
     if (!response.ok) {
         if (response.status !== 422) { // 422 is "Unprocessable Entity", often means file exists
             throw new Error(`Failed to create file ${path}: ${response.statusText}`);
@@ -267,7 +290,8 @@ export const createGitHubFile = async (path, content, message) => {
 };
 
 /**
- * Fetches the content of a specific file from GitHub. Used for reading archive files.
+ * Fetches the content of a specific file from GitHub.
+ * Used for reading archive files.
  * @param {string} path The path to the file in the repo.
  * @returns {Promise<any>} A promise that resolves with the parsed JSON data.
  * @throws {Error} If the fetch fails.
@@ -277,7 +301,6 @@ export const fetchGitHubFile = async (path) => {
     const { username, repo, pat } = appState.syncConfig;
     const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
     const response = await fetch(apiUrl, { headers: { 'Authorization': `token ${pat}` } });
-
     if (!response.ok) {
         throw new Error(`Failed to fetch file ${path}: ${response.statusText}`);
     }
