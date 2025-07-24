@@ -961,7 +961,7 @@ color: white;
 .quantity-badge {
     position: absolute;
     top: 8px;
-    right: 8px; /* Top-left for RTL layout */
+    left: 8px; /* Top-left for RTL layout */
     padding: 4px 8px;
     border-radius: 12px; /* Pill shape */
     background-color: var(--accent-color); /* Blue by default */
