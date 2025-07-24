@@ -255,10 +255,16 @@
                 <button type="submit">حفظ الإعدادات</button>
                 <button type="button" id="cancel-sync-btn">إلغاء</button>
             </div>
-            <button type="button" id="cleanup-images-btn" class="cleanup-btn">
-                 <span class="material-symbols-outlined">cleaning_services</span>
-                تنظيف الصور غير المستخدمة
-            </button>
+            <div class="maintenance-actions">
+                <button type="button" id="cleanup-images-btn" class="cleanup-btn">
+                    <span class="material-symbols-outlined">cleaning_services</span>
+                    تنظيف الصور غير المستخدمة
+                </button>
+                <button type="button" id="archive-sales-btn" class="cleanup-btn archive-btn">
+                    <span class="material-symbols-outlined">archive</span>
+                    عرض أرشيف المبيعات
+                </button>
+            </div>
         </form>
     </dialog>
 
@@ -294,6 +300,22 @@
                 <button type="button" id="cancel-sale-btn">إلغاء</button>
             </div>
         </form>
+    </dialog>
+
+    <dialog id="archive-browser-modal">
+        <div class="archive-browser-content">
+            <div class="archive-header">
+                <h3>أرشيف المبيعات</h3>
+                <button id="close-archive-browser-btn" class="icon-btn" aria-label="إغلاق">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div id="archive-list-container" class="archive-list-container">
+                <p>جاري تحميل قائمة الأرشيف...</p>
+            </div>
+            <div id="archive-details-container" class="archive-details-container">
+                </div>
+        </div>
     </dialog>
 
     <div id="status-indicator" class="status-indicator" aria-live="polite"></div>

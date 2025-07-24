@@ -297,10 +297,10 @@ input:read-only {
 }
 /* --- Hide number input spinners for a cleaner look --- */
 /* For Chrome, Safari, Edge, Opera */
-input[type=number]::-webkit-inner-spin-button, 
-input[type=number]::-webkit-outer-spin-button { 
-  -webkit-appearance: none; 
-  margin: 0; 
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 /* For Firefox */
@@ -317,7 +317,7 @@ input[type=number] {
     flex-shrink: 0;
 }
 #save-item-btn {
-background-color: var(--accent-color); 
+background-color: var(--accent-color);
 color: white;
 }
 #save-item-btn:hover {
@@ -354,7 +354,7 @@ color: white;
 }
 
 .modal-actions button[type="submit"] {
-    background-color: var(--accent-color); 
+    background-color: var(--accent-color);
     color: white;
 }
 .modal-actions button[type="submit"]:hover {
@@ -364,9 +364,9 @@ color: white;
 .icon-btn {
     width: 36px;
     height: 36px;
-    padding: 0; /* Let flexbox center the icon */
+    padding: 0;
     border: 1px solid transparent;
-    border-radius: var(--border-radius-sm); /* Changed from round to rounded square */
+    border-radius: var(--border-radius-sm);
     background-color: var(--surface-color);
     color: var(--text-primary);
     cursor: pointer;
@@ -377,7 +377,7 @@ color: white;
 }
 
 .icon-btn:hover {
-    transform: translateY(-2px); /* Softer hover effect */
+    transform: translateY(-2px);
     box-shadow: var(--shadow-strong);
 }
 
@@ -415,10 +415,18 @@ color: white;
     color: var(--accent-color);
 }
 
+.maintenance-actions {
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
 .cleanup-btn {
     width: 100%;
     padding: 12px;
-    margin-top: var(--spacing-lg);
     border-radius: var(--border-radius-sm);
     border: 1px solid var(--danger-color);
     background-color: transparent;
@@ -437,6 +445,17 @@ color: white;
     background-color: var(--danger-color);
     color: white;
 }
+
+.archive-btn {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+}
+.archive-btn:hover {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+    color: white;
+}
+
 
 /* --- Details Modal --- */
 #details-modal {
@@ -818,7 +837,7 @@ color: white;
 
 #search-bar {
     /* Add padding to make space for the icon button inside */
-    padding-left: 48px; 
+    padding-left: 48px;
 }
 
 .category-filter-toggle-btn {
@@ -961,7 +980,7 @@ color: white;
 .quantity-badge {
     position: absolute;
     top: 8px;
-    left: 8px; /* Top-left for RTL layout */
+    right: 8px;
     padding: 4px 8px;
     border-radius: 12px; /* Pill shape */
     background-color: var(--accent-color); /* Blue by default */
@@ -975,4 +994,69 @@ color: white;
 /* Modifier for low stock state */
 .quantity-badge.low-stock {
     background-color: var(--danger-color); /* Red for low stock */
+}
+
+/* --- NEW: Archive Browser Modal --- */
+#archive-browser-modal {
+    max-width: 700px;
+    height: 80vh;
+}
+.archive-browser-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+.archive-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+.archive-header h3 {
+    font-size: 18px;
+}
+.archive-list-container {
+    padding: var(--spacing-sm);
+    overflow-y: auto;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+    max-height: 150px;
+}
+.archive-item {
+    padding: 10px 12px;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+.archive-item:hover {
+    background-color: var(--bg-color);
+}
+.archive-item.active {
+    background-color: var(--accent-color);
+    color: white;
+}
+.archive-details-container {
+    padding: var(--spacing-md);
+    overflow-y: auto;
+    flex-grow: 1;
+}
+.archive-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+.archive-table th, .archive-table td {
+    padding: 8px 10px;
+    text-align: right;
+    border-bottom: 1px solid var(--border-color);
+}
+.archive-table thead {
+    background-color: var(--bg-color);
+}
+.archive-table th {
+    font-weight: 700;
 }

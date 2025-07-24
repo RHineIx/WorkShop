@@ -36,7 +36,6 @@ const toBase64 = file => new Promise((resolve, reject) => {
     reader.onerror = error => reject(error);
 });
 
-
 // --- Exported GitHub API Functions ---
 
 /**
@@ -98,7 +97,6 @@ export const fetchFromGitHub = async () => {
     if (!appState.syncConfig) return null;
     const { username, repo, pat } = appState.syncConfig;
     const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/inventory.json`;
-    
     const response = await fetch(apiUrl, { headers: { 'Authorization': `token ${pat}` } });
     if (response.status === 404) {
         console.log('inventory.json not found. A new one will be created on save.');
@@ -138,7 +136,7 @@ export const saveToGitHub = async () => {
 };
 
 /**
- * NEW: Fetches the sales.json file from the repo.
+ * Fetches the sales.json file from the repo.
  * @returns {Promise<{data: Array<Object>, sha: string}>} A promise that resolves with the sales data and file SHA.
  * @throws {Error} If the fetch fails for reasons other than 404.
  */
@@ -146,7 +144,6 @@ export const fetchSales = async () => {
     if (!appState.syncConfig) return null;
     const { username, repo, pat } = appState.syncConfig;
     const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/sales.json`;
-
     const response = await fetch(apiUrl, { headers: { 'Authorization': `token ${pat}` } });
     if (response.status === 404) {
         console.log('sales.json not found. A new one will be created on save.');
@@ -161,7 +158,7 @@ export const fetchSales = async () => {
 };
 
 /**
- * NEW: Saves the current appState.sales to the sales.json file in the repo.
+ * Saves the current appState.sales to the sales.json file in the repo.
  * @returns {Promise<void>}
  * @throws {Error} If the save operation fails.
  */
@@ -169,11 +166,25 @@ export const saveSales = async () => {
     if (!appState.syncConfig) return;
     const { username, repo, pat } = appState.syncConfig;
     const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/sales.json`;
+    
+    // Fetch the latest SHA before saving to prevent conflicts
+    try {
+        const remoteFile = await fetch(apiUrl, { headers: { 'Authorization': `token ${pat}` } });
+        if(remoteFile.ok) {
+            const fileData = await remoteFile.json();
+            appState.salesFileSha = fileData.sha;
+        } else {
+             appState.salesFileSha = null; // File doesn't exist, so we create it
+        }
+    } catch(e) {
+        appState.salesFileSha = null;
+    }
+
     const content = btoa(unescape(encodeURIComponent(JSON.stringify(appState.sales, null, 2))));
     const body = {
         message: `Update sales data - ${new Date().toISOString()}`,
         content: content,
-        sha: appState.salesFileSha,
+        sha: appState.salesFileSha, // Use latest SHA
     };
     const response = await fetch(apiUrl, {
         method: 'PUT',
@@ -215,13 +226,63 @@ export const deleteFileFromGitHub = async (path, sha, message) => {
  * @throws {Error} If the directory fetch fails.
  */
 export const getGitHubDirectoryListing = async (path) => {
+    if (!appState.syncConfig) return [];
     const { username, repo, pat } = appState.syncConfig;
     const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
     const response = await fetch(apiUrl, { headers: { 'Authorization': `token ${pat}` } });
     if (!response.ok) {
-        if (response.status === 404) return []; // Folder not found is not an error
-        throw new Error('فشل الوصول إلى مجلد الصور.');
+        if (response.status === 404) return [];
+        throw new Error('فشل الوصول إلى المجلد المحدد.');
     }
     const data = await response.json();
     return Array.isArray(data) ? data : [];
+};
+
+/**
+ * Creates a new file on GitHub. Used for creating archive files.
+ * @param {string} path The full path for the new file in the repo.
+ * @param {string} content The content of the file to create.
+ * @param {string} message The commit message.
+ * @returns {Promise<void>}
+ * @throws {Error} If the file creation fails.
+ */
+export const createGitHubFile = async (path, content, message) => {
+    if (!appState.syncConfig) return;
+    const { username, repo, pat } = appState.syncConfig;
+    const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
+    
+    const base64Content = btoa(unescape(encodeURIComponent(content)));
+
+    const response = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: { 'Authorization': `token ${pat}` },
+        body: JSON.stringify({ message, content: base64Content })
+    });
+
+    if (!response.ok) {
+        if (response.status !== 422) { // 422 is "Unprocessable Entity", often means file exists
+            throw new Error(`Failed to create file ${path}: ${response.statusText}`);
+        }
+    }
+};
+
+/**
+ * Fetches the content of a specific file from GitHub. Used for reading archive files.
+ * @param {string} path The path to the file in the repo.
+ * @returns {Promise<any>} A promise that resolves with the parsed JSON data.
+ * @throws {Error} If the fetch fails.
+ */
+export const fetchGitHubFile = async (path) => {
+    if (!appState.syncConfig) return null;
+    const { username, repo, pat } = appState.syncConfig;
+    const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
+    const response = await fetch(apiUrl, { headers: { 'Authorization': `token ${pat}` } });
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch file ${path}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const decodedContent = decodeURIComponent(escape(window.atob(data.content)));
+    return JSON.parse(decodedContent);
 };
