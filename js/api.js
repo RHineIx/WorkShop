@@ -84,7 +84,7 @@ export const fetchImageWithAuth = async (path) => {
  */
 export const uploadImageToGitHub = async (file) => {
     if (!appState.syncConfig) {
-        throw new Error('Sync must be configured to upload images.');
+        throw new Error('يجب إعداد المزامنة أولاً لرفع الصور.');
     }
     const base64content = await toBase64(file);
     const { username, repo, pat } = appState.syncConfig;
@@ -219,8 +219,6 @@ export const saveSales = async () => {
     appState.salesFileSha = data.content.sha;
 };
 
-// --- Other API functions (deleteFileFromGitHub, getGitHubDirectoryListing, etc.) remain unchanged ---
-
 /**
  * Deletes a file from the GitHub repository.
  * @param {string} path The full path to the file to delete.
@@ -257,7 +255,7 @@ export const getGitHubDirectoryListing = async (path) => {
     const response = await fetch(apiUrl, { headers: { 'Authorization': `token ${pat}` } });
     if (!response.ok) {
         if (response.status === 404) return [];
-        throw new Error('Failed to access the specified folder.');
+        throw new Error('فشل الوصول إلى المجلد المحدد.');
     }
     const data = await response.json();
     return Array.isArray(data) ? data : [];
