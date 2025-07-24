@@ -210,7 +210,12 @@ export const renderDashboard = () => {
     }
 
     const filteredSales = appState.sales.filter(sale => {
-        const saleDate = new Date(sale.saleDate);
+        // **THE FIX IS HERE**
+        // This prevents timezone issues by parsing the date string manually.
+        // It creates a date object at midnight in the user's local timezone.
+        const parts = sale.saleDate.split('-');
+        const saleDate = new Date(parts[0], parts[1] - 1, parts[2]);
+
         return saleDate >= startDate && saleDate <= now;
     });
     
