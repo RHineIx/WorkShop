@@ -102,7 +102,7 @@ export const uploadImageToGitHub = async (file) => {
 
 /**
  * Fetches the main inventory.json file from the repo.
- * @returns {Promise<{data: Array<Object>, sha: string}>} A promise that resolves with the inventory data and file SHA.
+ * @returns {Promise<{data: Object, sha: string}>} A promise that resolves with the inventory object and file SHA.
  * @throws {Error} If the fetch fails for reasons other than 404.
  */
 export const fetchFromGitHub = async () => {
@@ -110,20 +110,29 @@ export const fetchFromGitHub = async () => {
     const { username, repo, pat } = appState.syncConfig;
     const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/inventory.json`;
     const response = await fetch(apiUrl, { headers: { 'Authorization': `token ${pat}` } });
+    
     if (response.status === 404) {
         console.log('inventory.json not found. A new one will be created on save.');
-        return { data: [], sha: null };
+        return { data: { items: [], lastArchiveTimestamp: null }, sha: null };
     }
     if (!response.ok) {
         throw new Error(`Failed to fetch inventory data: ${response.statusText}`);
     }
+
     const data = await response.json();
     const decodedContent = decodeURIComponent(escape(window.atob(data.content)));
-    return { data: JSON.parse(decodedContent), sha: data.sha };
+    let parsedData = JSON.parse(decodedContent);
+
+    // Backward compatibility check: if the old format (just an array) is found, convert it.
+    if (Array.isArray(parsedData)) {
+        parsedData = { items: parsedData, lastArchiveTimestamp: null };
+    }
+
+    return { data: parsedData, sha: data.sha };
 };
 
 /**
- * Saves the current appState.inventory to the inventory.json file in the repo.
+ * Saves the current appState.inventory object to the inventory.json file in the repo.
  * @returns {Promise<void>}
  * @throws {Error} If the save operation fails for a generic reason.
  * @throws {ConflictError} If the save operation fails due to a 409 conflict.
