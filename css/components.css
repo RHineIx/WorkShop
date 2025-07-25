@@ -243,7 +243,8 @@ dialog::backdrop {
 /* --- Forms & Inputs --- */
 #item-form label,
 #sync-form label,
-#sale-form label {
+#sale-form label,
+#supplier-form label {
     margin-bottom: var(--spacing-sm);
     display: block;
     font-size: 14px;
@@ -255,7 +256,8 @@ dialog::backdrop {
 #item-form textarea,
 #sync-form input,
 #sale-form input,
-#sale-form textarea {
+#sale-form textarea,
+#supplier-form input {
     width: 100%;
     padding: 12px;
     font-family: var(--font-family);
@@ -295,19 +297,19 @@ input:read-only {
     cursor: not-allowed;
     opacity: 0.8;
 }
+
 /* --- Hide number input spinners for a cleaner look --- */
-/* For Chrome, Safari, Edge, Opera */
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+    -webkit-appearance: none;
+    margin: 0;
 }
 
-/* For Firefox */
 input[type=number] {
-  appearance: textfield;
-  -moz-appearance: textfield;
+    appearance: textfield;
+    -moz-appearance: textfield;
 }
+
 /* --- Buttons --- */
 .modal-actions {
     margin-top: var(--spacing-lg);
@@ -316,14 +318,6 @@ input[type=number] {
     gap: var(--spacing-sm);
     flex-shrink: 0;
 }
-#save-item-btn {
-background-color: var(--accent-color);
-color: white;
-}
-#save-item-btn:hover {
-    background-color: var(--accent-color-hover);
-}
-
 
 .modal-actions button {
     padding: 10px 15px;
@@ -341,6 +335,7 @@ color: white;
     background-color: var(--accent-color);
     color: white;
 }
+
 .modal-actions button.primary-action:hover {
     background-color: var(--accent-color-hover);
 }
@@ -349,6 +344,7 @@ color: white;
     background-color: var(--border-color);
     color: var(--text-primary);
 }
+
 .modal-actions button[type="button"]:hover {
     background-color: var(--bg-color);
 }
@@ -357,6 +353,7 @@ color: white;
     background-color: var(--accent-color);
     color: white;
 }
+
 .modal-actions button[type="submit"]:hover {
     background-color: var(--accent-color-hover);
 }
@@ -381,7 +378,11 @@ color: white;
     box-shadow: var(--shadow-strong);
 }
 
-/* Primary action button on the card (Sell) */
+.icon-btn.danger-btn:hover {
+    background-color: var(--danger-color);
+    color: white;
+}
+
 .sell-btn {
     background-color: var(--accent-color);
     border-color: var(--accent-color);
@@ -391,7 +392,7 @@ color: white;
 .sell-btn:hover {
     background-color: var(--accent-color-hover);
 }
-/* Utility class to hide elements visually but keep them accessible */
+
 .visually-hidden {
     position: absolute;
     width: 1px;
@@ -403,7 +404,7 @@ color: white;
     white-space: nowrap;
     border: 0;
 }
-/* Secondary action button on the card (Details) */
+
 .details-btn {
     background-color: var(--surface-color);
     border-color: var(--border-color);
@@ -450,6 +451,7 @@ color: white;
     border-color: var(--accent-color);
     color: var(--accent-color);
 }
+
 .archive-btn:hover {
     background-color: var(--accent-color);
     border-color: var(--accent-color);
@@ -595,21 +597,6 @@ color: white;
     align-items: center;
     gap: var(--spacing-sm);
 }
-/* --- Sale Modal Quantity Input Style --- */
-.quantity-controls input[type=number] {
-    width: 60px;
-    height: 36px;
-    text-align: center;
-    font-weight: bold;
-    font-size: 18px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-sm);
-    background-color: var(--surface-color);
-    color: var(--text-primary);
-    margin: 0 !important; /* Override default margin */
-    appearance: textfield;
-    -moz-appearance: textfield; /* For Firefox */
-}
 
 .quantity-value {
     font-weight: bold;
@@ -729,7 +716,6 @@ color: white;
     font-size: 50px;
 }
 
-/* New styles for the custom button */
 .custom-file-upload-btn {
     display: inline-flex;
     align-items: center;
@@ -749,6 +735,7 @@ color: white;
     color: var(--text-primary);
     border-color: var(--accent-color);
 }
+
 /* --- Barcode Modal --- */
 #barcode-modal {
     max-width: 320px;
@@ -783,6 +770,21 @@ color: white;
     border-radius: var(--border-radius-sm);
     text-align: center;
     margin-bottom: var(--spacing-md);
+}
+
+.quantity-controls input[type=number] {
+    width: 60px;
+    height: 36px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 18px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background-color: var(--surface-color);
+    color: var(--text-primary);
+    margin: 0 !important;
+    appearance: textfield;
+    -moz-appearance: textfield;
 }
 
 
@@ -837,15 +839,16 @@ color: white;
 .status-indicator.error {
     background-color: var(--danger-color);
 }
+
 /* --- Hide Scrollbar --- */
 *::-webkit-scrollbar {
-    display: none;
     width: 0 !important;
     background: transparent;
 }
 
 * {
-    scrollbar-width: none; /* Firefox */
+    scrollbar-width: none;
+    /* Firefox */
 }
 
 /* --- Link Styling --- */
@@ -862,23 +865,22 @@ color: white;
 /* --- Search & Category Filter --- */
 .search-container {
     position: relative;
-    width: 100%; /* Take full width on mobile */
+    width: 100%;
 }
 
 @media (min-width: 640px) {
     .search-container {
-        width: 350px; /* Specific width on larger screens */
+        width: 350px;
     }
 }
 
 #search-bar {
-    /* Add padding to make space for the icon button inside */
     padding-left: 48px;
 }
 
 .category-filter-toggle-btn {
     position: absolute;
-    left: 8px; /* Position button on the left for RTL */
+    left: 8px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--text-secondary);
@@ -889,12 +891,12 @@ color: white;
 .category-filter-toggle-btn:hover {
     background-color: var(--bg-color);
     color: var(--text-primary);
-    transform: translateY(-50%) scale(1.1); /* Add a subtle hover effect */
+    transform: translateY(-50%) scale(1.1);
     box-shadow: none;
 }
 
 .category-dropdown {
-    display: none; /* Hidden by default */
+    display: none;
     position: absolute;
     top: calc(100% + 8px);
     left: 0;
@@ -910,7 +912,7 @@ color: white;
 }
 
 .category-dropdown.show {
-    display: block; /* Show the dropdown */
+    display: block;
 }
 
 .category-item {
@@ -940,6 +942,7 @@ color: white;
     color: var(--accent-color);
     font-weight: 700;
 }
+
 .app-title {
     cursor: pointer;
 }
@@ -951,6 +954,7 @@ color: white;
     align-items: center;
     margin-bottom: var(--spacing-lg);
 }
+
 .time-filter-controls {
     display: flex;
     gap: var(--spacing-sm);
@@ -958,6 +962,7 @@ color: white;
     padding: 4px;
     border-radius: var(--border-radius-sm);
 }
+
 .time-filter-btn {
     padding: 6px 12px;
     border: none;
@@ -968,14 +973,16 @@ color: white;
     cursor: pointer;
     transition: all var(--transition-speed) ease;
 }
+
 .time-filter-btn.active {
     background-color: var(--surface-color);
     color: var(--text-primary);
     font-weight: 700;
     box-shadow: var(--shadow-light);
 }
+
 .stat-card.profit .card-icon .material-symbols-outlined {
-    color: #38A169; /* Green for profit */
+    color: #38A169;
 }
 
 .bestsellers-container {
@@ -985,14 +992,17 @@ color: white;
     padding: var(--spacing-md);
     border: 1px solid var(--border-color);
 }
+
 .bestsellers-container h3 {
     margin-bottom: var(--spacing-md);
 }
+
 .bestsellers-list {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
 }
+
 .bestseller-item {
     display: flex;
     justify-content: space-between;
@@ -1001,9 +1011,11 @@ color: white;
     background-color: var(--bg-color);
     border-radius: var(--border-radius-sm);
 }
+
 .bestseller-name {
     font-weight: 500;
 }
+
 .bestseller-count {
     font-weight: 700;
     color: var(--accent-color);
@@ -1012,37 +1024,38 @@ color: white;
     border-radius: 12px;
     font-size: 12px;
 }
-/* --- Quantity Badge on Product Card --- */
+
 .quantity-badge {
     position: absolute;
     top: 8px;
     right: 8px;
     padding: 4px 8px;
-    border-radius: 12px; /* Pill shape */
-    background-color: var(--accent-color); /* Blue by default */
+    border-radius: 12px;
+    background-color: var(--accent-color);
     color: white;
     font-size: 12px;
     font-weight: 700;
     z-index: 5;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* Modifier for low stock state */
 .quantity-badge.low-stock {
-    background-color: var(--danger-color); /* Red for low stock */
+    background-color: var(--danger-color);
 }
 
-/* --- NEW: Archive Browser Modal --- */
+/* --- Archive Browser Modal --- */
 #archive-browser-modal {
     max-width: 700px;
     height: 80vh;
 }
+
 .archive-browser-content {
     display: flex;
     flex-direction: column;
     height: 100%;
     overflow: hidden;
 }
+
 .archive-header {
     display: flex;
     justify-content: space-between;
@@ -1051,9 +1064,11 @@ color: white;
     border-bottom: 1px solid var(--border-color);
     flex-shrink: 0;
 }
+
 .archive-header h3 {
     font-size: 18px;
 }
+
 .archive-list-container {
     padding: var(--spacing-sm);
     overflow-y: auto;
@@ -1061,43 +1076,54 @@ color: white;
     flex-shrink: 0;
     max-height: 150px;
 }
+
 .archive-item {
     padding: 10px 12px;
     border-radius: var(--border-radius-sm);
     cursor: pointer;
     font-weight: 500;
     transition: background-color 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
+
 .archive-item:hover {
     background-color: var(--bg-color);
 }
+
 .archive-item.active {
     background-color: var(--accent-color);
     color: white;
 }
+
 .archive-details-container {
     padding: var(--spacing-md);
     overflow-y: auto;
     flex-grow: 1;
 }
+
 .archive-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 14px;
 }
-.archive-table th, .archive-table td {
+
+.archive-table th,
+.archive-table td {
     padding: 8px 10px;
     text-align: right;
     border-bottom: 1px solid var(--border-color);
 }
+
 .archive-table thead {
     background-color: var(--bg-color);
 }
+
 .archive-table th {
     font-weight: 700;
 }
 
-/* --- Maintenance Actions Text & Divider --- */
 .last-archive-text {
     font-size: 12px;
     text-align: center;
@@ -1109,12 +1135,6 @@ color: white;
     border: none;
     border-top: 1px solid var(--border-color);
     margin: var(--spacing-sm) 0;
-}
-/* Archive Item Delete Button --- */
-.archive-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 
 .archive-delete-btn {
@@ -1133,4 +1153,122 @@ color: white;
 .archive-delete-btn:hover {
     background-color: var(--danger-color);
     color: white;
+}
+
+/* --- Supplier Manager Modal --- */
+#supplier-manager-modal {
+    max-width: 600px;
+}
+
+.supplier-manager-content {
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-lg);
+    gap: var(--spacing-lg);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+    font-size: 18px;
+    margin-bottom: 0;
+}
+
+.supplier-list {
+    max-height: 200px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.supplier-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: var(--bg-color);
+    border-radius: var(--border-radius-sm);
+}
+
+.supplier-item-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+#supplier-form h4 {
+    margin-bottom: var(--spacing-md);
+    font-size: 16px;
+}
+
+/* --- Supplier Selection in Item Form --- */
+.form-group-divider {
+    border-top: 1px solid var(--border-color);
+    margin: var(--spacing-lg) 0;
+}
+
+.supplier-selection-container {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.supplier-selection-container select {
+    flex-grow: 1;
+    width: 100%;
+    padding: 12px;
+    font-family: var(--font-family);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    font-size: 16px;
+}
+
+/* --- Supplier Info in Details Modal --- */
+.details-supplier-info {
+    border-top: 1px solid var(--border-color);
+    padding-top: var(--spacing-md);
+    margin-top: var(--spacing-md);
+}
+
+.details-supplier-info.view-hidden {
+    display: none;
+}
+
+.details-supplier-info h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+    font-size: 16px;
+}
+
+.details-supplier-info p {
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-secondary);
+}
+
+.whatsapp-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: 8px 12px;
+    background-color: #25D366;
+    color: white;
+    font-weight: bold;
+    text-decoration: none;
+    border-radius: var(--border-radius-sm);
+    transition: background-color 0.2s;
+}
+
+.whatsapp-btn:hover {
+    background-color: #1DAE54;
 }

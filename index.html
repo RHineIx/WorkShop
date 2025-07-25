@@ -156,6 +156,16 @@
                         <h3><span class="material-symbols-outlined">notes</span> ملاحظات</h3>
                         <p id="details-notes-content"></p>
                     </div>
+
+                    <div id="supplier-details-container" class="details-supplier-info view-hidden">
+                        <h3><span class="material-symbols-outlined">business_center</span> معلومات المورّد</h3>
+                        <p><strong>الاسم:</strong> <span id="details-supplier-name"></span></p>
+                        <p><strong>الهاتف:</strong> <span id="details-supplier-phone"></span></p>
+                        <a id="details-supplier-whatsapp" href="#" target="_blank" class="whatsapp-btn">
+                            <span class="material-symbols-outlined">sms</span>
+                            تواصل عبر واتساب
+                        </a>
+                    </div>
                 </div>
              </div>
             <div class="details-actions">
@@ -196,6 +206,18 @@
             
             <label for="item-category">الفئة</label>
             <input type="text" id="item-category">
+
+            <div class="form-group-divider"></div>
+            <label for="item-supplier">المورّد (اختياري)</label>
+            <div class="supplier-selection-container">
+                <select id="item-supplier">
+                    <option value="">-- اختر مورّد --</option>
+                </select>
+                <button type="button" id="manage-suppliers-btn" class="icon-btn" title="إدارة المورّدين">
+                    <span class="material-symbols-outlined">group_add</span>
+                </button>
+            </div>
+            <div class="form-group-divider"></div>
             
             <div class="form-row">
                 <div class="form-group">
@@ -242,7 +264,7 @@
         <form id="sync-form">
             <h3>إعدادات المزامنة السحابية</h3>
             <p>
-                سيتم حفظ بياناتك في ملف <code>inventory.json</code> داخل مستودع GitHub خاص.
+                سيتم حفظ بياناتك في ملفات JSON داخل مستودع GitHub خاص.
                 <a href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens" target="_blank">كيفية إنشاء مفتاح وصول شخصي (PAT)</a>.
             </p>
             <label for="github-username">اسم المستخدم في GitHub</label>
@@ -297,13 +319,13 @@
 
             <div class="form-row">
                 <div class="form-group">
-                <label for="sale-quantity">الكمية المباعة</label>
-                <div class="quantity-controls">
-                    <button type="button" id="sale-decrease-btn" class="quantity-btn" aria-label="إنقاص الكمية">-</button>
-                    <input type="number" id="sale-quantity" value="1" min="1">
-                    <button type="button" id="sale-increase-btn" class="quantity-btn" aria-label="زيادة الكمية">+</button>
+                    <label for="sale-quantity">الكمية المباعة</label>
+                    <div class="quantity-controls">
+                        <button type="button" id="sale-decrease-btn" class="quantity-btn" aria-label="إنقاص الكمية">-</button>
+                        <input type="number" id="sale-quantity" value="1" min="1">
+                        <button type="button" id="sale-increase-btn" class="quantity-btn" aria-label="زيادة الكمية">+</button>
+                    </div>
                 </div>
-            </div>
                 <div class="form-group">
                     <label for="sale-price">سعر البيع للقطعة (بالعملة الحالية)</label>
                     <input type="number" id="sale-price" step="250" min="0">
@@ -321,6 +343,37 @@
                 <button type="button" id="cancel-sale-btn">إلغاء</button>
             </div>
         </form>
+    </dialog>
+
+    <dialog id="supplier-manager-modal">
+        <div class="supplier-manager-content">
+            <div class="modal-header">
+                <h3 id="supplier-modal-title">إدارة المورّدين</h3>
+                <button id="close-supplier-manager-btn" class="icon-btn" aria-label="إغلاق">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div id="supplier-list-container" class="supplier-list">
+                </div>
+            <form id="supplier-form">
+                <h4 id="supplier-form-title">إضافة مورّد جديد</h4>
+                <input type="hidden" id="supplier-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="supplier-name">اسم المورّد</label>
+                        <input type="text" id="supplier-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="supplier-phone">رقم الهاتف (مع رمز الدولة)</label>
+                        <input type="text" id="supplier-phone" placeholder="e.g., 9647701234567">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" id="save-supplier-btn" class="primary-action">حفظ المورّد</button>
+                    <button type="button" id="cancel-edit-supplier-btn" class="view-hidden">إلغاء التعديل</button>
+                </div>
+            </form>
+        </div>
     </dialog>
 
     <dialog id="archive-browser-modal">

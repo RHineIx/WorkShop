@@ -37,8 +37,8 @@ const b64toBlob = (b64Data, contentType = '', sliceSize = 512) => {
 };
 
 /**
- * Converts a File object to a Base64 string.
- * @param {File} file The file to convert.
+ * Converts a File or Blob object to a Base64 string.
+ * @param {Blob} file The file or blob to convert.
  * @returns {Promise<string>} A promise that resolves with the Base64 encoded string.
  */
 const toBase64 = file => new Promise((resolve, reject) => {
@@ -87,7 +87,7 @@ export const uploadImageToGitHub = async (imageBlob, originalFileName) => {
     if (!appState.syncConfig) {
         throw new Error('يجب إعداد المزامنة أولاً لرفع الصور.');
     }
-    const base64content = await toBase64(imageBlob); // toBase64 already works with Blobs
+    const base64content = await toBase64(imageBlob);
     const { username, repo, pat } = appState.syncConfig;
     const fileName = `img_${Date.now()}_${originalFileName.replace(/\s/g, '_')}`;
     const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/images/${fileName}`;
@@ -101,7 +101,6 @@ export const uploadImageToGitHub = async (imageBlob, originalFileName) => {
     return data.content.path;
 };
 
-
 /**
  * Fetches the main inventory.json file from the repo.
  * @returns {Promise<{data: Object, sha: string}>} A promise that resolves with the inventory object and file SHA.
@@ -113,7 +112,7 @@ export const fetchFromGitHub = async () => {
     const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/inventory.json`;
     const response = await fetch(apiUrl, { 
         headers: { 'Authorization': `token ${pat}` },
-        cache: 'no-cache' // Force re-validation for inventory data as well
+        cache: 'no-cache'
     });
     
     if (response.status === 404) {
@@ -177,7 +176,7 @@ export const fetchSales = async () => {
     const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/sales.json`;
     const response = await fetch(apiUrl, { 
         headers: { 'Authorization': `token ${pat}` },
-        cache: 'no-cache' // Force re-validation for sales data
+        cache: 'no-cache'
     });
     if (response.status === 404) {
         console.log('sales.json not found. A new one will be created on save.');
@@ -236,6 +235,75 @@ export const saveSales = async () => {
 };
 
 /**
+ * Fetches the suppliers.json file from the repo.
+ * @returns {Promise<{data: Array<Object>, sha: string}>} A promise that resolves with the suppliers data and file SHA.
+ * @throws {Error} If the fetch fails for reasons other than 404.
+ */
+export const fetchSuppliers = async () => {
+    if (!appState.syncConfig) return null;
+    const { username, repo, pat } = appState.syncConfig;
+    const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/suppliers.json`;
+    const response = await fetch(apiUrl, { 
+        headers: { 'Authorization': `token ${pat}` },
+        cache: 'no-cache'
+    });
+    if (response.status === 404) {
+        console.log('suppliers.json not found. A new one will be created on save.');
+        return { data: [], sha: null };
+    }
+    if (!response.ok) {
+        throw new Error(`Failed to fetch suppliers data: ${response.statusText}`);
+    }
+    const data = await response.json();
+    const decodedContent = decodeURIComponent(escape(window.atob(data.content)));
+    return { data: JSON.parse(decodedContent), sha: data.sha };
+};
+
+/**
+ * Saves the current appState.suppliers to the suppliers.json file in the repo.
+ * @returns {Promise<void>}
+ * @throws {Error} If the save operation fails for a generic reason.
+ * @throws {ConflictError} If the save operation fails due to a 409 conflict.
+ */
+export const saveSuppliers = async () => {
+    if (!appState.syncConfig) return;
+    const { username, repo, pat } = appState.syncConfig;
+    const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/suppliers.json`;
+
+    // Fetch the latest SHA before saving to avoid conflicts
+    try {
+        const remoteFile = await fetch(apiUrl, { headers: { 'Authorization': `token ${pat}` }, cache: 'no-cache' });
+        if (remoteFile.ok) {
+            appState.suppliersFileSha = (await remoteFile.json()).sha;
+        } else {
+            appState.suppliersFileSha = null;
+        }
+    } catch (e) {
+        appState.suppliersFileSha = null;
+    }
+
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(appState.suppliers, null, 2))));
+    const body = {
+        message: `Update suppliers data - ${new Date().toISOString()}`,
+        content: content,
+        sha: appState.suppliersFileSha,
+    };
+    const response = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: { 'Authorization': `token ${pat}` },
+        body: JSON.stringify(body)
+    });
+
+    if (response.status === 409) {
+        throw new ConflictError('Suppliers file has been updated by another source.');
+    }
+
+    if (!response.ok) throw new Error(`Failed to save suppliers: ${response.statusText}`);
+    const data = await response.json();
+    appState.suppliersFileSha = data.content.sha;
+};
+
+/**
  * Deletes a file from the GitHub repository.
  * @param {string} path The full path to the file to delete.
  * @param {string} sha The blob SHA of the file to delete.
@@ -270,7 +338,7 @@ export const getGitHubDirectoryListing = async (path) => {
     const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
     const response = await fetch(apiUrl, { 
         headers: { 'Authorization': `token ${pat}` },
-        cache: 'no-cache' // **THIS IS THE FIX**
+        cache: 'no-cache'
     });
     if (!response.ok) {
         if (response.status === 404) return [];
@@ -319,7 +387,7 @@ export const fetchGitHubFile = async (path) => {
     const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
     const response = await fetch(apiUrl, { 
         headers: { 'Authorization': `token ${pat}` },
-        cache: 'no-cache' // Also apply fix here for consistency
+        cache: 'no-cache'
     });
     if (!response.ok) {
         throw new Error(`Failed to fetch file ${path}: ${response.statusText}`);

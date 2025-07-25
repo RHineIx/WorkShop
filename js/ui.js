@@ -1,7 +1,7 @@
 // js/ui.js
 import { appState } from './state.js';
 import { fetchImageWithAuth } from './api.js';
-import { sanitizeHTML, generateUniqueSKU } from './utils.js';
+import { sanitizeHTML } from './utils.js';
 
 // Get all DOM elements once to be used throughout this module
 const elements = {
@@ -89,6 +89,21 @@ const elements = {
     barcodeSvg: document.getElementById('barcode-svg'),
     downloadBarcodeBtn: document.getElementById('download-barcode-btn'),
     closeBarcodeBtn: document.getElementById('close-barcode-btn'),
+    
+    // --- NEW: Supplier UI Elements ---
+    supplierManagerModal: document.getElementById('supplier-manager-modal'),
+    closeSupplierManagerBtn: document.getElementById('close-supplier-manager-btn'),
+    supplierListContainer: document.getElementById('supplier-list-container'),
+    supplierForm: document.getElementById('supplier-form'),
+    supplierFormTitle: document.getElementById('supplier-form-title'),
+    supplierIdInput: document.getElementById('supplier-id'),
+    cancelEditSupplierBtn: document.getElementById('cancel-edit-supplier-btn'),
+    manageSuppliersBtn: document.getElementById('manage-suppliers-btn'),
+    itemSupplierSelect: document.getElementById('item-supplier'),
+    supplierDetailsContainer: document.getElementById('supplier-details-container'),
+    detailsSupplierName: document.getElementById('details-supplier-name'),
+    detailsSupplierPhone: document.getElementById('details-supplier-phone'),
+    detailsSupplierWhatsapp: document.getElementById('details-supplier-whatsapp'),
 };
 
 /**
@@ -131,39 +146,24 @@ export function renderCategoryFilter() {
 
 /**
  * Displays a status message at the bottom of the screen.
- * Can now optionally include a refresh button.
  * @param {string} message The message to display.
  * @param {string} type The type of status (e.g., 'success', 'error', 'syncing').
  * @param {object} options Optional parameters { duration: number, showRefreshButton: boolean }.
  */
 export const showStatus = (message, type, options = {}) => {
     const { duration = 3000, showRefreshButton = false } = options;
-
-    // Clear previous content
     elements.statusIndicator.innerHTML = '';
-
-    // Create message element
     const messageSpan = document.createElement('span');
     messageSpan.textContent = message;
     elements.statusIndicator.appendChild(messageSpan);
-
     if (showRefreshButton) {
-        // Create refresh button
         const refreshButton = document.createElement('button');
         refreshButton.textContent = 'تحديث';
         refreshButton.className = 'status-refresh-btn';
-        
-        // Add click event to reload the page
-        refreshButton.onclick = () => {
-            location.reload();
-        };
-        
+        refreshButton.onclick = () => location.reload();
         elements.statusIndicator.appendChild(refreshButton);
     }
-
     elements.statusIndicator.className = `status-indicator ${type} show`;
-
-    // Do not auto-hide if a refresh button is present, as it requires user action
     if (type !== 'syncing' && !showRefreshButton) {
         setTimeout(() => {
             elements.statusIndicator.classList.remove('show');
@@ -178,13 +178,10 @@ export const showStatus = (message, type, options = {}) => {
 export const toggleView = (viewToShow) => {
     appState.currentView = viewToShow;
     const isInventory = viewToShow === 'inventory';
-
     elements.inventoryViewContainer.classList.toggle('view-hidden', !isInventory);
     elements.dashboardViewContainer.classList.toggle('view-hidden', isInventory);
-
     elements.inventoryToggleBtn.classList.toggle('active-view-btn', isInventory);
     elements.dashboardToggleBtn.classList.toggle('active-view-btn', !isInventory);
-
     if (!isInventory) {
         renderDashboard();
     }
@@ -201,7 +198,7 @@ export const renderDashboard = () => {
     switch (appState.dashboardPeriod) {
         case 'week':
             startDate = new Date(today);
-            startDate.setDate(today.getDate() - 6); // Last 7 days including today
+            startDate.setDate(today.getDate() - 6);
             break;
         case 'month':
             startDate = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -211,50 +208,31 @@ export const renderDashboard = () => {
             startDate = today;
             break;
     }
-
-    const filteredSales = appState.sales.filter(sale => {
-        // **THE FIX IS HERE**
-        // This prevents timezone issues by parsing the date string manually.
-        // It creates a date object at midnight in the user's local timezone.
-        const parts = sale.saleDate.split('-');
-        const saleDate = new Date(parts[0], parts[1] - 1, parts[2]);
-
-        return saleDate >= startDate && saleDate <= now;
-    });
-    
-    // Calculate Stats
+    const filteredSales = appState.sales.filter(sale => new Date(sale.saleDate) >= startDate && new Date(sale.saleDate) <= now);
     const isIQD = appState.activeCurrency === 'IQD';
     const totalSales = filteredSales.reduce((sum, sale) => sum + (isIQD ? sale.sellPriceIqd : sale.sellPriceUsd), 0);
     const totalCost = filteredSales.reduce((sum, sale) => sum + (isIQD ? sale.costPriceIqd : sale.costPriceUsd), 0);
     const totalProfit = totalSales - totalCost;
     const symbol = isIQD ? 'د.ع' : '$';
-
     elements.totalSalesStat.textContent = `${totalSales.toLocaleString()} ${symbol}`;
     elements.totalProfitStat.textContent = `${totalProfit.toLocaleString()} ${symbol}`;
-
-    // Calculate Best Sellers for the period
     const itemSales = {};
     filteredSales.forEach(sale => {
         itemSales[sale.itemId] = (itemSales[sale.itemId] || 0) + sale.quantitySold;
     });
-
     const sortedBestsellers = Object.entries(itemSales)
         .map(([itemId, count]) => {
             const item = appState.inventory.items.find(i => i.id === itemId);
             return { name: item ? item.name : 'منتج محذوف', count };
         })
         .sort((a, b) => b.count - a.count)
-        .slice(0, 5); // Top 5
-
+        .slice(0, 5);
     elements.bestsellersList.innerHTML = '';
     if (sortedBestsellers.length > 0) {
         sortedBestsellers.forEach(item => {
             const li = document.createElement('div');
             li.className = 'bestseller-item';
-            li.innerHTML = `
-                <span class="bestseller-name">${sanitizeHTML(item.name)}</span>
-                <span class="bestseller-count">بيع ${item.count}</span>
-            `;
+            li.innerHTML = `<span class="bestseller-name">${sanitizeHTML(item.name)}</span><span class="bestseller-count">بيع ${item.count}</span>`;
             elements.bestsellersList.appendChild(li);
         });
     } else {
@@ -268,8 +246,6 @@ export const renderDashboard = () => {
 export const renderInventory = () => {
     elements.inventoryGrid.innerHTML = '';
     let filteredInventory = [...appState.inventory.items];
-
-    // --- FILTERING LOGIC ---
     if (appState.activeFilter === 'low_stock') {
         filteredInventory = filteredInventory.filter(item => item.quantity <= item.alertLevel);
     }
@@ -283,8 +259,6 @@ export const renderInventory = () => {
             (item.sku && item.sku.toLowerCase().includes(lowerCaseSearch))
         );
     }
-
-    // --- RENDERING LOGIC ---
     if (filteredInventory.length === 0) {
         elements.inventoryGrid.innerHTML = '<p class="empty-state">لا توجد منتجات تطابق بحثك...</p>';
     } else {
@@ -292,41 +266,28 @@ export const renderInventory = () => {
             const card = document.createElement('div');
             card.className = 'product-card';
             card.dataset.id = item.id;
-            
             const isLowStock = item.quantity <= item.alertLevel;
-            if (isLowStock) {
-                card.classList.add('low-stock');
-            }
-            
+            if (isLowStock) card.classList.add('low-stock');
             const isIQD = appState.activeCurrency === 'IQD';
             const price = isIQD ? (item.sellPriceIqd || 0) : (item.sellPriceUsd || 0);
             const symbol = isIQD ? 'د.ع' : '$';
-
             const placeholder = `<div class="card-image-placeholder"><span class="material-symbols-outlined">key</span></div>`;
-            
             card.innerHTML = `
                 <div class="card-image-container">
-                    <div class="quantity-badge ${isLowStock ? 'low-stock' : ''}">
-                        متبقي ${item.quantity}
-                    </div>
+                    <div class="quantity-badge ${isLowStock ? 'low-stock' : ''}">متبقي ${item.quantity}</div>
                     ${item.imagePath ? `<img class="card-image" alt="${sanitizeHTML(item.name)}">` : placeholder}
                 </div>
                 <div class="card-info">
                     <div class="card-name">${sanitizeHTML(item.name)}</div>
                     <div class="card-footer">
-                        <div class="card-price">${sanitizeHTML(String(price))} ${symbol}</div>
+                        <div class="card-price">${price.toLocaleString()} ${symbol}</div>
                         <div class="card-actions">
-                            <button class="icon-btn sell-btn" title="بيع قطعة واحدة" aria-label="بيع قطعة واحدة">
-                                <span class="material-symbols-outlined">shopping_cart</span>
-                            </button>
-                            <button class="icon-btn details-btn" title="عرض التفاصيل" aria-label="عرض التفاصيل">
-                                <span class="material-symbols-outlined">more_vert</span>
-                            </button>
+                            <button class="icon-btn sell-btn" title="بيع قطعة واحدة"><span class="material-symbols-outlined">shopping_cart</span></button>
+                            <button class="icon-btn details-btn" title="عرض التفاصيل"><span class="material-symbols-outlined">more_vert</span></button>
                         </div>
                     </div>
                 </div>`;
             elements.inventoryGrid.appendChild(card);
-            
             if (item.imagePath) {
                 const imgElement = card.querySelector('.card-image');
                 fetchImageWithAuth(item.imagePath).then(blobUrl => {
@@ -361,7 +322,6 @@ export const setTheme = (themeName) => {
 export const updateCurrencyDisplay = () => {
     const isIQD = appState.activeCurrency === 'IQD';
     elements.currencyToggleBtn.textContent = isIQD ? 'د.ع' : '$';
-    
     if (appState.currentView === 'inventory') {
         renderInventory();
         if (elements.detailsModal.open && appState.currentItemId) {
@@ -372,7 +332,58 @@ export const updateCurrencyDisplay = () => {
     }
 };
 
-// --- MODAL UI FUNCTIONS ---
+// --- NEW: Supplier UI Functions ---
+
+/**
+ * Renders the list of suppliers in the supplier manager modal.
+ */
+export function renderSupplierList() {
+    elements.supplierListContainer.innerHTML = '';
+    if (appState.suppliers.length === 0) {
+        elements.supplierListContainer.innerHTML = '<p>لا يوجد مورّدون حاليًا.</p>';
+        return;
+    }
+    appState.suppliers.forEach(supplier => {
+        const item = document.createElement('div');
+        item.className = 'supplier-item';
+        item.innerHTML = `
+            <div>
+                <strong>${sanitizeHTML(supplier.name)}</strong>
+                <div class="text-secondary">${sanitizeHTML(supplier.phone || '')}</div>
+            </div>
+            <div class="supplier-item-actions">
+                <button class="icon-btn edit-supplier-btn" data-id="${supplier.id}" title="تعديل المورّد">
+                    <span class="material-symbols-outlined">edit</span>
+                </button>
+                <button class="icon-btn danger-btn delete-supplier-btn" data-id="${supplier.id}" title="حذف المورّد">
+                    <span class="material-symbols-outlined">delete</span>
+                </button>
+            </div>
+        `;
+        elements.supplierListContainer.appendChild(item);
+    });
+}
+
+/**
+ * Populates the supplier dropdown in the add/edit item modal.
+ * @param {string|null} selectedSupplierId The ID of the currently selected supplier for an item.
+ */
+export function populateSupplierDropdown(selectedSupplierId = null) {
+    const select = elements.itemSupplierSelect;
+    select.innerHTML = '<option value="">-- اختر مورّد --</option>'; // Default empty option
+    appState.suppliers.forEach(supplier => {
+        const option = document.createElement('option');
+        option.value = supplier.id;
+        option.textContent = sanitizeHTML(supplier.name);
+        if (supplier.id === selectedSupplierId) {
+            option.selected = true;
+        }
+        select.appendChild(option);
+    });
+}
+
+
+// --- MODAL UI FUNCTIONS (with modifications) ---
 
 /**
  * Populates and opens the details modal for a given item.
@@ -386,12 +397,28 @@ export const openDetailsModal = (itemId) => {
     elements.detailsName.textContent = item.name;
     elements.detailsSku.textContent = `SKU: ${sanitizeHTML(item.sku || 'N/A')}`;
     elements.detailsQuantityValue.textContent = item.quantity;
-    elements.detailsCostIqd.textContent = `${sanitizeHTML(String(item.costPriceIqd || 0))} د.ع`;
-    elements.detailsSellIqd.textContent = `${sanitizeHTML(String(item.sellPriceIqd || 0))} د.ع`;
-    elements.detailsCostUsd.textContent = `$${sanitizeHTML(String(item.costPriceUsd || 0))}`;
-    elements.detailsSellUsd.textContent = `$${sanitizeHTML(String(item.sellPriceUsd || 0))}`;
-    
+    elements.detailsCostIqd.textContent = `${(item.costPriceIqd || 0).toLocaleString()} د.ع`;
+    elements.detailsSellIqd.textContent = `${(item.sellPriceIqd || 0).toLocaleString()} د.ع`;
+    elements.detailsCostUsd.textContent = `$${(item.costPriceUsd || 0).toLocaleString()}`;
+    elements.detailsSellUsd.textContent = `$${(item.sellPriceUsd || 0).toLocaleString()}`;
     elements.detailsNotesContent.textContent = item.notes || 'لا توجد ملاحظات.';
+    
+    // Show/Hide Supplier Info
+    const supplier = appState.suppliers.find(s => s.id === item.supplierId);
+    if (supplier) {
+        elements.detailsSupplierName.textContent = sanitizeHTML(supplier.name);
+        elements.detailsSupplierPhone.textContent = supplier.phone ? sanitizeHTML(supplier.phone) : 'لا يوجد';
+        if (supplier.phone) {
+            elements.detailsSupplierWhatsapp.href = `https://wa.me/${supplier.phone.replace(/[^0-9]/g, '')}`;
+            elements.detailsSupplierWhatsapp.style.display = 'inline-flex';
+        } else {
+            elements.detailsSupplierWhatsapp.style.display = 'none';
+        }
+        elements.supplierDetailsContainer.classList.remove('view-hidden');
+    } else {
+        elements.supplierDetailsContainer.classList.add('view-hidden');
+    }
+
     if (item.imagePath) {
         elements.detailsImage.style.display = 'block';
         elements.detailsImagePlaceholder.style.display = 'none';
@@ -417,7 +444,7 @@ export const openItemModal = (itemId = null) => {
     elements.imagePlaceholder.style.display = 'flex';
     elements.regenerateSkuBtn.style.display = 'none';
 
-    if (itemId) { // Editing an existing item
+    if (itemId) {
         const item = appState.inventory.items.find(i => i.id === itemId);
         if (item) {
             elements.modalTitle.textContent = "تعديل منتج";
@@ -432,6 +459,9 @@ export const openItemModal = (itemId = null) => {
             document.getElementById('item-cost-price-usd').value = item.costPriceUsd || 0;
             document.getElementById('item-sell-price-usd').value = item.sellPriceUsd || 0;
             document.getElementById('item-notes').value = item.notes;
+            
+            populateSupplierDropdown(item.supplierId);
+
             if (item.imagePath) {
                 fetchImageWithAuth(item.imagePath).then(blobUrl => {
                     if (blobUrl) {
@@ -442,19 +472,17 @@ export const openItemModal = (itemId = null) => {
                 });
             }
         }
-    } else { // Adding a new item
+    } else {
         elements.modalTitle.textContent = "إضافة منتج جديد";
         elements.itemIdInput.value = '';
-        const existingSkus = new Set(appState.inventory.items.map(item => item.sku));
-        document.getElementById('item-sku').value = generateUniqueSKU(existingSkus);
         elements.regenerateSkuBtn.style.display = 'flex';
+        populateSupplierDropdown();
     }
     elements.itemModal.showModal();
 };
 
 /**
  * Opens and populates the "Confirm Sale" modal.
- * @param {string} itemId The ID of the item to be sold.
  */
 export const openSaleModal = (itemId) => {
     const item = appState.inventory.items.find(i => i.id === itemId);
@@ -466,17 +494,12 @@ export const openSaleModal = (itemId) => {
 
     const saleQuantityInput = document.getElementById('sale-quantity');
     const salePriceInput = document.getElementById('sale-price');
-
     const isIQD = appState.activeCurrency === 'IQD';
     const price = isIQD ? (item.sellPriceIqd || 0) : (item.sellPriceUsd || 0);
-
     salePriceInput.value = price;
     salePriceInput.step = isIQD ? '250' : '0.01';
-    
     saleQuantityInput.value = 1;
     saleQuantityInput.max = item.quantity;
-
-    // Set date to today in YYYY-MM-DD format
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
