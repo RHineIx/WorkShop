@@ -106,22 +106,14 @@ const elements = {
     detailsSupplierWhatsapp: document.getElementById('details-supplier-whatsapp'),
 };
 
-/**
- * Exports the collected DOM elements for use in other modules (primarily main.js).
- * @returns {Object} The elements object.
- */
 export function getDOMElements() {
     return elements;
 }
 
-/**
- * Renders the category filter dropdown based on available categories in the inventory.
- */
 export function renderCategoryFilter() {
     const categories = [...new Set(appState.inventory.items.map(item => item.category).filter(Boolean))];
-    elements.categoryFilterDropdown.innerHTML = ''; // Clear previous items
+    elements.categoryFilterDropdown.innerHTML = '';
 
-    // Add 'Show All' option
     const allItem = document.createElement('div');
     allItem.className = 'category-item';
     allItem.textContent = 'عرض الكل';
@@ -131,7 +123,6 @@ export function renderCategoryFilter() {
     }
     elements.categoryFilterDropdown.appendChild(allItem);
 
-    // Add each unique category
     categories.forEach(category => {
         const categoryItem = document.createElement('div');
         categoryItem.className = 'category-item';
@@ -144,12 +135,6 @@ export function renderCategoryFilter() {
     });
 }
 
-/**
- * Displays a status message at the bottom of the screen.
- * @param {string} message The message to display.
- * @param {string} type The type of status (e.g., 'success', 'error', 'syncing').
- * @param {object} options Optional parameters { duration: number, showRefreshButton: boolean }.
- */
 export const showStatus = (message, type, options = {}) => {
     const { duration = 3000, showRefreshButton = false } = options;
     elements.statusIndicator.innerHTML = '';
@@ -171,10 +156,6 @@ export const showStatus = (message, type, options = {}) => {
     }
 };
 
-/**
- * Toggles between the main inventory view and the dashboard view.
- * @param {'inventory' | 'dashboard'} viewToShow The view to display.
- */
 export const toggleView = (viewToShow) => {
     appState.currentView = viewToShow;
     const isInventory = viewToShow === 'inventory';
@@ -187,9 +168,6 @@ export const toggleView = (viewToShow) => {
     }
 };
 
-/**
- * Renders the dashboard with stats for the current period.
- */
 export const renderDashboard = () => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -240,9 +218,6 @@ export const renderDashboard = () => {
     }
 };
 
-/**
- * Renders the product cards in the main grid based on the current state.
- */
 export const renderInventory = () => {
     elements.inventoryGrid.innerHTML = '';
     let filteredInventory = [...appState.inventory.items];
@@ -299,26 +274,17 @@ export const renderInventory = () => {
     updateStats();
 };
 
-/**
- * Updates the statistic cards with the latest inventory counts.
- */
 export const updateStats = () => {
     elements.totalItemsStat.textContent = appState.inventory.items.length;
     elements.lowStockStat.textContent = appState.inventory.items.filter(item => item.quantity <= item.alertLevel).length;
 };
 
-/**
- * Sets the color theme for the application.
- */
 export const setTheme = (themeName) => {
     document.body.className = `theme-${themeName}`;
     elements.themeToggleBtn.querySelector('.material-symbols-outlined').textContent = themeName === 'dark' ? 'dark_mode' : 'light_mode';
     localStorage.setItem('inventoryAppTheme', themeName);
 };
 
-/**
- * Updates the currency toggle button text and re-renders the UI.
- */
 export const updateCurrencyDisplay = () => {
     const isIQD = appState.activeCurrency === 'IQD';
     elements.currencyToggleBtn.textContent = isIQD ? 'د.ع' : '$';
@@ -334,9 +300,6 @@ export const updateCurrencyDisplay = () => {
 
 // --- NEW: Supplier UI Functions ---
 
-/**
- * Renders the list of suppliers in the supplier manager modal.
- */
 export function renderSupplierList() {
     elements.supplierListContainer.innerHTML = '';
     if (appState.suppliers.length === 0) {
@@ -364,13 +327,9 @@ export function renderSupplierList() {
     });
 }
 
-/**
- * Populates the supplier dropdown in the add/edit item modal.
- * @param {string|null} selectedSupplierId The ID of the currently selected supplier for an item.
- */
 export function populateSupplierDropdown(selectedSupplierId = null) {
     const select = elements.itemSupplierSelect;
-    select.innerHTML = '<option value="">-- اختر مورّد --</option>'; // Default empty option
+    select.innerHTML = '<option value="">-- اختر مورّد --</option>';
     appState.suppliers.forEach(supplier => {
         const option = document.createElement('option');
         option.value = supplier.id;
@@ -382,12 +341,8 @@ export function populateSupplierDropdown(selectedSupplierId = null) {
     });
 }
 
-
 // --- MODAL UI FUNCTIONS (with modifications) ---
 
-/**
- * Populates and opens the details modal for a given item.
- */
 export const openDetailsModal = (itemId) => {
     const item = appState.inventory.items.find(i => i.id === itemId);
     if (!item) return;
@@ -403,7 +358,6 @@ export const openDetailsModal = (itemId) => {
     elements.detailsSellUsd.textContent = `$${(item.sellPriceUsd || 0).toLocaleString()}`;
     elements.detailsNotesContent.textContent = item.notes || 'لا توجد ملاحظات.';
     
-    // Show/Hide Supplier Info
     const supplier = appState.suppliers.find(s => s.id === item.supplierId);
     if (supplier) {
         elements.detailsSupplierName.textContent = sanitizeHTML(supplier.name);
@@ -433,9 +387,6 @@ export const openDetailsModal = (itemId) => {
     elements.detailsModal.showModal();
 };
 
-/**
- * Opens the Add/Edit item modal.
- */
 export const openItemModal = (itemId = null) => {
     elements.itemForm.reset();
     appState.selectedImageFile = null;
@@ -481,9 +432,6 @@ export const openItemModal = (itemId = null) => {
     elements.itemModal.showModal();
 };
 
-/**
- * Opens and populates the "Confirm Sale" modal.
- */
 export const openSaleModal = (itemId) => {
     const item = appState.inventory.items.find(i => i.id === itemId);
     if (!item) return;
@@ -509,9 +457,6 @@ export const openSaleModal = (itemId) => {
     elements.saleModal.showModal();
 };
 
-/**
- * Opens the barcode modal and generates a barcode for the given item.
- */
 export const openBarcodeModal = (itemId) => {
     const item = appState.inventory.items.find(i => i.id === itemId);
     if (item && item.sku) {
@@ -531,9 +476,6 @@ export const openBarcodeModal = (itemId) => {
     }
 };
 
-/**
- * Triggers the download of the currently displayed barcode as a PNG image.
- */
 export const downloadBarcode = () => {
     const item = appState.inventory.items.find(i => i.id === appState.currentItemId);
     if (!item) return;
@@ -565,9 +507,6 @@ export const downloadBarcode = () => {
     img.src = url;
 };
 
-/**
- * Populates the sync modal with saved configuration data and displays it.
- */
 export const populateSyncModal = () => {
     if (appState.syncConfig) {
         elements.githubUsernameInput.value = appState.syncConfig.username;

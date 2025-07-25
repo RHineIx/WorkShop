@@ -223,7 +223,6 @@ async function handleImageCleanup() {
     }
 }
 
-
 // --- NEW: Supplier Logic Handlers ---
 
 async function handleSupplierFormSubmit(e) {
@@ -609,12 +608,9 @@ function setupEventListeners() {
         await initializeApp();
     });
     elements.closeBarcodeBtn.addEventListener('click', () => elements.barcodeModal.close());
-    
-    // --- RESTORED Listeners for existing features ---
     elements.cleanupImagesBtn.addEventListener('click', handleImageCleanup);
     document.getElementById('manual-archive-btn').addEventListener('click', handleManualArchive);
     document.getElementById('view-archives-btn').addEventListener('click', openArchiveBrowser);
-    
     const archiveListContainer = document.getElementById('archive-list-container');
     archiveListContainer.addEventListener('click', async (e) => {
         const deleteButton = e.target.closest('.archive-delete-btn');
