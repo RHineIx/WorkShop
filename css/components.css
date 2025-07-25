@@ -1095,3 +1095,27 @@ color: white;
     border-top: 1px solid var(--border-color);
     margin: var(--spacing-sm) 0;
 }
+/* Archive Item Delete Button --- */
+.archive-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.archive-delete-btn {
+    background-color: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.archive-delete-btn:hover {
+    background-color: var(--danger-color);
+    color: white;
+}

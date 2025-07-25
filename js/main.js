@@ -53,13 +53,18 @@ async function handleSaleFormSubmit(e) {
     const quantityToSell = parseInt(document.getElementById('sale-quantity').value, 10);
     const salePrice = parseFloat(document.getElementById('sale-price').value);
 
-    if (!item || quantityToSell <= 0) {
-        ui.showStatus('خطأ: يرجى إدخال كمية صحيحة.', 'error', { duration: 5000 });
+    if (!item) {
+        ui.showStatus('خطأ: المنتج غير موجود.', 'error', { duration: 5000 });
         saveButton.disabled = false;
         return;
     }
     if (item.quantity < quantityToSell) {
         ui.showStatus(`لا يمكن بيع هذه الكمية، المتبقي: ${item.quantity} فقط.`, 'error', { duration: 5000 });
+        saveButton.disabled = false;
+        return;
+    }
+    if (quantityToSell <= 0) {
+        ui.showStatus('خطأ: يرجى إدخال كمية صحيحة.', 'error', { duration: 5000 });
         saveButton.disabled = false;
         return;
     }
@@ -305,8 +310,21 @@ async function openArchiveBrowser() {
             .forEach(file => {
                 const item = document.createElement('div');
                 item.className = 'archive-item';
-                item.textContent = file.name.replace('sales_', '').replace('.json', '').replace('_', '-');
-                item.dataset.path = file.path;
+                
+                const itemText = document.createElement('span');
+                itemText.className = 'archive-item-text';
+                itemText.textContent = file.name.replace('sales_', '').replace('.json', '').replace('_', '-');
+                item.dataset.path = file.path; // Set path on the main item for viewing
+                
+                const deleteButton = document.createElement('button');
+                deleteButton.className = 'archive-delete-btn';
+                deleteButton.innerHTML = `<span class="material-symbols-outlined">delete</span>`;
+                deleteButton.title = 'حذف الأرشيف';
+                deleteButton.dataset.path = file.path; // Set path and sha for deletion
+                deleteButton.dataset.sha = file.sha;
+
+                item.appendChild(itemText);
+                item.appendChild(deleteButton);
                 listContainer.appendChild(item);
             });
     } catch (error) {
@@ -487,35 +505,61 @@ function setupEventListeners() {
     document.getElementById('manual-archive-btn').addEventListener('click', handleManualArchive);
     document.getElementById('view-archives-btn').addEventListener('click', openArchiveBrowser);
     
-    const archiveBrowserModal = document.getElementById('archive-browser-modal');
-    document.getElementById('close-archive-browser-btn').addEventListener('click', () => archiveBrowserModal.close());
-    document.getElementById('archive-list-container').addEventListener('click', async (e) => {
-        const item = e.target.closest('.archive-item');
-        if (!item) return;
-
-        const container = item.parentElement;
-        if(container.querySelector('.active')) {
-            container.querySelector('.active').classList.remove('active');
-        }
-        item.classList.add('active');
+    // Event listener for the entire archive list container
+    const archiveListContainer = document.getElementById('archive-list-container');
+    archiveListContainer.addEventListener('click', async (e) => {
+        const deleteButton = e.target.closest('.archive-delete-btn');
         
-        const detailsContainer = document.getElementById('archive-details-container');
-        detailsContainer.innerHTML = '<p>جاري تحميل البيانات...</p>';
-        try {
-            const data = await api.fetchGitHubFile(item.dataset.path);
-            const symbol = appState.activeCurrency === 'IQD' ? 'د.ع' : '$';
-            let tableHTML = `<table class="archive-table"><thead><tr><th>المنتج</th><th>الكمية</th><th>السعر</th><th>التاريخ</th></tr></thead><tbody>`;
-            data.forEach(sale => {
-                const price = appState.activeCurrency === 'IQD' ? sale.sellPriceIqd : sale.sellPriceUsd;
-                tableHTML += `<tr><td>${sale.itemName}</td><td>${sale.quantitySold}</td><td>${price.toLocaleString()} ${symbol}</td><td>${sale.saleDate}</td></tr>`;
-            });
-            tableHTML += '</tbody></table>';
-            detailsContainer.innerHTML = tableHTML;
-        } catch (error) {
-            detailsContainer.innerHTML = `<p style="color: var(--danger-color);">فشل تحميل الملف: ${error.message}</p>`;
+        if (deleteButton) {
+            e.stopPropagation(); // Prevent the item click from firing
+            const path = deleteButton.dataset.path;
+            const sha = deleteButton.dataset.sha;
+            
+            if (confirm(`هل أنت متأكد من حذف هذا الأرشيف (${path}) نهائياً؟ لا يمكن التراجع عن هذا الإجراء.`)) {
+                ui.showStatus('جاري حذف الأرشيف...', 'syncing');
+                try {
+                    await api.deleteFileFromGitHub(path, sha, `Delete archive file: ${path}`);
+                    ui.showStatus('تم حذف الأرشيف بنجاح!', 'success');
+                    
+                    // Refresh the archive browser to show the updated list
+                    openArchiveBrowser();
+
+                } catch (error) {
+                    ui.showStatus(`فشل حذف الأرشيف: ${error.message}`, 'error', { duration: 5000 });
+                }
+            }
+        } else {
+            // This is the original logic for viewing an archive
+            const item = e.target.closest('.archive-item');
+            if (!item) return;
+
+            const container = item.parentElement;
+            if(container.querySelector('.active')) {
+                container.querySelector('.active').classList.remove('active');
+            }
+            item.classList.add('active');
+            
+            const detailsContainer = document.getElementById('archive-details-container');
+            detailsContainer.innerHTML = '<p>جاري تحميل البيانات...</p>';
+            try {
+                const data = await api.fetchGitHubFile(item.dataset.path);
+                const symbol = appState.activeCurrency === 'IQD' ? 'د.ع' : '$';
+                let tableHTML = `<table class="archive-table"><thead><tr><th>المنتج</th><th>الكمية</th><th>السعر</th><th>التاريخ</th></tr></thead><tbody>`;
+                data.forEach(sale => {
+                    const price = appState.activeCurrency === 'IQD' ? sale.sellPriceIqd : sale.sellPriceUsd;
+                    tableHTML += `<tr><td>${sale.itemName}</td><td>${sale.quantitySold}</td><td>${price.toLocaleString()} ${symbol}</td><td>${sale.saleDate}</td></tr>`;
+                });
+                tableHTML += '</tbody></table>';
+                detailsContainer.innerHTML = tableHTML;
+            } catch (error) {
+                detailsContainer.innerHTML = `<p style="color: var(--danger-color);">فشل تحميل الملف: ${error.message}</p>`;
+            }
         }
     });
 
+    const archiveBrowserModal = document.getElementById('archive-browser-modal');
+    document.getElementById('close-archive-browser-btn').addEventListener('click', () => archiveBrowserModal.close());
+    
     elements.regenerateSkuBtn.addEventListener('click', () => {
         const existingSkus = new Set(appState.inventory.items.map(item => item.sku));
         document.getElementById('item-sku').value = generateUniqueSKU(existingSkus);
