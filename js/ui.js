@@ -70,6 +70,9 @@ const elements = {
     saleItemIdInput: document.getElementById('sale-item-id'),
     saleItemName: document.getElementById('sale-item-name'),
     cancelSaleBtn: document.getElementById('cancel-sale-btn'),
+    saleQuantityInput: document.getElementById('sale-quantity'),
+    saleIncreaseBtn: document.getElementById('sale-increase-btn'),
+    saleDecreaseBtn: document.getElementById('sale-decrease-btn'),
 
     // Sync Modal
     syncModal: document.getElementById('sync-modal'),
@@ -378,6 +381,7 @@ export const openDetailsModal = (itemId) => {
     const item = appState.inventory.items.find(i => i.id === itemId);
     if (!item) return;
     appState.currentItemId = itemId;
+    appState.itemStateBeforeEdit = JSON.parse(JSON.stringify(item));
 
     elements.detailsName.textContent = item.name;
     elements.detailsSku.textContent = `SKU: ${sanitizeHTML(item.sku || 'N/A')}`;

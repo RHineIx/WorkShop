@@ -595,6 +595,21 @@ color: white;
     align-items: center;
     gap: var(--spacing-sm);
 }
+/* --- Sale Modal Quantity Input Style --- */
+.quantity-controls input[type=number] {
+    width: 60px;
+    height: 36px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 18px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background-color: var(--surface-color);
+    color: var(--text-primary);
+    margin: 0 !important; /* Override default margin */
+    appearance: textfield;
+    -moz-appearance: textfield; /* For Firefox */
+}
 
 .quantity-value {
     font-weight: bold;

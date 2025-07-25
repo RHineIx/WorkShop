@@ -78,17 +78,18 @@ export const fetchImageWithAuth = async (path) => {
 
 /**
  * Uploads a new image file to the /images directory in the GitHub repo.
- * @param {File} file The image file to upload.
+ * @param {Blob} imageBlob The image blob to upload (can be a File or a compressed Blob).
+ * @param {string} originalFileName The original name of the file for naming purposes.
  * @returns {Promise<string>} A promise that resolves with the new file's path in the repo.
  * @throws {Error} If the upload fails.
  */
-export const uploadImageToGitHub = async (file) => {
+export const uploadImageToGitHub = async (imageBlob, originalFileName) => {
     if (!appState.syncConfig) {
         throw new Error('يجب إعداد المزامنة أولاً لرفع الصور.');
     }
-    const base64content = await toBase64(file);
+    const base64content = await toBase64(imageBlob); // toBase64 already works with Blobs
     const { username, repo, pat } = appState.syncConfig;
-    const fileName = `img_${Date.now()}_${file.name.replace(/\s/g, '_')}`;
+    const fileName = `img_${Date.now()}_${originalFileName.replace(/\s/g, '_')}`;
     const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/images/${fileName}`;
     const response = await fetch(apiUrl, {
         method: 'PUT',
@@ -99,6 +100,7 @@ export const uploadImageToGitHub = async (file) => {
     const data = await response.json();
     return data.content.path;
 };
+
 
 /**
  * Fetches the main inventory.json file from the repo.

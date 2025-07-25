@@ -1,9 +1,9 @@
 // js/main.js
 import { appState } from './state.js';
-import { generateUniqueSKU } from './utils.js';
 import * as api from './api.js';
 import { ConflictError } from './api.js'; // Import the custom error
 import * as ui from './ui.js';
+import { generateUniqueSKU, compressImage } from './utils.js';
 
 // --- LOCAL STORAGE & CONFIG ---
 
@@ -128,13 +128,21 @@ async function handleItemFormSubmit(e) {
     
     try {
         let imagePath = null;
-        if(itemId){
-            const existingItem = appState.inventory.items.find(i => i.id === itemId);
-            if(existingItem) imagePath = existingItem.imagePath;
+        const existingItem = appState.inventory.items.find(i => i.id === itemId);
+        if (existingItem) {
+            imagePath = existingItem.imagePath;
         }
 
+        // *** Compression logic before upload ***
         if (appState.selectedImageFile) {
-            imagePath = await api.uploadImageToGitHub(appState.selectedImageFile);
+            // Convert the original File to a compressed Blob
+            const compressedImageBlob = await compressImage(appState.selectedImageFile, {
+                quality: 0.6, // 60% quality
+                maxWidth: 1024,
+                maxHeight: 1024
+            });
+            // Pass the compressed Blob to the upload function
+            imagePath = await api.uploadImageToGitHub(compressedImageBlob, appState.selectedImageFile.name);
         }
         
         const itemData = {
@@ -188,7 +196,6 @@ async function handleItemFormSubmit(e) {
         appState.selectedImageFile = null;
     }
 }
-
 
 async function handleImageCleanup() {
     if (!appState.syncConfig) {
@@ -337,7 +344,6 @@ async function openArchiveBrowser() {
 
 function setupEventListeners() {
     const elements = ui.getDOMElements();
-    let quantityInterval = null;
     
     elements.themeToggleBtn.addEventListener('click', () => ui.setTheme(document.body.classList.contains('theme-light') ? 'dark' : 'light'));
     elements.addItemBtn.addEventListener('click', () => ui.openItemModal());
@@ -368,67 +374,139 @@ function setupEventListeners() {
         if (!card) return;
         const itemId = card.dataset.id;
         
-        if (detailsBtn) ui.openDetailsModal(itemId);
-        if (sellBtn) ui.openSaleModal(itemId);
-    });
-    
-    elements.closeDetailsModalBtn.addEventListener('click', () => elements.detailsModal.close());
-    const stopQuantityChange = async () => {
-        if (quantityInterval) {
-            clearInterval(quantityInterval);
-            quantityInterval = null;
-            try {
-                await api.saveToGitHub();
-            } catch (error) {
-                 ui.showStatus(`فشل المزامنة: ${error.message}`, 'error', { duration: 5000 });
+        if (detailsBtn) {
+            ui.openDetailsModal(itemId);
+        }
+        
+        // *** NEW: Proactive check before opening the sale modal ***
+        if (sellBtn) {
+            const item = appState.inventory.items.find(i => i.id === itemId);
+            if (item && item.quantity > 0) {
+                ui.openSaleModal(itemId);
+            } else {
+                ui.showStatus('هذا المنتج نافد من المخزون ولا يمكن بيعه.', 'error', { duration: 4000 });
             }
         }
-    };
-    const startQuantityChange = (action) => {
-        action();
-        quantityInterval = setInterval(action, 100);
-    };
-    elements.detailsIncreaseBtn.addEventListener('mousedown', () => startQuantityChange(() => {
+    });
+    
+    // --- REFACTORED: Details Modal Logic ---
+    elements.detailsIncreaseBtn.addEventListener('click', () => {
         const item = appState.inventory.items.find(i => i.id === appState.currentItemId);
         if (item) {
             item.quantity++;
             elements.detailsQuantityValue.textContent = item.quantity;
             ui.renderInventory();
         }
-    }));
-    elements.detailsDecreaseBtn.addEventListener('mousedown', () => startQuantityChange(() => {
+    });
+
+    elements.detailsDecreaseBtn.addEventListener('click', () => {
         const item = appState.inventory.items.find(i => i.id === appState.currentItemId);
         if (item && item.quantity > 0) {
             item.quantity--;
             elements.detailsQuantityValue.textContent = item.quantity;
             ui.renderInventory();
-        } else {
-            stopQuantityChange();
         }
-    }));
-    ['mouseup', 'mouseleave', 'touchend'].forEach(eventType => {
-        elements.detailsIncreaseBtn.addEventListener(eventType, stopQuantityChange);
-        elements.detailsDecreaseBtn.addEventListener(eventType, stopQuantityChange);
     });
+    
+    elements.closeDetailsModalBtn.addEventListener('click', async () => {
+        const itemBeforeEdit = appState.itemStateBeforeEdit;
+        const currentItem = appState.inventory.items.find(i => i.id === appState.currentItemId);
+    
+        // Only proceed to save if a change was actually made
+        if (itemBeforeEdit && currentItem && itemBeforeEdit.quantity !== currentItem.quantity) {
+            ui.showStatus('جاري حفظ تغيير الكمية...', 'syncing');
+            try {
+                await api.saveToGitHub();
+                saveLocalData();
+                ui.showStatus('تم حفظ التغييرات بنجاح!', 'success');
+            } catch (error) {
+                // If saving fails, roll back the state to its original version
+                console.error("Failed to save quantity change:", error);
+                const originalItemIndex = appState.inventory.items.findIndex(i => i.id === itemBeforeEdit.id);
+                if (originalItemIndex !== -1) {
+                    appState.inventory.items[originalItemIndex] = itemBeforeEdit;
+                }
+                ui.renderInventory(); // Re-render to show the rolled-back state
+                
+                if (error instanceof ConflictError) {
+                    ui.showStatus('فشل الحفظ. تم تحديث البيانات من مكان آخر.', 'error', { showRefreshButton: true });
+                } else {
+                    ui.showStatus('فشل حفظ التغييرات.', 'error', { duration: 4000 });
+                }
+            }
+        }
+        
+        // Clean up and close the modal regardless of the save status
+        appState.itemStateBeforeEdit = null;
+        appState.currentItemId = null;
+        elements.detailsModal.close();
+    });
+
     elements.detailsEditBtn.addEventListener('click', () => {
         elements.detailsModal.close();
         ui.openItemModal(appState.currentItemId);
     });
+
     elements.detailsDeleteBtn.addEventListener('click', async () => {
-        if (confirm('هل أنت متأكد من رغبتك في حذف هذا المنتج؟')) {
+        // 1. Confirm the user's intent
+        if (confirm('هل أنت متأكد من رغبتك في حذف هذا المنتج؟ سيتم حذف صورته بشكل دائم أيضًا.')) {
+            
+            // 2. Identify the item and its associated image path before any state mutation
+            const itemToDelete = appState.inventory.items.find(item => item.id === appState.currentItemId);
+            const imagePathToDelete = itemToDelete?.imagePath;
+            
+            // 3. Keep a backup of the original state for rollback on failure
             const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
+    
+            // 4. Optimistically update the UI for a responsive feel
             appState.inventory.items = appState.inventory.items.filter(item => item.id !== appState.currentItemId);
             elements.detailsModal.close();
             ui.renderInventory();
+            ui.updateStats(); // Also update stats after deletion
+    
             try {
+                // 5. Persist the primary change: update the inventory file
                 await api.saveToGitHub();
+                
+                // 6. If an image path exists, proceed to delete it from the repository
+                if (imagePathToDelete) {
+                    try {
+                        // To get the required 'sha' for deletion, we must fetch the directory listing
+                        const repoImages = await api.getGitHubDirectoryListing('images');
+                        const imageFile = repoImages.find(file => file.path === imagePathToDelete);
+    
+                        if (imageFile) {
+                            await api.deleteFileFromGitHub(
+                                imageFile.path, 
+                                imageFile.sha, 
+                                `Cleanup: Delete image for item ${itemToDelete.name}`
+                            );
+                        }
+                    } catch (imageError) {
+                        // We don't roll back if only image deletion fails. Log it for debugging.
+                        console.error('Failed to delete associated image:', imageError);
+                    }
+                }
+    
+                // 7. Finalize the operation
+                saveLocalData();
+                ui.showStatus('تم حذف المنتج بنجاح!', 'success');
+    
             } catch(error) {
+                // 8. Rollback state and UI if the primary operation (saving inventory) failed
                 appState.inventory = originalInventory;
                 ui.renderInventory();
-                ui.showStatus('فشل الحذف، ربما قام مستخدم آخر بتحديث البيانات.', 'error', { showRefreshButton: true });
+                ui.updateStats();
+                
+                if (error instanceof ConflictError) {
+                     ui.showStatus('فشل الحذف بسبب تعارض في البيانات.', 'error', { showRefreshButton: true });
+                } else {
+                     ui.showStatus(`فشل الحذف: ${error.message}`, 'error', { duration: 5000 });
+                }
             }
         }
     });
+    
     elements.detailsBarcodeBtn.addEventListener('click', () => ui.openBarcodeModal(appState.currentItemId));
     elements.downloadBarcodeBtn.addEventListener('click', () => ui.downloadBarcode());
     
@@ -436,6 +514,7 @@ function setupEventListeners() {
         appState.searchTerm = e.target.value;
         ui.renderInventory();
     });
+
     elements.statsContainer.addEventListener('click', (e) => {
         const card = e.target.closest('.stat-card');
         if (!card) return;
@@ -455,6 +534,7 @@ function setupEventListeners() {
         e.stopPropagation();
         elements.categoryFilterDropdown.classList.toggle('show');
     });
+
     elements.categoryFilterDropdown.addEventListener('click', (e) => {
         const categoryItem = e.target.closest('.category-item');
         if (categoryItem) {
@@ -464,6 +544,7 @@ function setupEventListeners() {
             elements.categoryFilterDropdown.classList.remove('show');
         }
     });
+
     document.addEventListener('click', (e) => {
         if (!elements.searchContainer.contains(e.target)) {
             elements.categoryFilterDropdown.classList.remove('show');
@@ -474,6 +555,25 @@ function setupEventListeners() {
     elements.cancelItemBtn.addEventListener('click', () => elements.itemModal.close());
     elements.saleForm.addEventListener('submit', handleSaleFormSubmit);
     elements.cancelSaleBtn.addEventListener('click', () => elements.saleModal.close());
+
+    // --- Sale Modal Quantity Controls ---
+    elements.saleIncreaseBtn.addEventListener('click', () => {
+        const quantityInput = elements.saleQuantityInput;
+        const max = parseInt(quantityInput.max, 10);
+        let currentValue = parseInt(quantityInput.value, 10);
+        if (currentValue < max) {
+            quantityInput.value = currentValue + 1;
+        }
+    });
+
+    elements.saleDecreaseBtn.addEventListener('click', () => {
+        const quantityInput = elements.saleQuantityInput;
+        let currentValue = parseInt(quantityInput.value, 10);
+        if (currentValue > 1) { // Minimum quantity is 1
+            quantityInput.value = currentValue - 1;
+        }
+    });
+
     elements.imageUploadInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -487,6 +587,7 @@ function setupEventListeners() {
             reader.readAsDataURL(file);
         }
     });
+    
     elements.cancelSyncBtn.addEventListener('click', () => elements.syncModal.close());
     elements.syncForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -505,7 +606,6 @@ function setupEventListeners() {
     document.getElementById('manual-archive-btn').addEventListener('click', handleManualArchive);
     document.getElementById('view-archives-btn').addEventListener('click', openArchiveBrowser);
     
-    // Event listener for the entire archive list container
     const archiveListContainer = document.getElementById('archive-list-container');
     archiveListContainer.addEventListener('click', async (e) => {
         const deleteButton = e.target.closest('.archive-delete-btn');
@@ -515,15 +615,12 @@ function setupEventListeners() {
             const path = deleteButton.dataset.path;
             const sha = deleteButton.dataset.sha;
             
-            if (confirm(`هل أنت متأكد من حذف هذا الأرشيف (${path}) نهائياً؟ لا يمكن التراجع عن هذا الإجراء.`)) {
+            if (confirm(`هل أنت متأكد من حذف هذا الأرشيف (${path}) نهائياً؟`)) {
                 ui.showStatus('جاري حذف الأرشيف...', 'syncing');
                 try {
                     await api.deleteFileFromGitHub(path, sha, `Delete archive file: ${path}`);
                     ui.showStatus('تم حذف الأرشيف بنجاح!', 'success');
-                    
-                    // Refresh the archive browser to show the updated list
-                    openArchiveBrowser();
-
+                    openArchiveBrowser(); // Refresh the archive browser
                 } catch (error) {
                     ui.showStatus(`فشل حذف الأرشيف: ${error.message}`, 'error', { duration: 5000 });
                 }
