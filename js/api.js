@@ -109,7 +109,10 @@ export const fetchFromGitHub = async () => {
     if (!appState.syncConfig) return null;
     const { username, repo, pat } = appState.syncConfig;
     const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/inventory.json`;
-    const response = await fetch(apiUrl, { headers: { 'Authorization': `token ${pat}` } });
+    const response = await fetch(apiUrl, { 
+        headers: { 'Authorization': `token ${pat}` },
+        cache: 'no-cache' // Force re-validation for inventory data as well
+    });
     
     if (response.status === 404) {
         console.log('inventory.json not found. A new one will be created on save.');
@@ -123,7 +126,6 @@ export const fetchFromGitHub = async () => {
     const decodedContent = decodeURIComponent(escape(window.atob(data.content)));
     let parsedData = JSON.parse(decodedContent);
 
-    // Backward compatibility check: if the old format (just an array) is found, convert it.
     if (Array.isArray(parsedData)) {
         parsedData = { items: parsedData, lastArchiveTimestamp: null };
     }
@@ -171,7 +173,10 @@ export const fetchSales = async () => {
     if (!appState.syncConfig) return null;
     const { username, repo, pat } = appState.syncConfig;
     const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/sales.json`;
-    const response = await fetch(apiUrl, { headers: { 'Authorization': `token ${pat}` } });
+    const response = await fetch(apiUrl, { 
+        headers: { 'Authorization': `token ${pat}` },
+        cache: 'no-cache' // Force re-validation for sales data
+    });
     if (response.status === 404) {
         console.log('sales.json not found. A new one will be created on save.');
         return { data: [], sha: null };
@@ -196,7 +201,7 @@ export const saveSales = async () => {
     const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/sales.json`;
 
     try {
-        const remoteFile = await fetch(apiUrl, { headers: { 'Authorization': `token ${pat}` } });
+        const remoteFile = await fetch(apiUrl, { headers: { 'Authorization': `token ${pat}` }, cache: 'no-cache' });
         if(remoteFile.ok) {
             const fileData = await remoteFile.json();
             appState.salesFileSha = fileData.sha;
@@ -261,7 +266,10 @@ export const getGitHubDirectoryListing = async (path) => {
     if (!appState.syncConfig) return [];
     const { username, repo, pat } = appState.syncConfig;
     const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
-    const response = await fetch(apiUrl, { headers: { 'Authorization': `token ${pat}` } });
+    const response = await fetch(apiUrl, { 
+        headers: { 'Authorization': `token ${pat}` },
+        cache: 'no-cache' // **THIS IS THE FIX**
+    });
     if (!response.ok) {
         if (response.status === 404) return [];
         throw new Error('فشل الوصول إلى المجلد المحدد.');
@@ -307,7 +315,10 @@ export const fetchGitHubFile = async (path) => {
     if (!appState.syncConfig) return null;
     const { username, repo, pat } = appState.syncConfig;
     const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
-    const response = await fetch(apiUrl, { headers: { 'Authorization': `token ${pat}` } });
+    const response = await fetch(apiUrl, { 
+        headers: { 'Authorization': `token ${pat}` },
+        cache: 'no-cache' // Also apply fix here for consistency
+    });
     if (!response.ok) {
         throw new Error(`Failed to fetch file ${path}: ${response.statusText}`);
     }

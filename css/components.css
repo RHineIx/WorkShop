@@ -781,7 +781,7 @@ color: white;
     border-radius: var(--border-radius-sm);
     color: white;
     font-weight: bold;
-    z-index: 1000;
+    z-index: 9999;
     transition: bottom 0.5s ease-in-out;
     box-shadow: var(--shadow-strong);
     display: flex;
