@@ -167,6 +167,7 @@ async function handleItemFormSubmit(e) {
         
         ui.renderInventory();
         ui.renderCategoryFilter();
+        ui.populateCategoryDatalist();
         
         await api.saveToGitHub();
         saveLocalData();
@@ -734,6 +735,7 @@ async function initializeApp() {
     }
     updateLastArchiveDateDisplay();
     ui.renderCategoryFilter();
+    ui.populateCategoryDatalist();
     ui.updateCurrencyDisplay();
     ui.renderInventory();
     console.log('App Initialized Successfully.');

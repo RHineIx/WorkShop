@@ -61,6 +61,7 @@ const elements = {
     itemIdInput: document.getElementById('item-id'),
     imageUploadInput: document.getElementById('item-image-upload'),
     imagePreview: document.getElementById('image-preview'),
+    categoryDatalist: document.getElementById('category-list'),
     imagePlaceholder: document.getElementById('image-placeholder'),
     regenerateSkuBtn: document.getElementById('regenerate-sku-btn'),
 
@@ -132,6 +133,21 @@ export function renderCategoryFilter() {
             categoryItem.classList.add('active');
         }
         elements.categoryFilterDropdown.appendChild(categoryItem);
+    });
+}
+
+/**
+ * Populates the category datalist for the item form input.
+ */
+export function populateCategoryDatalist() {
+    const categories = [...new Set(appState.inventory.items.map(item => item.category).filter(Boolean))];
+    const datalist = elements.categoryDatalist;
+    datalist.innerHTML = ''; // Clear previous options
+    
+    categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = sanitizeHTML(category);
+        datalist.appendChild(option);
     });
 }
 

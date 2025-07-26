@@ -275,6 +275,7 @@ dialog::backdrop {
 #item-form textarea,
 #sale-form textarea {
     min-height: 80px; /* Ensures a consistent minimum height */
+    width: 100%;      /* Ensures it takes the full width */
 }
 
 .form-row {
@@ -372,6 +373,12 @@ appearance: textfield;
     align-items: center;
     justify-content: center;
     transition: all var(--transition-speed) ease;
+}
+/* And add this new rule right after it */
+.icon-btn svg {
+    fill: currentColor; /* This makes the SVG icon inherit the button's color */
+    width: 24px;       /* Ensure consistent sizing */
+    height: 24px;      /* Ensure consistent sizing */
 }
 
 .icon-btn:hover {
@@ -1165,10 +1172,10 @@ select {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='currentColor' viewBox='0 0 24 24'%3E%3Cpath d='m12 15l4-4H8zm0 7q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22m0-2q3.35 0 5.675-2.325T20 12t-2.325-5.675T12 4T6.325 6.325T4 12t2.325 5.675T12 20m0-8'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23718096' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: left 12px center;
-    padding-left: 36px !important;
+    padding-left: 36px !important; /* Add padding to prevent text from overlapping the arrow */
 }
 
 .supplier-selection-container select,

@@ -203,9 +203,11 @@
 
             <label for="item-name">اسم المنتج</label>
             <input type="text" id="item-name" required>
-            
+
             <label for="item-category">الفئة</label>
-            <input type="text" id="item-category">
+            <input type="text" id="item-category" list="category-list">
+            <datalist id="category-list">
+                </datalist>
 
             <div class="form-group-divider"></div>
             <label for="item-supplier">المورّد (اختياري)</label>
