@@ -234,6 +234,29 @@ export const renderDashboard = () => {
     }
 };
 
+// In js/ui.js
+
+/**
+ * Renders skeleton loaders for the inventory grid.
+ * @param {number} count The number of skeleton cards to render.
+ */
+export function renderInventorySkeleton(count = 8) {
+    elements.inventoryGrid.innerHTML = ''; // Clear previous content
+    for (let i = 0; i < count; i++) {
+        const skeletonCard = document.createElement('div');
+        skeletonCard.className = 'skeleton-card';
+        skeletonCard.innerHTML = `
+            <div class="skeleton skeleton-image"></div>
+            <div class="skeleton-info">
+                <div class="skeleton skeleton-text"></div>
+                <div class="skeleton skeleton-text w-75"></div>
+                 <div class="skeleton skeleton-text w-50" style="margin-top: 12px;"></div>
+            </div>
+        `;
+        elements.inventoryGrid.appendChild(skeletonCard);
+    }
+}
+
 export const renderInventory = () => {
     elements.inventoryGrid.innerHTML = '';
     let filteredInventory = [...appState.inventory.items];
