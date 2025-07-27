@@ -1321,28 +1321,13 @@ select {
     color: var(--accent-color);
     font-size: 20px;
 }
-/* --- Custom Date Input Styling --- */
-.date-input-container {
-    position: relative;
-    width: 100%;
-}
 
-.date-input-icon {
-    position: absolute;
-    top: 40%;
-    left: 12px; /* For RTL layout */
-    transform: translateY(-50%);
-    color: var(--text-secondary);
-    pointer-events: none; /* Allows clicks to pass through to the input */
-}
-
-/* Hide the default browser calendar icon */
+/* default browser calendar icon */
 #sale-date::-webkit-calendar-picker-indicator {
-    background: none;
-    display: none;
+    filter: invert(41%) sepia(98%) saturate(747%) hue-rotate(180deg) brightness(95%) contrast(101%);
 }
 
-/* Ensure text doesn't go under our new icon */
 #sale-date {
-    padding-left: 45px !important;
+    text-align: center;
+    padding-left: 12px; /* Reset to default padding if needed */
 }
