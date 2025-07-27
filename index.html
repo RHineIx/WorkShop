@@ -290,12 +290,23 @@
                     <span class="material-symbols-outlined">inventory</span>
                     عرض أرشيف المبيعات
                 </button>
-                <button type="button" id="cleanup-images-btn" class="cleanup-btn">
-                    <span class="material-symbols-outlined">cleaning_services</span>
-                    تنظيف الصور غير المستخدمة
-                </button>
+            <button type="button" id="cleanup-images-btn" class="cleanup-btn">
+                <span class="material-symbols-outlined">cleaning_services</span>
+                تنظيف الصور غير المستخدمة
+            </button>
+
+            <hr class="maintenance-divider">
+            <button type="button" id="download-backup-btn" class="cleanup-btn archive-btn">
+                <span class="material-symbols-outlined">download_for_offline</span>
+                تنزيل نسخة احتياطية محلية
+            </button>
+            <input type="file" id="restore-backup-input" class="visually-hidden" accept=".zip">
+            <label for="restore-backup-input" class="cleanup-btn">
+                <span class="material-symbols-outlined">upload_file</span>
+                استعادة من نسخة احتياطية
+            </label>
             </div>
-        </form>
+    </form>
     </dialog>
 
     <dialog id="barcode-modal">
@@ -402,6 +413,8 @@
     </dialog>
 
     <div id="status-indicator" class="status-indicator" aria-live="polite"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script type="module" src="js/main.js"></script>
