@@ -622,6 +622,8 @@ function setupEventListeners() {
     });
     elements.closeBarcodeBtn.addEventListener('click', () => elements.barcodeModal.close());
     elements.cleanupImagesBtn.addEventListener('click', handleImageCleanup);
+    downloadBackupBtn: document.getElementById('download-backup-btn'),
+    restoreBackupInput: document.getElementById('restore-backup-input'),
     document.getElementById('manual-archive-btn').addEventListener('click', handleManualArchive);
     document.getElementById('view-archives-btn').addEventListener('click', openArchiveBrowser);
     const archiveListContainer = document.getElementById('archive-list-container');
@@ -704,6 +706,93 @@ function setupEventListeners() {
         elements.supplierFormTitle.textContent = 'إضافة مورّد جديد';
         elements.cancelEditSupplierBtn.classList.add('view-hidden');
     });
+}
+
+/**
+ * Creates a zip file containing all application data and triggers a download.
+ */
+async function handleDownloadBackup() {
+    ui.showStatus('جاري تجهيز النسخة الاحتياطية...', 'syncing');
+    try {
+        const zip = new JSZip();
+        zip.file("inventory.json", JSON.stringify(appState.inventory, null, 2));
+        zip.file("sales.json", JSON.stringify(appState.sales, null, 2));
+        zip.file("suppliers.json", JSON.stringify(appState.suppliers, null, 2));
+
+        const blob = await zip.generateAsync({ type: "blob" });
+
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+        link.download = `rhineix-workshop-backup-${timestamp}.zip`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+
+        ui.showStatus('تم تنزيل النسخة الاحتياطية بنجاح!', 'success');
+    } catch (error) {
+        console.error("Backup failed:", error);
+        ui.showStatus(`فشل إنشاء النسخة الاحتياطية: ${error.message}`, 'error', { duration: 5000 });
+    }
+}
+
+/**
+ * Handles the file selection for restoring a backup.
+ * Reads the zip file, validates its content, and restores the application state.
+ * @param {Event} event The file input change event.
+ */
+async function handleRestoreBackup(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!confirm("هل أنت متأكد من رغبتك في استعادة البيانات من هذا الملف؟ سيتم الكتابة فوق جميع بياناتك الحالية.")) {
+        event.target.value = ''; // Reset the input if user cancels
+        return;
+    }
+
+    ui.showStatus('جاري استعادة النسخة الاحتياطية...', 'syncing');
+
+    try {
+        const zip = await JSZip.loadAsync(file);
+
+        const inventoryFile = zip.file("inventory.json");
+        const salesFile = zip.file("sales.json");
+        const suppliersFile = zip.file("suppliers.json");
+
+        if (!inventoryFile || !salesFile || !suppliersFile) {
+            throw new Error("ملف النسخة الاحتياطية غير صالح أو لا يحتوي على الملفات المطلوبة.");
+        }
+
+        const inventoryData = JSON.parse(await inventoryFile.async("string"));
+        const salesData = JSON.parse(await salesFile.async("string"));
+        const suppliersData = JSON.parse(await suppliersFile.async("string"));
+
+        // Basic validation to ensure file structure is correct
+        if (!inventoryData.items || !Array.isArray(salesData) || !Array.isArray(suppliersData)) {
+            throw new Error("محتوى ملف النسخة الاحتياطية غير صالح.");
+        }
+
+        // All checks passed, update the application state
+        appState.inventory = inventoryData;
+        appState.sales = salesData;
+        appState.suppliers = suppliersData;
+
+        saveLocalData();
+
+        ui.showStatus('تمت استعادة البيانات بنجاح! سيتم إعادة تحميل التطبيق.', 'success', { duration: 4000 });
+
+        // Reload the application after a short delay to reflect the new state everywhere
+        setTimeout(() => {
+            location.reload();
+        }, 4000);
+
+    } catch (error) {
+        console.error("Restore failed:", error);
+        ui.showStatus(`فشلت عملية الاستعادة: ${error.message}`, 'error', { duration: 5000 });
+    } finally {
+        event.target.value = ''; // Reset the input to allow selecting the same file again
+    }
 }
 
 // --- INITIALIZATION ---
