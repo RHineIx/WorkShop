@@ -85,6 +85,8 @@ const elements = {
     githubRepoInput: document.getElementById('github-repo'),
     githubPatInput: document.getElementById('github-pat'),
     cleanupImagesBtn: document.getElementById('cleanup-images-btn'),
+    downloadBackupBtn: document.getElementById('download-backup-btn'),
+    restoreBackupInput: document.getElementById('restore-backup-input'),
      
     // Barcode Modal
     barcodeModal: document.getElementById('barcode-modal'),
@@ -93,7 +95,7 @@ const elements = {
     downloadBarcodeBtn: document.getElementById('download-barcode-btn'),
     closeBarcodeBtn: document.getElementById('close-barcode-btn'),
     
-    // --- NEW: Supplier UI Elements ---
+    // Supplier UI Elements
     supplierManagerModal: document.getElementById('supplier-manager-modal'),
     closeSupplierManagerBtn: document.getElementById('close-supplier-manager-btn'),
     supplierListContainer: document.getElementById('supplier-list-container'),
@@ -113,7 +115,6 @@ export function getDOMElements() {
     return elements;
 }
 
-// ... (Other functions like renderCategoryFilter, populateCategoryDatalist, showStatus, toggleView, renderDashboard remain the same)
 export function renderCategoryFilter() {
     const categories = [...new Set(appState.inventory.items.map(item => item.category).filter(Boolean))];
     elements.categoryFilterDropdown.innerHTML = '';
