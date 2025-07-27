@@ -22,6 +22,7 @@ const elements = {
     syncSettingsBtn: document.getElementById('sync-settings-btn'),
     currencyToggleBtn: document.getElementById('currency-toggle-btn'),
     inventoryToggleBtn: document.getElementById('inventory-toggle-btn'),
+ 
     dashboardToggleBtn: document.getElementById('dashboard-toggle-btn'),
 
     // View Containers
@@ -44,6 +45,7 @@ const elements = {
     detailsQuantityValue: document.getElementById('details-quantity-value'),
     detailsDecreaseBtn: document.getElementById('details-decrease-btn'),
     detailsIncreaseBtn: document.getElementById('details-increase-btn'),
+   
     detailsNotesContent: document.getElementById('details-notes-content'),
     detailsEditBtn: document.getElementById('details-edit-btn'),
     detailsBarcodeBtn: document.getElementById('details-barcode-btn'),
@@ -66,6 +68,7 @@ const elements = {
     regenerateSkuBtn: document.getElementById('regenerate-sku-btn'),
 
     // Sale Modal
+ 
     saleModal: document.getElementById('sale-modal'),
     saleForm: document.getElementById('sale-form'),
     saleItemIdInput: document.getElementById('sale-item-id'),
@@ -84,6 +87,7 @@ const elements = {
     githubUsernameInput: document.getElementById('github-username'),
     githubRepoInput: document.getElementById('github-repo'),
     githubPatInput: document.getElementById('github-pat'),
+    maintenanceActions: document.querySelector('#sync-modal .maintenance-actions'),
     cleanupImagesBtn: document.getElementById('cleanup-images-btn'),
     downloadBackupBtn: document.getElementById('download-backup-btn'),
     restoreBackupInput: document.getElementById('restore-backup-input'),
@@ -95,7 +99,7 @@ const elements = {
     downloadBarcodeBtn: document.getElementById('download-barcode-btn'),
     closeBarcodeBtn: document.getElementById('close-barcode-btn'),
     
-    // Supplier UI Elements
+    // --- NEW: Supplier UI Elements ---
     supplierManagerModal: document.getElementById('supplier-manager-modal'),
     closeSupplierManagerBtn: document.getElementById('close-supplier-manager-btn'),
     supplierListContainer: document.getElementById('supplier-list-container'),
@@ -107,7 +111,8 @@ const elements = {
     itemSupplierSelect: document.getElementById('item-supplier'),
     supplierDetailsContainer: document.getElementById('supplier-details-container'),
     detailsSupplierName: document.getElementById('details-supplier-name'),
-    detailsSupplierPhone: document.getElementById('details-supplier-phone'),
+    detailsSupplierPhone: 
+    document.getElementById('details-supplier-phone'),
     detailsSupplierWhatsapp: document.getElementById('details-supplier-whatsapp'),
 };
 
@@ -127,7 +132,7 @@ export function renderCategoryFilter() {
         allItem.classList.add('active');
     }
     elements.categoryFilterDropdown.appendChild(allItem);
-    
+
     categories.forEach(category => {
         const categoryItem = document.createElement('div');
         categoryItem.className = 'category-item';
@@ -143,7 +148,7 @@ export function renderCategoryFilter() {
 export function populateCategoryDatalist() {
     const categories = [...new Set(appState.inventory.items.map(item => item.category).filter(Boolean))];
     const datalist = elements.categoryDatalist;
-    datalist.innerHTML = ''; // Clear previous options
+    datalist.innerHTML = ''; 
     
     categories.forEach(category => {
         const option = document.createElement('option');
@@ -158,7 +163,7 @@ export const showStatus = (message, type, options = {}) => {
     const messageSpan = document.createElement('span');
     messageSpan.textContent = message;
     elements.statusIndicator.appendChild(messageSpan);
-    
+
     if (showRefreshButton) {
         const refreshButton = document.createElement('button');
         refreshButton.textContent = 'تحديث';
@@ -168,7 +173,6 @@ export const showStatus = (message, type, options = {}) => {
     }
     
     elements.statusIndicator.className = `status-indicator ${type} show`;
-    
     if (type !== 'syncing' && !showRefreshButton) {
         setTimeout(() => {
             elements.statusIndicator.classList.remove('show');
@@ -179,7 +183,6 @@ export const showStatus = (message, type, options = {}) => {
 export const toggleView = (viewToShow) => {
     appState.currentView = viewToShow;
     const isInventory = viewToShow === 'inventory';
-    
     elements.inventoryViewContainer.classList.toggle('view-hidden', !isInventory);
     elements.dashboardViewContainer.classList.toggle('view-hidden', isInventory);
     elements.inventoryToggleBtn.classList.toggle('active-view-btn', isInventory);
@@ -189,7 +192,6 @@ export const toggleView = (viewToShow) => {
         renderDashboard();
     }
 };
-
 export const renderDashboard = () => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -223,7 +225,6 @@ export const renderDashboard = () => {
     filteredSales.forEach(sale => {
         itemSales[sale.itemId] = (itemSales[sale.itemId] || 0) + sale.quantitySold;
     });
-
     const sortedBestsellers = Object.entries(itemSales)
         .map(([itemId, count]) => {
             const item = appState.inventory.items.find(i => i.id === itemId);
@@ -231,7 +232,6 @@ export const renderDashboard = () => {
         })
         .sort((a, b) => b.count - a.count)
         .slice(0, 5);
-
     elements.bestsellersList.innerHTML = '';
     if (sortedBestsellers.length > 0) {
         sortedBestsellers.forEach(item => {
@@ -247,7 +247,6 @@ export const renderDashboard = () => {
 export function updateSaleTotal() {
     const quantity = parseInt(elements.saleQuantityInput.value, 10) || 0;
     const unitPrice = parseFloat(document.getElementById('sale-price').value) || 0;
-    
     const totalPrice = quantity * unitPrice;
     const symbol = appState.activeCurrency === 'IQD' ? 'د.ع' : '$';
 
@@ -260,7 +259,7 @@ export function updateSaleTotal() {
  * @param {number} count The number of skeleton cards to render.
  */
 export function renderInventorySkeleton(count = 8) {
-    elements.inventoryGrid.innerHTML = ''; // Clear previous content
+    elements.inventoryGrid.innerHTML = '';
     for (let i = 0; i < count; i++) {
         const skeletonCard = document.createElement('div');
         skeletonCard.className = 'skeleton-card';
@@ -270,7 +269,8 @@ export function renderInventorySkeleton(count = 8) {
                 <div class="skeleton skeleton-text"></div>
                 <div class="skeleton skeleton-text w-75"></div>
                  <div class="skeleton skeleton-text w-50" style="margin-top: 12px;"></div>
-            </div>
+         
+           </div>
         `;
         elements.inventoryGrid.appendChild(skeletonCard);
     }
@@ -278,12 +278,9 @@ export function renderInventorySkeleton(count = 8) {
 
 /**
  * A new helper function to get the currently filtered list of items.
- * This separates the "what to show" from the "how to show it".
- * @returns {Array<Object>} The filtered list of items.
  */
 function getFilteredItems() {
     let items = [...appState.inventory.items];
-
     if (appState.activeFilter === 'low_stock') {
         items = items.filter(item => item.quantity <= item.alertLevel);
     }
@@ -302,7 +299,6 @@ function getFilteredItems() {
 
 /**
  * The main function to orchestrate filtering and rendering.
- * It's called by event listeners.
  */
 export function filterAndRenderItems() {
     const itemsToRender = getFilteredItems();
@@ -314,14 +310,14 @@ export function filterAndRenderItems() {
  * @param {Array<Object>} itemsToRender The array of items to display.
  */
 export function renderInventory(itemsToRender) {
-    elements.inventoryGrid.innerHTML = ''; // Clear the grid (skeletons or old items)
+    elements.inventoryGrid.innerHTML = '';
 
     if (itemsToRender.length === 0) {
         elements.inventoryGrid.innerHTML = '<p class="empty-state">لا توجد منتجات تطابق بحثك...</p>';
         return;
     }
 
-    const fragment = document.createDocumentFragment(); // Create an in-memory fragment
+    const fragment = document.createDocumentFragment();
 
     itemsToRender.forEach(item => {
         const card = document.createElement('div');
@@ -331,6 +327,7 @@ export function renderInventory(itemsToRender) {
         if (isLowStock) card.classList.add('low-stock');
         
         const isIQD = appState.activeCurrency === 'IQD';
+      
         const price = isIQD ? (item.sellPriceIqd || 0) : (item.sellPriceUsd || 0);
         const symbol = isIQD ? 'د.ع' : '$';
         const placeholder = `<div class="card-image-placeholder"><span class="material-symbols-outlined">key</span></div>`;
@@ -338,20 +335,22 @@ export function renderInventory(itemsToRender) {
         card.innerHTML = `
             <div class="card-image-container">
                 <div class="quantity-badge ${isLowStock ? 'low-stock' : ''}">متبقي ${item.quantity}</div>
-                ${item.imagePath ? `<img class="card-image" alt="${sanitizeHTML(item.name)}">` : placeholder}
+     
+               ${item.imagePath ? `<img class="card-image" alt="${sanitizeHTML(item.name)}">` : placeholder}
             </div>
             <div class="card-info">
                 <div class="card-name">${sanitizeHTML(item.name)}</div>
                 <div class="card-footer">
                     <div class="card-price">${price.toLocaleString()} ${symbol}</div>
-                    <div class="card-actions">
+  
+                     <div class="card-actions">
                         <button class="icon-btn sell-btn" title="بيع قطعة واحدة"><span class="material-symbols-outlined">shopping_cart</span></button>
                         <button class="icon-btn details-btn" title="عرض التفاصيل"><span class="material-symbols-outlined">more_vert</span></button>
                     </div>
-                </div>
+  
+                   </div>
             </div>`;
-        
-        fragment.appendChild(card); // Append to the fragment, not the live DOM
+        fragment.appendChild(card);
         
         if (item.imagePath) {
             const imgElement = card.querySelector('.card-image');
@@ -361,7 +360,7 @@ export function renderInventory(itemsToRender) {
         }
     });
 
-    elements.inventoryGrid.appendChild(fragment); // Append the entire fragment in one go
+    elements.inventoryGrid.appendChild(fragment);
     updateStats();
 }
 
@@ -381,7 +380,7 @@ export const updateCurrencyDisplay = () => {
     const isIQD = appState.activeCurrency === 'IQD';
     elements.currencyToggleBtn.textContent = isIQD ? 'د.ع' : '$';
     if (appState.currentView === 'inventory') {
-        filterAndRenderItems(); // Use the new orchestrator function
+        filterAndRenderItems();
         if (elements.detailsModal.open && appState.currentItemId) {
             openDetailsModal(appState.currentItemId);
         }
@@ -389,8 +388,6 @@ export const updateCurrencyDisplay = () => {
         renderDashboard();
     }
 };
-
-// --- (Other functions like renderSupplierList, populateSupplierDropdown, etc. remain the same) ---
 export function renderSupplierList() {
     elements.supplierListContainer.innerHTML = '';
     if (appState.suppliers.length === 0) {
@@ -405,12 +402,14 @@ export function renderSupplierList() {
                 <strong>${sanitizeHTML(supplier.name)}</strong>
                 <div class="text-secondary">${sanitizeHTML(supplier.phone || '')}</div>
             </div>
+    
             <div class="supplier-item-actions">
                 <button class="icon-btn edit-supplier-btn" data-id="${supplier.id}" title="تعديل المورّد">
                     <span class="material-symbols-outlined">edit</span>
                 </button>
                 <button class="icon-btn danger-btn delete-supplier-btn" data-id="${supplier.id}" title="حذف المورّد">
-                    <span class="material-symbols-outlined">delete</span>
+           
+                 <span class="material-symbols-outlined">delete</span>
                 </button>
             </div>
         `;
@@ -467,17 +466,16 @@ export const openDetailsModal = (itemId) => {
     if (item.imagePath) {
         elements.detailsImage.style.display = 'block';
         elements.detailsImagePlaceholder.style.display = 'none';
-        elements.detailsImage.src = ''; // Clear previous image
-        elements.detailsImage.classList.add('skeleton'); // Add skeleton class
+        elements.detailsImage.src = '';
+        elements.detailsImage.classList.add('skeleton');
 
         fetchImageWithAuth(item.imagePath).then(blobUrl => {
             if (blobUrl) {
                 elements.detailsImage.src = blobUrl;
                 elements.detailsImage.onload = () => {
-                    elements.detailsImage.classList.remove('skeleton'); // Remove skeleton on load
+                    elements.detailsImage.classList.remove('skeleton');
                 };
             } else {
-                // If fetching fails, remove skeleton and maybe show placeholder
                 elements.detailsImage.classList.remove('skeleton');
             }
         });
@@ -488,7 +486,6 @@ export const openDetailsModal = (itemId) => {
     elements.detailsModal.showModal();
 };
 
-// ... (The rest of the modal functions: openItemModal, openSaleModal, openBarcodeModal, downloadBarcode, populateSyncModal remain unchanged)
 export const openItemModal = (itemId = null) => {
     elements.itemForm.reset();
     appState.selectedImageFile = null;
@@ -496,7 +493,6 @@ export const openItemModal = (itemId = null) => {
     elements.imagePreview.classList.add('image-preview-hidden');
     elements.imagePlaceholder.style.display = 'flex';
     elements.regenerateSkuBtn.style.display = 'none';
-    
     if (itemId) {
         const item = appState.inventory.items.find(i => i.id === itemId);
         if (item) {
@@ -520,6 +516,7 @@ export const openItemModal = (itemId = null) => {
                     if (blobUrl) {
                         elements.imagePreview.src = blobUrl;
                         elements.imagePreview.classList.remove('image-preview-hidden');
+    
                         elements.imagePlaceholder.style.display = 'none';
                     }
                 });
@@ -533,7 +530,6 @@ export const openItemModal = (itemId = null) => {
     }
     elements.itemModal.showModal();
 };
-
 export const openSaleModal = (itemId) => {
     const item = appState.inventory.items.find(i => i.id === itemId);
     if (!item) return;
@@ -563,7 +559,6 @@ export const openSaleModal = (itemId) => {
     elements.saleModal.showModal();
     updateSaleTotal(); 
 };
-
 export const openBarcodeModal = (itemId) => {
     const item = appState.inventory.items.find(i => i.id === itemId);
     if (item && item.sku) {
@@ -595,7 +590,6 @@ export const downloadBarcode = () => {
     const img = new Image();
     const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
     const url = URL.createObjectURL(svgBlob);
-    
     img.onload = function () {
         canvas.width = img.width * scale;
         canvas.height = img.height * scale;
@@ -603,7 +597,6 @@ export const downloadBarcode = () => {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.scale(scale, scale);
         ctx.drawImage(img, 0, 0);
-        
         const pngUrl = canvas.toDataURL("image/png");
         const downloadLink = document.createElement("a");
         downloadLink.href = pngUrl;
@@ -621,6 +614,12 @@ export const populateSyncModal = () => {
         elements.githubUsernameInput.value = appState.syncConfig.username;
         elements.githubRepoInput.value = appState.syncConfig.repo;
         elements.githubPatInput.value = appState.syncConfig.pat;
+        elements.maintenanceActions.classList.remove('view-hidden');
+    } else {
+        elements.githubUsernameInput.value = '';
+        elements.githubRepoInput.value = '';
+        elements.githubPatInput.value = '';
+        elements.maintenanceActions.classList.add('view-hidden');
     }
     elements.syncModal.showModal();
 };
