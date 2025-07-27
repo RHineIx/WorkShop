@@ -1,6 +1,6 @@
 // js/main.js
 import { appState } from './state.js';
-import { generateUniqueSKU, compressImage } from './utils.js';
+import { generateUniqueSKU, compressImage, debounce } from './utils.js';
 import * as api from './api.js';
 import { ConflictError } from './api.js';
 import * as ui from './ui.js';
@@ -529,10 +529,10 @@ function setupEventListeners() {
     elements.downloadBarcodeBtn.addEventListener('click', () => ui.downloadBarcode());
 
     // --- Search and Filter Event Listeners ---
-    elements.searchBar.addEventListener('input', (e) => {
+    elements.searchBar.addEventListener('input', debounce((e) => {
         appState.searchTerm = e.target.value;
         ui.filterAndRenderItems();
-    });
+    }, 500)); // <-- We wrap the function and add a 300ms delay
     elements.statsContainer.addEventListener('click', (e) => {
         const card = e.target.closest('.stat-card');
         if (!card) return;

@@ -97,3 +97,23 @@ export const compressImage = (file, options = {}) => {
         reader.readAsDataURL(file);
     });
 };
+/**
+ * Creates and returns a new debounced version of the passed function
+ * that will postpone its execution until after `delay` milliseconds
+ * have elapsed since the last time it was invoked.
+ * @param {Function} func The function to debounce.
+ * @param {number} delay The number of milliseconds to delay.
+ * @returns {Function} Returns the new debounced function.
+ */
+export const debounce = (func, delay) => {
+    let timeoutId;
+    // Return a new function that wraps the original function
+    return (...args) => {
+        // Clear the previous timeout if the function is called again
+        clearTimeout(timeoutId);
+        // Set a new timeout
+        timeoutId = setTimeout(() => {
+            func.apply(this, args);
+        }, delay);
+    };
+};
