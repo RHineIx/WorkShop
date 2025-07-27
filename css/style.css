@@ -10,9 +10,9 @@
 @import 'layout.css';
 
 /* 3. Components (Importing all the new partial files) */
-@import '/components/_header.css';
-@import '/components/_buttons.css';
-@import '/components/_forms.css';
-@import '/components/_cards.css';
-@import '/components/_modals.css';
-@import '/components/_utilities.css';
+@import 'components/_header.css';
+@import 'components/_buttons.css';
+@import 'components/_forms.css';
+@import 'components/_cards.css';
+@import 'components/_modals.css';
+@import 'components/_utilities.css';
