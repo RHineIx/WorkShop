@@ -123,7 +123,7 @@ export function renderCategoryFilter() {
         allItem.classList.add('active');
     }
     elements.categoryFilterDropdown.appendChild(allItem);
-
+    
     categories.forEach(category => {
         const categoryItem = document.createElement('div');
         categoryItem.className = 'category-item';
@@ -157,6 +157,7 @@ export const showStatus = (message, type, options = {}) => {
     const messageSpan = document.createElement('span');
     messageSpan.textContent = message;
     elements.statusIndicator.appendChild(messageSpan);
+    
     if (showRefreshButton) {
         const refreshButton = document.createElement('button');
         refreshButton.textContent = 'تحديث';
@@ -164,7 +165,9 @@ export const showStatus = (message, type, options = {}) => {
         refreshButton.onclick = () => location.reload();
         elements.statusIndicator.appendChild(refreshButton);
     }
+    
     elements.statusIndicator.className = `status-indicator ${type} show`;
+    
     if (type !== 'syncing' && !showRefreshButton) {
         setTimeout(() => {
             elements.statusIndicator.classList.remove('show');
@@ -175,10 +178,12 @@ export const showStatus = (message, type, options = {}) => {
 export const toggleView = (viewToShow) => {
     appState.currentView = viewToShow;
     const isInventory = viewToShow === 'inventory';
+    
     elements.inventoryViewContainer.classList.toggle('view-hidden', !isInventory);
     elements.dashboardViewContainer.classList.toggle('view-hidden', isInventory);
     elements.inventoryToggleBtn.classList.toggle('active-view-btn', isInventory);
     elements.dashboardToggleBtn.classList.toggle('active-view-btn', !isInventory);
+    
     if (!isInventory) {
         renderDashboard();
     }
@@ -202,18 +207,22 @@ export const renderDashboard = () => {
             startDate = today;
             break;
     }
+
     const filteredSales = appState.sales.filter(sale => new Date(sale.saleDate) >= startDate && new Date(sale.saleDate) <= now);
     const isIQD = appState.activeCurrency === 'IQD';
     const totalSales = filteredSales.reduce((sum, sale) => sum + (isIQD ? sale.sellPriceIqd : sale.sellPriceUsd), 0);
     const totalCost = filteredSales.reduce((sum, sale) => sum + (isIQD ? sale.costPriceIqd : sale.costPriceUsd), 0);
     const totalProfit = totalSales - totalCost;
     const symbol = isIQD ? 'د.ع' : '$';
+
     elements.totalSalesStat.textContent = `${totalSales.toLocaleString()} ${symbol}`;
     elements.totalProfitStat.textContent = `${totalProfit.toLocaleString()} ${symbol}`;
+
     const itemSales = {};
     filteredSales.forEach(sale => {
         itemSales[sale.itemId] = (itemSales[sale.itemId] || 0) + sale.quantitySold;
     });
+
     const sortedBestsellers = Object.entries(itemSales)
         .map(([itemId, count]) => {
             const item = appState.inventory.items.find(i => i.id === itemId);
@@ -221,6 +230,7 @@ export const renderDashboard = () => {
         })
         .sort((a, b) => b.count - a.count)
         .slice(0, 5);
+
     elements.bestsellersList.innerHTML = '';
     if (sortedBestsellers.length > 0) {
         sortedBestsellers.forEach(item => {
@@ -233,8 +243,6 @@ export const renderDashboard = () => {
         elements.bestsellersList.innerHTML = '<p>لا توجد مبيعات في هذه الفترة.</p>';
     }
 };
-
-// In js/ui.js
 
 /**
  * Renders skeleton loaders for the inventory grid.
@@ -258,59 +266,70 @@ export function renderInventorySkeleton(count = 8) {
 }
 
 export const renderInventory = () => {
-    elements.inventoryGrid.innerHTML = '';
-    let filteredInventory = [...appState.inventory.items];
-    if (appState.activeFilter === 'low_stock') {
-        filteredInventory = filteredInventory.filter(item => item.quantity <= item.alertLevel);
-    }
-    if (appState.selectedCategory && appState.selectedCategory !== 'all') {
-        filteredInventory = filteredInventory.filter(item => item.category === appState.selectedCategory);
-    }
-    if (appState.searchTerm) {
-        const lowerCaseSearch = appState.searchTerm.toLowerCase();
-        filteredInventory = filteredInventory.filter(item =>
-            item.name.toLowerCase().includes(lowerCaseSearch) ||
-            (item.sku && item.sku.toLowerCase().includes(lowerCaseSearch))
-        );
-    }
-    if (filteredInventory.length === 0) {
-        elements.inventoryGrid.innerHTML = '<p class="empty-state">لا توجد منتجات تطابق بحثك...</p>';
-    } else {
-        filteredInventory.forEach(item => {
-            const card = document.createElement('div');
-            card.className = 'product-card';
-            card.dataset.id = item.id;
-            const isLowStock = item.quantity <= item.alertLevel;
-            if (isLowStock) card.classList.add('low-stock');
-            const isIQD = appState.activeCurrency === 'IQD';
-            const price = isIQD ? (item.sellPriceIqd || 0) : (item.sellPriceUsd || 0);
-            const symbol = isIQD ? 'د.ع' : '$';
-            const placeholder = `<div class="card-image-placeholder"><span class="material-symbols-outlined">key</span></div>`;
-            card.innerHTML = `
-                <div class="card-image-container">
-                    <div class="quantity-badge ${isLowStock ? 'low-stock' : ''}">متبقي ${item.quantity}</div>
-                    ${item.imagePath ? `<img class="card-image" alt="${sanitizeHTML(item.name)}">` : placeholder}
-                </div>
-                <div class="card-info">
-                    <div class="card-name">${sanitizeHTML(item.name)}</div>
-                    <div class="card-footer">
-                        <div class="card-price">${price.toLocaleString()} ${symbol}</div>
-                        <div class="card-actions">
-                            <button class="icon-btn sell-btn" title="بيع قطعة واحدة"><span class="material-symbols-outlined">shopping_cart</span></button>
-                            <button class="icon-btn details-btn" title="عرض التفاصيل"><span class="material-symbols-outlined">more_vert</span></button>
-                        </div>
+    renderInventorySkeleton(); // Show skeletons first
+
+    setTimeout(() => { // Use setTimeout to allow the DOM to update and show the skeletons
+        let filteredInventory = [...appState.inventory.items];
+
+        if (appState.activeFilter === 'low_stock') {
+            filteredInventory = filteredInventory.filter(item => item.quantity <= item.alertLevel);
+        }
+        if (appState.selectedCategory && appState.selectedCategory !== 'all') {
+            filteredInventory = filteredInventory.filter(item => item.category === appState.selectedCategory);
+        }
+        if (appState.searchTerm) {
+            const lowerCaseSearch = appState.searchTerm.toLowerCase();
+            filteredInventory = filteredInventory.filter(item =>
+                item.name.toLowerCase().includes(lowerCaseSearch) ||
+                (item.sku && item.sku.toLowerCase().includes(lowerCaseSearch))
+            );
+        }
+        
+        elements.inventoryGrid.innerHTML = ''; // Clear skeletons now
+
+        if (filteredInventory.length === 0) {
+            elements.inventoryGrid.innerHTML = '<p class="empty-state">لا توجد منتجات تطابق بحثك...</p>';
+        } else {
+            filteredInventory.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.dataset.id = item.id;
+                const isLowStock = item.quantity <= item.alertLevel;
+                if (isLowStock) card.classList.add('low-stock');
+                
+                const isIQD = appState.activeCurrency === 'IQD';
+                const price = isIQD ? (item.sellPriceIqd || 0) : (item.sellPriceUsd || 0);
+                const symbol = isIQD ? 'د.ع' : '$';
+                const placeholder = `<div class="card-image-placeholder"><span class="material-symbols-outlined">key</span></div>`;
+                
+                card.innerHTML = `
+                    <div class="card-image-container">
+                        <div class="quantity-badge ${isLowStock ? 'low-stock' : ''}">متبقي ${item.quantity}</div>
+                        ${item.imagePath ? `<img class="card-image" alt="${sanitizeHTML(item.name)}">` : placeholder}
                     </div>
-                </div>`;
-            elements.inventoryGrid.appendChild(card);
-            if (item.imagePath) {
-                const imgElement = card.querySelector('.card-image');
-                fetchImageWithAuth(item.imagePath).then(blobUrl => {
-                    if (blobUrl) imgElement.src = blobUrl;
-                });
-            }
-        });
-    }
-    updateStats();
+                    <div class="card-info">
+                        <div class="card-name">${sanitizeHTML(item.name)}</div>
+                        <div class="card-footer">
+                            <div class="card-price">${price.toLocaleString()} ${symbol}</div>
+                            <div class="card-actions">
+                                <button class="icon-btn sell-btn" title="بيع قطعة واحدة"><span class="material-symbols-outlined">shopping_cart</span></button>
+                                <button class="icon-btn details-btn" title="عرض التفاصيل"><span class="material-symbols-outlined">more_vert</span></button>
+                            </div>
+                        </div>
+                    </div>`;
+                
+                elements.inventoryGrid.appendChild(card);
+                
+                if (item.imagePath) {
+                    const imgElement = card.querySelector('.card-image');
+                    fetchImageWithAuth(item.imagePath).then(blobUrl => {
+                        if (blobUrl) imgElement.src = blobUrl;
+                    });
+                }
+            });
+        }
+        updateStats();
+    }, 50); // A small delay like 50ms is enough
 };
 
 export const updateStats = () => {
@@ -415,9 +434,19 @@ export const openDetailsModal = (itemId) => {
     if (item.imagePath) {
         elements.detailsImage.style.display = 'block';
         elements.detailsImagePlaceholder.style.display = 'none';
-        elements.detailsImage.src = '';
+        elements.detailsImage.src = ''; // Clear previous image
+        elements.detailsImage.classList.add('skeleton'); // Add skeleton class
+
         fetchImageWithAuth(item.imagePath).then(blobUrl => {
-            if (blobUrl) elements.detailsImage.src = blobUrl;
+            if (blobUrl) {
+                elements.detailsImage.src = blobUrl;
+                elements.detailsImage.onload = () => {
+                    elements.detailsImage.classList.remove('skeleton'); // Remove skeleton on load
+                };
+            } else {
+                // If fetching fails, remove skeleton and maybe show placeholder
+                elements.detailsImage.classList.remove('skeleton');
+            }
         });
     } else {
         elements.detailsImage.style.display = 'none';
@@ -433,7 +462,7 @@ export const openItemModal = (itemId = null) => {
     elements.imagePreview.classList.add('image-preview-hidden');
     elements.imagePlaceholder.style.display = 'flex';
     elements.regenerateSkuBtn.style.display = 'none';
-
+    
     if (itemId) {
         const item = appState.inventory.items.find(i => i.id === itemId);
         if (item) {
@@ -483,10 +512,12 @@ export const openSaleModal = (itemId) => {
     const salePriceInput = document.getElementById('sale-price');
     const isIQD = appState.activeCurrency === 'IQD';
     const price = isIQD ? (item.sellPriceIqd || 0) : (item.sellPriceUsd || 0);
+    
     salePriceInput.value = price;
     salePriceInput.step = isIQD ? '250' : '0.01';
     saleQuantityInput.value = 1;
     saleQuantityInput.max = item.quantity;
+
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -527,6 +558,7 @@ export const downloadBarcode = () => {
     const img = new Image();
     const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
     const url = URL.createObjectURL(svgBlob);
+    
     img.onload = function () {
         canvas.width = img.width * scale;
         canvas.height = img.height * scale;
@@ -534,6 +566,7 @@ export const downloadBarcode = () => {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.scale(scale, scale);
         ctx.drawImage(img, 0, 0);
+        
         const pngUrl = canvas.toDataURL("image/png");
         const downloadLink = document.createElement("a");
         downloadLink.href = pngUrl;
