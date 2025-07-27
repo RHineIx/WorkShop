@@ -704,6 +704,8 @@ async function initializeApp() {
     const savedCurrency = localStorage.getItem('inventoryAppCurrency') || 'IQD';
     appState.activeCurrency = savedCurrency;
     ui.setTheme(savedTheme);
+    // --- NEW: Render skeleton loaders immediately ---
+    ui.renderInventorySkeleton(); 
     if (appState.syncConfig) {
         ui.showStatus('جاري مزامنة البيانات...', 'syncing');
         try {
