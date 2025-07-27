@@ -329,13 +329,23 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="sale-price">سعر البيع للقطعة (بالعملة الحالية)</label>
+                <label for="sale-price">سعر البيع للقطعة</label>
+                <div class="input-with-currency">
                     <input type="number" id="sale-price" step="250" min="0">
+                    <span id="sale-price-currency" class="currency-symbol"></span>
                 </div>
+            </div>
+            <div class="sale-total-container">
+                <span class="total-label">الإجمالي:</span>
+                <span id="sale-total-price" class="total-value"></span>
+            </div>
             </div>
             
              <label for="sale-date">تاريخ البيع</label>
-            <input type="date" id="sale-date" required>
+            <div class="date-input-container">
+                <input type="date" id="sale-date" required>
+                <span class="material-symbols-outlined date-input-icon">calendar_today</span>
+            </div>
             
             <label for="sale-notes">ملاحظات على البيع</label>
             <textarea id="sale-notes" rows="3"></textarea>

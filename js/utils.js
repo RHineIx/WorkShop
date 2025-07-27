@@ -86,7 +86,7 @@ export const compressImage = (file, options = {}) => {
                         }
                         resolve(blob);
                     },
-                    'image/jpeg',
+                    'image/webp',
                     quality
                 );
             };

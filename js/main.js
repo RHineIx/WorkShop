@@ -401,7 +401,6 @@ async function openArchiveBrowser() {
 
 function setupEventListeners() {
     const elements = ui.getDOMElements();
-    
     elements.themeToggleBtn.addEventListener('click', () => ui.setTheme(document.body.classList.contains('theme-light') ? 'dark' : 'light'));
     elements.addItemBtn.addEventListener('click', () => {
         ui.openItemModal();
@@ -448,7 +447,7 @@ function setupEventListeners() {
         if (item) {
             item.quantity++;
             elements.detailsQuantityValue.textContent = item.quantity;
-            ui.renderInventory();
+            ui.filterAndRenderItems(); // Use updated render function
         }
     });
     elements.detailsDecreaseBtn.addEventListener('click', () => {
@@ -456,7 +455,7 @@ function setupEventListeners() {
         if (item && item.quantity > 0) {
             item.quantity--;
             elements.detailsQuantityValue.textContent = item.quantity;
-            ui.renderInventory();
+            ui.filterAndRenderItems(); // Use updated render function
         }
     });
     elements.closeDetailsModalBtn.addEventListener('click', async () => {
@@ -474,7 +473,7 @@ function setupEventListeners() {
                 if (originalItemIndex !== -1) {
                     appState.inventory.items[originalItemIndex] = itemBeforeEdit;
                 }
-                ui.renderInventory();
+                ui.filterAndRenderItems(); // Use updated render function
                 if (error instanceof ConflictError) {
                     ui.showStatus('فشل الحفظ. تم تحديث البيانات من مكان آخر.', 'error', { showRefreshButton: true });
                 } else {
@@ -497,7 +496,7 @@ function setupEventListeners() {
             const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
             appState.inventory.items = appState.inventory.items.filter(item => item.id !== appState.currentItemId);
             elements.detailsModal.close();
-            ui.renderInventory();
+            ui.filterAndRenderItems(); // Use updated render function
             ui.updateStats();
             try {
                 await api.saveToGitHub();
@@ -516,7 +515,7 @@ function setupEventListeners() {
                 ui.showStatus('تم حذف المنتج بنجاح!', 'success');
             } catch(error) {
                 appState.inventory = originalInventory;
-                ui.renderInventory();
+                ui.filterAndRenderItems(); // Use updated render function
                 ui.updateStats();
                 if (error instanceof ConflictError) {
                      ui.showStatus('فشل الحذف بسبب تعارض في البيانات.', 'error', { showRefreshButton: true });
@@ -528,11 +527,12 @@ function setupEventListeners() {
     });
     elements.detailsBarcodeBtn.addEventListener('click', () => ui.openBarcodeModal(appState.currentItemId));
     elements.downloadBarcodeBtn.addEventListener('click', () => ui.downloadBarcode());
+
+    // --- Search and Filter Event Listeners ---
     elements.searchBar.addEventListener('input', (e) => {
         appState.searchTerm = e.target.value;
-        ui.filterAndRenderItems(); // Use a new helper function
+        ui.filterAndRenderItems();
     });
-
     elements.statsContainer.addEventListener('click', (e) => {
         const card = e.target.closest('.stat-card');
         if (!card) return;
@@ -545,15 +545,18 @@ function setupEventListeners() {
             appState.selectedCategory = 'all';
             ui.renderCategoryFilter();
         }
-        ui.filterAndRenderItems(); // Use a new helper function
+        ui.filterAndRenderItems();
     });
-
+    elements.categoryFilterBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        elements.categoryFilterDropdown.classList.toggle('show');
+    });
     elements.categoryFilterDropdown.addEventListener('click', (e) => {
         const categoryItem = e.target.closest('.category-item');
         if (categoryItem) {
             appState.selectedCategory = categoryItem.dataset.category;
-            ui.filterAndRenderItems(); // Use a new helper function
-            ui.renderCategoryFilter(); // Re-render to update the 'active' class
+            ui.filterAndRenderItems();
+            ui.renderCategoryFilter();
             elements.categoryFilterDropdown.classList.remove('show');
         }
     });
@@ -562,16 +565,21 @@ function setupEventListeners() {
             elements.categoryFilterDropdown.classList.remove('show');
         }
     });
+
+    // --- Form Event Listeners ---
     elements.itemForm.addEventListener('submit', handleItemFormSubmit);
     elements.cancelItemBtn.addEventListener('click', () => elements.itemModal.close());
     elements.saleForm.addEventListener('submit', handleSaleFormSubmit);
     elements.cancelSaleBtn.addEventListener('click', () => elements.saleModal.close());
+    
+    // --- Sale Modal Quantity and Price Listeners ---
     elements.saleIncreaseBtn.addEventListener('click', () => {
         const quantityInput = elements.saleQuantityInput;
         const max = parseInt(quantityInput.max, 10);
         let currentValue = parseInt(quantityInput.value, 10);
         if (currentValue < max) {
             quantityInput.value = currentValue + 1;
+            ui.updateSaleTotal(); // Update total on click
         }
     });
     elements.saleDecreaseBtn.addEventListener('click', () => {
@@ -579,8 +587,14 @@ function setupEventListeners() {
         let currentValue = parseInt(quantityInput.value, 10);
         if (currentValue > 1) {
             quantityInput.value = currentValue - 1;
+            ui.updateSaleTotal(); // Update total on click
         }
     });
+    // --- NEW: Listen for direct input on quantity and price fields ---
+    elements.saleQuantityInput.addEventListener('input', ui.updateSaleTotal);
+    document.getElementById('sale-price').addEventListener('input', ui.updateSaleTotal);
+    // -----------------------------------------------------------------
+
     elements.imageUploadInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -657,8 +671,8 @@ function setupEventListeners() {
         const existingSkus = new Set(appState.inventory.items.map(item => item.sku));
         document.getElementById('item-sku').value = generateUniqueSKU(existingSkus);
     });
-
-    // --- NEW: Supplier Event Listeners ---
+    
+    // --- Supplier Event Listeners ---
     elements.manageSuppliersBtn.addEventListener('click', () => {
         ui.renderSupplierList();
         elements.supplierManagerModal.showModal();

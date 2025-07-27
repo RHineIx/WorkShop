@@ -74,6 +74,8 @@ const elements = {
     saleQuantityInput: document.getElementById('sale-quantity'),
     saleIncreaseBtn: document.getElementById('sale-increase-btn'),
     saleDecreaseBtn: document.getElementById('sale-decrease-btn'),
+    salePriceCurrency: document.getElementById('sale-price-currency'),
+    saleTotalPrice: document.getElementById('sale-total-price'),
 
     // Sync Modal
     syncModal: document.getElementById('sync-modal'),
@@ -241,6 +243,15 @@ export const renderDashboard = () => {
         elements.bestsellersList.innerHTML = '<p>لا توجد مبيعات في هذه الفترة.</p>';
     }
 };
+export function updateSaleTotal() {
+    const quantity = parseInt(elements.saleQuantityInput.value, 10) || 0;
+    const unitPrice = parseFloat(document.getElementById('sale-price').value) || 0;
+    
+    const totalPrice = quantity * unitPrice;
+    const symbol = appState.activeCurrency === 'IQD' ? 'د.ع' : '$';
+
+    elements.saleTotalPrice.textContent = `${totalPrice.toLocaleString()} ${symbol}`;
+}
 // --- NEW/REFACTORED INVENTORY RENDERING LOGIC ---
 
 /**
@@ -534,7 +545,9 @@ export const openSaleModal = (itemId) => {
     const salePriceInput = document.getElementById('sale-price');
     const isIQD = appState.activeCurrency === 'IQD';
     const price = isIQD ? (item.sellPriceIqd || 0) : (item.sellPriceUsd || 0);
+    const symbol = isIQD ? 'د.ع' : '$';
     
+    elements.salePriceCurrency.textContent = symbol;
     salePriceInput.value = price;
     salePriceInput.step = isIQD ? '250' : '0.01';
     saleQuantityInput.value = 1;
@@ -547,6 +560,7 @@ export const openSaleModal = (itemId) => {
     document.getElementById('sale-date').value = `${year}-${month}-${day}`;
 
     elements.saleModal.showModal();
+    updateSaleTotal(); 
 };
 
 export const openBarcodeModal = (itemId) => {
