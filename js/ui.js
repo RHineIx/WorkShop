@@ -610,12 +610,16 @@ export const downloadBarcode = () => {
 };
 
 export const populateSyncModal = () => {
-    if (appState.syncConfig) {
-        elements.githubUsernameInput.value = appState.syncConfig.username;
-        elements.githubRepoInput.value = appState.syncConfig.repo;
-        elements.githubPatInput.value = appState.syncConfig.pat;
+    // This is the updated, more robust check
+    const config = appState.syncConfig;
+    if (config && config.username && config.repo && config.pat) {
+        // If config is valid, populate the form and show the actions
+        elements.githubUsernameInput.value = config.username;
+        elements.githubRepoInput.value = config.repo;
+        elements.githubPatInput.value = config.pat;
         elements.maintenanceActions.classList.remove('view-hidden');
     } else {
+        // If config is null or incomplete, clear the form and hide the actions
         elements.githubUsernameInput.value = '';
         elements.githubRepoInput.value = '';
         elements.githubPatInput.value = '';
