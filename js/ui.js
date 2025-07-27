@@ -111,6 +111,7 @@ export function getDOMElements() {
     return elements;
 }
 
+// ... (Other functions like renderCategoryFilter, populateCategoryDatalist, showStatus, toggleView, renderDashboard remain the same)
 export function renderCategoryFilter() {
     const categories = [...new Set(appState.inventory.items.map(item => item.category).filter(Boolean))];
     elements.categoryFilterDropdown.innerHTML = '';
@@ -136,9 +137,6 @@ export function renderCategoryFilter() {
     });
 }
 
-/**
- * Populates the category datalist for the item form input.
- */
 export function populateCategoryDatalist() {
     const categories = [...new Set(appState.inventory.items.map(item => item.category).filter(Boolean))];
     const datalist = elements.categoryDatalist;
@@ -243,6 +241,7 @@ export const renderDashboard = () => {
         elements.bestsellersList.innerHTML = '<p>لا توجد مبيعات في هذه الفترة.</p>';
     }
 };
+// --- NEW/REFACTORED INVENTORY RENDERING LOGIC ---
 
 /**
  * Renders skeleton loaders for the inventory grid.
@@ -265,72 +264,95 @@ export function renderInventorySkeleton(count = 8) {
     }
 }
 
-export const renderInventory = () => {
-    renderInventorySkeleton(); // Show skeletons first
+/**
+ * A new helper function to get the currently filtered list of items.
+ * This separates the "what to show" from the "how to show it".
+ * @returns {Array<Object>} The filtered list of items.
+ */
+function getFilteredItems() {
+    let items = [...appState.inventory.items];
 
-    setTimeout(() => { // Use setTimeout to allow the DOM to update and show the skeletons
-        let filteredInventory = [...appState.inventory.items];
+    if (appState.activeFilter === 'low_stock') {
+        items = items.filter(item => item.quantity <= item.alertLevel);
+    }
+    if (appState.selectedCategory && appState.selectedCategory !== 'all') {
+        items = items.filter(item => item.category === appState.selectedCategory);
+    }
+    if (appState.searchTerm) {
+        const lowerCaseSearch = appState.searchTerm.toLowerCase();
+        items = items.filter(item =>
+            item.name.toLowerCase().includes(lowerCaseSearch) ||
+            (item.sku && item.sku.toLowerCase().includes(lowerCaseSearch))
+        );
+    }
+    return items;
+}
 
-        if (appState.activeFilter === 'low_stock') {
-            filteredInventory = filteredInventory.filter(item => item.quantity <= item.alertLevel);
-        }
-        if (appState.selectedCategory && appState.selectedCategory !== 'all') {
-            filteredInventory = filteredInventory.filter(item => item.category === appState.selectedCategory);
-        }
-        if (appState.searchTerm) {
-            const lowerCaseSearch = appState.searchTerm.toLowerCase();
-            filteredInventory = filteredInventory.filter(item =>
-                item.name.toLowerCase().includes(lowerCaseSearch) ||
-                (item.sku && item.sku.toLowerCase().includes(lowerCaseSearch))
-            );
-        }
+/**
+ * The main function to orchestrate filtering and rendering.
+ * It's called by event listeners.
+ */
+export function filterAndRenderItems() {
+    const itemsToRender = getFilteredItems();
+    renderInventory(itemsToRender);
+}
+
+/**
+ * The highly optimized rendering function. It only draws what it's given.
+ * @param {Array<Object>} itemsToRender The array of items to display.
+ */
+export function renderInventory(itemsToRender) {
+    elements.inventoryGrid.innerHTML = ''; // Clear the grid (skeletons or old items)
+
+    if (itemsToRender.length === 0) {
+        elements.inventoryGrid.innerHTML = '<p class="empty-state">لا توجد منتجات تطابق بحثك...</p>';
+        return;
+    }
+
+    const fragment = document.createDocumentFragment(); // Create an in-memory fragment
+
+    itemsToRender.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.dataset.id = item.id;
+        const isLowStock = item.quantity <= item.alertLevel;
+        if (isLowStock) card.classList.add('low-stock');
         
-        elements.inventoryGrid.innerHTML = ''; // Clear skeletons now
-
-        if (filteredInventory.length === 0) {
-            elements.inventoryGrid.innerHTML = '<p class="empty-state">لا توجد منتجات تطابق بحثك...</p>';
-        } else {
-            filteredInventory.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'product-card';
-                card.dataset.id = item.id;
-                const isLowStock = item.quantity <= item.alertLevel;
-                if (isLowStock) card.classList.add('low-stock');
-                
-                const isIQD = appState.activeCurrency === 'IQD';
-                const price = isIQD ? (item.sellPriceIqd || 0) : (item.sellPriceUsd || 0);
-                const symbol = isIQD ? 'د.ع' : '$';
-                const placeholder = `<div class="card-image-placeholder"><span class="material-symbols-outlined">key</span></div>`;
-                
-                card.innerHTML = `
-                    <div class="card-image-container">
-                        <div class="quantity-badge ${isLowStock ? 'low-stock' : ''}">متبقي ${item.quantity}</div>
-                        ${item.imagePath ? `<img class="card-image" alt="${sanitizeHTML(item.name)}">` : placeholder}
+        const isIQD = appState.activeCurrency === 'IQD';
+        const price = isIQD ? (item.sellPriceIqd || 0) : (item.sellPriceUsd || 0);
+        const symbol = isIQD ? 'د.ع' : '$';
+        const placeholder = `<div class="card-image-placeholder"><span class="material-symbols-outlined">key</span></div>`;
+        
+        card.innerHTML = `
+            <div class="card-image-container">
+                <div class="quantity-badge ${isLowStock ? 'low-stock' : ''}">متبقي ${item.quantity}</div>
+                ${item.imagePath ? `<img class="card-image" alt="${sanitizeHTML(item.name)}">` : placeholder}
+            </div>
+            <div class="card-info">
+                <div class="card-name">${sanitizeHTML(item.name)}</div>
+                <div class="card-footer">
+                    <div class="card-price">${price.toLocaleString()} ${symbol}</div>
+                    <div class="card-actions">
+                        <button class="icon-btn sell-btn" title="بيع قطعة واحدة"><span class="material-symbols-outlined">shopping_cart</span></button>
+                        <button class="icon-btn details-btn" title="عرض التفاصيل"><span class="material-symbols-outlined">more_vert</span></button>
                     </div>
-                    <div class="card-info">
-                        <div class="card-name">${sanitizeHTML(item.name)}</div>
-                        <div class="card-footer">
-                            <div class="card-price">${price.toLocaleString()} ${symbol}</div>
-                            <div class="card-actions">
-                                <button class="icon-btn sell-btn" title="بيع قطعة واحدة"><span class="material-symbols-outlined">shopping_cart</span></button>
-                                <button class="icon-btn details-btn" title="عرض التفاصيل"><span class="material-symbols-outlined">more_vert</span></button>
-                            </div>
-                        </div>
-                    </div>`;
-                
-                elements.inventoryGrid.appendChild(card);
-                
-                if (item.imagePath) {
-                    const imgElement = card.querySelector('.card-image');
-                    fetchImageWithAuth(item.imagePath).then(blobUrl => {
-                        if (blobUrl) imgElement.src = blobUrl;
-                    });
-                }
+                </div>
+            </div>`;
+        
+        fragment.appendChild(card); // Append to the fragment, not the live DOM
+        
+        if (item.imagePath) {
+            const imgElement = card.querySelector('.card-image');
+            fetchImageWithAuth(item.imagePath).then(blobUrl => {
+                if (blobUrl) imgElement.src = blobUrl;
             });
         }
-        updateStats();
-    }, 50); // A small delay like 50ms is enough
-};
+    });
+
+    elements.inventoryGrid.appendChild(fragment); // Append the entire fragment in one go
+    updateStats();
+}
+
 
 export const updateStats = () => {
     elements.totalItemsStat.textContent = appState.inventory.items.length;
@@ -347,7 +369,7 @@ export const updateCurrencyDisplay = () => {
     const isIQD = appState.activeCurrency === 'IQD';
     elements.currencyToggleBtn.textContent = isIQD ? 'د.ع' : '$';
     if (appState.currentView === 'inventory') {
-        renderInventory();
+        filterAndRenderItems(); // Use the new orchestrator function
         if (elements.detailsModal.open && appState.currentItemId) {
             openDetailsModal(appState.currentItemId);
         }
@@ -356,8 +378,7 @@ export const updateCurrencyDisplay = () => {
     }
 };
 
-// --- NEW: Supplier UI Functions ---
-
+// --- (Other functions like renderSupplierList, populateSupplierDropdown, etc. remain the same) ---
 export function renderSupplierList() {
     elements.supplierListContainer.innerHTML = '';
     if (appState.suppliers.length === 0) {
@@ -455,6 +476,7 @@ export const openDetailsModal = (itemId) => {
     elements.detailsModal.showModal();
 };
 
+// ... (The rest of the modal functions: openItemModal, openSaleModal, openBarcodeModal, downloadBarcode, populateSyncModal remain unchanged)
 export const openItemModal = (itemId = null) => {
     elements.itemForm.reset();
     appState.selectedImageFile = null;
