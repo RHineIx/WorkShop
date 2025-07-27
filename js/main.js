@@ -1,6 +1,6 @@
 // js/main.js
 import { appState } from './state.js';
-import { generateUniqueSKU, compressImage, debounce } from './utils.js';
+import { generateUniqueSKU, compressImage } from './utils.js';
 import * as api from './api.js';
 import { ConflictError } from './api.js';
 import * as ui from './ui.js';
@@ -75,7 +75,6 @@ async function handleSaleFormSubmit(e) {
 
     ui.showStatus('جاري تسجيل البيع...', 'syncing');
     item.quantity -= quantityToSell;
-
     const isIQD = appState.activeCurrency === 'IQD';
     const saleRecord = {
         saleId: `sale_${Date.now()}`,
@@ -107,7 +106,7 @@ async function handleSaleFormSubmit(e) {
         }
         item.quantity += quantityToSell;
         appState.sales.pop();
-        ui.renderInventory();
+        ui.filterAndRenderItems();
     } finally {
         if(appState.currentView === 'dashboard') {
             ui.renderDashboard();
@@ -124,7 +123,6 @@ async function handleItemFormSubmit(e) {
 
     const originalInventoryState = JSON.parse(JSON.stringify(appState.inventory));
     const itemId = document.getElementById('item-id').value;
-    
     try {
         let imagePath = null;
         const existingItem = appState.inventory.items.find(i => i.id === itemId);
@@ -168,7 +166,6 @@ async function handleItemFormSubmit(e) {
         ui.filterAndRenderItems();
         ui.renderCategoryFilter();
         ui.populateCategoryDatalist();
-        
         await api.saveToGitHub();
         saveLocalData();
         
@@ -180,7 +177,7 @@ async function handleItemFormSubmit(e) {
         }
     } catch (error) {
         appState.inventory = originalInventoryState;
-        ui.renderInventory();
+        ui.filterAndRenderItems();
         if (error instanceof ConflictError) {
             ui.showStatus('خطأ: قام مستخدم آخر بتحديث البيانات. يرجى التحديث.', 'error', { showRefreshButton: true });
         } else {
@@ -206,7 +203,6 @@ async function handleImageCleanup() {
         const allRepoImages = await api.getGitHubDirectoryListing('images');
         const usedImages = new Set(appState.inventory.items.map(item => item.imagePath).filter(Boolean));
         const orphanedImages = allRepoImages.filter(repoImage => !usedImages.has(repoImage.path));
-        
         if (orphanedImages.length === 0) {
             ui.showStatus('لا توجد صور غير مستخدمة ليتم حذفها.', 'success');
             return;
@@ -224,7 +220,7 @@ async function handleImageCleanup() {
     }
 }
 
-// --- NEW: Supplier Logic Handlers ---
+// --- Supplier Logic Handlers ---
 
 async function handleSupplierFormSubmit(e) {
     e.preventDefault();
@@ -232,7 +228,6 @@ async function handleSupplierFormSubmit(e) {
     const id = elements.supplierIdInput.value;
     const name = document.getElementById('supplier-name').value.trim();
     const phone = document.getElementById('supplier-phone').value.trim();
-
     if (!name) {
         ui.showStatus('يرجى إدخال اسم المورّد.', 'error');
         return;
@@ -266,14 +261,12 @@ async function handleSupplierFormSubmit(e) {
         elements.cancelEditSupplierBtn.classList.add('view-hidden');
     } catch (error) {
         ui.showStatus(`فشل حفظ المورّد: ${error.message}`, 'error');
-        // Simple rollback might be complex, for now, we just show error
     }
 }
 
 async function handleDeleteSupplier(supplierId) {
     const linkedProductsCount = appState.inventory.items.filter(item => item.supplierId === supplierId).length;
     let confirmMessage = 'هل أنت متأكد من رغبتك في حذف هذا المورّد نهائياً؟';
-
     if (linkedProductsCount > 0) {
         confirmMessage = `هذا المورّد مرتبط بـ ${linkedProductsCount} منتجات. هل أنت متأكد من حذفه؟ سيتم فك ارتباطه من هذه المنتجات.`;
     }
@@ -379,21 +372,111 @@ async function openArchiveBrowser() {
                 const item = document.createElement('div');
                 item.className = 'archive-item';
                 const itemText = document.createElement('span');
+                
                 itemText.className = 'archive-item-text';
                 itemText.textContent = file.name.replace('sales_', '').replace('.json', '').replace('_', '-');
                 item.dataset.path = file.path;
                 const deleteButton = document.createElement('button');
                 deleteButton.className = 'archive-delete-btn';
                 deleteButton.innerHTML = `<span class="material-symbols-outlined">delete</span>`;
+   
                 deleteButton.title = 'حذف الأرشيف';
                 deleteButton.dataset.path = file.path;
                 deleteButton.dataset.sha = file.sha;
                 item.appendChild(itemText);
                 item.appendChild(deleteButton);
+                
                 listContainer.appendChild(item);
             });
     } catch (error) {
         listContainer.innerHTML = `<p style="color: var(--danger-color);">فشل تحميل الأرشيف: ${error.message}</p>`;
+    }
+}
+
+/**
+ * Creates a zip file containing all application data and triggers a download.
+ */
+async function handleDownloadBackup() {
+    ui.showStatus('جاري تجهيز النسخة الاحتياطية...', 'syncing');
+    try {
+        const zip = new JSZip();
+        zip.file("inventory.json", JSON.stringify(appState.inventory, null, 2));
+        zip.file("sales.json", JSON.stringify(appState.sales, null, 2));
+        zip.file("suppliers.json", JSON.stringify(appState.suppliers, null, 2));
+
+        const blob = await zip.generateAsync({ type: "blob" });
+
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+        link.download = `rhineix-workshop-backup-${timestamp}.zip`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+
+        ui.showStatus('تم تنزيل النسخة الاحتياطية بنجاح!', 'success');
+    } catch (error) {
+        console.error("Backup failed:", error);
+        ui.showStatus(`فشل إنشاء النسخة الاحتياطية: ${error.message}`, 'error', { duration: 5000 });
+    }
+}
+
+/**
+ * Handles the file selection for restoring a backup.
+ * Reads the zip file, validates its content, and restores the application state.
+ * @param {Event} event The file input change event.
+ */
+async function handleRestoreBackup(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!confirm("هل أنت متأكد من رغبتك في استعادة البيانات من هذا الملف؟ سيتم الكتابة فوق جميع بياناتك الحالية.")) {
+        event.target.value = ''; // Reset the input if user cancels
+        return;
+    }
+
+    ui.showStatus('جاري استعادة النسخة الاحتياطية...', 'syncing');
+
+    try {
+        const zip = await JSZip.loadAsync(file);
+        
+        const inventoryFile = zip.file("inventory.json");
+        const salesFile = zip.file("sales.json");
+        const suppliersFile = zip.file("suppliers.json");
+
+        if (!inventoryFile || !salesFile || !suppliersFile) {
+            throw new Error("ملف النسخة الاحتياطية غير صالح أو لا يحتوي على الملفات المطلوبة.");
+        }
+
+        const inventoryData = JSON.parse(await inventoryFile.async("string"));
+        const salesData = JSON.parse(await salesFile.async("string"));
+        const suppliersData = JSON.parse(await suppliersFile.async("string"));
+
+        // Basic validation to ensure file structure is correct
+        if (!inventoryData.items || !Array.isArray(salesData) || !Array.isArray(suppliersData)) {
+            throw new Error("محتوى ملف النسخة الاحتياطية غير صالح.");
+        }
+
+        // All checks passed, update the application state
+        appState.inventory = inventoryData;
+        appState.sales = salesData;
+        appState.suppliers = suppliersData;
+
+        saveLocalData();
+
+        ui.showStatus('تمت استعادة البيانات بنجاح! سيتم إعادة تحميل التطبيق.', 'success', { duration: 4000 });
+        
+        // Reload the application after a short delay to reflect the new state everywhere
+        setTimeout(() => {
+            location.reload();
+        }, 4000);
+
+    } catch (error) {
+        console.error("Restore failed:", error);
+        ui.showStatus(`فشلت عملية الاستعادة: ${error.message}`, 'error', { duration: 5000 });
+    } finally {
+        event.target.value = ''; // Reset the input to allow selecting the same file again
     }
 }
 
@@ -447,7 +530,7 @@ function setupEventListeners() {
         if (item) {
             item.quantity++;
             elements.detailsQuantityValue.textContent = item.quantity;
-            ui.filterAndRenderItems(); // Use updated render function
+            ui.filterAndRenderItems();
         }
     });
     elements.detailsDecreaseBtn.addEventListener('click', () => {
@@ -455,7 +538,7 @@ function setupEventListeners() {
         if (item && item.quantity > 0) {
             item.quantity--;
             elements.detailsQuantityValue.textContent = item.quantity;
-            ui.filterAndRenderItems(); // Use updated render function
+            ui.filterAndRenderItems();
         }
     });
     elements.closeDetailsModalBtn.addEventListener('click', async () => {
@@ -473,7 +556,7 @@ function setupEventListeners() {
                 if (originalItemIndex !== -1) {
                     appState.inventory.items[originalItemIndex] = itemBeforeEdit;
                 }
-                ui.filterAndRenderItems(); // Use updated render function
+                ui.filterAndRenderItems();
                 if (error instanceof ConflictError) {
                     ui.showStatus('فشل الحفظ. تم تحديث البيانات من مكان آخر.', 'error', { showRefreshButton: true });
                 } else {
@@ -496,7 +579,7 @@ function setupEventListeners() {
             const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
             appState.inventory.items = appState.inventory.items.filter(item => item.id !== appState.currentItemId);
             elements.detailsModal.close();
-            ui.filterAndRenderItems(); // Use updated render function
+            ui.filterAndRenderItems();
             ui.updateStats();
             try {
                 await api.saveToGitHub();
@@ -515,7 +598,7 @@ function setupEventListeners() {
                 ui.showStatus('تم حذف المنتج بنجاح!', 'success');
             } catch(error) {
                 appState.inventory = originalInventory;
-                ui.filterAndRenderItems(); // Use updated render function
+                ui.filterAndRenderItems();
                 ui.updateStats();
                 if (error instanceof ConflictError) {
                      ui.showStatus('فشل الحذف بسبب تعارض في البيانات.', 'error', { showRefreshButton: true });
@@ -529,10 +612,10 @@ function setupEventListeners() {
     elements.downloadBarcodeBtn.addEventListener('click', () => ui.downloadBarcode());
 
     // --- Search and Filter Event Listeners ---
-    elements.searchBar.addEventListener('input', debounce((e) => {
+    elements.searchBar.addEventListener('input', (e) => {
         appState.searchTerm = e.target.value;
         ui.filterAndRenderItems();
-    }, 500)); // <-- We wrap the function and add a 300ms delay
+    });
     elements.statsContainer.addEventListener('click', (e) => {
         const card = e.target.closest('.stat-card');
         if (!card) return;
@@ -565,7 +648,6 @@ function setupEventListeners() {
             elements.categoryFilterDropdown.classList.remove('show');
         }
     });
-
     // --- Form Event Listeners ---
     elements.itemForm.addEventListener('submit', handleItemFormSubmit);
     elements.cancelItemBtn.addEventListener('click', () => elements.itemModal.close());
@@ -579,7 +661,7 @@ function setupEventListeners() {
         let currentValue = parseInt(quantityInput.value, 10);
         if (currentValue < max) {
             quantityInput.value = currentValue + 1;
-            ui.updateSaleTotal(); // Update total on click
+            ui.updateSaleTotal();
         }
     });
     elements.saleDecreaseBtn.addEventListener('click', () => {
@@ -587,13 +669,11 @@ function setupEventListeners() {
         let currentValue = parseInt(quantityInput.value, 10);
         if (currentValue > 1) {
             quantityInput.value = currentValue - 1;
-            ui.updateSaleTotal(); // Update total on click
+            ui.updateSaleTotal();
         }
     });
-    // --- NEW: Listen for direct input on quantity and price fields ---
     elements.saleQuantityInput.addEventListener('input', ui.updateSaleTotal);
     document.getElementById('sale-price').addEventListener('input', ui.updateSaleTotal);
-    // -----------------------------------------------------------------
 
     elements.imageUploadInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
@@ -622,8 +702,8 @@ function setupEventListeners() {
     });
     elements.closeBarcodeBtn.addEventListener('click', () => elements.barcodeModal.close());
     elements.cleanupImagesBtn.addEventListener('click', handleImageCleanup);
-    downloadBackupBtn: document.getElementById('download-backup-btn'),
-    restoreBackupInput: document.getElementById('restore-backup-input'),
+    elements.downloadBackupBtn.addEventListener('click', handleDownloadBackup);
+    elements.restoreBackupInput.addEventListener('change', handleRestoreBackup);
     document.getElementById('manual-archive-btn').addEventListener('click', handleManualArchive);
     document.getElementById('view-archives-btn').addEventListener('click', openArchiveBrowser);
     const archiveListContainer = document.getElementById('archive-list-container');
@@ -673,7 +753,6 @@ function setupEventListeners() {
         const existingSkus = new Set(appState.inventory.items.map(item => item.sku));
         document.getElementById('item-sku').value = generateUniqueSKU(existingSkus);
     });
-    
     // --- Supplier Event Listeners ---
     elements.manageSuppliersBtn.addEventListener('click', () => {
         ui.renderSupplierList();
@@ -708,93 +787,6 @@ function setupEventListeners() {
     });
 }
 
-/**
- * Creates a zip file containing all application data and triggers a download.
- */
-async function handleDownloadBackup() {
-    ui.showStatus('جاري تجهيز النسخة الاحتياطية...', 'syncing');
-    try {
-        const zip = new JSZip();
-        zip.file("inventory.json", JSON.stringify(appState.inventory, null, 2));
-        zip.file("sales.json", JSON.stringify(appState.sales, null, 2));
-        zip.file("suppliers.json", JSON.stringify(appState.suppliers, null, 2));
-
-        const blob = await zip.generateAsync({ type: "blob" });
-
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
-        link.download = `rhineix-workshop-backup-${timestamp}.zip`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
-
-        ui.showStatus('تم تنزيل النسخة الاحتياطية بنجاح!', 'success');
-    } catch (error) {
-        console.error("Backup failed:", error);
-        ui.showStatus(`فشل إنشاء النسخة الاحتياطية: ${error.message}`, 'error', { duration: 5000 });
-    }
-}
-
-/**
- * Handles the file selection for restoring a backup.
- * Reads the zip file, validates its content, and restores the application state.
- * @param {Event} event The file input change event.
- */
-async function handleRestoreBackup(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    if (!confirm("هل أنت متأكد من رغبتك في استعادة البيانات من هذا الملف؟ سيتم الكتابة فوق جميع بياناتك الحالية.")) {
-        event.target.value = ''; // Reset the input if user cancels
-        return;
-    }
-
-    ui.showStatus('جاري استعادة النسخة الاحتياطية...', 'syncing');
-
-    try {
-        const zip = await JSZip.loadAsync(file);
-
-        const inventoryFile = zip.file("inventory.json");
-        const salesFile = zip.file("sales.json");
-        const suppliersFile = zip.file("suppliers.json");
-
-        if (!inventoryFile || !salesFile || !suppliersFile) {
-            throw new Error("ملف النسخة الاحتياطية غير صالح أو لا يحتوي على الملفات المطلوبة.");
-        }
-
-        const inventoryData = JSON.parse(await inventoryFile.async("string"));
-        const salesData = JSON.parse(await salesFile.async("string"));
-        const suppliersData = JSON.parse(await suppliersFile.async("string"));
-
-        // Basic validation to ensure file structure is correct
-        if (!inventoryData.items || !Array.isArray(salesData) || !Array.isArray(suppliersData)) {
-            throw new Error("محتوى ملف النسخة الاحتياطية غير صالح.");
-        }
-
-        // All checks passed, update the application state
-        appState.inventory = inventoryData;
-        appState.sales = salesData;
-        appState.suppliers = suppliersData;
-
-        saveLocalData();
-
-        ui.showStatus('تمت استعادة البيانات بنجاح! سيتم إعادة تحميل التطبيق.', 'success', { duration: 4000 });
-
-        // Reload the application after a short delay to reflect the new state everywhere
-        setTimeout(() => {
-            location.reload();
-        }, 4000);
-
-    } catch (error) {
-        console.error("Restore failed:", error);
-        ui.showStatus(`فشلت عملية الاستعادة: ${error.message}`, 'error', { duration: 5000 });
-    } finally {
-        event.target.value = ''; // Reset the input to allow selecting the same file again
-    }
-}
-
 // --- INITIALIZATION ---
 
 async function initializeApp() {
@@ -805,7 +797,6 @@ async function initializeApp() {
     const savedCurrency = localStorage.getItem('inventoryAppCurrency') || 'IQD';
     appState.activeCurrency = savedCurrency;
     ui.setTheme(savedTheme);
-
     // Render skeleton loaders immediately
     ui.renderInventorySkeleton(); 
 
@@ -817,7 +808,6 @@ async function initializeApp() {
                 api.fetchSales(),
                 api.fetchSuppliers()
             ]);
-
             if (inventoryResult) {
                 appState.inventory = inventoryResult.data;
                 appState.fileSha = inventoryResult.sha;
@@ -843,7 +833,7 @@ async function initializeApp() {
     updateLastArchiveDateDisplay();
     ui.renderCategoryFilter();
     ui.populateCategoryDatalist();
-    ui.updateCurrencyDisplay(); // This will call renderInventory with the full list
+    ui.updateCurrencyDisplay();
     console.log('App Initialized Successfully.');
 }
 
