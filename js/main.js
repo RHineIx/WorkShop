@@ -530,8 +530,9 @@ function setupEventListeners() {
     elements.downloadBarcodeBtn.addEventListener('click', () => ui.downloadBarcode());
     elements.searchBar.addEventListener('input', (e) => {
         appState.searchTerm = e.target.value;
-        ui.renderInventory();
+        ui.filterAndRenderItems(); // Use a new helper function
     });
+
     elements.statsContainer.addEventListener('click', (e) => {
         const card = e.target.closest('.stat-card');
         if (!card) return;
@@ -544,18 +545,15 @@ function setupEventListeners() {
             appState.selectedCategory = 'all';
             ui.renderCategoryFilter();
         }
-        ui.renderInventory();
+        ui.filterAndRenderItems(); // Use a new helper function
     });
-    elements.categoryFilterBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        elements.categoryFilterDropdown.classList.toggle('show');
-    });
+
     elements.categoryFilterDropdown.addEventListener('click', (e) => {
         const categoryItem = e.target.closest('.category-item');
         if (categoryItem) {
             appState.selectedCategory = categoryItem.dataset.category;
-            ui.renderInventory();
-            ui.renderCategoryFilter();
+            ui.filterAndRenderItems(); // Use a new helper function
+            ui.renderCategoryFilter(); // Re-render to update the 'active' class
             elements.categoryFilterDropdown.classList.remove('show');
         }
     });
@@ -704,8 +702,10 @@ async function initializeApp() {
     const savedCurrency = localStorage.getItem('inventoryAppCurrency') || 'IQD';
     appState.activeCurrency = savedCurrency;
     ui.setTheme(savedTheme);
-    // --- NEW: Render skeleton loaders immediately ---
+
+    // Render skeleton loaders immediately
     ui.renderInventorySkeleton(); 
+
     if (appState.syncConfig) {
         ui.showStatus('جاري مزامنة البيانات...', 'syncing');
         try {
@@ -714,6 +714,7 @@ async function initializeApp() {
                 api.fetchSales(),
                 api.fetchSuppliers()
             ]);
+
             if (inventoryResult) {
                 appState.inventory = inventoryResult.data;
                 appState.fileSha = inventoryResult.sha;
@@ -735,11 +736,11 @@ async function initializeApp() {
     } else {
         loadLocalData();
     }
+
     updateLastArchiveDateDisplay();
     ui.renderCategoryFilter();
     ui.populateCategoryDatalist();
-    ui.updateCurrencyDisplay();
-    ui.renderInventory();
+    ui.updateCurrencyDisplay(); // This will call renderInventory with the full list
     console.log('App Initialized Successfully.');
 }
 
