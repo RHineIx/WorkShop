@@ -1324,7 +1324,8 @@ select {
 
 /* default browser calendar icon */
 #sale-date::-webkit-calendar-picker-indicator {
-    filter: invert(41%) sepia(98%) saturate(747%) hue-rotate(180deg) brightness(95%) contrast(101%);
+    background: none;
+    display: none;
 }
 
 #sale-date {
