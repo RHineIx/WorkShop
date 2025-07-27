@@ -91,7 +91,7 @@ async function handleSaleFormSubmit(e) {
         timestamp: new Date().toISOString()
     };
     appState.sales.push(saleRecord);
-    ui.renderInventory();
+    ui.filterAndRenderItems();
 
     try {
         await api.saveToGitHub();
@@ -165,7 +165,7 @@ async function handleItemFormSubmit(e) {
             appState.inventory.items.push(itemData);
         }
         
-        ui.renderInventory();
+        ui.filterAndRenderItems();
         ui.renderCategoryFilter();
         ui.populateCategoryDatalist();
         

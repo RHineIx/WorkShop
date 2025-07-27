@@ -114,7 +114,6 @@ export const fetchFromGitHub = async () => {
         headers: { 'Authorization': `token ${pat}` },
         cache: 'no-cache'
     });
-    
     if (response.status === 404) {
         console.log('inventory.json not found. A new one will be created on save.');
         return { data: { items: [], lastArchiveTimestamp: null }, sha: null };
@@ -126,7 +125,6 @@ export const fetchFromGitHub = async () => {
     const data = await response.json();
     const decodedContent = decodeURIComponent(escape(window.atob(data.content)));
     let parsedData = JSON.parse(decodedContent);
-
     if (Array.isArray(parsedData)) {
         parsedData = { items: parsedData, lastArchiveTimestamp: null };
     }
@@ -134,41 +132,71 @@ export const fetchFromGitHub = async () => {
     return { data: parsedData, sha: data.sha };
 };
 
-/**
- * Saves the current appState.inventory object to the inventory.json file in the repo.
- * @returns {Promise<void>}
- * @throws {Error} If the save operation fails for a generic reason.
- * @throws {ConflictError} If the save operation fails due to a 409 conflict.
- */
-export const saveToGitHub = async () => {
-    if (!appState.syncConfig) return;
+// =================================================================
+// REFACTORING: Centralized function for saving JSON files to GitHub.
+// This new helper function encapsulates the repetitive logic for saving
+// any JSON file. It handles getting the latest file version (SHA),
+// encoding the data, and making the authenticated PUT request.
+// This helps us adhere to the DRY (Don't Repeat Yourself) principle.
+// =================================================================
+async function saveJsonToGitHub(filePath, dataObject, commitMessage) {
+    if (!appState.syncConfig) throw new Error("Sync config is not set.");
     const { username, repo, pat } = appState.syncConfig;
-    const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/inventory.json`;
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify(appState.inventory, null, 2))));
+    const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${filePath}`;
+
+    // Step 1: Get the latest SHA to avoid conflicts
+    let latestSha = null;
+    try {
+        const remoteFile = await fetch(apiUrl, { headers: { 'Authorization': `token ${pat}` }, cache: 'no-cache' });
+        if (remoteFile.ok) {
+            latestSha = (await remoteFile.json()).sha;
+        }
+    } catch (e) {
+        // File probably doesn't exist, which is fine. `latestSha` remains null.
+    }
+
+    // Step 2: Prepare the request body
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(dataObject, null, 2))));
     const body = {
-        message: `Update inventory data - ${new Date().toISOString()}`,
+        message: `${commitMessage} - ${new Date().toISOString()}`,
         content: content,
-        sha: appState.fileSha,
+        sha: latestSha,
     };
+
+    // Step 3: Make the API call
     const response = await fetch(apiUrl, {
         method: 'PUT',
         headers: { 'Authorization': `token ${pat}` },
         body: JSON.stringify(body)
     });
 
+    // Step 4: Handle the response
     if (response.status === 409) {
-        throw new ConflictError('Inventory file has been updated by another source.');
+        throw new ConflictError(`Conflict Error: The file '${filePath}' was updated elsewhere.`);
+    }
+    if (!response.ok) {
+        throw new Error(`Failed to save '${filePath}': ${response.statusText}`);
     }
 
-    if (!response.ok) throw new Error(`Failed to save inventory: ${response.statusText}`);
-    const data = await response.json();
-    appState.fileSha = data.content.sha;
+    const responseData = await response.json();
+    return responseData.content.sha;
+}
+
+/**
+ * REFACTORING: Saves the main inventory data.
+ * This function now acts as a simple wrapper around the generic saveJsonToGitHub helper.
+ */
+export const saveToGitHub = async () => {
+    appState.fileSha = await saveJsonToGitHub(
+        'inventory.json', 
+        appState.inventory, 
+        'Update inventory data'
+    );
 };
 
 /**
  * Fetches the sales.json file from the repo.
  * @returns {Promise<{data: Array<Object>, sha: string}>} A promise that resolves with the sales data and file SHA.
- * @throws {Error} If the fetch fails for reasons other than 404.
  */
 export const fetchSales = async () => {
     if (!appState.syncConfig) return null;
@@ -191,53 +219,20 @@ export const fetchSales = async () => {
 };
 
 /**
- * Saves the current appState.sales to the sales.json file in the repo.
- * @returns {Promise<void>}
- * @throws {Error} If the save operation fails for a generic reason.
- * @throws {ConflictError} If the save operation fails due to a 409 conflict.
+ * REFACTORING: Saves the sales data.
+ * This function is now simplified to a single call to the generic helper.
  */
 export const saveSales = async () => {
-    if (!appState.syncConfig) return;
-    const { username, repo, pat } = appState.syncConfig;
-    const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/sales.json`;
-
-    try {
-        const remoteFile = await fetch(apiUrl, { headers: { 'Authorization': `token ${pat}` }, cache: 'no-cache' });
-        if(remoteFile.ok) {
-            const fileData = await remoteFile.json();
-            appState.salesFileSha = fileData.sha;
-        } else {
-             appState.salesFileSha = null;
-        }
-    } catch(e) {
-        appState.salesFileSha = null;
-    }
-
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify(appState.sales, null, 2))));
-    const body = {
-        message: `Update sales data - ${new Date().toISOString()}`,
-        content: content,
-        sha: appState.salesFileSha,
-    };
-    const response = await fetch(apiUrl, {
-        method: 'PUT',
-        headers: { 'Authorization': `token ${pat}` },
-        body: JSON.stringify(body)
-    });
-
-    if (response.status === 409) {
-        throw new ConflictError('Sales file has been updated by another source.');
-    }
-
-    if (!response.ok) throw new Error(`Failed to save sales: ${response.statusText}`);
-    const data = await response.json();
-    appState.salesFileSha = data.content.sha;
+    appState.salesFileSha = await saveJsonToGitHub(
+        'sales.json',
+        appState.sales,
+        'Update sales data'
+    );
 };
 
 /**
  * Fetches the suppliers.json file from the repo.
  * @returns {Promise<{data: Array<Object>, sha: string}>} A promise that resolves with the suppliers data and file SHA.
- * @throws {Error} If the fetch fails for reasons other than 404.
  */
 export const fetchSuppliers = async () => {
     if (!appState.syncConfig) return null;
@@ -260,47 +255,15 @@ export const fetchSuppliers = async () => {
 };
 
 /**
- * Saves the current appState.suppliers to the suppliers.json file in the repo.
- * @returns {Promise<void>}
- * @throws {Error} If the save operation fails for a generic reason.
- * @throws {ConflictError} If the save operation fails due to a 409 conflict.
+ * REFACTORING: Saves the suppliers data.
+ * This function is also simplified to a single call to the generic helper.
  */
 export const saveSuppliers = async () => {
-    if (!appState.syncConfig) return;
-    const { username, repo, pat } = appState.syncConfig;
-    const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/suppliers.json`;
-
-    // Fetch the latest SHA before saving to avoid conflicts
-    try {
-        const remoteFile = await fetch(apiUrl, { headers: { 'Authorization': `token ${pat}` }, cache: 'no-cache' });
-        if (remoteFile.ok) {
-            appState.suppliersFileSha = (await remoteFile.json()).sha;
-        } else {
-            appState.suppliersFileSha = null;
-        }
-    } catch (e) {
-        appState.suppliersFileSha = null;
-    }
-
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify(appState.suppliers, null, 2))));
-    const body = {
-        message: `Update suppliers data - ${new Date().toISOString()}`,
-        content: content,
-        sha: appState.suppliersFileSha,
-    };
-    const response = await fetch(apiUrl, {
-        method: 'PUT',
-        headers: { 'Authorization': `token ${pat}` },
-        body: JSON.stringify(body)
-    });
-
-    if (response.status === 409) {
-        throw new ConflictError('Suppliers file has been updated by another source.');
-    }
-
-    if (!response.ok) throw new Error(`Failed to save suppliers: ${response.statusText}`);
-    const data = await response.json();
-    appState.suppliersFileSha = data.content.sha;
+    appState.suppliersFileSha = await saveJsonToGitHub(
+        'suppliers.json',
+        appState.suppliers,
+        'Update suppliers data'
+    );
 };
 
 /**
@@ -309,7 +272,6 @@ export const saveSuppliers = async () => {
  * @param {string} sha The blob SHA of the file to delete.
  * @param {string} message The commit message for the deletion.
  * @returns {Promise<boolean>} A promise that resolves with true on success.
- * @throws {Error} If the delete operation fails.
  */
 export const deleteFileFromGitHub = async (path, sha, message) => {
     if (!appState.syncConfig) return false;
@@ -330,7 +292,6 @@ export const deleteFileFromGitHub = async (path, sha, message) => {
  * Fetches the contents of a directory from the GitHub repo.
  * @param {string} path The path to the directory.
  * @returns {Promise<Array<Object>>} A promise that resolves with an array of file objects.
- * @throws {Error} If the directory fetch fails.
  */
 export const getGitHubDirectoryListing = async (path) => {
     if (!appState.syncConfig) return [];
@@ -354,7 +315,6 @@ export const getGitHubDirectoryListing = async (path) => {
  * @param {string} content The content of the file to create.
  * @param {string} message The commit message.
  * @returns {Promise<void>}
- * @throws {Error} If the file creation fails.
  */
 export const createGitHubFile = async (path, content, message) => {
     if (!appState.syncConfig) return;
@@ -379,7 +339,6 @@ export const createGitHubFile = async (path, content, message) => {
  * Used for reading archive files.
  * @param {string} path The path to the file in the repo.
  * @returns {Promise<any>} A promise that resolves with the parsed JSON data.
- * @throws {Error} If the fetch fails.
  */
 export const fetchGitHubFile = async (path) => {
     if (!appState.syncConfig) return null;
