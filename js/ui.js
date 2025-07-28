@@ -3,7 +3,6 @@ import { appState } from './state.js';
 import { fetchImageWithAuth } from './api.js';
 import { sanitizeHTML } from './utils.js';
 
-// Get all DOM elements once to be used throughout this module
 const elements = {
     // Main Layout
     inventoryGrid: document.getElementById('inventory-grid'),
@@ -11,7 +10,7 @@ const elements = {
     statsContainer: document.getElementById('stats-cards'),
     totalItemsStat: document.getElementById('total-items-stat'),
     lowStockStat: document.getElementById('low-stock-stat'),
-    statusIndicator: document.getElementById('status-indicator'),
+    toastContainer: document.getElementById('toast-container'),
     searchContainer: document.getElementById('search-container'),
     categoryFilterBtn: document.getElementById('category-filter-btn'),
     categoryFilterDropdown: document.getElementById('category-filter-dropdown'),
@@ -22,7 +21,6 @@ const elements = {
     syncSettingsBtn: document.getElementById('sync-settings-btn'),
     currencyToggleBtn: document.getElementById('currency-toggle-btn'),
     inventoryToggleBtn: document.getElementById('inventory-toggle-btn'),
- 
     dashboardToggleBtn: document.getElementById('dashboard-toggle-btn'),
 
     // View Containers
@@ -45,7 +43,6 @@ const elements = {
     detailsQuantityValue: document.getElementById('details-quantity-value'),
     detailsDecreaseBtn: document.getElementById('details-decrease-btn'),
     detailsIncreaseBtn: document.getElementById('details-increase-btn'),
-   
     detailsNotesContent: document.getElementById('details-notes-content'),
     detailsEditBtn: document.getElementById('details-edit-btn'),
     detailsBarcodeBtn: document.getElementById('details-barcode-btn'),
@@ -68,7 +65,6 @@ const elements = {
     regenerateSkuBtn: document.getElementById('regenerate-sku-btn'),
 
     // Sale Modal
- 
     saleModal: document.getElementById('sale-modal'),
     saleForm: document.getElementById('sale-form'),
     saleItemIdInput: document.getElementById('sale-item-id'),
@@ -110,8 +106,7 @@ const elements = {
     itemSupplierSelect: document.getElementById('item-supplier'),
     supplierDetailsContainer: document.getElementById('supplier-details-container'),
     detailsSupplierName: document.getElementById('details-supplier-name'),
-    detailsSupplierPhone: 
-    document.getElementById('details-supplier-phone'),
+    detailsSupplierPhone: document.getElementById('details-supplier-phone'),
     detailsSupplierWhatsapp: document.getElementById('details-supplier-whatsapp'),
 };
 
@@ -122,7 +117,6 @@ export function getDOMElements() {
 export function renderCategoryFilter() {
     const categories = [...new Set(appState.inventory.items.map(item => item.category).filter(Boolean))];
     elements.categoryFilterDropdown.innerHTML = '';
-
     const allItem = document.createElement('div');
     allItem.className = 'category-item';
     allItem.textContent = 'عرض الكل';
@@ -131,7 +125,6 @@ export function renderCategoryFilter() {
         allItem.classList.add('active');
     }
     elements.categoryFilterDropdown.appendChild(allItem);
-
     categories.forEach(category => {
         const categoryItem = document.createElement('div');
         categoryItem.className = 'category-item';
@@ -148,7 +141,6 @@ export function populateCategoryDatalist() {
     const categories = [...new Set(appState.inventory.items.map(item => item.category).filter(Boolean))];
     const datalist = elements.categoryDatalist;
     datalist.innerHTML = ''; 
-    
     categories.forEach(category => {
         const option = document.createElement('option');
         option.value = sanitizeHTML(category);
@@ -156,25 +148,57 @@ export function populateCategoryDatalist() {
     });
 }
 
+const ICONS = {
+    success: 'check_circle',
+    error: 'error',
+    syncing: 'sync',
+    info: 'info',
+    warning: 'warning'
+};
+
 export const showStatus = (message, type, options = {}) => {
-    const { duration = 3000, showRefreshButton = false } = options;
-    elements.statusIndicator.innerHTML = '';
+    const { duration = 4000, showRefreshButton = false } = options;
+    
+    // If a new status is shown, find and remove any existing 'syncing' toast.
+    const existingSyncingToast = elements.toastContainer.querySelector('.toast--syncing');
+    if (existingSyncingToast) {
+        existingSyncingToast.classList.remove('show');
+        existingSyncingToast.addEventListener('transitionend', () => existingSyncingToast.remove(), { once: true });
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast--${type}`;
+
+    const iconName = ICONS[type] || 'info';
+    const iconSpan = document.createElement('span');
+    iconSpan.className = 'material-symbols-outlined toast__icon';
+    iconSpan.textContent = iconName;
+    toast.appendChild(iconSpan);
+    
     const messageSpan = document.createElement('span');
     messageSpan.textContent = message;
-    elements.statusIndicator.appendChild(messageSpan);
+    toast.appendChild(messageSpan);
 
     if (showRefreshButton) {
         const refreshButton = document.createElement('button');
         refreshButton.textContent = 'تحديث';
         refreshButton.className = 'status-refresh-btn';
         refreshButton.onclick = () => location.reload();
-        elements.statusIndicator.appendChild(refreshButton);
+        refreshButton.style.marginLeft = 'auto'; 
+        toast.appendChild(refreshButton);
     }
-    
-    elements.statusIndicator.className = `status-indicator ${type} show`;
+
+    elements.toastContainer.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+
+    // Set a timeout to remove the toast, but not for 'syncing' types.
     if (type !== 'syncing' && !showRefreshButton) {
         setTimeout(() => {
-            elements.statusIndicator.classList.remove('show');
+            toast.classList.remove('show');
+            toast.addEventListener('transitionend', () => toast.remove(), { once: true });
         }, duration);
     }
 };
@@ -186,15 +210,14 @@ export const toggleView = (viewToShow) => {
     elements.dashboardViewContainer.classList.toggle('view-hidden', isInventory);
     elements.inventoryToggleBtn.classList.toggle('active-view-btn', isInventory);
     elements.dashboardToggleBtn.classList.toggle('active-view-btn', !isInventory);
-    
     if (!isInventory) {
         renderDashboard();
     }
 };
+
 export const renderDashboard = () => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
     let startDate;
     switch (appState.dashboardPeriod) {
         case 'week':
@@ -209,17 +232,14 @@ export const renderDashboard = () => {
             startDate = today;
             break;
     }
-
     const filteredSales = appState.sales.filter(sale => new Date(sale.saleDate) >= startDate && new Date(sale.saleDate) <= now);
     const isIQD = appState.activeCurrency === 'IQD';
     const totalSales = filteredSales.reduce((sum, sale) => sum + (isIQD ? sale.sellPriceIqd : sale.sellPriceUsd), 0);
     const totalCost = filteredSales.reduce((sum, sale) => sum + (isIQD ? sale.costPriceIqd : sale.costPriceUsd), 0);
     const totalProfit = totalSales - totalCost;
     const symbol = isIQD ? 'د.ع' : '$';
-
     elements.totalSalesStat.textContent = `${totalSales.toLocaleString()} ${symbol}`;
     elements.totalProfitStat.textContent = `${totalProfit.toLocaleString()} ${symbol}`;
-
     const itemSales = {};
     filteredSales.forEach(sale => {
         itemSales[sale.itemId] = (itemSales[sale.itemId] || 0) + sale.quantitySold;
@@ -243,12 +263,12 @@ export const renderDashboard = () => {
         elements.bestsellersList.innerHTML = '<p>لا توجد مبيعات في هذه الفترة.</p>';
     }
 };
+
 export function updateSaleTotal() {
     const quantity = parseInt(elements.saleQuantityInput.value, 10) || 0;
     const unitPrice = parseFloat(document.getElementById('sale-price').value) || 0;
     const totalPrice = quantity * unitPrice;
     const symbol = appState.activeCurrency === 'IQD' ? 'د.ع' : '$';
-
     elements.saleTotalPrice.textContent = `${totalPrice.toLocaleString()} ${symbol}`;
 }
 
@@ -294,47 +314,37 @@ export function filterAndRenderItems() {
 
 export function renderInventory(itemsToRender) {
     elements.inventoryGrid.innerHTML = '';
-
     if (itemsToRender.length === 0) {
         elements.inventoryGrid.innerHTML = '<p class="empty-state">لا توجد منتجات تطابق بحثك...</p>';
         return;
     }
-
     const fragment = document.createDocumentFragment();
-
     itemsToRender.forEach(item => {
         const card = document.createElement('div');
         card.className = 'product-card';
         card.dataset.id = item.id;
         const isLowStock = item.quantity <= item.alertLevel;
         if (isLowStock) card.classList.add('low-stock');
-        
         const isIQD = appState.activeCurrency === 'IQD';
-      
         const price = isIQD ? (item.sellPriceIqd || 0) : (item.sellPriceUsd || 0);
         const symbol = isIQD ? 'د.ع' : '$';
         const placeholder = `<div class="card-image-placeholder"><span class="material-symbols-outlined">key</span></div>`;
-        
         card.innerHTML = `
             <div class="card-image-container">
                 <div class="quantity-badge ${isLowStock ? 'low-stock' : ''}">متبقي ${item.quantity}</div>
-     
                ${item.imagePath ? `<img class="card-image" alt="${sanitizeHTML(item.name)}">` : placeholder}
             </div>
             <div class="card-info">
                 <div class="card-name">${sanitizeHTML(item.name)}</div>
                 <div class="card-footer">
                     <div class="card-price">${price.toLocaleString()} ${symbol}</div>
-  
                      <div class="card-actions">
                         <button class="icon-btn sell-btn" title="بيع قطعة واحدة"><span class="material-symbols-outlined">shopping_cart</span></button>
                         <button class="icon-btn details-btn" title="عرض التفاصيل"><span class="material-symbols-outlined">more_vert</span></button>
                     </div>
-  
                    </div>
             </div>`;
         fragment.appendChild(card);
-        
         if (item.imagePath) {
             const imgElement = card.querySelector('.card-image');
             fetchImageWithAuth(item.imagePath).then(blobUrl => {
@@ -342,11 +352,9 @@ export function renderInventory(itemsToRender) {
             });
         }
     });
-
     elements.inventoryGrid.appendChild(fragment);
     updateStats();
 }
-
 
 export const updateStats = () => {
     elements.totalItemsStat.textContent = appState.inventory.items.length;
@@ -371,6 +379,7 @@ export const updateCurrencyDisplay = () => {
         renderDashboard();
     }
 };
+
 export function renderSupplierList() {
     elements.supplierListContainer.innerHTML = '';
     if (appState.suppliers.length === 0) {
@@ -385,13 +394,11 @@ export function renderSupplierList() {
                 <strong>${sanitizeHTML(supplier.name)}</strong>
                 <div class="text-secondary">${sanitizeHTML(supplier.phone || '')}</div>
             </div>
-    
             <div class="supplier-item-actions">
                 <button class="icon-btn edit-supplier-btn" data-id="${supplier.id}" title="تعديل المورّد">
                     <span class="material-symbols-outlined">edit</span>
                 </button>
                 <button class="icon-btn danger-btn delete-supplier-btn" data-id="${supplier.id}" title="حذف المورّد">
-           
                  <span class="material-symbols-outlined">delete</span>
                 </button>
             </div>
@@ -419,7 +426,6 @@ export const openDetailsModal = (itemId) => {
     if (!item) return;
     appState.currentItemId = itemId;
     appState.itemStateBeforeEdit = JSON.parse(JSON.stringify(item));
-
     elements.detailsName.textContent = item.name;
     elements.detailsSku.textContent = `SKU: ${sanitizeHTML(item.sku || 'N/A')}`;
     elements.detailsQuantityValue.textContent = item.quantity;
@@ -428,7 +434,6 @@ export const openDetailsModal = (itemId) => {
     elements.detailsCostUsd.textContent = `$${(item.costPriceUsd || 0).toLocaleString()}`;
     elements.detailsSellUsd.textContent = `$${(item.sellPriceUsd || 0).toLocaleString()}`;
     elements.detailsNotesContent.textContent = item.notes || 'لا توجد ملاحظات.';
-    
     const supplier = appState.suppliers.find(s => s.id === item.supplierId);
     if (supplier) {
         elements.detailsSupplierName.textContent = sanitizeHTML(supplier.name);
@@ -443,13 +448,11 @@ export const openDetailsModal = (itemId) => {
     } else {
         elements.supplierDetailsContainer.classList.add('view-hidden');
     }
-
     if (item.imagePath) {
         elements.detailsImage.style.display = 'block';
         elements.detailsImagePlaceholder.style.display = 'none';
         elements.detailsImage.src = '';
         elements.detailsImage.classList.add('skeleton');
-
         fetchImageWithAuth(item.imagePath).then(blobUrl => {
             if (blobUrl) {
                 elements.detailsImage.src = blobUrl;
@@ -489,15 +492,12 @@ export const openItemModal = (itemId = null) => {
             document.getElementById('item-cost-price-usd').value = item.costPriceUsd || 0;
             document.getElementById('item-sell-price-usd').value = item.sellPriceUsd || 0;
             document.getElementById('item-notes').value = item.notes;
-            
             populateSupplierDropdown(item.supplierId);
-
             if (item.imagePath) {
                 fetchImageWithAuth(item.imagePath).then(blobUrl => {
                     if (blobUrl) {
                         elements.imagePreview.src = blobUrl;
                         elements.imagePreview.classList.remove('image-preview-hidden');
-    
                         elements.imagePlaceholder.style.display = 'none';
                     }
                 });
@@ -511,35 +511,32 @@ export const openItemModal = (itemId = null) => {
     }
     elements.itemModal.showModal();
 };
+
 export const openSaleModal = (itemId) => {
     const item = appState.inventory.items.find(i => i.id === itemId);
     if (!item) return;
-
     elements.saleForm.reset();
     elements.saleItemIdInput.value = item.id;
     elements.saleItemName.textContent = item.name;
-
     const saleQuantityInput = document.getElementById('sale-quantity');
     const salePriceInput = document.getElementById('sale-price');
     const isIQD = appState.activeCurrency === 'IQD';
     const price = isIQD ? (item.sellPriceIqd || 0) : (item.sellPriceUsd || 0);
     const symbol = isIQD ? 'د.ع' : '$';
-    
     elements.salePriceCurrency.textContent = symbol;
     salePriceInput.value = price;
     salePriceInput.step = isIQD ? '250' : '0.01';
     saleQuantityInput.value = 1;
     saleQuantityInput.max = item.quantity;
-
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
     document.getElementById('sale-date').value = `${year}-${month}-${day}`;
-
     elements.saleModal.showModal();
     updateSaleTotal(); 
 };
+
 export const openBarcodeModal = (itemId) => {
     const item = appState.inventory.items.find(i => i.id === itemId);
     if (item && item.sku) {
