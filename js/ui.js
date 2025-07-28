@@ -339,7 +339,7 @@ export function renderInventory(itemsToRender) {
                 <div class="card-footer">
                     <div class="card-price">${price.toLocaleString()} ${symbol}</div>
                      <div class="card-actions">
-                        <button class="icon-btn sell-btn" title="بيع قطعة واحدة"><span class="material-symbols-outlined">shopping_cart</span></button>
+                        <button class="icon-btn sell-btn" title="بيع"><span class="material-symbols-outlined">shopping_cart</span></button>
                         <button class="icon-btn details-btn" title="عرض التفاصيل"><span class="material-symbols-outlined">more_vert</span></button>
                     </div>
                    </div>

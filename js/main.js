@@ -51,62 +51,79 @@ async function handleSaleFormSubmit(e) {
     e.preventDefault();
     const saveButton = document.getElementById('confirm-sale-btn');
     saveButton.disabled = true;
-
-    const itemId = document.getElementById('sale-item-id').value;
-    const item = appState.inventory.items.find(i => i.id === itemId);
-    const quantityToSell = parseInt(document.getElementById('sale-quantity').value, 10);
-    const salePrice = parseFloat(document.getElementById('sale-price').value);
-
-    if (!item) {
-        ui.showStatus('خطأ: المنتج غير موجود.', 'error', { duration: 5000 });
-        saveButton.disabled = false;
-        return;
-    }
-    if (item.quantity < quantityToSell) {
-        ui.showStatus(`لا يمكن بيع هذه الكمية، المتبقي: ${item.quantity} فقط.`, 'error', { duration: 5000 });
-        saveButton.disabled = false;
-        return;
-    }
-    if (quantityToSell <= 0) {
-        ui.showStatus('خطأ: يرجى إدخال كمية صحيحة.', 'error', { duration: 5000 });
-        saveButton.disabled = false;
-        return;
-    }
-
-    ui.showStatus('جاري تسجيل البيع...', 'syncing');
-    item.quantity -= quantityToSell;
-    const isIQD = appState.activeCurrency === 'IQD';
-    const saleRecord = {
-        saleId: `sale_${Date.now()}`,
-        itemId: item.id,
-        itemName: item.name,
-        quantitySold: quantityToSell,
-        sellPriceIqd: isIQD ? salePrice : item.sellPriceIqd,
-        costPriceIqd: item.costPriceIqd || 0,
-        sellPriceUsd: !isIQD ? salePrice : item.sellPriceUsd,
-        costPriceUsd: item.costPriceUsd || 0,
-        saleDate: document.getElementById('sale-date').value,
-        notes: document.getElementById('sale-notes').value,
-        timestamp: new Date().toISOString()
-    };
-    appState.sales.push(saleRecord);
-    ui.filterAndRenderItems();
+    ui.showStatus('التحقق من البيانات...', 'syncing');
 
     try {
-        await api.saveToGitHub();
-        await api.saveSales();
-        saveLocalData();
-        ui.showStatus('تم تسجيل البيع بنجاح!', 'success');
-        ui.getDOMElements().saleModal.close();
-    } catch (error) {
-        if (error instanceof ConflictError) {
-            ui.showStatus('البيانات غير محدّثة. يرجى تحديث الصفحة والمحاولة مرة أخرى.', 'error', { showRefreshButton: true });
-        } else {
-            ui.showStatus(`فشل تسجيل البيع: ${error.message}`, 'error', { duration: 5000 });
+        // --- NEW: Check-First Logic ---
+        // 1. Fetch the latest version from GitHub before doing anything.
+        const { sha: latestSha } = await api.fetchFromGitHub();
+
+        // 2. Compare the latest SHA with the one we have locally.
+        if (latestSha !== appState.fileSha) {
+            // If they don't match, our data is stale. Abort the operation.
+            ui.showStatus('البيانات غير محدّثة. تم تحديثها من جهاز آخر.', 'error', { showRefreshButton: true });
+            saveButton.disabled = false;
+            return;
         }
-        item.quantity += quantityToSell;
-        appState.sales.pop();
+
+        // --- If check passes, continue with the sale ---
+        const itemId = document.getElementById('sale-item-id').value;
+        const item = appState.inventory.items.find(i => i.id === itemId);
+        const quantityToSell = parseInt(document.getElementById('sale-quantity').value, 10);
+        const salePrice = parseFloat(document.getElementById('sale-price').value);
+
+        // Re-validate after getting confirmation that data is fresh
+        if (!item || item.quantity < quantityToSell || quantityToSell <= 0) {
+            ui.showStatus('خطأ في البيانات أو الكمية غير متوفرة.', 'error');
+            saveButton.disabled = false;
+            return;
+        }
+        
+        ui.showStatus('جاري تسجيل البيع...', 'syncing');
+
+        // 3. Update local state
+        const originalQuantity = item.quantity; // Keep original quantity for rollback
+        item.quantity -= quantityToSell;
+        
+        const saleRecord = {
+            saleId: `sale_${Date.now()}`,
+            itemId: item.id,
+            itemName: item.name,
+            quantitySold: quantityToSell,
+            sellPriceIqd: appState.activeCurrency === 'IQD' ? salePrice : item.sellPriceIqd,
+            costPriceIqd: item.costPriceIqd || 0,
+            sellPriceUsd: appState.activeCurrency !== 'IQD' ? salePrice : item.sellPriceUsd,
+            costPriceUsd: item.costPriceUsd || 0,
+            saleDate: document.getElementById('sale-date').value,
+            notes: document.getElementById('sale-notes').value,
+            timestamp: new Date().toISOString()
+        };
+        appState.sales.push(saleRecord);
         ui.filterAndRenderItems();
+
+        // 4. Save to GitHub
+        // We wrap save operations in their own try...catch to handle potential network failures
+        // and roll back the local changes if the save fails.
+        try {
+            await api.saveToGitHub();
+            await api.saveSales();
+            saveLocalData();
+            
+            ui.getDOMElements().saleModal.close();
+            ui.showStatus('تم تسجيل البيع بنجاح!', 'success');
+        } catch (saveError) {
+            // If saving fails (e.g., network error), revert local changes
+            item.quantity = originalQuantity;
+            appState.sales.pop();
+            ui.filterAndRenderItems();
+            throw saveError; // Re-throw the error to be caught by the outer block
+        }
+
+    } catch (error) {
+        // This will now catch check failures or save failures
+        if (!(error instanceof ConflictError)) { // ConflictError is already handled by the check
+            ui.showStatus(`فشل تسجيل البيع: ${error.message}`, 'error');
+        }
     } finally {
         if(appState.currentView === 'dashboard') {
             ui.renderDashboard();
@@ -119,11 +136,24 @@ async function handleItemFormSubmit(e) {
     e.preventDefault();
     const saveButton = document.getElementById('save-item-btn');
     saveButton.disabled = true;
-    ui.showStatus('جاري الحفظ...', 'syncing');
+    ui.showStatus('التحقق من البيانات...', 'syncing');
 
-    const originalInventoryState = JSON.parse(JSON.stringify(appState.inventory));
-    const itemId = document.getElementById('item-id').value;
     try {
+        // --- NEW: Check-First Logic ---
+        const { data: latestInventory, sha: latestSha } = await api.fetchFromGitHub();
+        if (latestSha !== appState.fileSha) {
+            ui.showStatus('البيانات غير محدّثة. تم تحديثها من جهاز آخر.', 'error', { showRefreshButton: true });
+            saveButton.disabled = false;
+            return;
+        }
+        
+        ui.showStatus('جاري الحفظ...', 'syncing');
+        
+        // Before making changes, update our local state to the latest version to avoid conflicts
+        appState.inventory = latestInventory;
+        appState.fileSha = latestSha;
+
+        const itemId = document.getElementById('item-id').value;
         let imagePath = null;
         const existingItem = appState.inventory.items.find(i => i.id === itemId);
         if (existingItem) {
@@ -132,11 +162,7 @@ async function handleItemFormSubmit(e) {
 
         if (appState.selectedImageFile) {
             ui.showStatus('جاري ضغط الصورة...', 'syncing');
-            const compressedImageBlob = await compressImage(appState.selectedImageFile, {
-                quality: 0.7,
-                maxWidth: 1024,
-                maxHeight: 1024
-            });
+            const compressedImageBlob = await compressImage(appState.selectedImageFile, { quality: 0.7, maxWidth: 1024, maxHeight: 1024 });
             imagePath = await api.uploadImageToGitHub(compressedImageBlob, appState.selectedImageFile.name);
         }
         
@@ -166,23 +192,18 @@ async function handleItemFormSubmit(e) {
         ui.filterAndRenderItems();
         ui.renderCategoryFilter();
         ui.populateCategoryDatalist();
+        
         await api.saveToGitHub();
         saveLocalData();
         
-        ui.showStatus('تم حفظ التغييرات بنجاح!', 'success');
         ui.getDOMElements().itemModal.close();
+        ui.showStatus('تم حفظ التغييرات بنجاح!', 'success');
 
         if (appState.currentItemId === itemData.id) {
             ui.openDetailsModal(itemData.id);
         }
     } catch (error) {
-        appState.inventory = originalInventoryState;
-        ui.filterAndRenderItems();
-        if (error instanceof ConflictError) {
-            ui.showStatus('خطأ: قام مستخدم آخر بتحديث البيانات. يرجى التحديث.', 'error', { showRefreshButton: true });
-        } else {
-            ui.showStatus(`فشل الحفظ: ${error.message}`, 'error', { duration: 5000 });
-        }
+        ui.showStatus(`فشل الحفظ: ${error.message}`, 'error');
     } finally {
         saveButton.disabled = false;
         appState.selectedImageFile = null;
@@ -220,8 +241,6 @@ async function handleImageCleanup() {
     }
 }
 
-// --- Supplier Logic Handlers ---
-
 async function handleSupplierFormSubmit(e) {
     e.preventDefault();
     const elements = ui.getDOMElements();
@@ -233,13 +252,13 @@ async function handleSupplierFormSubmit(e) {
         return;
     }
 
-    if (id) { // Editing existing supplier
+    if (id) {
         const supplier = appState.suppliers.find(s => s.id === id);
         if (supplier) {
             supplier.name = name;
             supplier.phone = phone;
         }
-    } else { // Adding new supplier
+    } else {
         if (appState.suppliers.some(s => s.name.toLowerCase() === name.toLowerCase())) {
             ui.showStatus('هذا المورّد موجود بالفعل.', 'error');
             return;
@@ -274,7 +293,6 @@ async function handleDeleteSupplier(supplierId) {
     if (confirm(confirmMessage)) {
         ui.showStatus('جاري حذف المورّد...', 'syncing');
         try {
-            // Unlink products from the supplier
             if (linkedProductsCount > 0) {
                 appState.inventory.items.forEach(item => {
                     if (item.supplierId === supplierId) {
@@ -284,7 +302,6 @@ async function handleDeleteSupplier(supplierId) {
                 await api.saveToGitHub();
             }
 
-            // Delete the supplier
             appState.suppliers = appState.suppliers.filter(s => s.id !== supplierId);
             await api.saveSuppliers();
             
@@ -297,8 +314,6 @@ async function handleDeleteSupplier(supplierId) {
         }
     }
 }
-
-// --- Archive Feature Handlers ---
 
 async function handleManualArchive() {
     if (!appState.syncConfig || !appState.sales || appState.sales.length === 0) {
@@ -393,9 +408,6 @@ async function openArchiveBrowser() {
     }
 }
 
-/**
- * Creates a zip file containing all application data and triggers a download.
- */
 async function handleDownloadBackup() {
     ui.showStatus('جاري تجهيز النسخة الاحتياطية...', 'syncing');
     try {
@@ -403,9 +415,7 @@ async function handleDownloadBackup() {
         zip.file("inventory.json", JSON.stringify(appState.inventory, null, 2));
         zip.file("sales.json", JSON.stringify(appState.sales, null, 2));
         zip.file("suppliers.json", JSON.stringify(appState.suppliers, null, 2));
-
         const blob = await zip.generateAsync({ type: "blob" });
-
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
         const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
@@ -414,7 +424,6 @@ async function handleDownloadBackup() {
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(link.href);
-
         ui.showStatus('تم تنزيل النسخة الاحتياطية بنجاح!', 'success');
     } catch (error) {
         console.error("Backup failed:", error);
@@ -422,65 +431,43 @@ async function handleDownloadBackup() {
     }
 }
 
-/**
- * Handles the file selection for restoring a backup.
- * Reads the zip file, validates its content, and restores the application state.
- * @param {Event} event The file input change event.
- */
 async function handleRestoreBackup(event) {
     const file = event.target.files[0];
     if (!file) return;
-
     if (!confirm("هل أنت متأكد من رغبتك في استعادة البيانات من هذا الملف؟ سيتم الكتابة فوق جميع بياناتك الحالية.")) {
-        event.target.value = ''; // Reset the input if user cancels
+        event.target.value = '';
         return;
     }
-
     ui.showStatus('جاري استعادة النسخة الاحتياطية...', 'syncing');
-
     try {
         const zip = await JSZip.loadAsync(file);
-        
         const inventoryFile = zip.file("inventory.json");
         const salesFile = zip.file("sales.json");
         const suppliersFile = zip.file("suppliers.json");
-
         if (!inventoryFile || !salesFile || !suppliersFile) {
             throw new Error("ملف النسخة الاحتياطية غير صالح أو لا يحتوي على الملفات المطلوبة.");
         }
-
         const inventoryData = JSON.parse(await inventoryFile.async("string"));
         const salesData = JSON.parse(await salesFile.async("string"));
         const suppliersData = JSON.parse(await suppliersFile.async("string"));
-
-        // Basic validation to ensure file structure is correct
         if (!inventoryData.items || !Array.isArray(salesData) || !Array.isArray(suppliersData)) {
             throw new Error("محتوى ملف النسخة الاحتياطية غير صالح.");
         }
-
-        // All checks passed, update the application state
         appState.inventory = inventoryData;
         appState.sales = salesData;
         appState.suppliers = suppliersData;
-
         saveLocalData();
-
         ui.showStatus('تمت استعادة البيانات بنجاح! سيتم إعادة تحميل التطبيق.', 'success', { duration: 4000 });
-        
-        // Reload the application after a short delay to reflect the new state everywhere
         setTimeout(() => {
             location.reload();
         }, 4000);
-
     } catch (error) {
         console.error("Restore failed:", error);
         ui.showStatus(`فشلت عملية الاستعادة: ${error.message}`, 'error', { duration: 5000 });
     } finally {
-        event.target.value = ''; // Reset the input to allow selecting the same file again
+        event.target.value = '';
     }
 }
-
-// --- EVENT LISTENERS SETUP ---
 
 function setupEventListeners() {
     const elements = ui.getDOMElements();
@@ -545,25 +532,45 @@ function setupEventListeners() {
         const itemBeforeEdit = appState.itemStateBeforeEdit;
         const currentItem = appState.inventory.items.find(i => i.id === appState.currentItemId);
         if (itemBeforeEdit && currentItem && itemBeforeEdit.quantity !== currentItem.quantity) {
-            ui.showStatus('جاري حفظ تغيير الكمية...', 'syncing');
+            ui.showStatus('التحقق من البيانات...', 'syncing');
             try {
-                await api.saveToGitHub();
-                saveLocalData();
-                ui.showStatus('تم حفظ التغييرات بنجاح!', 'success');
+                // --- NEW: Check-First Logic ---
+                const { data: latestInventory, sha: latestSha } = await api.fetchFromGitHub();
+                if (latestSha !== appState.fileSha) {
+                    ui.showStatus('البيانات غير محدّثة. تم تحديثها من جهاز آخر.', 'error', { showRefreshButton: true });
+                    // Revert local changes as they were based on stale data
+                    const originalItemIndex = appState.inventory.items.findIndex(i => i.id === itemBeforeEdit.id);
+                    if (originalItemIndex !== -1) {
+                        appState.inventory.items[originalItemIndex] = itemBeforeEdit;
+                    }
+                    ui.filterAndRenderItems();
+                } else {
+                    // Data is current, proceed with saving the quantity change
+                    ui.showStatus('جاري حفظ تغيير الكمية...', 'syncing');
+                    appState.inventory = latestInventory;
+                    appState.fileSha = latestSha;
+                    
+                    // Re-apply the quantity change to the fresh data
+                    const itemToUpdate = appState.inventory.items.find(i => i.id === currentItem.id);
+                    if (itemToUpdate) {
+                        itemToUpdate.quantity = currentItem.quantity;
+                    }
+                    
+                    await api.saveToGitHub();
+                    saveLocalData();
+                    ui.showStatus('تم حفظ التغييرات بنجاح!', 'success');
+                }
             } catch (error) {
-                console.error("Failed to save quantity change:", error);
+                 // Revert local changes on failure
                 const originalItemIndex = appState.inventory.items.findIndex(i => i.id === itemBeforeEdit.id);
                 if (originalItemIndex !== -1) {
                     appState.inventory.items[originalItemIndex] = itemBeforeEdit;
                 }
                 ui.filterAndRenderItems();
-                if (error instanceof ConflictError) {
-                    ui.showStatus('فشل الحفظ. تم تحديث البيانات من مكان آخر.', 'error', { showRefreshButton: true });
-                } else {
-                    ui.showStatus('فشل حفظ التغييرات.', 'error', { duration: 4000 });
-                }
+                ui.showStatus('فشل حفظ التغييرات.', 'error', { duration: 4000 });
             }
         }
+        
         appState.itemStateBeforeEdit = null;
         appState.currentItemId = null;
         elements.detailsModal.close();
@@ -610,8 +617,6 @@ function setupEventListeners() {
     });
     elements.detailsBarcodeBtn.addEventListener('click', () => ui.openBarcodeModal(appState.currentItemId));
     elements.downloadBarcodeBtn.addEventListener('click', () => ui.downloadBarcode());
-
-    // --- Search and Filter Event Listeners ---
     elements.searchBar.addEventListener('input', (e) => {
         appState.searchTerm = e.target.value;
         ui.filterAndRenderItems();
@@ -648,13 +653,10 @@ function setupEventListeners() {
             elements.categoryFilterDropdown.classList.remove('show');
         }
     });
-    // --- Form Event Listeners ---
     elements.itemForm.addEventListener('submit', handleItemFormSubmit);
     elements.cancelItemBtn.addEventListener('click', () => elements.itemModal.close());
     elements.saleForm.addEventListener('submit', handleSaleFormSubmit);
     elements.cancelSaleBtn.addEventListener('click', () => elements.saleModal.close());
-    
-    // --- Sale Modal Quantity and Price Listeners ---
     elements.saleIncreaseBtn.addEventListener('click', () => {
         const quantityInput = elements.saleQuantityInput;
         const max = parseInt(quantityInput.max, 10);
@@ -674,7 +676,6 @@ function setupEventListeners() {
     });
     elements.saleQuantityInput.addEventListener('input', ui.updateSaleTotal);
     document.getElementById('sale-price').addEventListener('input', ui.updateSaleTotal);
-
     elements.imageUploadInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -797,7 +798,7 @@ async function initializeApp() {
     const savedCurrency = localStorage.getItem('inventoryAppCurrency') || 'IQD';
     appState.activeCurrency = savedCurrency;
     ui.setTheme(savedTheme);
-    // Render skeleton loaders immediately
+    
     ui.renderInventorySkeleton(); 
 
     if (appState.syncConfig) {

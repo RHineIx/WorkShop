@@ -138,9 +138,13 @@
     border-color: var(--accent-color);
     color: white;
 }
-label[for="restore-backup-input"].cleanup-btn {
-    color: var(--accent-color);
+label[for="restore-backup-input"] {
+    color: var(--accent-color) !important;
+    font-weight: bold !important;
     text-align: center;
+}
+label[for="restore-backup-input"]:hover {
+    color: white !important;
 }
 .action-btn-details {
     padding: 12px;
