@@ -87,7 +87,6 @@ const elements = {
     githubUsernameInput: document.getElementById('github-username'),
     githubRepoInput: document.getElementById('github-repo'),
     githubPatInput: document.getElementById('github-pat'),
-    maintenanceActions: document.querySelector('#sync-modal .maintenance-actions'),
     cleanupImagesBtn: document.getElementById('cleanup-images-btn'),
     downloadBackupBtn: document.getElementById('download-backup-btn'),
     restoreBackupInput: document.getElementById('restore-backup-input'),
@@ -99,7 +98,7 @@ const elements = {
     downloadBarcodeBtn: document.getElementById('download-barcode-btn'),
     closeBarcodeBtn: document.getElementById('close-barcode-btn'),
     
-    // --- NEW: Supplier UI Elements ---
+    // Supplier UI Elements
     supplierManagerModal: document.getElementById('supplier-manager-modal'),
     closeSupplierManagerBtn: document.getElementById('close-supplier-manager-btn'),
     supplierListContainer: document.getElementById('supplier-list-container'),
@@ -252,12 +251,7 @@ export function updateSaleTotal() {
 
     elements.saleTotalPrice.textContent = `${totalPrice.toLocaleString()} ${symbol}`;
 }
-// --- NEW/REFACTORED INVENTORY RENDERING LOGIC ---
 
-/**
- * Renders skeleton loaders for the inventory grid.
- * @param {number} count The number of skeleton cards to render.
- */
 export function renderInventorySkeleton(count = 8) {
     elements.inventoryGrid.innerHTML = '';
     for (let i = 0; i < count; i++) {
@@ -269,16 +263,12 @@ export function renderInventorySkeleton(count = 8) {
                 <div class="skeleton skeleton-text"></div>
                 <div class="skeleton skeleton-text w-75"></div>
                  <div class="skeleton skeleton-text w-50" style="margin-top: 12px;"></div>
-         
            </div>
         `;
         elements.inventoryGrid.appendChild(skeletonCard);
     }
 }
 
-/**
- * A new helper function to get the currently filtered list of items.
- */
 function getFilteredItems() {
     let items = [...appState.inventory.items];
     if (appState.activeFilter === 'low_stock') {
@@ -297,18 +287,11 @@ function getFilteredItems() {
     return items;
 }
 
-/**
- * The main function to orchestrate filtering and rendering.
- */
 export function filterAndRenderItems() {
     const itemsToRender = getFilteredItems();
     renderInventory(itemsToRender);
 }
 
-/**
- * The highly optimized rendering function. It only draws what it's given.
- * @param {Array<Object>} itemsToRender The array of items to display.
- */
 export function renderInventory(itemsToRender) {
     elements.inventoryGrid.innerHTML = '';
 
@@ -430,8 +413,6 @@ export function populateSupplierDropdown(selectedSupplierId = null) {
         select.appendChild(option);
     });
 }
-
-// --- MODAL UI FUNCTIONS (with modifications) ---
 
 export const openDetailsModal = (itemId) => {
     const item = appState.inventory.items.find(i => i.id === itemId);
@@ -610,20 +591,10 @@ export const downloadBarcode = () => {
 };
 
 export const populateSyncModal = () => {
-    // This is the updated, more robust check
-    const config = appState.syncConfig;
-    if (config && config.username && config.repo && config.pat) {
-        // If config is valid, populate the form and show the actions
-        elements.githubUsernameInput.value = config.username;
-        elements.githubRepoInput.value = config.repo;
-        elements.githubPatInput.value = config.pat;
-        elements.maintenanceActions.classList.remove('view-hidden');
-    } else {
-        // If config is null or incomplete, clear the form and hide the actions
-        elements.githubUsernameInput.value = '';
-        elements.githubRepoInput.value = '';
-        elements.githubPatInput.value = '';
-        elements.maintenanceActions.classList.add('view-hidden');
+    if (appState.syncConfig) {
+        elements.githubUsernameInput.value = appState.syncConfig.username;
+        elements.githubRepoInput.value = appState.syncConfig.repo;
+        elements.githubPatInput.value = appState.syncConfig.pat;
     }
     elements.syncModal.showModal();
 };
