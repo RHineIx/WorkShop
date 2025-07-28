@@ -1,478 +1,656 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
     <title>إدارة مخزون ورشة المفاتيح</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
-    
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body class="theme-light">
 
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+    />
+
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body class="theme-light">
     <div id="toast-container" class="toast-container"></div>
 
     <header class="page-controls">
-        <div class="control-group">
-            <h1 id="inventory-toggle-btn" class="app-title active-view-btn">إدارة المخزون</h1>
-        </div>
-        <div class="control-group">
-             <button id="add-item-btn" title="إضافة منتج جديد" class="control-button primary-action">
-                <span class="material-symbols-outlined">add</span>
-                <span class="btn-text">إضافة منتج</span>
-            </button>
-     
-           <button id="dashboard-toggle-btn" title="لوحة المعلومات" class="control-button">
-                <span class="material-symbols-outlined">monitoring</span>
-            </button>
-             <button id="sync-settings-btn" title="إعدادات المزامنة" class="control-button">
-                <span class="material-symbols-outlined">cloud_sync</span>
-             </button>
-             
-            <button id="currency-toggle-btn" title="تبديل العملة" class="control-button">
-                </button>
-             <button id="theme-toggle-btn" title="تبديل الثيم" class="control-button">
-                <span class="material-symbols-outlined">light_mode</span>
-             </button>
-        </div>
+      <div class="control-group">
+        <h1 id="inventory-toggle-btn" class="app-title active-view-btn">
+          إدارة المخزون
+        </h1>
+      </div>
+      <div class="control-group">
+        <button
+          id="add-item-btn"
+          title="إضافة منتج جديد"
+          class="control-button primary-action"
+        >
+          <span class="material-symbols-outlined">add</span>
+          <span class="btn-text">إضافة منتج</span>
+        </button>
+
+        <button
+          id="dashboard-toggle-btn"
+          title="لوحة المعلومات"
+          class="control-button"
+        >
+          <span class="material-symbols-outlined">monitoring</span>
+        </button>
+        <button
+          id="sync-settings-btn"
+          title="إعدادات المزامنة"
+          class="control-button"
+        >
+          <span class="material-symbols-outlined">cloud_sync</span>
+        </button>
+
+        <button
+          id="currency-toggle-btn"
+          title="تبديل العملة"
+          class="control-button"
+        ></button>
+        <button
+          id="theme-toggle-btn"
+          title="تبديل الثيم"
+          class="control-button"
+        >
+          <span class="material-symbols-outlined">light_mode</span>
+        </button>
+      </div>
     </header>
-    
+
     <main class="main-container">
+      <div id="inventory-view-container">
+        <section id="stats-cards" class="stats-container">
+          <div class="stat-card">
+            <div class="card-icon">
+              <span class="material-symbols-outlined">inventory_2</span>
+            </div>
+            <div class="card-details">
+              <div class="card-title">إجمالي المنتجات</div>
 
-        <div id="inventory-view-container">
-   
-            <section id="stats-cards" class="stats-container">
-                 <div class="stat-card">
-                    <div class="card-icon"><span class="material-symbols-outlined">inventory_2</span></div>
-                    <div class="card-details">
-                        <div class="card-title">إجمالي المنتجات</div>
-  
-                      <div id="total-items-stat" class="card-value">0</div>
-                    </div>
-                </div>
-                <div class="stat-card low-stock-alert">
-                    <div class="card-icon"><span class="material-symbols-outlined">warning</span></div>
-                    <div class="card-details">
-                        <div class="card-title">تنبيهات انخفاض المخزون</div>
-                        <div id="low-stock-stat" class="card-value">0</div>
-                    </div>
-      
-               </div>
-            </section>
+              <div id="total-items-stat" class="card-value">0</div>
+            </div>
+          </div>
+          <div class="stat-card low-stock-alert">
+            <div class="card-icon">
+              <span class="material-symbols-outlined">warning</span>
+            </div>
+            <div class="card-details">
+              <div class="card-title">تنبيهات انخفاض المخزون</div>
+              <div id="low-stock-stat" class="card-value">0</div>
+            </div>
+          </div>
+        </section>
 
-            <section class="inventory-container">
-                <div class="inventory-header">
-                    <h2>قائمة المنتجات</h2>
-                    <div id="search-container" class="search-container">
-     
-                       <input type="text" id="search-bar" placeholder="ابحث بالاسم أو الرمز...">
-                        <button id="category-filter-btn" class="icon-btn category-filter-toggle-btn" title="تصفية حسب الفئة" aria-label="تصفية حسب الفئة">
-                            <span class="material-symbols-outlined">filter_list</span>
-             
-                       </button>
-                        <div id="category-filter-dropdown" class="category-dropdown">
-                            </div>
-                    </div>
-               
-                </div>
-                <div id="inventory-grid" class="inventory-grid">
-                     </div>
-            </section>
-        </div>
+        <section class="inventory-container">
+          <div class="inventory-header">
+            <h2>قائمة المنتجات</h2>
+            <div id="search-container" class="search-container">
+              <input
+                type="text"
+                id="search-bar"
+                placeholder="ابحث بالاسم أو الرمز..."
+              />
+              <button
+                id="category-filter-btn"
+                class="icon-btn category-filter-toggle-btn"
+                title="تصفية حسب الفئة"
+                aria-label="تصفية حسب الفئة"
+              >
+                <span class="material-symbols-outlined">filter_list</span>
+              </button>
+              <div
+                id="category-filter-dropdown"
+                class="category-dropdown"
+              ></div>
+            </div>
+          </div>
+          <div id="inventory-grid" class="inventory-grid"></div>
+        </section>
+      </div>
 
-        <div id="dashboard-view-container" class="view-hidden">
-            <section class="dashboard-container">
-                <div class="dashboard-header">
-                    <h2>لوحة المعلومات</h2>
-                    <div id="time-filter-controls" class="time-filter-controls">
-                        <button class="time-filter-btn active" data-period="today">يومي</button>
-                        <button class="time-filter-btn" data-period="week">أسبوعي</button>
-    
-                        <button class="time-filter-btn" data-period="month">شهري</button>
-                    </div>
-                </div>
+      <div id="dashboard-view-container" class="view-hidden">
+        <section class="dashboard-container">
+          <div class="dashboard-header">
+            <h2>لوحة المعلومات</h2>
+            <div id="time-filter-controls" class="time-filter-controls">
+              <button class="time-filter-btn active" data-period="today">
+                يومي
+              </button>
+              <button class="time-filter-btn" data-period="week">أسبوعي</button>
 
-                <div id="dashboard-stats" class="stats-container">
-                    <div class="stat-card">
-   
-                         <div class="card-icon"><span class="material-symbols-outlined">point_of_sale</span></div>
-                        <div class="card-details">
-                            <div class="card-title">إجمالي المبيعات</div>
-                      
-                          <div id="total-sales-stat" class="card-value">0</div>
-                        </div>
-                    </div>
-                    <div class="stat-card profit">
-                        <div class="card-icon"><span class="material-symbols-outlined">trending_up</span></div>
-                        <div class="card-details">
-                            <div class="card-title">إجمالي الأرباح</div>
-                            <div id="total-profit-stat" class="card-value">0</div>
-               
-                         </div>
-                    </div>
-                </div>
+              <button class="time-filter-btn" data-period="month">شهري</button>
+            </div>
+          </div>
 
-                <div class="bestsellers-container">
-                    <h3>الأكثر مبيعًا</h3>
-                 
-                   <div id="bestsellers-list" class="bestsellers-list">
-                        </div>
-                </div>
-            </section>
-        </div>
+          <div id="dashboard-stats" class="stats-container">
+            <div class="stat-card">
+              <div class="card-icon">
+                <span class="material-symbols-outlined">point_of_sale</span>
+              </div>
+              <div class="card-details">
+                <div class="card-title">إجمالي المبيعات</div>
+
+                <div id="total-sales-stat" class="card-value">0</div>
+              </div>
+            </div>
+            <div class="stat-card profit">
+              <div class="card-icon">
+                <span class="material-symbols-outlined">trending_up</span>
+              </div>
+              <div class="card-details">
+                <div class="card-title">إجمالي الأرباح</div>
+                <div id="total-profit-stat" class="card-value">0</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bestsellers-container">
+            <h3>الأكثر مبيعًا</h3>
+
+            <div id="bestsellers-list" class="bestsellers-list"></div>
+          </div>
+        </section>
+      </div>
     </main>
 
     <dialog id="details-modal">
-        <div class="details-modal-content">
-            <button id="close-details-modal-btn" class="close-modal-btn" aria-label="إغلاق"><span class="material-symbols-outlined">close</span></button>
- 
-           <div class="details-layout">
-                <div class="details-image-container">
-                     <img id="details-image" src="" alt="صورة المنتج">
-                    <div id="details-image-placeholder" class="item-image-details">
-                        
-                        <span class="material-symbols-outlined">key</span>
-                    </div>
-                </div>
-                <div class="details-info-container">
-                    <h2 id="details-name"></h2>
-                    <p id="details-sku" class="details-sku"></p>
-   
-                    
-                    <div class="details-price-grid">
-                         <div class="price-item">
-                            <span class="price-label">تكلفة (دينار)</span>
-      
-                             <span id="details-cost-iqd" class="price-value iqd"></span>
-                         </div>
-                        <div class="price-item">
-                         
-                           <span class="price-label">بيع (دينار)</span>
-                            <span id="details-sell-iqd" class="price-value iqd"></span>
-                         </div>
-                        <div class="price-item">
-              
-                          <span class="price-label">تكلفة (دولار)</span>
-                            <span id="details-cost-usd" class="price-value usd"></span>
-                         </div>
-                        <div class="price-item">
-   
-                             <span class="price-label">بيع (دولار)</span>
-                            <span id="details-sell-usd" class="price-value usd"></span>
-                        </div>
-                  
-                   </div>
-                    
-                    <div class="details-quantity">
-                         <span>الكمية:</span>
-                        <div class="quantity-controls">
-       
-                             <button class="quantity-btn" id="details-decrease-btn" aria-label="إنقاص الكمية">-</button>
-                            <span class="quantity-value" id="details-quantity-value"></span>
-                            <button class="quantity-btn" id="details-increase-btn" aria-label="زيادة الكمية">+</button>
-             
-                       </div>
-                    </div>
-                     <div class="details-notes">
-                        <h3><span class="material-symbols-outlined">notes</span> ملاحظات</h3>
-                     
-                       <p id="details-notes-content"></p>
-                    </div>
+      <div class="details-modal-content">
+        <button
+          id="close-details-modal-btn"
+          class="close-modal-btn"
+          aria-label="إغلاق"
+        >
+          <span class="material-symbols-outlined">close</span>
+        </button>
 
-                    <div id="supplier-details-container" class="details-supplier-info view-hidden">
-                        <h3><span class="material-symbols-outlined">business_center</span> معلومات المورّد</h3>
-                        <p><strong>الاسم:</strong> <span id="details-supplier-name"></span></p>
-                        <p><strong>الهاتف:</strong> <span id="details-supplier-phone"></span></p>
-                        <a id="details-supplier-whatsapp" href="#" target="_blank" class="whatsapp-btn">
-                            <span class="material-symbols-outlined">sms</span>
-                 
-                           تواصل عبر واتساب
-                        </a>
-                    </div>
-                </div>
-             </div>
-            <div class="details-actions">
- 
-               <button id="details-edit-btn" class="action-btn-details"><span class="material-symbols-outlined">edit</span> تعديل</button>
-                <button id="details-barcode-btn" class="action-btn-details"><span class="material-symbols-outlined">qr_code_2</span> باركود</button>
-                <button id="details-delete-btn" class="action-btn-details danger"><span class="material-symbols-outlined">delete</span> حذف</button>
+        <div class="details-layout">
+          <div class="details-image-container">
+            <img id="details-image" src="" alt="صورة المنتج" />
+            <div id="details-image-placeholder" class="item-image-details">
+              <span class="material-symbols-outlined">key</span>
             </div>
+          </div>
+          <div class="details-info-container">
+            <h2 id="details-name"></h2>
+            <p id="details-sku" class="details-sku"></p>
+
+            <div class="details-price-grid">
+              <div class="price-item">
+                <span class="price-label">تكلفة (دينار)</span>
+
+                <span id="details-cost-iqd" class="price-value iqd"></span>
+              </div>
+              <div class="price-item">
+                <span class="price-label">بيع (دينار)</span>
+                <span id="details-sell-iqd" class="price-value iqd"></span>
+              </div>
+              <div class="price-item">
+                <span class="price-label">تكلفة (دولار)</span>
+                <span id="details-cost-usd" class="price-value usd"></span>
+              </div>
+              <div class="price-item">
+                <span class="price-label">بيع (دولار)</span>
+                <span id="details-sell-usd" class="price-value usd"></span>
+              </div>
+            </div>
+
+            <div class="details-quantity">
+              <span>الكمية:</span>
+              <div class="quantity-controls">
+                <button
+                  class="quantity-btn"
+                  id="details-decrease-btn"
+                  aria-label="إنقاص الكمية"
+                >
+                  -
+                </button>
+                <span class="quantity-value" id="details-quantity-value"></span>
+                <button
+                  class="quantity-btn"
+                  id="details-increase-btn"
+                  aria-label="زيادة الكمية"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+            <div class="details-notes">
+              <h3>
+                <span class="material-symbols-outlined">notes</span> ملاحظات
+              </h3>
+
+              <p id="details-notes-content"></p>
+            </div>
+
+            <div
+              id="supplier-details-container"
+              class="details-supplier-info view-hidden"
+            >
+              <h3>
+                <span class="material-symbols-outlined">business_center</span>
+                معلومات المورّد
+              </h3>
+              <p>
+                <strong>الاسم:</strong> <span id="details-supplier-name"></span>
+              </p>
+              <p>
+                <strong>الهاتف:</strong>
+                <span id="details-supplier-phone"></span>
+              </p>
+              <a
+                id="details-supplier-whatsapp"
+                href="#"
+                target="_blank"
+                class="whatsapp-btn"
+              >
+                <span class="material-symbols-outlined">sms</span>
+
+                تواصل عبر واتساب
+              </a>
+            </div>
+          </div>
         </div>
+        <div class="details-actions">
+          <button id="details-edit-btn" class="action-btn-details">
+            <span class="material-symbols-outlined">edit</span> تعديل
+          </button>
+          <button id="details-barcode-btn" class="action-btn-details">
+            <span class="material-symbols-outlined">qr_code_2</span> باركود
+          </button>
+          <button id="details-delete-btn" class="action-btn-details danger">
+            <span class="material-symbols-outlined">delete</span> حذف
+          </button>
+        </div>
+      </div>
     </dialog>
 
     <dialog id="item-modal">
-        <form id="item-form">
-  
-           <h3 id="modal-title">إضافة منتج جديد</h3>
-            <input type="hidden" id="item-id">
+      <form id="item-form">
+        <h3 id="modal-title">إضافة منتج جديد</h3>
+        <input type="hidden" id="item-id" />
 
-            <div class="image-upload-container">
-                <div class="image-preview-wrapper">
-                    <img id="image-preview" src="#" alt="معاينة الصورة" class="image-preview-hidden">
-                  
-                  <div id="image-placeholder"><span class="material-symbols-outlined">key</span></div>
-                </div>
-                <input type="file" id="item-image-upload" accept="image/*" class="visually-hidden">
-                <label for="item-image-upload" class="custom-file-upload-btn">
-                    <span class="material-symbols-outlined">upload_file</span>
-                    
-                     <span>اختر صورة</span>
-                </label>
+        <div class="image-upload-container">
+          <div class="image-preview-wrapper">
+            <img
+              id="image-preview"
+              src="#"
+              alt="معاينة الصورة"
+              class="image-preview-hidden"
+            />
+
+            <div id="image-placeholder">
+              <span class="material-symbols-outlined">key</span>
             </div>
+          </div>
+          <input
+            type="file"
+            id="item-image-upload"
+            accept="image/*"
+            class="visually-hidden"
+          />
+          <label for="item-image-upload" class="custom-file-upload-btn">
+            <span class="material-symbols-outlined">upload_file</span>
 
-            <label for="item-sku">SKU (رقم المنتج - يستخدم للباركود)</label>
-            <div class="sku-container">
-                <input type="text" id="item-sku" required>
-                 <button type="button" id="regenerate-sku-btn" class="icon-btn" title="توليد SKU جديد" aria-label="توليد SKU جديد">
-                    <span class="material-symbols-outlined">refresh</span>
-                </button>
-            </div>
+            <span>اختر صورة</span>
+          </label>
+        </div>
 
-            <label for="item-name">اسم المنتج</label>
-            <input type="text" id="item-name" required>
+        <label for="item-sku">SKU (رقم المنتج - يستخدم للباركود)</label>
+        <div class="sku-container">
+          <input type="text" id="item-sku" required />
+          <button
+            type="button"
+            id="regenerate-sku-btn"
+            class="icon-btn"
+            title="توليد SKU جديد"
+            aria-label="توليد SKU جديد"
+          >
+            <span class="material-symbols-outlined">refresh</span>
+          </button>
+        </div>
 
-            <label for="item-category">الفئة</label>
-   
-             <input type="text" id="item-category" list="category-list">
-            <datalist id="category-list">
-                </datalist>
+        <label for="item-name">اسم المنتج</label>
+        <input type="text" id="item-name" required />
 
-            <div class="form-group-divider"></div>
-            <label for="item-supplier">المورّد (اختياري)</label>
-            <div class="supplier-selection-container">
-                <select id="item-supplier">
-  
-                   <option value="">-- اختر مورّد --</option>
-                </select>
-                <button type="button" id="manage-suppliers-btn" class="icon-btn" title="إدارة المورّدين">
-                    <span class="material-symbols-outlined">group_add</span>
-                </button>
-    
-            </div>
-            <div class="form-group-divider"></div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="item-quantity">الكمية</label>
-                
-                     <input type="number" id="item-quantity" value="0" min="0">
-                </div>
-                <div class="form-group">
-                    <label for="item-alert-level">حد التنبيه</label>
-                    <input type="number" id="item-alert-level" value="5" min="0">
-            
-                    </div>
-            </div>
+        <label for="item-category">الفئة</label>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="item-cost-price-iqd">سعر التكلفة (دينار)</label>
-                     <input type="number" id="item-cost-price-iqd" step="250" value="0" min="0">
-     
-                   </div>
-                <div class="form-group">
-                    <label for="item-sell-price-iqd">سعر البيع (دينار)</label>
-                    <input type="number" id="item-sell-price-iqd" step="250" value="0" min="0">
-                 </div>
-       
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="item-cost-price-usd">سعر التكلفة (دولار)</label>
-                    <input type="number" id="item-cost-price-usd" step="0.01" value="0" min="0">
-                 
-                </div>
-                <div class="form-group">
-                    <label for="item-sell-price-usd">سعر البيع (دولار)</label>
-                    <input type="number" id="item-sell-price-usd" step="0.01" value="0" min="0">
-                </div>
-             </div>
+        <input type="text" id="item-category" list="category-list" />
+        <datalist id="category-list"> </datalist>
 
-      
-              <label for="item-notes">ملاحظات</label>
-            <textarea id="item-notes" rows="3"></textarea>
-            <div class="modal-actions">
-                <button type="submit" id="save-item-btn">حفظ</button>
-                <button type="button" id="cancel-item-btn">إلغاء</button>
-            </div>
-        </form>
+        <div class="form-group-divider"></div>
+        <label for="item-supplier">المورّد (اختياري)</label>
+        <div class="supplier-selection-container">
+          <select id="item-supplier">
+            <option value="">-- اختر مورّد --</option>
+          </select>
+          <button
+            type="button"
+            id="manage-suppliers-btn"
+            class="icon-btn"
+            title="إدارة المورّدين"
+          >
+            <span class="material-symbols-outlined">group_add</span>
+          </button>
+        </div>
+        <div class="form-group-divider"></div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="item-quantity">الكمية</label>
+
+            <input type="number" id="item-quantity" value="0" min="0" />
+          </div>
+          <div class="form-group">
+            <label for="item-alert-level">حد التنبيه</label>
+            <input type="number" id="item-alert-level" value="5" min="0" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="item-cost-price-iqd">سعر التكلفة (دينار)</label>
+            <input
+              type="number"
+              id="item-cost-price-iqd"
+              step="250"
+              value="0"
+              min="0"
+            />
+          </div>
+          <div class="form-group">
+            <label for="item-sell-price-iqd">سعر البيع (دينار)</label>
+            <input
+              type="number"
+              id="item-sell-price-iqd"
+              step="250"
+              value="0"
+              min="0"
+            />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="item-cost-price-usd">سعر التكلفة (دولار)</label>
+            <input
+              type="number"
+              id="item-cost-price-usd"
+              step="0.01"
+              value="0"
+              min="0"
+            />
+          </div>
+          <div class="form-group">
+            <label for="item-sell-price-usd">سعر البيع (دولار)</label>
+            <input
+              type="number"
+              id="item-sell-price-usd"
+              step="0.01"
+              value="0"
+              min="0"
+            />
+          </div>
+        </div>
+
+        <label for="item-notes">ملاحظات</label>
+        <textarea id="item-notes" rows="3"></textarea>
+        <div class="modal-actions">
+          <button type="submit" id="save-item-btn">حفظ</button>
+          <button type="button" id="cancel-item-btn">إلغاء</button>
+        </div>
+      </form>
     </dialog>
 
     <dialog id="sync-modal">
- 
-       <form id="sync-form">
-            <h3>إعدادات المزامنة السحابية</h3>
-            <p>
-                سيتم حفظ بياناتك في ملفات JSON داخل مستودع GitHub خاص.
-                <a href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens" target="_blank">كيفية إنشاء مفتاح وصول شخصي (PAT)</a>.
-            </p>
-            <label for="github-username">اسم المستخدم في GitHub</label>
-            <input type="text" id="github-username" required placeholder="e.g., my-username">
-            <label for="github-repo">اسم المستودع (Repository)</label>
-            <input type="text" id="github-repo" required placeholder="e.g., key-inventory-data">
-            <label for="github-pat">مفتاح الوصول الشخصي (Personal Access Token)</label>
-         
-            <input type="password" id="github-pat" required placeholder="يبدأ بـ ghp_...">
-            <div class="modal-actions">
-                <button type="submit">حفظ الإعدادات</button>
-                <button type="button" id="cancel-sync-btn">إلغاء</button>
-            </div>
-            <div class="maintenance-actions">
-                
-                <button type="button" id="manual-archive-btn" class="cleanup-btn archive-btn">
-                    <span class="material-symbols-outlined">archive</span>
-                    أرشفة المبيعات القديمة
-                </button>
-                <p id="last-archive-date-display" class="last-archive-text">آخر أرشفة: لم تتم بعد</p>
-               
-                 <hr class="maintenance-divider">
-                <button type="button" id="view-archives-btn" class="cleanup-btn archive-btn">
-                    <span class="material-symbols-outlined">inventory</span>
-                    عرض أرشيف المبيعات
-                </button>
-                <button type="button" id="cleanup-images-btn" class="cleanup-btn">
-                    <span class="material-symbols-outlined">cleaning_services</span>
-                    تنظيف الصور غير المستخدمة
-                </button>
-                
-                <hr class="maintenance-divider">
-                <button type="button" id="download-backup-btn" class="cleanup-btn archive-btn">
-                    <span class="material-symbols-outlined">download_for_offline</span>
-                    تنزيل نسخة احتياطية محلية
-                </button>
-                <input type="file" id="restore-backup-input" class="visually-hidden" accept=".zip">
-                <label for="restore-backup-input" class="cleanup-btn archive-btn">
-                    <span class="material-symbols-outlined">upload_file</span>
-                    استعادة من نسخة احتياطية
-                </label>
-            </div>
-        </form>
+      <form id="sync-form">
+        <h3>إعدادات المزامنة السحابية</h3>
+        <p>
+          سيتم حفظ بياناتك في ملفات JSON داخل مستودع GitHub خاص.
+          <a
+            href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens"
+            target="_blank"
+            >كيفية إنشاء مفتاح وصول شخصي (PAT)</a
+          >.
+        </p>
+        <label for="github-username">اسم المستخدم في GitHub</label>
+        <input
+          type="text"
+          id="github-username"
+          required
+          placeholder="e.g., my-username"
+        />
+        <label for="github-repo">اسم المستودع (Repository)</label>
+        <input
+          type="text"
+          id="github-repo"
+          required
+          placeholder="e.g., key-inventory-data"
+        />
+        <label for="github-pat"
+          >مفتاح الوصول الشخصي (Personal Access Token)</label
+        >
+
+        <input
+          type="password"
+          id="github-pat"
+          required
+          placeholder="يبدأ بـ ghp_..."
+        />
+        <div class="modal-actions">
+          <button type="submit">حفظ الإعدادات</button>
+          <button type="button" id="cancel-sync-btn">إلغاء</button>
+        </div>
+        <div class="maintenance-actions">
+          <button
+            type="button"
+            id="manual-archive-btn"
+            class="cleanup-btn archive-btn"
+          >
+            <span class="material-symbols-outlined">archive</span>
+            أرشفة المبيعات القديمة
+          </button>
+          <p id="last-archive-date-display" class="last-archive-text">
+            آخر أرشفة: لم تتم بعد
+          </p>
+
+          <hr class="maintenance-divider" />
+          <button
+            type="button"
+            id="view-archives-btn"
+            class="cleanup-btn archive-btn"
+          >
+            <span class="material-symbols-outlined">inventory</span>
+            عرض أرشيف المبيعات
+          </button>
+          <button type="button" id="cleanup-images-btn" class="cleanup-btn">
+            <span class="material-symbols-outlined">cleaning_services</span>
+            تنظيف الصور غير المستخدمة
+          </button>
+
+          <hr class="maintenance-divider" />
+          <button
+            type="button"
+            id="download-backup-btn"
+            class="cleanup-btn archive-btn"
+          >
+            <span class="material-symbols-outlined">download_for_offline</span>
+            تنزيل نسخة احتياطية محلية
+          </button>
+          <input
+            type="file"
+            id="restore-backup-input"
+            class="visually-hidden"
+            accept=".zip"
+          />
+          <label for="restore-backup-input" class="cleanup-btn archive-btn">
+            <span class="material-symbols-outlined">upload_file</span>
+            استعادة من نسخة احتياطية
+          </label>
+        </div>
+      </form>
     </dialog>
 
     <dialog id="barcode-modal">
-        <div class="barcode-modal-content">
-  
-           <h3 id="barcode-item-name"></h3>
-            <div id="barcode-display">
-                 <svg id="barcode-svg"></svg>
-            </div>
-            <div class="modal-actions">
-                <button id="download-barcode-btn" class="primary-action"><span class="material-symbols-outlined">download</span> تنزيل PNG</button>
-            
-                <button id="close-barcode-btn" type="button">إغلاق</button>
-            </div>
+      <div class="barcode-modal-content">
+        <h3 id="barcode-item-name"></h3>
+        <div id="barcode-display">
+          <svg id="barcode-svg"></svg>
         </div>
+        <div class="modal-actions">
+          <button id="download-barcode-btn" class="primary-action">
+            <span class="material-symbols-outlined">download</span> تنزيل PNG
+          </button>
+
+          <button id="close-barcode-btn" type="button">إغلاق</button>
+        </div>
+      </div>
     </dialog>
 
     <dialog id="sale-modal">
-         <form id="sale-form">
-            <h3>تأكيد عملية البيع</h3>
-            <input type="hidden" id="sale-item-id">
-            
-            <p>تأكيد تفاصيل البيع للمنتج التالي:</p>
-            <strong id="sale-item-name" class="sale-item-name-display"></strong>
+      <form id="sale-form">
+        <h3>تأكيد عملية البيع</h3>
+        <input type="hidden" id="sale-item-id" />
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="sale-quantity">الكمية المباعة</label>
-                    <div class="quantity-controls">
-            
-                         <button type="button" id="sale-decrease-btn" class="quantity-btn" aria-label="إنقاص الكمية">-</button>
-                        <input type="number" id="sale-quantity" value="1" min="1">
-                        <button type="button" id="sale-increase-btn" class="quantity-btn" aria-label="زيادة الكمية">+</button>
-                    </div>
-      
-                   </div>
-                <div class="form-group">
-                <label for="sale-price">سعر البيع للقطعة</label>
-                <div class="input-with-currency">
-                    <input type="number" id="sale-price" step="250" min="0">
-             
-                   <span id="sale-price-currency" class="currency-symbol"></span>
-                </div>
+        <p>تأكيد تفاصيل البيع للمنتج التالي:</p>
+        <strong id="sale-item-name" class="sale-item-name-display"></strong>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="sale-quantity">الكمية المباعة</label>
+            <div class="quantity-controls">
+              <button
+                type="button"
+                id="sale-decrease-btn"
+                class="quantity-btn"
+                aria-label="إنقاص الكمية"
+              >
+                -
+              </button>
+              <input type="number" id="sale-quantity" value="1" min="1" />
+              <button
+                type="button"
+                id="sale-increase-btn"
+                class="quantity-btn"
+                aria-label="زيادة الكمية"
+              >
+                +
+              </button>
             </div>
-            <div class="sale-total-container">
-                <span class="total-label">الإجمالي:</span>
-                <span id="sale-total-price" class="total-value"></span>
+          </div>
+          <div class="form-group">
+            <label for="sale-price">سعر البيع للقطعة</label>
+            <div class="input-with-currency">
+              <input type="number" id="sale-price" step="250" min="0" />
+
+              <span id="sale-price-currency" class="currency-symbol"></span>
             </div>
-   
-                 </div>
-            
-             <label for="sale-date">تاريخ البيع</label>
-            <input type="date" id="sale-date" required>
-            
-            <label for="sale-notes">ملاحظات على البيع</label>
-            <textarea id="sale-notes" rows="3"></textarea>
-        
-            
-            <div class="modal-actions">
-                <button type="submit" id="confirm-sale-btn" class="primary-action">تأكيد البيع</button>
-                <button type="button" id="cancel-sale-btn">إلغاء</button>
-            </div>
-        </form>
+          </div>
+          <div class="sale-total-container">
+            <span class="total-label">الإجمالي:</span>
+            <span id="sale-total-price" class="total-value"></span>
+          </div>
+        </div>
+
+        <label for="sale-date">تاريخ البيع</label>
+        <input type="date" id="sale-date" required />
+
+        <label for="sale-notes">ملاحظات على البيع</label>
+        <textarea id="sale-notes" rows="3"></textarea>
+
+        <div class="modal-actions">
+          <button type="submit" id="confirm-sale-btn" class="primary-action">
+            تأكيد البيع
+          </button>
+          <button type="button" id="cancel-sale-btn">إلغاء</button>
+        </div>
+      </form>
     </dialog>
 
     <dialog id="supplier-manager-modal">
-        <div class="supplier-manager-content">
-       
-             <div class="modal-header">
-                <h3 id="supplier-modal-title">إدارة المورّدين</h3>
-                <button id="close-supplier-manager-btn" class="icon-btn" aria-label="إغلاق">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
-        
-            <div id="supplier-list-container" class="supplier-list">
-                </div>
-            <form id="supplier-form">
-                <h4 id="supplier-form-title">إضافة مورّد جديد</h4>
-                <input type="hidden" id="supplier-id">
-                <div class="form-row">
-           
-                 <div class="form-group">
-                        <label for="supplier-name">اسم المورّد</label>
-                        <input type="text" id="supplier-name" required>
-                    </div>
-                 
-                   <div class="form-group">
-                        <label for="supplier-phone">رقم الهاتف (مع رمز الدولة)</label>
-                        <input type="text" id="supplier-phone" placeholder="e.g., 9647701234567">
-                    </div>
-                </div>
-   
-                 <div class="modal-actions">
-                    <button type="submit" id="save-supplier-btn" class="primary-action">حفظ المورّد</button>
-                    <button type="button" id="cancel-edit-supplier-btn" class="view-hidden">إلغاء التعديل</button>
-                </div>
-            </form>
+      <div class="supplier-manager-content">
+        <div class="modal-header">
+          <h3 id="supplier-modal-title">إدارة المورّدين</h3>
+          <button
+            id="close-supplier-manager-btn"
+            class="icon-btn"
+            aria-label="إغلاق"
+          >
+            <span class="material-symbols-outlined">close</span>
+          </button>
         </div>
-  
-       </dialog>
+
+        <div id="supplier-list-container" class="supplier-list"></div>
+        <form id="supplier-form">
+          <h4 id="supplier-form-title">إضافة مورّد جديد</h4>
+          <input type="hidden" id="supplier-id" />
+          <div class="form-row">
+            <div class="form-group">
+              <label for="supplier-name">اسم المورّد</label>
+              <input type="text" id="supplier-name" required />
+            </div>
+
+            <div class="form-group">
+              <label for="supplier-phone">رقم الهاتف (مع رمز الدولة)</label>
+              <input
+                type="text"
+                id="supplier-phone"
+                placeholder="e.g., 9647701234567"
+              />
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="submit" id="save-supplier-btn" class="primary-action">
+              حفظ المورّد
+            </button>
+            <button
+              type="button"
+              id="cancel-edit-supplier-btn"
+              class="view-hidden"
+            >
+              إلغاء التعديل
+            </button>
+          </div>
+        </form>
+      </div>
+    </dialog>
 
     <dialog id="archive-browser-modal">
-        <div class="archive-browser-content">
-            <div class="archive-header">
-                <h3>أرشيف المبيعات</h3>
-                <button id="close-archive-browser-btn" class="icon-btn" aria-label="إغلاق">
-                    <span class="material-symbols-outlined">close</span>
-              
-                 </button>
-            </div>
-            <div id="archive-list-container" class="archive-list-container">
-                <p>جاري تحميل قائمة الأرشيف...</p>
-            </div>
-            <div id="archive-details-container" class="archive-details-container">
-                </div>
+      <div class="archive-browser-content">
+        <div class="archive-header">
+          <h3>أرشيف المبيعات</h3>
+          <button
+            id="close-archive-browser-btn"
+            class="icon-btn"
+            aria-label="إغلاق"
+          >
+            <span class="material-symbols-outlined">close</span>
+          </button>
         </div>
-   
-     </dialog>
+        <div id="archive-list-container" class="archive-list-container">
+          <p>جاري تحميل قائمة الأرشيف...</p>
+        </div>
+        <div
+          id="archive-details-container"
+          class="archive-details-container"
+        ></div>
+      </div>
+    </dialog>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script type="module" src="js/main.js"></script>
-</body>
+  </body>
 </html>
