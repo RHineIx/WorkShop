@@ -469,41 +469,46 @@ async function handleRestoreBackup(event) {
     }
 }
 
-function setupEventListeners() {
-    const elements = ui.getDOMElements();
+// --- EVENT LISTENER SETUP ---
+
+/**
+ * Attaches event listeners for general UI controls like theme and currency.
+ * @param {object} elements - A map of DOM elements from ui.getDOMElements().
+ */
+function setupGeneralListeners(elements) {
     elements.themeToggleBtn.addEventListener('click', () => ui.setTheme(document.body.classList.contains('theme-light') ? 'dark' : 'light'));
-    elements.addItemBtn.addEventListener('click', () => {
-        ui.openItemModal();
-        const existingSkus = new Set(appState.inventory.items.map(item => item.sku));
-        document.getElementById('item-sku').value = generateUniqueSKU(existingSkus);
-    });
-    elements.syncSettingsBtn.addEventListener('click', ui.populateSyncModal);
     elements.currencyToggleBtn.addEventListener('click', () => {
         appState.activeCurrency = appState.activeCurrency === 'IQD' ? 'USD' : 'IQD';
         localStorage.setItem('inventoryAppCurrency', appState.activeCurrency);
         ui.updateCurrencyDisplay();
     });
+}
+
+/**
+ * Attaches event listeners for view toggling (inventory vs. dashboard).
+ * @param {object} elements - A map of DOM elements.
+ */
+function setupViewToggleListeners(elements) {
     elements.inventoryToggleBtn.addEventListener('click', () => ui.toggleView('inventory'));
     elements.dashboardToggleBtn.addEventListener('click', () => ui.toggleView('dashboard'));
-    elements.timeFilterControls.addEventListener('click', (e) => {
-        const button = e.target.closest('.time-filter-btn');
-        if (button) {
-            appState.dashboardPeriod = button.dataset.period;
-            elements.timeFilterControls.querySelector('.active').classList.remove('active');
-            button.classList.add('active');
-            ui.renderDashboard();
-        }
-    });
+}
+
+/**
+ * Attaches event listeners for inventory-specific controls.
+ * @param {object} elements - A map of DOM elements.
+ */
+function setupInventoryListeners(elements) {
     elements.inventoryGrid.addEventListener('click', (e) => {
-        const detailsBtn = e.target.closest('.details-btn');
         const sellBtn = e.target.closest('.sell-btn');
         const card = e.target.closest('.product-card');
         if (!card) return;
+
         const itemId = card.dataset.id;
+        const detailsBtn = e.target.closest('.details-btn');
+
         if (detailsBtn) {
             ui.openDetailsModal(itemId);
-        }
-        if (sellBtn) {
+        } else if (sellBtn) {
             const item = appState.inventory.items.find(i => i.id === itemId);
             if (item && item.quantity > 0) {
                 ui.openSaleModal(itemId);
@@ -512,6 +517,81 @@ function setupEventListeners() {
             }
         }
     });
+
+    elements.searchBar.addEventListener('input', (e) => {
+        appState.searchTerm = e.target.value;
+        ui.filterAndRenderItems();
+    });
+
+    elements.statsContainer.addEventListener('click', (e) => {
+        const card = e.target.closest('.stat-card');
+        if (!card) return;
+        appState.searchTerm = '';
+        elements.searchBar.value = '';
+        if (card.classList.contains('low-stock-alert')) {
+            appState.activeFilter = (appState.activeFilter === 'low_stock') ? 'all' : 'low_stock';
+        } else {
+            appState.activeFilter = 'all';
+            appState.selectedCategory = 'all';
+            ui.renderCategoryFilter();
+        }
+        ui.filterAndRenderItems();
+    });
+
+    elements.categoryFilterBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        elements.categoryFilterDropdown.classList.toggle('show');
+    });
+
+    elements.categoryFilterDropdown.addEventListener('click', (e) => {
+        const categoryItem = e.target.closest('.category-item');
+        if (categoryItem) {
+            appState.selectedCategory = categoryItem.dataset.category;
+            ui.filterAndRenderItems();
+            ui.renderCategoryFilter();
+            elements.categoryFilterDropdown.classList.remove('show');
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!elements.searchContainer.contains(e.target)) {
+            elements.categoryFilterDropdown.classList.remove('show');
+        }
+    });
+}
+
+/**
+ * Attaches event listeners for all modals in the application.
+ * @param {object} elements - A map of DOM elements.
+ */
+function setupModalListeners(elements) {
+    // Item Modal
+    elements.addItemBtn.addEventListener('click', () => {
+        ui.openItemModal();
+        const existingSkus = new Set(appState.inventory.items.map(item => item.sku));
+        document.getElementById('item-sku').value = generateUniqueSKU(existingSkus);
+    });
+    elements.itemForm.addEventListener('submit', handleItemFormSubmit);
+    elements.cancelItemBtn.addEventListener('click', () => elements.itemModal.close());
+    elements.imageUploadInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            appState.selectedImageFile = file;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                elements.imagePreview.src = event.target.result;
+                elements.imagePreview.classList.remove('image-preview-hidden');
+                elements.imagePlaceholder.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    elements.regenerateSkuBtn.addEventListener('click', () => {
+        const existingSkus = new Set(appState.inventory.items.map(item => item.sku));
+        document.getElementById('item-sku').value = generateUniqueSKU(existingSkus);
+    });
+
+    // Details Modal
     elements.detailsIncreaseBtn.addEventListener('click', () => {
         const item = appState.inventory.items.find(i => i.id === appState.currentItemId);
         if (item) {
@@ -615,44 +695,8 @@ function setupEventListeners() {
             }
         }
     });
-    elements.searchBar.addEventListener('input', (e) => {
-        appState.searchTerm = e.target.value;
-        ui.filterAndRenderItems();
-    });
-    elements.statsContainer.addEventListener('click', (e) => {
-        const card = e.target.closest('.stat-card');
-        if (!card) return;
-        appState.searchTerm = '';
-        elements.searchBar.value = '';
-        if (card.classList.contains('low-stock-alert')) {
-            appState.activeFilter = (appState.activeFilter === 'low_stock') ? 'all' : 'low_stock';
-        } else {
-            appState.activeFilter = 'all';
-            appState.selectedCategory = 'all';
-            ui.renderCategoryFilter();
-        }
-        ui.filterAndRenderItems();
-    });
-    elements.categoryFilterBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        elements.categoryFilterDropdown.classList.toggle('show');
-    });
-    elements.categoryFilterDropdown.addEventListener('click', (e) => {
-        const categoryItem = e.target.closest('.category-item');
-        if (categoryItem) {
-            appState.selectedCategory = categoryItem.dataset.category;
-            ui.filterAndRenderItems();
-            ui.renderCategoryFilter();
-            elements.categoryFilterDropdown.classList.remove('show');
-        }
-    });
-    document.addEventListener('click', (e) => {
-        if (!elements.searchContainer.contains(e.target)) {
-            elements.categoryFilterDropdown.classList.remove('show');
-        }
-    });
-    elements.itemForm.addEventListener('submit', handleItemFormSubmit);
-    elements.cancelItemBtn.addEventListener('click', () => elements.itemModal.close());
+
+    // Sale Modal
     elements.saleForm.addEventListener('submit', handleSaleFormSubmit);
     elements.cancelSaleBtn.addEventListener('click', () => elements.saleModal.close());
     elements.saleIncreaseBtn.addEventListener('click', () => {
@@ -674,19 +718,9 @@ function setupEventListeners() {
     });
     elements.saleQuantityInput.addEventListener('input', ui.updateSaleTotal);
     document.getElementById('sale-price').addEventListener('input', ui.updateSaleTotal);
-    elements.imageUploadInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            appState.selectedImageFile = file;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                elements.imagePreview.src = event.target.result;
-                elements.imagePreview.classList.remove('image-preview-hidden');
-                elements.imagePlaceholder.style.display = 'none';
-            };
-            reader.readAsDataURL(file);
-        }
-    });
+
+    // Sync Modal & Maintenance
+    elements.syncSettingsBtn.addEventListener('click', ui.populateSyncModal);
     elements.cancelSyncBtn.addEventListener('click', () => elements.syncModal.close());
     elements.syncForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -703,9 +737,10 @@ function setupEventListeners() {
     elements.downloadBackupBtn.addEventListener('click', handleDownloadBackup);
     elements.restoreBackupInput.addEventListener('change', handleRestoreBackup);
     document.getElementById('manual-archive-btn').addEventListener('click', handleManualArchive);
+    
+    // Archive Browser Modal
     document.getElementById('view-archives-btn').addEventListener('click', openArchiveBrowser);
-    const archiveListContainer = document.getElementById('archive-list-container');
-    archiveListContainer.addEventListener('click', async (e) => {
+    document.getElementById('archive-list-container').addEventListener('click', async (e) => {
         const deleteButton = e.target.closest('.archive-delete-btn');
         if (deleteButton) {
             e.stopPropagation();
@@ -747,11 +782,29 @@ function setupEventListeners() {
         }
     });
     document.getElementById('close-archive-browser-btn').addEventListener('click', () => document.getElementById('archive-browser-modal').close());
-    elements.regenerateSkuBtn.addEventListener('click', () => {
-        const existingSkus = new Set(appState.inventory.items.map(item => item.sku));
-        document.getElementById('item-sku').value = generateUniqueSKU(existingSkus);
+}
+
+/**
+ * Attaches event listeners for the dashboard controls.
+ * @param {object} elements - A map of DOM elements.
+ */
+function setupDashboardListeners(elements) {
+    elements.timeFilterControls.addEventListener('click', (e) => {
+        const button = e.target.closest('.time-filter-btn');
+        if (button) {
+            appState.dashboardPeriod = button.dataset.period;
+            elements.timeFilterControls.querySelector('.active').classList.remove('active');
+            button.classList.add('active');
+            ui.renderDashboard();
+        }
     });
-    // --- Supplier Event Listeners ---
+}
+
+/**
+ * Attaches event listeners for the supplier management UI.
+ * @param {object} elements - A map of DOM elements.
+ */
+function setupSupplierListeners(elements) {
     elements.manageSuppliersBtn.addEventListener('click', () => {
         ui.renderSupplierList();
         elements.supplierManagerModal.showModal();
@@ -783,6 +836,20 @@ function setupEventListeners() {
         elements.supplierFormTitle.textContent = 'إضافة مورّد جديد';
         elements.cancelEditSupplierBtn.classList.add('view-hidden');
     });
+}
+
+/**
+ * Main function to attach all event listeners for the application.
+ */
+function setupEventListeners() {
+    const elements = ui.getDOMElements();
+    
+    setupGeneralListeners(elements);
+    setupViewToggleListeners(elements);
+    setupInventoryListeners(elements);
+    setupModalListeners(elements);
+    setupDashboardListeners(elements);
+    setupSupplierListeners(elements);
 }
 
 // --- INITIALIZATION ---
