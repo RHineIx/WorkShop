@@ -18,39 +18,3 @@ body {
     color: var(--text-primary);
     transition: background-color var(--transition-speed) ease;
 }
-
-/* --- Print Styles --- */
-@media print {
-    body,
-    .modal-actions,
-    .details-actions,
-    .close-modal-btn {
-        visibility: hidden;
-    }
-
-    #barcode-display,
-    #barcode-display * {
-        visibility: visible;
-    }
-
-    #barcode-display {
-        position: absolute;
-        left: 0;
-        top: 0;
-        margin: 0;
-        padding: 5mm;
-        width: 100%;
-        height: auto;
-        border: none;
-    }
-
-    dialog {
-        box-shadow: none;
-        border: none;
-    }
-
-    @page {
-        size: auto;
-        margin: 0;
-    }
-}

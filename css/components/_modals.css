@@ -174,19 +174,6 @@ dialog::backdrop {
     line-height: 1.6;
     white-space: pre-wrap;
 }
-#barcode-modal {
-    max-width: 320px;
-}
-#barcode-display {
-    padding: var(--spacing-lg);
-    background: white;
-    width: 100%;
-    text-align: center;
-}
-#barcode-svg {
-    max-width: 100%;
-    height: auto;
-}
 #sale-form {
     display: flex;
     flex-direction: column;

@@ -267,9 +267,6 @@
           <button id="details-edit-btn" class="action-btn-details">
             <span class="material-symbols-outlined">edit</span> تعديل
           </button>
-          <button id="details-barcode-btn" class="action-btn-details">
-            <span class="material-symbols-outlined">qr_code_2</span> باركود
-          </button>
           <button id="details-delete-btn" class="action-btn-details danger">
             <span class="material-symbols-outlined">delete</span> حذف
           </button>
@@ -502,22 +499,6 @@
       </form>
     </dialog>
 
-    <dialog id="barcode-modal">
-      <div class="barcode-modal-content">
-        <h3 id="barcode-item-name"></h3>
-        <div id="barcode-display">
-          <svg id="barcode-svg"></svg>
-        </div>
-        <div class="modal-actions">
-          <button id="download-barcode-btn" class="primary-action">
-            <span class="material-symbols-outlined">download</span> تنزيل PNG
-          </button>
-
-          <button id="close-barcode-btn" type="button">إغلاق</button>
-        </div>
-      </div>
-    </dialog>
-
     <dialog id="sale-modal">
       <form id="sale-form">
         <h3>تأكيد عملية البيع</h3>
@@ -650,7 +631,6 @@
     </dialog>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script type="module" src="js/main.js"></script>
   </body>
 </html>

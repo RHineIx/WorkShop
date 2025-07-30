@@ -615,8 +615,6 @@ function setupEventListeners() {
             }
         }
     });
-    elements.detailsBarcodeBtn.addEventListener('click', () => ui.openBarcodeModal(appState.currentItemId));
-    elements.downloadBarcodeBtn.addEventListener('click', () => ui.downloadBarcode());
     elements.searchBar.addEventListener('input', (e) => {
         appState.searchTerm = e.target.value;
         ui.filterAndRenderItems();
@@ -701,7 +699,6 @@ function setupEventListeners() {
         elements.syncModal.close();
         await initializeApp();
     });
-    elements.closeBarcodeBtn.addEventListener('click', () => elements.barcodeModal.close());
     elements.cleanupImagesBtn.addEventListener('click', handleImageCleanup);
     elements.downloadBackupBtn.addEventListener('click', handleDownloadBackup);
     elements.restoreBackupInput.addEventListener('change', handleRestoreBackup);

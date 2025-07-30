@@ -45,7 +45,6 @@ const elements = {
     detailsIncreaseBtn: document.getElementById('details-increase-btn'),
     detailsNotesContent: document.getElementById('details-notes-content'),
     detailsEditBtn: document.getElementById('details-edit-btn'),
-    detailsBarcodeBtn: document.getElementById('details-barcode-btn'),
     detailsDeleteBtn: document.getElementById('details-delete-btn'),
     detailsCostIqd: document.getElementById('details-cost-iqd'),
     detailsSellIqd: document.getElementById('details-sell-iqd'),
@@ -86,13 +85,6 @@ const elements = {
     cleanupImagesBtn: document.getElementById('cleanup-images-btn'),
     downloadBackupBtn: document.getElementById('download-backup-btn'),
     restoreBackupInput: document.getElementById('restore-backup-input'),
-     
-    // Barcode Modal
-    barcodeModal: document.getElementById('barcode-modal'),
-    barcodeItemName: document.getElementById('barcode-item-name'),
-    barcodeSvg: document.getElementById('barcode-svg'),
-    downloadBarcodeBtn: document.getElementById('download-barcode-btn'),
-    closeBarcodeBtn: document.getElementById('close-barcode-btn'),
     
     // Supplier UI Elements
     supplierManagerModal: document.getElementById('supplier-manager-modal'),
@@ -535,56 +527,6 @@ export const openSaleModal = (itemId) => {
     document.getElementById('sale-date').value = `${year}-${month}-${day}`;
     elements.saleModal.showModal();
     updateSaleTotal(); 
-};
-
-export const openBarcodeModal = (itemId) => {
-    const item = appState.inventory.items.find(i => i.id === itemId);
-    if (item && item.sku) {
-        appState.currentItemId = item.id;
-        elements.barcodeItemName.textContent = item.name;
-        try {
-            JsBarcode(elements.barcodeSvg, item.sku, {
-                format: "CODE128", lineColor: "#000", width: 2, height: 100, displayValue: true
-            });
-            elements.barcodeModal.showModal();
-        } catch (error) {
-            console.error("Barcode generation error:", error);
-            alert("خطأ في إنشاء الباركود. تأكد من أن SKU صالح.");
-        }
-    } else {
-        alert("هذا المنتج لا يحتوي على SKU لإنشاء باركود.");
-    }
-};
-
-export const downloadBarcode = () => {
-    const item = appState.inventory.items.find(i => i.id === appState.currentItemId);
-    if (!item) return;
-    const svg = elements.barcodeSvg;
-    const serializer = new XMLSerializer();
-    const svgString = serializer.serializeToString(svg);
-    const scale = 5;
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const img = new Image();
-    const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
-    const url = URL.createObjectURL(svgBlob);
-    img.onload = function () {
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.scale(scale, scale);
-        ctx.drawImage(img, 0, 0);
-        const pngUrl = canvas.toDataURL("image/png");
-        const downloadLink = document.createElement("a");
-        downloadLink.href = pngUrl;
-        downloadLink.download = `barcode_${item.sku}.png`;
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-        URL.revokeObjectURL(url);
-    };
-    img.src = url;
 };
 
 export const populateSyncModal = () => {
