@@ -52,7 +52,7 @@
 }
 
 .remote-card .car-title .brand-logo {
-    font-size: 28px;
+    font-size: 38px;
 }
 
 .remote-card .car-title h3 {
@@ -247,7 +247,7 @@
     font-weight: 700;
 }
 .brand-filter-chip .brand-logo {
-    font-size: 18px;
+    font-size: 22px;
 }
 
 /* Modal form styles remain largely unchanged but are included for context */
