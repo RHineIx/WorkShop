@@ -1,6 +1,7 @@
 /* --- All Form & Input Styles --- */
 
-#search-bar {
+#search-bar,
+#remote-finder-search-input { /* Added remote finder search */
     width: 100%;
     padding: 12px;
     font-size: 16px;
@@ -8,13 +9,18 @@
     border-radius: var(--border-radius-sm);
     background-color: var(--surface-color);
     color: var(--text-primary);
-    padding-left: 48px; /* <-- The corrected rule is now included here */
 }
+
+#search-bar {
+    padding-left: 48px;
+}
+
 
 #item-form label,
 #sync-form label,
 #sale-form label,
-#supplier-form label {
+#supplier-form label,
+#remote-finder-form label { /* Added remote finder form */
     margin-bottom: var(--spacing-sm);
     display: block;
     font-size: 14px;
@@ -24,10 +30,13 @@
 
 #item-form input,
 #item-form textarea,
+#item-form select,
 #sync-form input,
 #sale-form input,
 #sale-form textarea,
-#supplier-form input {
+#supplier-form input,
+#remote-finder-form input, /* Added remote finder form */
+#remote-finder-form select { /* Added remote finder form */
     width: 100%;
     padding: 12px;
     font-family: var(--font-family);
@@ -39,10 +48,26 @@
     box-sizing: border-box;
     resize: vertical;
     margin-bottom: var(--spacing-md);
+    transition: border-color 0.2s;
 }
 
+#item-form input:focus,
+#item-form textarea:focus,
+#item-form select:focus,
+#sync-form input:focus,
+#sale-form input:focus,
+#sale-form textarea:focus,
+#supplier-form input:focus,
+#remote-finder-form input:focus,
+#remote-finder-form select:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+
 #item-form textarea,
-#sale-form textarea {
+#sale-form textarea,
+#remote-finder-form textarea {
     min-height: 80px;
     width: 100%;
 }

@@ -37,22 +37,15 @@ const toBase64 = file => new Promise((resolve, reject) => {
     reader.onerror = error => reject(error);
 });
 
-// =================================================================
-// REFACTORED: Centralized function for fetching JSON files from GitHub.
-// This new helper function encapsulates the logic for fetching and decoding
-// any JSON file, handling non-existent files gracefully.
-// =================================================================
 async function fetchJsonFromGitHub(filePath, defaultValue) {
     if (!appState.syncConfig) return null;
     const { username, repo, pat } = appState.syncConfig;
     const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${filePath}`;
-
     try {
         const response = await fetch(apiUrl, {
             headers: { 'Authorization': `token ${pat}` },
             cache: 'no-cache'
         });
-
         if (response.status === 404) {
             console.log(`${filePath} not found. A new one will be created on save.`);
             return { data: defaultValue, sha: null };
@@ -68,14 +61,11 @@ async function fetchJsonFromGitHub(filePath, defaultValue) {
         return { data: parsedData, sha: fileData.sha };
     } catch (error) {
         console.error(`Error fetching ${filePath}:`, error);
-        throw error; // Re-throw the error to be handled by the caller
+        throw error;
     }
 }
 
 
-// =================================================================
-// REFACTORED: Centralized function for saving JSON files to GitHub.
-// =================================================================
 async function saveJsonToGitHub(filePath, dataObject, commitMessage) {
     if (!appState.syncConfig) throw new Error("Sync config is not set.");
     const { username, repo, pat } = appState.syncConfig;
@@ -97,13 +87,11 @@ async function saveJsonToGitHub(filePath, dataObject, commitMessage) {
         content: content,
         sha: latestSha,
     };
-
     const response = await fetch(apiUrl, {
         method: 'PUT',
         headers: { 'Authorization': `token ${pat}` },
         body: JSON.stringify(body)
     });
-
     if (response.status === 409) {
         throw new ConflictError(`Conflict Error: The file '${filePath}' was updated elsewhere.`);
     }
@@ -162,7 +150,6 @@ export const uploadImageToGitHub = async (imageBlob, originalFileName) => {
     const data = await response.json();
     return data.content.path;
 };
-
 /**
  * REFACTORED: Fetches the main inventory.json file.
  */
@@ -220,6 +207,24 @@ export const saveSuppliers = async () => {
         'suppliers.json',
         appState.suppliers,
         'Update suppliers data'
+    );
+};
+
+/**
+ * Fetches the remote_finder_db.json file.
+ */
+export const fetchRemoteFinderDB = async () => {
+    return await fetchJsonFromGitHub('remote_finder_db.json', []);
+};
+
+/**
+ * Saves the remote finder database.
+ */
+export const saveRemoteFinderDB = async () => {
+    appState.remoteFinderDBFileSha = await saveJsonToGitHub(
+        'remote_finder_db.json',
+        appState.remoteFinderDB,
+        'Update remote finder database'
     );
 };
 

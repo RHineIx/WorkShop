@@ -22,10 +22,12 @@ const elements = {
     currencyToggleBtn: document.getElementById('currency-toggle-btn'),
     inventoryToggleBtn: document.getElementById('inventory-toggle-btn'),
     dashboardToggleBtn: document.getElementById('dashboard-toggle-btn'),
+    remoteFinderToggleBtn: document.getElementById('remote-finder-toggle-btn'),
 
     // View Containers
     inventoryViewContainer: document.getElementById('inventory-view-container'),
     dashboardViewContainer: document.getElementById('dashboard-view-container'),
+    remoteFinderViewContainer: document.getElementById('remote-finder-view-container'),
 
     // Dashboard Elements
     timeFilterControls: document.getElementById('time-filter-controls'),
@@ -100,12 +102,29 @@ const elements = {
     detailsSupplierName: document.getElementById('details-supplier-name'),
     detailsSupplierPhone: document.getElementById('details-supplier-phone'),
     detailsSupplierWhatsapp: document.getElementById('details-supplier-whatsapp'),
+
+    // === FIX: Add all missing Remote Finder elements ===
+    addNewRemoteFinderBtn: document.getElementById('add-new-remote-finder-btn'),
+    remoteFinderModal: document.getElementById('remote-finder-modal'),
+    closeRemoteFinderModalBtn: document.getElementById('close-remote-finder-modal-btn'),
+    cancelRemoteFinderModalBtn: document.getElementById('cancel-remote-finder-modal-btn'),
+    remoteFinderForm: document.getElementById('remote-finder-form'),
+    remoteFinderResultsArea: document.getElementById('remote-finder-results-area'),
+    remoteFinderSearchInput: document.getElementById('remote-finder-search-input'),
+    remoteFinderModalTitle: document.getElementById('remote-finder-modal-title'),
+    remoteCarIdInput: document.getElementById('remote-car-id'),
+    addRemoteSectionBtn: document.getElementById('add-remote-section-btn'),
+    breadcrumbs: document.getElementById('breadcrumbs'),
+    makesDatalist: document.getElementById('makes-list'),
+    remotesContainerModal: document.getElementById('remotes-container-modal'),
+    // ===================================================
 };
 
 export function getDOMElements() {
     return elements;
 }
 
+// ... (دوال renderCategoryFilter, populateCategoryDatalist, ICONS, showStatus تبقى كما هي)
 export function renderCategoryFilter() {
     const categories = [...new Set(appState.inventory.items.map(item => item.category).filter(Boolean))];
     elements.categoryFilterDropdown.innerHTML = '';
@@ -150,8 +169,6 @@ const ICONS = {
 
 export const showStatus = (message, type, options = {}) => {
     const { duration = 4000, showRefreshButton = false } = options;
-    
-    // If a new status is shown, find and remove any existing 'syncing' toast.
     const existingSyncingToast = elements.toastContainer.querySelector('.toast--syncing');
     if (existingSyncingToast) {
         existingSyncingToast.classList.remove('show');
@@ -181,12 +198,10 @@ export const showStatus = (message, type, options = {}) => {
     }
 
     elements.toastContainer.appendChild(toast);
-
     setTimeout(() => {
         toast.classList.add('show');
     }, 10);
 
-    // Set a timeout to remove the toast, but not for 'syncing' types.
     if (type !== 'syncing' && !showRefreshButton) {
         setTimeout(() => {
             toast.classList.remove('show');
@@ -195,18 +210,37 @@ export const showStatus = (message, type, options = {}) => {
     }
 };
 
+
 export const toggleView = (viewToShow) => {
     appState.currentView = viewToShow;
     const isInventory = viewToShow === 'inventory';
+    const isDashboard = viewToShow === 'dashboard';
+    const isRemoteFinder = viewToShow === 'remote_finder';
+
     elements.inventoryViewContainer.classList.toggle('view-hidden', !isInventory);
-    elements.dashboardViewContainer.classList.toggle('view-hidden', isInventory);
-    elements.inventoryToggleBtn.classList.toggle('active-view-btn', isInventory);
-    elements.dashboardToggleBtn.classList.toggle('active-view-btn', !isInventory);
-    if (!isInventory) {
+    elements.dashboardViewContainer.classList.toggle('view-hidden', !isDashboard);
+    elements.remoteFinderViewContainer.classList.toggle('view-hidden', !isRemoteFinder);
+
+    elements.inventoryToggleBtn.classList.remove('active-view-btn');
+    elements.dashboardToggleBtn.classList.remove('active-view-btn');
+    elements.remoteFinderToggleBtn.classList.remove('active-view-btn');
+    
+    if (isInventory) {
+        elements.inventoryToggleBtn.classList.add('active-view-btn');
+    } else if (isDashboard) {
+        elements.dashboardToggleBtn.classList.add('active-view-btn');
+    } else if (isRemoteFinder) {
+        elements.remoteFinderToggleBtn.classList.add('active-view-btn');
+    }
+
+    if (isDashboard) {
         renderDashboard();
+    } else if (isRemoteFinder) {
+        renderRemoteFinder();
     }
 };
 
+// ... (بقية الدوال حتى openRemoteFinderModal تبقى كما هي)
 export const renderDashboard = () => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -275,7 +309,7 @@ export function renderInventorySkeleton(count = 8) {
                 <div class="skeleton skeleton-text"></div>
                 <div class="skeleton skeleton-text w-75"></div>
                  <div class="skeleton skeleton-text w-50" style="margin-top: 12px;"></div>
-           </div>
+            </div>
         `;
         elements.inventoryGrid.appendChild(skeletonCard);
     }
@@ -334,7 +368,7 @@ export function renderInventory(itemsToRender) {
                         <button class="icon-btn sell-btn" title="بيع"><span class="material-symbols-outlined">shopping_cart</span></button>
                         <button class="icon-btn details-btn" title="عرض التفاصيل"><span class="material-symbols-outlined">more_vert</span></button>
                     </div>
-                   </div>
+                </div>
             </div>`;
         fragment.appendChild(card);
         if (item.imagePath) {
@@ -367,7 +401,7 @@ export const updateCurrencyDisplay = () => {
         if (elements.detailsModal.open && appState.currentItemId) {
             openDetailsModal(appState.currentItemId);
         }
-    } else {
+    } else if (appState.currentView === 'dashboard') {
         renderDashboard();
     }
 };
@@ -391,7 +425,7 @@ export function renderSupplierList() {
                     <span class="material-symbols-outlined">edit</span>
                 </button>
                 <button class="icon-btn danger-btn delete-supplier-btn" data-id="${supplier.id}" title="حذف المورّد">
-                 <span class="material-symbols-outlined">delete</span>
+                    <span class="material-symbols-outlined">delete</span>
                 </button>
             </div>
         `;
@@ -537,3 +571,205 @@ export const populateSyncModal = () => {
     }
     elements.syncModal.showModal();
 };
+
+
+// --- Remote Finder UI Functions ---
+
+function renderBreadcrumbs() {
+    if (appState.remoteFinderView === 'brands') {
+        elements.breadcrumbs.innerHTML = `<span class="crumb-link" data-target="brands">الكل</span>`;
+    } else {
+        elements.breadcrumbs.innerHTML = `<span class="crumb-link" data-target="brands">الكل</span> <span class="crumb-separator">&gt;</span> <span>${sanitizeHTML(appState.selectedBrand)}</span>`;
+    }
+}
+
+function renderBrandsView() {
+    const searchTerm = elements.remoteFinderSearchInput.value.toLowerCase();
+    const uniqueMakes = [...new Set(appState.remoteFinderDB.map(car => car.make))];
+    
+    const filteredMakes = uniqueMakes.filter(make => make.toLowerCase().includes(searchTerm));
+
+    if (filteredMakes.length === 0) {
+        elements.remoteFinderResultsArea.innerHTML = '<p class="empty-state">لا توجد ماركات تطابق بحثك.</p>';
+        return;
+    }
+    
+    elements.remoteFinderResultsArea.innerHTML = `<div class="brand-grid">` + filteredMakes.map(make => `
+        <div class="brand-card" data-brand="${sanitizeHTML(make)}">
+            <iconify-icon class="brand-logo" icon="cbi:${sanitizeHTML(make.toLowerCase().replace(/\s/g, ''))}"></iconify-icon>
+            <h3>${sanitizeHTML(make)}</h3>
+        </div>
+    `).join('') + `</div>`;
+}
+
+function renderCarsView() {
+    const searchTerm = elements.remoteFinderSearchInput.value.toLowerCase();
+    const carsOfBrand = appState.remoteFinderDB.filter(car => car.make === appState.selectedBrand);
+
+    const filteredCars = carsOfBrand.filter(car => {
+        if (!searchTerm) return true;
+        const carInfo = `${car.make} ${car.model} ${car.yearStart} ${car.yearEnd}`.toLowerCase();
+        if (carInfo.includes(searchTerm)) return true;
+        return (car.remotes || []).some(remote => {
+            const remoteInfo = `${remote.type} ${remote.frequency} ${remote.fccId}`.toLowerCase();
+            if (remoteInfo.includes(searchTerm)) return true;
+            return Object.values(remote.partNumbers).some(code => code.toLowerCase().includes(searchTerm));
+        });
+    });
+
+    if (filteredCars.length === 0) {
+        elements.remoteFinderResultsArea.innerHTML = '<p class="empty-state">لا توجد سيارات تطابق بحثك في هذه الماركة.</p>';
+        return;
+    }
+
+    elements.remoteFinderResultsArea.innerHTML = `<div class="results-grid">` + filteredCars.map(car => {
+        const yearRange = (car.yearStart && car.yearEnd) ? `${car.yearStart} - ${car.yearEnd}` : (car.yearStart || '');
+        const country = car.country ? `(${sanitizeHTML(car.country)})` : '';
+        const remotesHTML = (car.remotes || []).map(remote => {
+            const partNumbersHTML = Object.entries(remote.partNumbers).map(([vendor, code]) => 
+                `<div class="part-number ${vendor.toLowerCase()}">
+                    <span class="vendor">${sanitizeHTML(vendor.toUpperCase())}</span>
+                    <span class="code">${sanitizeHTML(code)}</span>
+                    <div class="actions">
+                        <a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(code)}" target="_blank" class="icon-btn" title="بحث عن صورة">
+                            <span class="material-symbols-outlined">image_search</span>
+                        </a>
+                        <button class="icon-btn copy-btn" data-code="${sanitizeHTML(code)}" title="نسخ">
+                            <span class="material-symbols-outlined">content_copy</span>
+                        </button>
+                    </div>
+                </div>`
+            ).join('');
+            return `
+                <div class="remote-details">
+                    <h4>${sanitizeHTML(remote.type)}</h4>
+                    <div class="info-grid">
+                        <p><strong>التردد:</strong> ${sanitizeHTML(remote.frequency)}</p>
+                        <p><strong>FCC ID:</strong> ${sanitizeHTML(remote.fccId)}</p>
+                    </div>
+                    <div class="part-numbers">${partNumbersHTML}</div>
+                    ${remote.notes ? `<p class="notes"><strong>ملاحظات:</strong> ${sanitizeHTML(remote.notes)}</p>` : ''}
+                </div>`;
+        }).join('');
+        return `
+            <div class="remote-card" data-id="${car.id}">
+                <div class="remote-card-header">
+                    <h3>${sanitizeHTML(car.make)} ${sanitizeHTML(car.model)}</h3>
+                    <div class="header-actions">
+                        <span>${yearRange} ${country}</span>
+                        <button class="icon-btn edit-btn" title="تعديل"><span class="material-symbols-outlined">edit</span></button>
+                        <button class="icon-btn danger delete-btn" title="حذف"><span class="material-symbols-outlined">delete</span></button>
+                    </div>
+                </div>
+                <div class="remote-card-body">${remotesHTML}</div>
+            </div>`;
+    }).join('') + `</div>`;
+}
+
+export function renderRemoteFinder() {
+    renderBreadcrumbs();
+    if (appState.remoteFinderView === 'brands') {
+        renderBrandsView();
+    } else {
+        renderCarsView();
+    }
+}
+
+let remoteCounter = 0;
+let partNumberCounter = 0;
+
+export function addPartNumberEntry(container, pnData = {}) {
+    partNumberCounter++;
+    const entry = document.createElement('div');
+    entry.className = 'part-number-entry';
+    const vendor = pnData.vendor || 'oem';
+    const code = pnData.code || '';
+    entry.innerHTML = `
+        <div class="form-group">
+            <label for="pn-vendor-${partNumberCounter}">الشركة</label>
+            <select id="pn-vendor-${partNumberCounter}" class="pn-vendor">
+                <option value="oem" ${vendor === 'oem' ? 'selected' : ''}>OEM</option>
+                <option value="keydiy" ${vendor === 'keydiy' ? 'selected' : ''}>Keydiy</option>
+                <option value="xhorse" ${vendor === 'xhorse' ? 'selected' : ''}>Xhorse</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="pn-code-${partNumberCounter}">الكود</label>
+            <input type="text" id="pn-code-${partNumberCounter}" class="pn-code" placeholder="أدخل رقم القطعة..." value="${sanitizeHTML(code)}">
+        </div>
+        <button type="button" class="icon-btn danger remove-part-btn" style="align-self: end; margin-bottom: 16px;">
+            <span class="material-symbols-outlined">remove</span>
+        </button>`;
+    container.appendChild(entry);
+}
+
+export function addRemoteSection(remoteData = {}) {
+    remoteCounter++;
+    const container = elements.remotesContainerModal;
+    const section = document.createElement('div');
+    section.className = 'remote-form-section';
+    section.innerHTML = `
+        <div class="form-section-header">
+            <h4>الريموت #${remoteCounter}</h4>
+            <button type="button" class="icon-btn danger remove-remote-btn">
+                <span class="material-symbols-outlined">delete</span>
+            </button>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="remote-type-${remoteCounter}">النوع</label>
+                <input type="text" id="remote-type-${remoteCounter}" class="remote-type" value="${sanitizeHTML(remoteData.type || '')}" placeholder="مفتاح ذكي...">
+            </div>
+            <div class="form-group">
+                <label for="remote-freq-${remoteCounter}">التردد</label>
+                <input type="text" id="remote-freq-${remoteCounter}" class="remote-frequency" value="${sanitizeHTML(remoteData.frequency || '')}" placeholder="315 MHz...">
+            </div>
+            <div class="form-group">
+                <label for="remote-fcc-${remoteCounter}">FCC ID</label>
+                <input type="text" id="remote-fcc-${remoteCounter}" class="remote-fccId" value="${sanitizeHTML(remoteData.fccId || '')}" placeholder="HYQ14FBA...">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="remote-notes-${remoteCounter}">ملاحظات</label>
+            <input type="text" id="remote-notes-${remoteCounter}" class="remote-notes" value="${sanitizeHTML(remoteData.notes || '')}">
+        </div>
+        <div class="part-numbers-container"></div>
+        <button type="button" class="add-btn add-part-number-btn">+ أضف رقم قطعة</button>`;
+    container.appendChild(section);
+    
+    const pnContainer = section.querySelector('.part-numbers-container');
+    if (remoteData.partNumbers && Object.keys(remoteData.partNumbers).length > 0) {
+        Object.entries(remoteData.partNumbers).forEach(([vendor, code]) => addPartNumberEntry(pnContainer, { vendor, code }));
+    } else {
+        addPartNumberEntry(pnContainer);
+    }
+}
+
+export function openRemoteFinderModal(carId = null) {
+    elements.remoteFinderForm.reset();
+    const uniqueMakes = [...new Set(appState.remoteFinderDB.map(car => car.make))];
+    elements.makesDatalist.innerHTML = uniqueMakes.map(make => `<option value="${sanitizeHTML(make)}">`).join('');
+    
+    elements.remotesContainerModal.innerHTML = '';
+    remoteCounter = 0;
+    partNumberCounter = 0;
+
+    if (carId) {
+        const car = appState.remoteFinderDB.find(c => c.id === carId);
+        if (!car) return;
+        elements.remoteFinderModalTitle.textContent = 'تعديل بيانات السيارة';
+        elements.remoteCarIdInput.value = car.id;
+        elements.remoteFinderForm.querySelector('#car-make').value = car.make;
+        elements.remoteFinderForm.querySelector('#car-model').value = car.model;
+        elements.remoteFinderForm.querySelector('#car-year-start').value = car.yearStart;
+        elements.remoteFinderForm.querySelector('#car-year-end').value = car.yearEnd;
+        elements.remoteFinderForm.querySelector('#car-country').value = car.country;
+        
+        (car.remotes || []).forEach(remoteData => addRemoteSection(remoteData));
+    } else {
+        elements.remoteFinderModalTitle.textContent = 'إضافة سيارة جديدة';
+        elements.remoteCarIdInput.value = '';
+        addRemoteSection(); 
+    }
+    elements.remoteFinderModal.showModal();
+}

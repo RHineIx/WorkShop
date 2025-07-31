@@ -36,12 +36,17 @@ function loadLocalData() {
     if(savedSuppliers) {
         appState.suppliers = JSON.parse(savedSuppliers);
     }
+    const savedRemoteFinderDB = localStorage.getItem('remoteFinderDB');
+    if(savedRemoteFinderDB) {
+        appState.remoteFinderDB = JSON.parse(savedRemoteFinderDB);
+    }
 }
 
 function saveLocalData() {
     localStorage.setItem('inventoryAppData', JSON.stringify(appState.inventory));
     localStorage.setItem('salesAppData', JSON.stringify(appState.sales));
     localStorage.setItem('suppliersAppData', JSON.stringify(appState.suppliers));
+    localStorage.setItem('remoteFinderDB', JSON.stringify(appState.remoteFinderDB));
 }
 
 
@@ -52,27 +57,20 @@ async function handleSaleFormSubmit(e) {
     const saveButton = document.getElementById('confirm-sale-btn');
     saveButton.disabled = true;
     ui.showStatus('التحقق من البيانات...', 'syncing');
-
     try {
-        // --- NEW: Check-First Logic ---
-        // 1. Fetch the latest version from GitHub before doing anything.
         const { sha: latestSha } = await api.fetchFromGitHub();
 
-        // 2. Compare the latest SHA with the one we have locally.
         if (latestSha !== appState.fileSha) {
-            // If they don't match, our data is stale. Abort the operation.
             ui.showStatus('البيانات غير محدّثة. تم تحديثها من جهاز آخر.', 'error', { showRefreshButton: true });
             saveButton.disabled = false;
             return;
         }
 
-        // --- If check passes, continue with the sale ---
         const itemId = document.getElementById('sale-item-id').value;
         const item = appState.inventory.items.find(i => i.id === itemId);
         const quantityToSell = parseInt(document.getElementById('sale-quantity').value, 10);
         const salePrice = parseFloat(document.getElementById('sale-price').value);
 
-        // Re-validate after getting confirmation that data is fresh
         if (!item || item.quantity < quantityToSell || quantityToSell <= 0) {
             ui.showStatus('خطأ في البيانات أو الكمية غير متوفرة.', 'error');
             saveButton.disabled = false;
@@ -80,11 +78,9 @@ async function handleSaleFormSubmit(e) {
         }
         
         ui.showStatus('جاري تسجيل البيع...', 'syncing');
-
-        // 3. Update local state
-        const originalQuantity = item.quantity; // Keep original quantity for rollback
+        const originalQuantity = item.quantity;
         item.quantity -= quantityToSell;
-        
+
         const saleRecord = {
             saleId: `sale_${Date.now()}`,
             itemId: item.id,
@@ -101,9 +97,6 @@ async function handleSaleFormSubmit(e) {
         appState.sales.push(saleRecord);
         ui.filterAndRenderItems();
 
-        // 4. Save to GitHub
-        // We wrap save operations in their own try...catch to handle potential network failures
-        // and roll back the local changes if the save fails.
         try {
             await api.saveToGitHub();
             await api.saveSales();
@@ -112,16 +105,14 @@ async function handleSaleFormSubmit(e) {
             ui.getDOMElements().saleModal.close();
             ui.showStatus('تم تسجيل البيع بنجاح!', 'success');
         } catch (saveError) {
-            // If saving fails (e.g., network error), revert local changes
             item.quantity = originalQuantity;
             appState.sales.pop();
             ui.filterAndRenderItems();
-            throw saveError; // Re-throw the error to be caught by the outer block
+            throw saveError;
         }
 
     } catch (error) {
-        // This will now catch check failures or save failures
-        if (!(error instanceof ConflictError)) { // ConflictError is already handled by the check
+        if (!(error instanceof ConflictError)) {
             ui.showStatus(`فشل تسجيل البيع: ${error.message}`, 'error');
         }
     } finally {
@@ -137,9 +128,7 @@ async function handleItemFormSubmit(e) {
     const saveButton = document.getElementById('save-item-btn');
     saveButton.disabled = true;
     ui.showStatus('التحقق من البيانات...', 'syncing');
-
     try {
-        // --- NEW: Check-First Logic ---
         const { data: latestInventory, sha: latestSha } = await api.fetchFromGitHub();
         if (latestSha !== appState.fileSha) {
             ui.showStatus('البيانات غير محدّثة. تم تحديثها من جهاز آخر.', 'error', { showRefreshButton: true });
@@ -148,8 +137,6 @@ async function handleItemFormSubmit(e) {
         }
         
         ui.showStatus('جاري الحفظ...', 'syncing');
-        
-        // Before making changes, update our local state to the latest version to avoid conflicts
         appState.inventory = latestInventory;
         appState.fileSha = latestSha;
 
@@ -192,7 +179,6 @@ async function handleItemFormSubmit(e) {
         ui.filterAndRenderItems();
         ui.renderCategoryFilter();
         ui.populateCategoryDatalist();
-        
         await api.saveToGitHub();
         saveLocalData();
         
@@ -224,6 +210,7 @@ async function handleImageCleanup() {
         const allRepoImages = await api.getGitHubDirectoryListing('images');
         const usedImages = new Set(appState.inventory.items.map(item => item.imagePath).filter(Boolean));
         const orphanedImages = allRepoImages.filter(repoImage => !usedImages.has(repoImage.path));
+        
         if (orphanedImages.length === 0) {
             ui.showStatus('لا توجد صور غير مستخدمة ليتم حذفها.', 'success');
             return;
@@ -394,7 +381,6 @@ async function openArchiveBrowser() {
                 const deleteButton = document.createElement('button');
                 deleteButton.className = 'archive-delete-btn';
                 deleteButton.innerHTML = `<span class="material-symbols-outlined">delete</span>`;
-   
                 deleteButton.title = 'حذف الأرشيف';
                 deleteButton.dataset.path = file.path;
                 deleteButton.dataset.sha = file.sha;
@@ -415,6 +401,7 @@ async function handleDownloadBackup() {
         zip.file("inventory.json", JSON.stringify(appState.inventory, null, 2));
         zip.file("sales.json", JSON.stringify(appState.sales, null, 2));
         zip.file("suppliers.json", JSON.stringify(appState.suppliers, null, 2));
+        zip.file("remote_finder_db.json", JSON.stringify(appState.remoteFinderDB, null, 2));
         const blob = await zip.generateAsync({ type: "blob" });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
@@ -444,18 +431,26 @@ async function handleRestoreBackup(event) {
         const inventoryFile = zip.file("inventory.json");
         const salesFile = zip.file("sales.json");
         const suppliersFile = zip.file("suppliers.json");
-        if (!inventoryFile || !salesFile || !suppliersFile) {
+        const remoteDbFile = zip.file("remote_finder_db.json");
+
+        if (!inventoryFile || !salesFile || !suppliersFile || !remoteDbFile) {
             throw new Error("ملف النسخة الاحتياطية غير صالح أو لا يحتوي على الملفات المطلوبة.");
         }
+        
         const inventoryData = JSON.parse(await inventoryFile.async("string"));
         const salesData = JSON.parse(await salesFile.async("string"));
         const suppliersData = JSON.parse(await suppliersFile.async("string"));
-        if (!inventoryData.items || !Array.isArray(salesData) || !Array.isArray(suppliersData)) {
+        const remoteDbData = JSON.parse(await remoteDbFile.async("string"));
+
+        if (!inventoryData.items || !Array.isArray(salesData) || !Array.isArray(suppliersData) || !Array.isArray(remoteDbData)) {
             throw new Error("محتوى ملف النسخة الاحتياطية غير صالح.");
         }
+        
         appState.inventory = inventoryData;
         appState.sales = salesData;
         appState.suppliers = suppliersData;
+        appState.remoteFinderDB = remoteDbData;
+
         saveLocalData();
         ui.showStatus('تمت استعادة البيانات بنجاح! سيتم إعادة تحميل التطبيق.', 'success', { duration: 4000 });
         setTimeout(() => {
@@ -469,14 +464,65 @@ async function handleRestoreBackup(event) {
     }
 }
 
+async function handleRemoteFinderFormSubmit(e) {
+    e.preventDefault();
+    const elements = ui.getDOMElements();
+    const carId = elements.remoteCarIdInput.value;
+    
+    const carData = {
+        id: carId || `car_${Date.now()}`,
+        make: elements.remoteFinderForm.querySelector('#car-make').value.trim(),
+        model: elements.remoteFinderForm.querySelector('#car-model').value.trim(),
+        yearStart: elements.remoteFinderForm.querySelector('#car-year-start').value.trim(),
+        yearEnd: elements.remoteFinderForm.querySelector('#car-year-end').value.trim(),
+        country: elements.remoteFinderForm.querySelector('#car-country').value.trim(),
+        remotes: []
+    };
+
+    elements.remoteFinderForm.querySelectorAll('.remote-form-section').forEach(section => {
+        const remote = {
+            type: section.querySelector('.remote-type').value.trim(),
+            frequency: section.querySelector('.remote-frequency').value.trim(),
+            fccId: section.querySelector('.remote-fccId').value.trim(),
+            notes: section.querySelector('.remote-notes').value.trim(),
+            partNumbers: {}
+        };
+        section.querySelectorAll('.part-number-entry').forEach(entry => {
+            const vendor = entry.querySelector('.pn-vendor').value;
+            const code = entry.querySelector('.pn-code').value.trim();
+            if (vendor && code) {
+                remote.partNumbers[vendor] = code;
+            }
+        });
+        carData.remotes.push(remote);
+    });
+    
+    ui.showStatus('جاري حفظ البيانات...', 'syncing');
+    try {
+        if (carId) {
+            const index = appState.remoteFinderDB.findIndex(c => c.id === carId);
+            if (index !== -1) appState.remoteFinderDB[index] = carData;
+        } else {
+            appState.remoteFinderDB.push(carData);
+        }
+        
+        await api.saveRemoteFinderDB();
+        saveLocalData();
+        ui.renderRemoteFinder();
+        elements.remoteFinderModal.close();
+        ui.showStatus('تم الحفظ بنجاح!', 'success');
+    } catch (error) {
+        ui.showStatus(`فشل الحفظ: ${error.message}`, 'error', { duration: 5000 });
+    }
+}
+
 // --- EVENT LISTENER SETUP ---
 
-/**
- * Attaches event listeners for general UI controls like theme and currency.
- * @param {object} elements - A map of DOM elements from ui.getDOMElements().
- */
 function setupGeneralListeners(elements) {
-    elements.themeToggleBtn.addEventListener('click', () => ui.setTheme(document.body.classList.contains('theme-light') ? 'dark' : 'light'));
+    elements.themeToggleBtn.addEventListener('click', () => {
+        const isLight = document.body.classList.contains('theme-light');
+        ui.setTheme(isLight ? 'dark' : 'light');
+    });
     elements.currencyToggleBtn.addEventListener('click', () => {
         appState.activeCurrency = appState.activeCurrency === 'IQD' ? 'USD' : 'IQD';
         localStorage.setItem('inventoryAppCurrency', appState.activeCurrency);
@@ -484,31 +530,21 @@ function setupGeneralListeners(elements) {
     });
 }
 
-/**
- * Attaches event listeners for view toggling (inventory vs. dashboard).
- * @param {object} elements - A map of DOM elements.
- */
 function setupViewToggleListeners(elements) {
     elements.inventoryToggleBtn.addEventListener('click', () => ui.toggleView('inventory'));
     elements.dashboardToggleBtn.addEventListener('click', () => ui.toggleView('dashboard'));
+    elements.remoteFinderToggleBtn.addEventListener('click', () => ui.toggleView('remote_finder'));
 }
 
-/**
- * Attaches event listeners for inventory-specific controls.
- * @param {object} elements - A map of DOM elements.
- */
 function setupInventoryListeners(elements) {
     elements.inventoryGrid.addEventListener('click', (e) => {
-        const sellBtn = e.target.closest('.sell-btn');
         const card = e.target.closest('.product-card');
         if (!card) return;
 
         const itemId = card.dataset.id;
-        const detailsBtn = e.target.closest('.details-btn');
-
-        if (detailsBtn) {
+        if (e.target.closest('.details-btn')) {
             ui.openDetailsModal(itemId);
-        } else if (sellBtn) {
+        } else if (e.target.closest('.sell-btn')) {
             const item = appState.inventory.items.find(i => i.id === itemId);
             if (item && item.quantity > 0) {
                 ui.openSaleModal(itemId);
@@ -517,12 +553,10 @@ function setupInventoryListeners(elements) {
             }
         }
     });
-
     elements.searchBar.addEventListener('input', (e) => {
         appState.searchTerm = e.target.value;
         ui.filterAndRenderItems();
     });
-
     elements.statsContainer.addEventListener('click', (e) => {
         const card = e.target.closest('.stat-card');
         if (!card) return;
@@ -537,12 +571,10 @@ function setupInventoryListeners(elements) {
         }
         ui.filterAndRenderItems();
     });
-
     elements.categoryFilterBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         elements.categoryFilterDropdown.classList.toggle('show');
     });
-
     elements.categoryFilterDropdown.addEventListener('click', (e) => {
         const categoryItem = e.target.closest('.category-item');
         if (categoryItem) {
@@ -552,7 +584,6 @@ function setupInventoryListeners(elements) {
             elements.categoryFilterDropdown.classList.remove('show');
         }
     });
-
     document.addEventListener('click', (e) => {
         if (!elements.searchContainer.contains(e.target)) {
             elements.categoryFilterDropdown.classList.remove('show');
@@ -560,10 +591,6 @@ function setupInventoryListeners(elements) {
     });
 }
 
-/**
- * Attaches event listeners for all modals in the application.
- * @param {object} elements - A map of DOM elements.
- */
 function setupModalListeners(elements) {
     // Item Modal
     elements.addItemBtn.addEventListener('click', () => {
@@ -614,38 +641,27 @@ function setupModalListeners(elements) {
         if (itemBeforeEdit && currentItem && itemBeforeEdit.quantity !== currentItem.quantity) {
             ui.showStatus('التحقق من البيانات...', 'syncing');
             try {
-                // --- NEW: Check-First Logic ---
                 const { data: latestInventory, sha: latestSha } = await api.fetchFromGitHub();
                 if (latestSha !== appState.fileSha) {
-                    ui.showStatus('البيانات غير محدّثة. تم تحديثها من جهاز آخر.', 'error', { showRefreshButton: true });
-                    // Revert local changes as they were based on stale data
+                    ui.showStatus('البيانات غير محدّثة.', 'error', { showRefreshButton: true });
                     const originalItemIndex = appState.inventory.items.findIndex(i => i.id === itemBeforeEdit.id);
-                    if (originalItemIndex !== -1) {
-                        appState.inventory.items[originalItemIndex] = itemBeforeEdit;
-                    }
+                    if (originalItemIndex !== -1) appState.inventory.items[originalItemIndex] = itemBeforeEdit;
                     ui.filterAndRenderItems();
                 } else {
-                    // Data is current, proceed with saving the quantity change
                     ui.showStatus('جاري حفظ تغيير الكمية...', 'syncing');
                     appState.inventory = latestInventory;
                     appState.fileSha = latestSha;
                     
-                    // Re-apply the quantity change to the fresh data
                     const itemToUpdate = appState.inventory.items.find(i => i.id === currentItem.id);
-                    if (itemToUpdate) {
-                        itemToUpdate.quantity = currentItem.quantity;
-                    }
+                    if (itemToUpdate) itemToUpdate.quantity = currentItem.quantity;
                     
                     await api.saveToGitHub();
                     saveLocalData();
                     ui.showStatus('تم حفظ التغييرات بنجاح!', 'success');
                 }
             } catch (error) {
-                 // Revert local changes on failure
                 const originalItemIndex = appState.inventory.items.findIndex(i => i.id === itemBeforeEdit.id);
-                if (originalItemIndex !== -1) {
-                    appState.inventory.items[originalItemIndex] = itemBeforeEdit;
-                }
+                if (originalItemIndex !== -1) appState.inventory.items[originalItemIndex] = itemBeforeEdit;
                 ui.filterAndRenderItems();
                 ui.showStatus('فشل حفظ التغييرات.', 'error', { duration: 4000 });
             }
@@ -665,6 +681,7 @@ function setupModalListeners(elements) {
             const imagePathToDelete = itemToDelete?.imagePath;
             const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
             appState.inventory.items = appState.inventory.items.filter(item => item.id !== appState.currentItemId);
+     
             elements.detailsModal.close();
             ui.filterAndRenderItems();
             ui.updateStats();
@@ -674,9 +691,7 @@ function setupModalListeners(elements) {
                     try {
                         const repoImages = await api.getGitHubDirectoryListing('images');
                         const imageFile = repoImages.find(file => file.path === imagePathToDelete);
-                        if (imageFile) {
-                            await api.deleteFileFromGitHub(imageFile.path, imageFile.sha, `Cleanup: Delete image for item ${itemToDelete.name}`);
-                        }
+                        if (imageFile) await api.deleteFileFromGitHub(imageFile.path, imageFile.sha, `Cleanup: Delete image for item ${itemToDelete.name}`);
                     } catch (imageError) {
                         console.error('Failed to delete associated image:', imageError);
                     }
@@ -784,10 +799,6 @@ function setupModalListeners(elements) {
     document.getElementById('close-archive-browser-btn').addEventListener('click', () => document.getElementById('archive-browser-modal').close());
 }
 
-/**
- * Attaches event listeners for the dashboard controls.
- * @param {object} elements - A map of DOM elements.
- */
 function setupDashboardListeners(elements) {
     elements.timeFilterControls.addEventListener('click', (e) => {
         const button = e.target.closest('.time-filter-btn');
@@ -800,10 +811,6 @@ function setupDashboardListeners(elements) {
     });
 }
 
-/**
- * Attaches event listeners for the supplier management UI.
- * @param {object} elements - A map of DOM elements.
- */
 function setupSupplierListeners(elements) {
     elements.manageSuppliersBtn.addEventListener('click', () => {
         ui.renderSupplierList();
@@ -838,9 +845,93 @@ function setupSupplierListeners(elements) {
     });
 }
 
-/**
- * Main function to attach all event listeners for the application.
- */
+function setupRemoteFinderListeners(elements) {
+    elements.addNewRemoteFinderBtn.addEventListener('click', () => ui.openRemoteFinderModal());
+    elements.closeRemoteFinderModalBtn.addEventListener('click', () => elements.remoteFinderModal.close());
+    elements.cancelRemoteFinderModalBtn.addEventListener('click', () => elements.remoteFinderModal.close());
+    
+    elements.remoteFinderSearchInput.addEventListener('input', ui.renderRemoteFinder);
+
+    elements.remoteFinderForm.addEventListener('submit', handleRemoteFinderFormSubmit);
+
+    // === FIX: Correctly handle clicks on dynamic buttons inside the form ===
+    elements.remoteFinderForm.addEventListener('click', (e) => {
+        const addPartBtn = e.target.closest('.add-part-number-btn');
+        const removePartBtn = e.target.closest('.remove-part-btn');
+        const removeRemoteBtn = e.target.closest('.remove-remote-btn');
+        const addRemoteBtn = e.target.closest('#add-remote-section-btn');
+
+        if (addPartBtn) {
+            e.preventDefault();
+            const container = addPartBtn.previousElementSibling;
+            if (container && container.classList.contains('part-numbers-container')) {
+                ui.addPartNumberEntry(container); // Call the exported UI function
+            }
+            return;
+        }
+
+        if (addRemoteBtn) {
+            e.preventDefault();
+            ui.addRemoteSection(); // Call the exported UI function
+            return;
+        }
+
+        if (removePartBtn) {
+            e.preventDefault();
+            removePartBtn.closest('.part-number-entry').remove();
+            return;
+        }
+
+        if (removeRemoteBtn) {
+            e.preventDefault();
+            removeRemoteBtn.closest('.remote-form-section').remove();
+            return;
+        }
+    });
+    // --- ========================================================== ---
+
+    elements.remoteFinderResultsArea.addEventListener('click', (e) => {
+        const brandCard = e.target.closest('.brand-card');
+        const remoteCard = e.target.closest('.remote-card');
+        
+        if (brandCard) {
+            appState.remoteFinderView = 'cars';
+            appState.selectedBrand = brandCard.dataset.brand;
+            elements.remoteFinderSearchInput.value = '';
+            ui.renderRemoteFinder();
+            return;
+        }
+
+        if (remoteCard) {
+            const cardId = remoteCard.dataset.id;
+            if (e.target.closest('.edit-btn')) {
+                ui.openRemoteFinderModal(cardId);
+            } else if (e.target.closest('.delete-btn')) {
+                if (confirm('هل أنت متأكد من رغبتك في حذف بيانات هذه السيارة نهائياً؟')) {
+                    appState.remoteFinderDB = appState.remoteFinderDB.filter(c => c.id !== cardId);
+                    api.saveRemoteFinderDB().then(() => {
+                        saveLocalData();
+                        ui.renderRemoteFinder();
+                        ui.showStatus('تم الحذف بنجاح', 'success');
+                    }).catch(err => ui.showStatus(`فشل الحذف: ${err.message}`, 'error'));
+                }
+            } else if (e.target.closest('.copy-btn')) {
+                navigator.clipboard.writeText(e.target.closest('.copy-btn').dataset.code)
+                    .then(() => ui.showStatus('تم نسخ الكود!', 'success', { duration: 1500 }));
+            }
+        }
+    });
+
+    elements.breadcrumbs.addEventListener('click', (e) => {
+        if (e.target.dataset.target === 'brands') {
+            appState.remoteFinderView = 'brands';
+            appState.selectedBrand = null;
+            elements.remoteFinderSearchInput.value = '';
+            ui.renderRemoteFinder();
+        }
+    });
+}
+
 function setupEventListeners() {
     const elements = ui.getDOMElements();
     
@@ -850,6 +941,7 @@ function setupEventListeners() {
     setupModalListeners(elements);
     setupDashboardListeners(elements);
     setupSupplierListeners(elements);
+    setupRemoteFinderListeners(elements);
 }
 
 // --- INITIALIZATION ---
@@ -863,16 +955,18 @@ async function initializeApp() {
     appState.activeCurrency = savedCurrency;
     ui.setTheme(savedTheme);
     
-    ui.renderInventorySkeleton(); 
+    ui.renderInventorySkeleton();
 
     if (appState.syncConfig) {
         ui.showStatus('جاري مزامنة البيانات...', 'syncing');
         try {
-            const [inventoryResult, salesResult, suppliersResult] = await Promise.all([
+            const [inventoryResult, salesResult, suppliersResult, remoteFinderResult] = await Promise.all([
                 api.fetchFromGitHub(),
                 api.fetchSales(),
-                api.fetchSuppliers()
+                api.fetchSuppliers(),
+                api.fetchRemoteFinderDB()
             ]);
+            
             if (inventoryResult) {
                 appState.inventory = inventoryResult.data;
                 appState.fileSha = inventoryResult.sha;
@@ -885,6 +979,11 @@ async function initializeApp() {
                 appState.suppliers = suppliersResult.data;
                 appState.suppliersFileSha = suppliersResult.sha;
             }
+            if (remoteFinderResult) {
+                appState.remoteFinderDB = remoteFinderResult.data;
+                appState.remoteFinderDBFileSha = remoteFinderResult.sha;
+            }
+            
             saveLocalData();
             ui.showStatus('تمت المزامنة بنجاح!', 'success');
         } catch(error) {
@@ -896,6 +995,7 @@ async function initializeApp() {
     }
 
     updateLastArchiveDateDisplay();
+    ui.filterAndRenderItems(); // Render initial inventory view
     ui.renderCategoryFilter();
     ui.populateCategoryDatalist();
     ui.updateCurrencyDisplay();
