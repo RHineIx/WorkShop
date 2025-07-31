@@ -11,7 +11,6 @@ export const sanitizeHTML = (str) => {
     temp.textContent = str;
     return temp.innerHTML;
 };
-
 /**
  * Generates a random, non-unique SKU string in the format "KEY-XXXXXXXX".
  * @returns {string} A randomly generated SKU.
@@ -38,7 +37,6 @@ export const generateUniqueSKU = (existingSkus) => {
     } while (existingSkus.has(newSku));
     return newSku;
 };
-
 /**
  * Compresses an image file using the canvas element.
  * Resizes the image to a max width/height and adjusts quality.
@@ -76,7 +74,6 @@ export const compressImage = (file, options = {}) => {
                 canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
-
                 // Get the compressed image Blob
                 canvas.toBlob(
                     (blob) => {
@@ -97,6 +94,7 @@ export const compressImage = (file, options = {}) => {
         reader.readAsDataURL(file);
     });
 };
+
 /**
  * Creates and returns a new debounced version of the passed function
  * that will postpone its execution until after `delay` milliseconds

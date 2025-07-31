@@ -1,6 +1,6 @@
 // js/main.js
 import { appState } from './state.js';
-import { generateUniqueSKU, compressImage } from './utils.js';
+import { generateUniqueSKU, compressImage, debounce } from './utils.js';
 import * as api from './api.js';
 import { ConflictError } from './api.js';
 import * as ui from './ui.js';
@@ -59,7 +59,6 @@ async function handleSaleFormSubmit(e) {
     ui.showStatus('التحقق من البيانات...', 'syncing');
     try {
         const { sha: latestSha } = await api.fetchFromGitHub();
-
         if (latestSha !== appState.fileSha) {
             ui.showStatus('البيانات غير محدّثة. تم تحديثها من جهاز آخر.', 'error', { showRefreshButton: true });
             saveButton.disabled = false;
@@ -70,7 +69,6 @@ async function handleSaleFormSubmit(e) {
         const item = appState.inventory.items.find(i => i.id === itemId);
         const quantityToSell = parseInt(document.getElementById('sale-quantity').value, 10);
         const salePrice = parseFloat(document.getElementById('sale-price').value);
-
         if (!item || item.quantity < quantityToSell || quantityToSell <= 0) {
             ui.showStatus('خطأ في البيانات أو الكمية غير متوفرة.', 'error');
             saveButton.disabled = false;
@@ -86,9 +84,11 @@ async function handleSaleFormSubmit(e) {
             itemId: item.id,
             itemName: item.name,
             quantitySold: quantityToSell,
-            sellPriceIqd: appState.activeCurrency === 'IQD' ? salePrice : item.sellPriceIqd,
+            sellPriceIqd: appState.activeCurrency === 'IQD' ?
+                salePrice : item.sellPriceIqd,
             costPriceIqd: item.costPriceIqd || 0,
-            sellPriceUsd: appState.activeCurrency !== 'IQD' ? salePrice : item.sellPriceUsd,
+            sellPriceUsd: appState.activeCurrency !== 'IQD' ?
+                salePrice : item.sellPriceUsd,
             costPriceUsd: item.costPriceUsd || 0,
             saleDate: document.getElementById('sale-date').value,
             notes: document.getElementById('sale-notes').value,
@@ -101,7 +101,6 @@ async function handleSaleFormSubmit(e) {
             await api.saveToGitHub();
             await api.saveSales();
             saveLocalData();
-            
             ui.getDOMElements().saleModal.close();
             ui.showStatus('تم تسجيل البيع بنجاح!', 'success');
         } catch (saveError) {
@@ -210,7 +209,6 @@ async function handleImageCleanup() {
         const allRepoImages = await api.getGitHubDirectoryListing('images');
         const usedImages = new Set(appState.inventory.items.map(item => item.imagePath).filter(Boolean));
         const orphanedImages = allRepoImages.filter(repoImage => !usedImages.has(repoImage.path));
-        
         if (orphanedImages.length === 0) {
             ui.showStatus('لا توجد صور غير مستخدمة ليتم حذفها.', 'success');
             return;
@@ -274,7 +272,8 @@ async function handleDeleteSupplier(supplierId) {
     const linkedProductsCount = appState.inventory.items.filter(item => item.supplierId === supplierId).length;
     let confirmMessage = 'هل أنت متأكد من رغبتك في حذف هذا المورّد نهائياً؟';
     if (linkedProductsCount > 0) {
-        confirmMessage = `هذا المورّد مرتبط بـ ${linkedProductsCount} منتجات. هل أنت متأكد من حذفه؟ سيتم فك ارتباطه من هذه المنتجات.`;
+        confirmMessage = `هذا المورّد مرتبط بـ ${linkedProductsCount} منتجات.
+هل أنت متأكد من حذفه؟ سيتم فك ارتباطه من هذه المنتجات.`;
     }
 
     if (confirm(confirmMessage)) {
@@ -380,7 +379,7 @@ async function openArchiveBrowser() {
                 item.dataset.path = file.path;
                 const deleteButton = document.createElement('button');
                 deleteButton.className = 'archive-delete-btn';
-                deleteButton.innerHTML = `<span class="material-symbols-outlined">delete</span>`;
+                deleteButton.innerHTML = `<iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon>`;
                 deleteButton.title = 'حذف الأرشيف';
                 deleteButton.dataset.path = file.path;
                 deleteButton.dataset.sha = file.sha;
@@ -432,7 +431,6 @@ async function handleRestoreBackup(event) {
         const salesFile = zip.file("sales.json");
         const suppliersFile = zip.file("suppliers.json");
         const remoteDbFile = zip.file("remote_finder_db.json");
-
         if (!inventoryFile || !salesFile || !suppliersFile || !remoteDbFile) {
             throw new Error("ملف النسخة الاحتياطية غير صالح أو لا يحتوي على الملفات المطلوبة.");
         }
@@ -441,7 +439,6 @@ async function handleRestoreBackup(event) {
         const salesData = JSON.parse(await salesFile.async("string"));
         const suppliersData = JSON.parse(await suppliersFile.async("string"));
         const remoteDbData = JSON.parse(await remoteDbFile.async("string"));
-
         if (!inventoryData.items || !Array.isArray(salesData) || !Array.isArray(suppliersData) || !Array.isArray(remoteDbData)) {
             throw new Error("محتوى ملف النسخة الاحتياطية غير صالح.");
         }
@@ -467,19 +464,20 @@ async function handleRestoreBackup(event) {
 async function handleRemoteFinderFormSubmit(e) {
     e.preventDefault();
     const elements = ui.getDOMElements();
+    const form = elements.remoteFinderForm;
     const carId = elements.remoteCarIdInput.value;
-    
+
     const carData = {
         id: carId || `car_${Date.now()}`,
-        make: elements.remoteFinderForm.querySelector('#car-make').value.trim(),
-        model: elements.remoteFinderForm.querySelector('#car-model').value.trim(),
-        yearStart: elements.remoteFinderForm.querySelector('#car-year-start').value.trim(),
-        yearEnd: elements.remoteFinderForm.querySelector('#car-year-end').value.trim(),
-        country: elements.remoteFinderForm.querySelector('#car-country').value.trim(),
+        make: form.querySelector('#car-make').value.trim(),
+        model: form.querySelector('#car-model').value.trim(),
+        yearStart: form.querySelector('#car-year-start').value.trim(),
+        yearEnd: form.querySelector('#car-year-end').value.trim(),
+        country: form.querySelector('#car-country').value.trim(),
         remotes: []
     };
 
-    elements.remoteFinderForm.querySelectorAll('.remote-form-section').forEach(section => {
+    form.querySelectorAll('.remote-form-section').forEach(section => {
         const remote = {
             type: section.querySelector('.remote-type').value.trim(),
             frequency: section.querySelector('.remote-frequency').value.trim(),
@@ -487,21 +485,29 @@ async function handleRemoteFinderFormSubmit(e) {
             notes: section.querySelector('.remote-notes').value.trim(),
             partNumbers: {}
         };
+
         section.querySelectorAll('.part-number-entry').forEach(entry => {
             const vendor = entry.querySelector('.pn-vendor').value;
             const code = entry.querySelector('.pn-code').value.trim();
             if (vendor && code) {
-                remote.partNumbers[vendor] = code;
+                // To avoid overwriting, handle multiple codes for the same vendor if needed
+                if (remote.partNumbers[vendor]) {
+                    remote.partNumbers[vendor] += `, ${code}`; // Or store as an array
+                } else {
+                    remote.partNumbers[vendor] = code;
+                }
             }
         });
         carData.remotes.push(remote);
     });
-    
+
     ui.showStatus('جاري حفظ البيانات...', 'syncing');
     try {
         if (carId) {
             const index = appState.remoteFinderDB.findIndex(c => c.id === carId);
-            if (index !== -1) appState.remoteFinderDB[index] = carData;
+            if (index !== -1) {
+                appState.remoteFinderDB[index] = carData;
+            }
         } else {
             appState.remoteFinderDB.push(carData);
         }
@@ -617,7 +623,6 @@ function setupModalListeners(elements) {
         const existingSkus = new Set(appState.inventory.items.map(item => item.sku));
         document.getElementById('item-sku').value = generateUniqueSKU(existingSkus);
     });
-
     // Details Modal
     elements.detailsIncreaseBtn.addEventListener('click', () => {
         const item = appState.inventory.items.find(i => i.id === appState.currentItemId);
@@ -654,7 +659,6 @@ function setupModalListeners(elements) {
                     
                     const itemToUpdate = appState.inventory.items.find(i => i.id === currentItem.id);
                     if (itemToUpdate) itemToUpdate.quantity = currentItem.quantity;
-                    
                     await api.saveToGitHub();
                     saveLocalData();
                     ui.showStatus('تم حفظ التغييرات بنجاح!', 'success');
@@ -681,7 +685,7 @@ function setupModalListeners(elements) {
             const imagePathToDelete = itemToDelete?.imagePath;
             const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
             appState.inventory.items = appState.inventory.items.filter(item => item.id !== appState.currentItemId);
-     
+            
             elements.detailsModal.close();
             ui.filterAndRenderItems();
             ui.updateStats();
@@ -710,7 +714,6 @@ function setupModalListeners(elements) {
             }
         }
     });
-
     // Sale Modal
     elements.saleForm.addEventListener('submit', handleSaleFormSubmit);
     elements.cancelSaleBtn.addEventListener('click', () => elements.saleModal.close());
@@ -850,8 +853,7 @@ function setupRemoteFinderListeners(elements) {
     elements.closeRemoteFinderModalBtn.addEventListener('click', () => elements.remoteFinderModal.close());
     elements.cancelRemoteFinderModalBtn.addEventListener('click', () => elements.remoteFinderModal.close());
     
-    elements.remoteFinderSearchInput.addEventListener('input', ui.renderRemoteFinder);
-
+    elements.remoteFinderSearchInput.addEventListener('input', debounce(ui.renderRemoteFinder, 300));
     elements.remoteFinderForm.addEventListener('submit', handleRemoteFinderFormSubmit);
 
     elements.remoteFinderForm.addEventListener('click', (e) => {
@@ -877,7 +879,6 @@ function setupRemoteFinderListeners(elements) {
             ui.addRemoteSection();
         }
     });
-
     elements.remoteFinderResultsArea.addEventListener('click', (e) => {
         const remoteCard = e.target.closest('.remote-card');
         if (remoteCard) {
@@ -899,7 +900,6 @@ function setupRemoteFinderListeners(elements) {
             }
         }
     });
-    
     elements.brandFilterBar.addEventListener('click', (e) => {
         const chip = e.target.closest('.brand-filter-chip');
         if (!chip) return;
@@ -940,7 +940,6 @@ async function initializeApp() {
     ui.setTheme(savedTheme);
     
     ui.renderInventorySkeleton();
-
     if (appState.syncConfig) {
         ui.showStatus('جاري مزامنة البيانات...', 'syncing');
         try {
@@ -950,7 +949,6 @@ async function initializeApp() {
                 api.fetchSuppliers(),
                 api.fetchRemoteFinderDB()
             ]);
-            
             if (inventoryResult) {
                 appState.inventory = inventoryResult.data;
                 appState.fileSha = inventoryResult.sha;

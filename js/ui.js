@@ -164,7 +164,7 @@ const ICONS = {
     error: 'material-symbols:error',
     syncing: 'material-symbols:sync',
     info: 'material-symbols:info',
-    warning: 'material-symbols:warning'
+    warning: 'material-symbols:warning-rounded'
 };
 
 export const showStatus = (message, type, options = {}) => {
@@ -388,7 +388,7 @@ export const setTheme = (themeName) => {
     document.body.className = `theme-${themeName}`;
     const icon = elements.themeToggleBtn.querySelector('iconify-icon');
     if (icon) {
-      icon.setAttribute('icon', themeName === 'dark' ? 'material-symbols:dark-mode' : 'material-symbols:light-mode');
+      icon.setAttribute('icon', themeName === 'dark' ? 'material-symbols:dark-mode-outline-rounded' : 'material-symbols:light-mode-outline-rounded');
     }
     localStorage.setItem('inventoryAppTheme', themeName);
 };
@@ -422,7 +422,7 @@ export function renderSupplierList() {
             </div>
             <div class="supplier-item-actions">
                 <button class="icon-btn edit-supplier-btn" data-id="${supplier.id}" title="تعديل المورّد">
-                    <iconify-icon icon="material-symbols:edit"></iconify-icon>
+                    <iconify-icon icon="material-symbols:edit-outline-rounded"></iconify-icon>
                 </button>
                 <button class="icon-btn danger-btn delete-supplier-btn" data-id="${supplier.id}" title="حذف المورّد">
                     <iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon>
@@ -655,7 +655,7 @@ function renderCarsView() {
                     </div>
                     <div class="header-actions">
                         <span>${yearRange} ${country}</span>
-                        <button class="icon-btn edit-btn" title="تعديل"><iconify-icon icon="material-symbols:edit"></iconify-icon></button>
+                        <button class="icon-btn edit-btn" title="تعديل"><iconify-icon icon="material-symbols:edit-outline-rounded"></iconify-icon></button>
                         <button class="icon-btn danger delete-btn" title="حذف"><iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon></button>
                     </div>
                 </div>
@@ -669,63 +669,68 @@ export function renderRemoteFinder() {
     renderCarsView();
 }
 
-let remoteCounter = 0;
-let partNumberCounter = 0;
-
 export function addPartNumberEntry(container, pnData = {}) {
-    partNumberCounter++;
     const entry = document.createElement('div');
     entry.className = 'part-number-entry';
     const vendor = pnData.vendor || 'oem';
     const code = pnData.code || '';
+    // To maintain accessibility without IDs, we nest the input inside the label.
     entry.innerHTML = `
         <div class="form-group">
-            <label for="pn-vendor-${partNumberCounter}">الشركة</label>
-            <select id="pn-vendor-${partNumberCounter}" class="pn-vendor">
-                <option value="oem" ${vendor === 'oem' ? 'selected' : ''}>OEM</option>
-                <option value="keydiy" ${vendor === 'keydiy' ? 'selected' : ''}>Keydiy</option>
-                <option value="xhorse" ${vendor === 'xhorse' ? 'selected' : ''}>Xhorse</option>
-            </select>
+            <label>الشركة
+                <select class="pn-vendor">
+                    <option value="oem" ${vendor === 'oem' ? 'selected' : ''}>OEM</option>
+                    <option value="keydiy" ${vendor === 'keydiy' ? 'selected' : ''}>Keydiy</option>
+                    <option value="xhorse" ${vendor === 'xhorse' ? 'selected' : ''}>Xhorse</option>
+                </select>
+            </label>
         </div>
         <div class="form-group">
-            <label for="pn-code-${partNumberCounter}">الكود</label>
-            <input type="text" id="pn-code-${partNumberCounter}" class="pn-code" placeholder="أدخل رقم القطعة..." value="${sanitizeHTML(code)}">
+            <label>الكود
+                <input type="text" class="pn-code" placeholder="أدخل رقم القطعة..." value="${sanitizeHTML(code)}">
+            </label>
         </div>
         <button type="button" class="icon-btn danger remove-part-btn" style="align-self: end; margin-bottom: 16px;">
-            <iconify-icon icon="material-symbols:remove"></iconify-icon>
+            <iconify-icon icon="material-symbols:remove-rounded"></iconify-icon>
         </button>`;
     container.appendChild(entry);
 }
 
 export function addRemoteSection(remoteData = {}) {
-    remoteCounter++;
     const container = elements.remotesContainerModal;
+    const remoteNumber = container.querySelectorAll('.remote-form-section').length + 1;
+
     const section = document.createElement('div');
     section.className = 'remote-form-section';
+
     section.innerHTML = `
         <div class="form-section-header">
-            <h4>الريموت #${remoteCounter}</h4>
+            <h4>الريموت #${remoteNumber}</h4>
             <button type="button" class="icon-btn danger remove-remote-btn">
                 <iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon>
             </button>
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label for="remote-type-${remoteCounter}">النوع</label>
-                <input type="text" id="remote-type-${remoteCounter}" class="remote-type" value="${sanitizeHTML(remoteData.type || '')}" placeholder="مفتاح ذكي...">
+                <label>النوع
+                    <input type="text" class="remote-type" value="${sanitizeHTML(remoteData.type || '')}" placeholder="مفتاح ذكي...">
+                </label>
             </div>
             <div class="form-group">
-                <label for="remote-freq-${remoteCounter}">التردد</label>
-                <input type="text" id="remote-freq-${remoteCounter}" class="remote-frequency" value="${sanitizeHTML(remoteData.frequency || '')}" placeholder="315 MHz...">
+                <label>التردد
+                    <input type="text" class="remote-frequency" value="${sanitizeHTML(remoteData.frequency || '')}" placeholder="315 MHz...">
+                </label>
             </div>
             <div class="form-group">
-                <label for="remote-fcc-${remoteCounter}">FCC ID</label>
-                <input type="text" id="remote-fcc-${remoteCounter}" class="remote-fccId" value="${sanitizeHTML(remoteData.fccId || '')}" placeholder="HYQ14FBA...">
+                <label>FCC ID
+                    <input type="text" class="remote-fccId" value="${sanitizeHTML(remoteData.fccId || '')}" placeholder="HYQ14FBA...">
+                </label>
             </div>
         </div>
         <div class="form-group">
-            <label for="remote-notes-${remoteCounter}">ملاحظات</label>
-            <input type="text" id="remote-notes-${remoteCounter}" class="remote-notes" value="${sanitizeHTML(remoteData.notes || '')}">
+            <label>ملاحظات
+                <input type="text" class="remote-notes" value="${sanitizeHTML(remoteData.notes || '')}">
+            </label>
         </div>
         <div class="part-numbers-container"></div>
         <button type="button" class="add-btn add-part-number-btn">+ أضف رقم قطعة</button>`;
@@ -735,7 +740,7 @@ export function addRemoteSection(remoteData = {}) {
     if (remoteData.partNumbers && Object.keys(remoteData.partNumbers).length > 0) {
         Object.entries(remoteData.partNumbers).forEach(([vendor, code]) => addPartNumberEntry(pnContainer, { vendor, code }));
     } else {
-        addPartNumberEntry(pnContainer);
+        addPartNumberEntry(pnContainer); // Add one empty entry by default
     }
 }
 
@@ -745,8 +750,7 @@ export function openRemoteFinderModal(carId = null) {
     elements.makesDatalist.innerHTML = uniqueMakes.map(make => `<option value="${sanitizeHTML(make)}">`).join('');
     
     elements.remotesContainerModal.innerHTML = '';
-    remoteCounter = 0;
-    partNumberCounter = 0;
+
     if (carId) {
         const car = appState.remoteFinderDB.find(c => c.id === carId);
         if (!car) return;
@@ -758,11 +762,15 @@ export function openRemoteFinderModal(carId = null) {
         elements.remoteFinderForm.querySelector('#car-year-end').value = car.yearEnd;
         elements.remoteFinderForm.querySelector('#car-country').value = car.country;
         
-        (car.remotes || []).forEach(remoteData => addRemoteSection(remoteData));
+        if (car.remotes && car.remotes.length > 0) {
+            car.remotes.forEach(remoteData => addRemoteSection(remoteData));
+        } else {
+            addRemoteSection(); // Add one empty section if no remotes exist
+        }
     } else {
         elements.remoteFinderModalTitle.textContent = 'إضافة سيارة جديدة';
         elements.remoteCarIdInput.value = '';
-        addRemoteSection();
+        addRemoteSection(); // Add one empty section for a new car
     }
     elements.remoteFinderModal.showModal();
 }
