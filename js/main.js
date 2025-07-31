@@ -482,6 +482,7 @@ async function handleRemoteFinderFormSubmit(e) {
             type: section.querySelector('.remote-type').value.trim(),
             frequency: section.querySelector('.remote-frequency').value.trim(),
             fccId: section.querySelector('.remote-fccId').value.trim(),
+            battery: section.querySelector('.remote-battery').value.trim(),
             notes: section.querySelector('.remote-notes').value.trim(),
             partNumbers: {}
         };
@@ -490,9 +491,8 @@ async function handleRemoteFinderFormSubmit(e) {
             const vendor = entry.querySelector('.pn-vendor').value;
             const code = entry.querySelector('.pn-code').value.trim();
             if (vendor && code) {
-                // To avoid overwriting, handle multiple codes for the same vendor if needed
                 if (remote.partNumbers[vendor]) {
-                    remote.partNumbers[vendor] += `, ${code}`; // Or store as an array
+                    remote.partNumbers[vendor] += `, ${code}`;
                 } else {
                     remote.partNumbers[vendor] = code;
                 }
@@ -879,27 +879,42 @@ function setupRemoteFinderListeners(elements) {
             ui.addRemoteSection();
         }
     });
+
     elements.remoteFinderResultsArea.addEventListener('click', (e) => {
-        const remoteCard = e.target.closest('.remote-card');
-        if (remoteCard) {
-            const cardId = remoteCard.dataset.id;
-            if (e.target.closest('.edit-btn')) {
-                ui.openRemoteFinderModal(cardId);
-            } else if (e.target.closest('.delete-btn')) {
-                if (confirm('هل أنت متأكد من رغبتك في حذف بيانات هذه السيارة نهائياً؟')) {
-                    appState.remoteFinderDB = appState.remoteFinderDB.filter(c => c.id !== cardId);
-                    api.saveRemoteFinderDB().then(() => {
-                        saveLocalData();
-                        ui.renderRemoteFinder();
-                        ui.showStatus('تم الحذف بنجاح', 'success');
-                    }).catch(err => ui.showStatus(`فشل الحذف: ${err.message}`, 'error'));
-                }
-            } else if (e.target.closest('.copy-btn')) {
-                navigator.clipboard.writeText(e.target.closest('.copy-btn').dataset.code)
-                    .then(() => ui.showStatus('تم نسخ الكود!', 'success', { duration: 1500 }));
+        const target = e.target;
+        const remoteCard = target.closest('.remote-card');
+        if (!remoteCard) return;
+
+        const cardId = remoteCard.dataset.id;
+        
+        if (target.closest('.edit-btn')) {
+            ui.openRemoteFinderModal(cardId);
+        } else if (target.closest('.delete-btn')) {
+            if (confirm('هل أنت متأكد من رغبتك في حذف بيانات هذه السيارة نهائياً؟')) {
+                appState.remoteFinderDB = appState.remoteFinderDB.filter(c => c.id !== cardId);
+                api.saveRemoteFinderDB().then(() => {
+                    saveLocalData();
+                    ui.renderRemoteFinder();
+                    ui.showStatus('تم الحذف بنجاح', 'success');
+                }).catch(err => ui.showStatus(`فشل الحذف: ${err.message}`, 'error'));
             }
+        } else if (target.closest('.copy-btn')) {
+            const copyBtn = target.closest('.copy-btn');
+            const codeToCopy = copyBtn.dataset.code;
+            const icon = copyBtn.querySelector('iconify-icon');
+            
+            navigator.clipboard.writeText(codeToCopy).then(() => {
+                if (icon) {
+                    const originalIcon = icon.getAttribute('icon');
+                    icon.setAttribute('icon', 'material-symbols:check');
+                    setTimeout(() => {
+                        icon.setAttribute('icon', originalIcon);
+                    }, 1500);
+                }
+            });
         }
     });
+
     elements.brandFilterBar.addEventListener('click', (e) => {
         const chip = e.target.closest('.brand-filter-chip');
         if (!chip) return;

@@ -604,7 +604,7 @@ function renderCarsView() {
             const carInfo = `${car.make} ${car.model} ${car.yearStart} ${car.yearEnd}`.toLowerCase();
             if (carInfo.includes(searchTerm)) return true;
             return (car.remotes || []).some(remote => {
-                const remoteInfo = `${remote.type} ${remote.frequency} ${remote.fccId}`.toLowerCase();
+                const remoteInfo = `${remote.type} ${remote.frequency} ${remote.fccId} ${remote.battery}`.toLowerCase();
                  if (remoteInfo.includes(searchTerm)) return true;
                 return Object.values(remote.partNumbers).some(code => code.toLowerCase().includes(searchTerm));
             });
@@ -618,51 +618,62 @@ function renderCarsView() {
 
     elements.remoteFinderResultsArea.innerHTML = `<div class="results-grid">` + carsToRender.map(car => {
         const yearRange = (car.yearStart && car.yearEnd) ? `${car.yearStart} - ${car.yearEnd}` : (car.yearStart || '');
-        const country = car.country ? `(${sanitizeHTML(car.country)})` : '';
+        const countryInfo = car.country ? `(${sanitizeHTML(car.country)})` : '';
+        const carMeta = `${yearRange} ${countryInfo}`.trim();
+
         const remotesHTML = (car.remotes || []).map(remote => {
             const partNumbersHTML = Object.entries(remote.partNumbers).map(([vendor, code]) => 
-                `<div class="part-number ${vendor.toLowerCase()}">
-                    <span class="vendor">${sanitizeHTML(vendor.toUpperCase())}</span>
-                    <span class="code">${sanitizeHTML(code)}</span>
-                    <div class="actions">
+                `<div class="part-number-row">
+                    <span class="vendor-tag ${vendor.toLowerCase()}">${sanitizeHTML(vendor.toUpperCase())}</span>
+                    <span class="part-code">${sanitizeHTML(code)}</span>
+                    <div class="part-actions">
+                        <button class="icon-btn copy-btn" title="نسخ" data-code="${sanitizeHTML(code)}"><iconify-icon icon="material-symbols:content-copy-outline-rounded"></iconify-icon></button>
                         <a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(code)}" target="_blank" class="icon-btn" title="بحث عن صورة">
-                            <iconify-icon icon="material-symbols:image-search"></iconify-icon>
+                            <iconify-icon icon="material-symbols:image-search-outline-rounded"></iconify-icon>
                         </a>
-                        <button class="icon-btn copy-btn" data-code="${sanitizeHTML(code)}" title="نسخ">
-                            <iconify-icon icon="material-symbols:content-copy"></iconify-icon>
-                        </button>
                     </div>
                 </div>`
             ).join('');
 
             return `
-                <div class="remote-details">
-                    <h4>${sanitizeHTML(remote.type)}</h4>
-                    <div class="info-grid">
-                        <p><strong>التردد:</strong> ${sanitizeHTML(remote.frequency)}</p>
-                        <p><strong>FCC ID:</strong> ${sanitizeHTML(remote.fccId)}</p>
+                <div class="remote-section">
+                    <h4 class="remote-type">${sanitizeHTML(remote.type || 'ريموت')}</h4>
+                    <div class="info-badges">
+                        ${remote.frequency ? `<div class="info-badge"><iconify-icon icon="material-symbols:wifi-tethering-rounded"></iconify-icon><span class="value">${sanitizeHTML(remote.frequency)}</span></div>` : ''}
+                        ${remote.fccId ? `<div class="info-badge"><iconify-icon icon="material-symbols:badge-outline-rounded"></iconify-icon><span class="value">${sanitizeHTML(remote.fccId)}</span></div>` : ''}
+                        ${remote.battery ? `<div class="info-badge"><iconify-icon icon="material-symbols:battery-horiz-075-rounded"></iconify-icon><span class="value">${sanitizeHTML(remote.battery)}</span></div>` : ''}
                     </div>
-                    <div class="part-numbers">${partNumbersHTML}</div>
-                    ${remote.notes ? `<p class="notes"><strong>ملاحظات:</strong> ${sanitizeHTML(remote.notes)}</p>` : ''}
+                    <div class="part-numbers-list">${partNumbersHTML}</div>
+                    ${remote.notes ? `
+                        <div class="notes-section">
+                            <div class="notes-header">
+                                <iconify-icon icon="material-symbols:sticky-note-2-outline-rounded"></iconify-icon>
+                                <span>ملاحظات</span>
+                            </div>
+                            <p class="notes-content">${sanitizeHTML(remote.notes)}</p>
+                        </div>
+                    ` : ''}
                 </div>`;
         }).join('');
+
         return `
             <div class="remote-card" data-id="${car.id}">
-                <div class="remote-card-header">
-                    <div class="header-info">
+                <header class="card-header">
+                    <div class="car-title">
                         <iconify-icon class="brand-logo" icon="cbi:${sanitizeHTML(car.make.toLowerCase().replace(/\s/g, ''))}"></iconify-icon>
                         <h3>${sanitizeHTML(car.make)} ${sanitizeHTML(car.model)}</h3>
                     </div>
+                    <span class="car-meta">${carMeta}</span>
                     <div class="header-actions">
-                        <span>${yearRange} ${country}</span>
                         <button class="icon-btn edit-btn" title="تعديل"><iconify-icon icon="material-symbols:edit-outline-rounded"></iconify-icon></button>
                         <button class="icon-btn danger delete-btn" title="حذف"><iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon></button>
                     </div>
-                </div>
-                <div class="remote-card-body">${remotesHTML}</div>
+                </header>
+                <div class="card-body">${remotesHTML}</div>
             </div>`;
     }).join('') + `</div>`;
 }
+
 
 export function renderRemoteFinder() {
     renderBrandFilterBar();
@@ -674,7 +685,6 @@ export function addPartNumberEntry(container, pnData = {}) {
     entry.className = 'part-number-entry';
     const vendor = pnData.vendor || 'oem';
     const code = pnData.code || '';
-    // To maintain accessibility without IDs, we nest the input inside the label.
     entry.innerHTML = `
         <div class="form-group">
             <label>الشركة
@@ -691,7 +701,7 @@ export function addPartNumberEntry(container, pnData = {}) {
             </label>
         </div>
         <button type="button" class="icon-btn danger remove-part-btn" style="align-self: end; margin-bottom: 16px;">
-            <iconify-icon icon="material-symbols:remove-rounded"></iconify-icon>
+            <iconify-icon icon="material-symbols:remove"></iconify-icon>
         </button>`;
     container.appendChild(entry);
 }
@@ -721,9 +731,16 @@ export function addRemoteSection(remoteData = {}) {
                     <input type="text" class="remote-frequency" value="${sanitizeHTML(remoteData.frequency || '')}" placeholder="315 MHz...">
                 </label>
             </div>
+        </div>
+        <div class="form-row">
             <div class="form-group">
                 <label>FCC ID
                     <input type="text" class="remote-fccId" value="${sanitizeHTML(remoteData.fccId || '')}" placeholder="HYQ14FBA...">
+                </label>
+            </div>
+            <div class="form-group">
+                <label>البطارية
+                    <input type="text" class="remote-battery" value="${sanitizeHTML(remoteData.battery || '')}" placeholder="CR2032...">
                 </label>
             </div>
         </div>
@@ -740,7 +757,7 @@ export function addRemoteSection(remoteData = {}) {
     if (remoteData.partNumbers && Object.keys(remoteData.partNumbers).length > 0) {
         Object.entries(remoteData.partNumbers).forEach(([vendor, code]) => addPartNumberEntry(pnContainer, { vendor, code }));
     } else {
-        addPartNumberEntry(pnContainer); // Add one empty entry by default
+        addPartNumberEntry(pnContainer);
     }
 }
 
@@ -765,12 +782,12 @@ export function openRemoteFinderModal(carId = null) {
         if (car.remotes && car.remotes.length > 0) {
             car.remotes.forEach(remoteData => addRemoteSection(remoteData));
         } else {
-            addRemoteSection(); // Add one empty section if no remotes exist
+            addRemoteSection();
         }
     } else {
         elements.remoteFinderModalTitle.textContent = 'إضافة سيارة جديدة';
         elements.remoteCarIdInput.value = '';
-        addRemoteSection(); // Add one empty section for a new car
+        addRemoteSection();
     }
     elements.remoteFinderModal.showModal();
 }
