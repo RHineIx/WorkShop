@@ -14,6 +14,9 @@
     gap: var(--spacing-sm);
     transition: all var(--transition-speed) ease;
 }
+.control-button iconify-icon {
+    font-size: 22px;
+}
 #currency-toggle-btn {
     font-weight: bold;
     min-width: 48px;
@@ -79,10 +82,8 @@
     justify-content: center;
     transition: all var(--transition-speed) ease;
 }
-.icon-btn svg {
-    fill: currentColor;
-    width: 24px;
-    height: 24px;
+.icon-btn iconify-icon {
+    font-size: 24px;
 }
 .icon-btn:hover {
     transform: translateY(-2px);
@@ -125,6 +126,9 @@
     gap: var(--spacing-sm);
     transition: all var(--transition-speed) ease;
 }
+.cleanup-btn iconify-icon {
+    font-size: 22px;
+}
 .cleanup-btn:hover {
     background-color: var(--danger-color);
     color: white;
@@ -161,6 +165,9 @@ label[for="restore-backup-input"]:hover {
     gap: var(--spacing-sm);
     transition: background-color 0.2s, color 0.2s;
 }
+.action-btn-details iconify-icon {
+    font-size: 20px;
+}
 .action-btn-details:hover {
     background-color: var(--bg-color);
 }
@@ -184,6 +191,9 @@ label[for="restore-backup-input"]:hover {
     cursor: pointer;
     font-weight: 500;
     transition: all var(--transition-speed) ease;
+}
+.custom-file-upload-btn iconify-icon {
+    font-size: 20px;
 }
 .custom-file-upload-btn:hover {
     background-color: var(--bg-color);
@@ -271,6 +281,9 @@ label[for="restore-backup-input"]:hover {
     border-radius: var(--border-radius-sm);
     transition: background-color 0.2s;
 }
+.whatsapp-btn iconify-icon {
+    font-size: 20px;
+}
 .whatsapp-btn:hover {
     background-color: #1DAE54;
 }
@@ -302,4 +315,7 @@ label[for="restore-backup-input"]:hover {
     align-items: center;
     justify-content: center;
     backdrop-filter: blur(4px);
+}
+.close-modal-btn iconify-icon {
+    font-size: 24px;
 }

@@ -45,6 +45,7 @@ const elements = {
     detailsQuantityValue: document.getElementById('details-quantity-value'),
     detailsDecreaseBtn: document.getElementById('details-decrease-btn'),
     detailsIncreaseBtn: document.getElementById('details-increase-btn'),
+    
     detailsNotesContent: document.getElementById('details-notes-content'),
     detailsEditBtn: document.getElementById('details-edit-btn'),
     detailsDeleteBtn: document.getElementById('details-delete-btn'),
@@ -159,11 +160,11 @@ export function populateCategoryDatalist() {
 }
 
 const ICONS = {
-    success: 'check_circle',
-    error: 'error',
-    syncing: 'sync',
-    info: 'info',
-    warning: 'warning'
+    success: 'material-symbols:check-circle',
+    error: 'material-symbols:error',
+    syncing: 'material-symbols:sync',
+    info: 'material-symbols:info',
+    warning: 'material-symbols:warning'
 };
 
 export const showStatus = (message, type, options = {}) => {
@@ -176,13 +177,13 @@ export const showStatus = (message, type, options = {}) => {
 
     const toast = document.createElement('div');
     toast.className = `toast toast--${type}`;
-
     const iconName = ICONS[type] || 'info';
-    const iconSpan = document.createElement('span');
-    iconSpan.className = 'material-symbols-outlined toast__icon';
-    iconSpan.textContent = iconName;
-    toast.appendChild(iconSpan);
     
+    const icon = document.createElement('iconify-icon');
+    icon.className = 'toast__icon';
+    icon.setAttribute('icon', iconName);
+    toast.appendChild(icon);
+
     const messageSpan = document.createElement('span');
     messageSpan.textContent = message;
     toast.appendChild(messageSpan);
@@ -200,7 +201,6 @@ export const showStatus = (message, type, options = {}) => {
     setTimeout(() => {
         toast.classList.add('show');
     }, 10);
-
     if (type !== 'syncing' && !showRefreshButton) {
         setTimeout(() => {
             toast.classList.remove('show');
@@ -351,7 +351,7 @@ export function renderInventory(itemsToRender) {
         const isIQD = appState.activeCurrency === 'IQD';
         const price = isIQD ? (item.sellPriceIqd || 0) : (item.sellPriceUsd || 0);
         const symbol = isIQD ? 'د.ع' : '$';
-        const placeholder = `<div class="card-image-placeholder"><span class="material-symbols-outlined">key</span></div>`;
+        const placeholder = `<div class="card-image-placeholder"><iconify-icon icon="material-symbols:key"></iconify-icon></div>`;
         card.innerHTML = `
             <div class="card-image-container">
                 <div class="quantity-badge ${isLowStock ? 'low-stock' : ''}">متبقي ${item.quantity}</div>
@@ -362,8 +362,8 @@ export function renderInventory(itemsToRender) {
                 <div class="card-footer">
                     <div class="card-price">${price.toLocaleString()} ${symbol}</div>
                      <div class="card-actions">
-                        <button class="icon-btn sell-btn" title="بيع"><span class="material-symbols-outlined">shopping_cart</span></button>
-                        <button class="icon-btn details-btn" title="عرض التفاصيل"><span class="material-symbols-outlined">more_vert</span></button>
+                        <button class="icon-btn sell-btn" title="بيع"><iconify-icon icon="material-symbols:shopping-cart-outline-rounded"></iconify-icon></button>
+                        <button class="icon-btn details-btn" title="عرض التفاصيل"><iconify-icon icon="material-symbols:more-vert"></iconify-icon></button>
                     </div>
                 </div>
             </div>`;
@@ -386,7 +386,10 @@ export const updateStats = () => {
 
 export const setTheme = (themeName) => {
     document.body.className = `theme-${themeName}`;
-    elements.themeToggleBtn.querySelector('.material-symbols-outlined').textContent = themeName === 'dark' ? 'dark_mode' : 'light_mode';
+    const icon = elements.themeToggleBtn.querySelector('iconify-icon');
+    if (icon) {
+      icon.setAttribute('icon', themeName === 'dark' ? 'material-symbols:dark-mode' : 'material-symbols:light-mode');
+    }
     localStorage.setItem('inventoryAppTheme', themeName);
 };
 
@@ -419,10 +422,10 @@ export function renderSupplierList() {
             </div>
             <div class="supplier-item-actions">
                 <button class="icon-btn edit-supplier-btn" data-id="${supplier.id}" title="تعديل المورّد">
-                    <span class="material-symbols-outlined">edit</span>
+                    <iconify-icon icon="material-symbols:edit"></iconify-icon>
                 </button>
                 <button class="icon-btn danger-btn delete-supplier-btn" data-id="${supplier.id}" title="حذف المورّد">
-                    <span class="material-symbols-outlined">delete</span>
+                    <iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon>
                 </button>
             </div>
         `;
@@ -460,7 +463,8 @@ export const openDetailsModal = (itemId) => {
     const supplier = appState.suppliers.find(s => s.id === item.supplierId);
     if (supplier) {
         elements.detailsSupplierName.textContent = sanitizeHTML(supplier.name);
-        elements.detailsSupplierPhone.textContent = supplier.phone ? sanitizeHTML(supplier.phone) : 'لا يوجد';
+        elements.detailsSupplierPhone.textContent = supplier.phone ?
+            sanitizeHTML(supplier.phone) : 'لا يوجد';
         if (supplier.phone) {
             elements.detailsSupplierWhatsapp.href = `https://wa.me/${supplier.phone.replace(/[^0-9]/g, '')}`;
             elements.detailsSupplierWhatsapp.style.display = 'inline-flex';
@@ -569,7 +573,6 @@ export const populateSyncModal = () => {
     elements.syncModal.showModal();
 };
 
-
 // --- Remote Finder UI Functions ---
 
 function renderBrandFilterBar() {
@@ -578,7 +581,7 @@ function renderBrandFilterBar() {
         const brandForFilter = make === 'الكل' ? null : make;
         const isActive = appState.selectedBrand === brandForFilter;
         const iconHTML = make === 'الكل' 
-            ? `<span class="material-symbols-outlined">select_all</span>` 
+            ? `<iconify-icon class="brand-logo" icon="material-symbols:select-all"></iconify-icon>` 
             : `<iconify-icon class="brand-logo" icon="cbi:${sanitizeHTML(make.toLowerCase().replace(/\s/g, ''))}"></iconify-icon>`;
         
         return `<button class="brand-filter-chip ${isActive ? 'active' : ''}" data-brand="${sanitizeHTML(make)}">
@@ -591,7 +594,6 @@ function renderBrandFilterBar() {
 
 function renderCarsView() {
     let carsToRender = [...appState.remoteFinderDB];
-
     if (appState.selectedBrand) {
         carsToRender = carsToRender.filter(car => car.make === appState.selectedBrand);
     }
@@ -603,7 +605,7 @@ function renderCarsView() {
             if (carInfo.includes(searchTerm)) return true;
             return (car.remotes || []).some(remote => {
                 const remoteInfo = `${remote.type} ${remote.frequency} ${remote.fccId}`.toLowerCase();
-                if (remoteInfo.includes(searchTerm)) return true;
+                 if (remoteInfo.includes(searchTerm)) return true;
                 return Object.values(remote.partNumbers).some(code => code.toLowerCase().includes(searchTerm));
             });
         });
@@ -624,14 +626,15 @@ function renderCarsView() {
                     <span class="code">${sanitizeHTML(code)}</span>
                     <div class="actions">
                         <a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(code)}" target="_blank" class="icon-btn" title="بحث عن صورة">
-                            <span class="material-symbols-outlined">image_search</span>
+                            <iconify-icon icon="material-symbols:image-search"></iconify-icon>
                         </a>
                         <button class="icon-btn copy-btn" data-code="${sanitizeHTML(code)}" title="نسخ">
-                            <span class="material-symbols-outlined">content_copy</span>
+                            <iconify-icon icon="material-symbols:content-copy"></iconify-icon>
                         </button>
                     </div>
                 </div>`
             ).join('');
+
             return `
                 <div class="remote-details">
                     <h4>${sanitizeHTML(remote.type)}</h4>
@@ -652,8 +655,8 @@ function renderCarsView() {
                     </div>
                     <div class="header-actions">
                         <span>${yearRange} ${country}</span>
-                        <button class="icon-btn edit-btn" title="تعديل"><span class="material-symbols-outlined">edit</span></button>
-                        <button class="icon-btn danger delete-btn" title="حذف"><span class="material-symbols-outlined">delete</span></button>
+                        <button class="icon-btn edit-btn" title="تعديل"><iconify-icon icon="material-symbols:edit"></iconify-icon></button>
+                        <button class="icon-btn danger delete-btn" title="حذف"><iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon></button>
                     </div>
                 </div>
                 <div class="remote-card-body">${remotesHTML}</div>
@@ -689,7 +692,7 @@ export function addPartNumberEntry(container, pnData = {}) {
             <input type="text" id="pn-code-${partNumberCounter}" class="pn-code" placeholder="أدخل رقم القطعة..." value="${sanitizeHTML(code)}">
         </div>
         <button type="button" class="icon-btn danger remove-part-btn" style="align-self: end; margin-bottom: 16px;">
-            <span class="material-symbols-outlined">remove</span>
+            <iconify-icon icon="material-symbols:remove"></iconify-icon>
         </button>`;
     container.appendChild(entry);
 }
@@ -703,7 +706,7 @@ export function addRemoteSection(remoteData = {}) {
         <div class="form-section-header">
             <h4>الريموت #${remoteCounter}</h4>
             <button type="button" class="icon-btn danger remove-remote-btn">
-                <span class="material-symbols-outlined">delete</span>
+                <iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon>
             </button>
         </div>
         <div class="form-row">
@@ -744,7 +747,6 @@ export function openRemoteFinderModal(carId = null) {
     elements.remotesContainerModal.innerHTML = '';
     remoteCounter = 0;
     partNumberCounter = 0;
-
     if (carId) {
         const car = appState.remoteFinderDB.find(c => c.id === carId);
         if (!car) return;
@@ -760,7 +762,7 @@ export function openRemoteFinderModal(carId = null) {
     } else {
         elements.remoteFinderModalTitle.textContent = 'إضافة سيارة جديدة';
         elements.remoteCarIdInput.value = '';
-        addRemoteSection(); 
+        addRemoteSection();
     }
     elements.remoteFinderModal.showModal();
 }

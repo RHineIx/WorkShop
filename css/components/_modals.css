@@ -44,7 +44,8 @@ dialog::backdrop {
 #sale-form h3,
 .modal-header h3, /* Generalize for all modal headers */
 .barcode-modal-content h3 {
-    margin-bottom: 0; /* Let the header padding handle spacing */
+    margin-bottom: 0;
+    /* Let the header padding handle spacing */
     font-size: 18px;
     flex-shrink: 0;
 }
@@ -107,7 +108,7 @@ dialog::backdrop {
     align-items: center;
     justify-content: center;
 }
-.item-image-details .material-symbols-outlined {
+.item-image-details iconify-icon {
     font-size: 80px;
     color: var(--text-secondary);
 }

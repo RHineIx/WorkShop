@@ -10,14 +10,14 @@
     gap: 12px;
     cursor: pointer;
 }
-.stat-card .card-icon .material-symbols-outlined {
+.stat-card .card-icon iconify-icon {
     font-size: 32px;
     color: var(--accent-color);
 }
-.stat-card.low-stock-alert .card-icon .material-symbols-outlined {
+.stat-card.low-stock-alert .card-icon iconify-icon {
     color: var(--danger-color);
 }
-.stat-card.profit .card-icon .material-symbols-outlined {
+.stat-card.profit .card-icon iconify-icon {
     color: #38A169;
 }
 .card-details .card-title {
@@ -72,7 +72,7 @@
     justify-content: center;
     color: var(--text-secondary);
 }
-.card-image-placeholder .material-symbols-outlined {
+.card-image-placeholder iconify-icon {
     font-size: 40%;
 }
 .card-info {
