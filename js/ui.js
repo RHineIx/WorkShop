@@ -103,7 +103,7 @@ const elements = {
     detailsSupplierPhone: document.getElementById('details-supplier-phone'),
     detailsSupplierWhatsapp: document.getElementById('details-supplier-whatsapp'),
 
-    // === FIX: Add all missing Remote Finder elements ===
+    // Remote Finder Elements
     addNewRemoteFinderBtn: document.getElementById('add-new-remote-finder-btn'),
     remoteFinderModal: document.getElementById('remote-finder-modal'),
     closeRemoteFinderModalBtn: document.getElementById('close-remote-finder-modal-btn'),
@@ -117,14 +117,13 @@ const elements = {
     breadcrumbs: document.getElementById('breadcrumbs'),
     makesDatalist: document.getElementById('makes-list'),
     remotesContainerModal: document.getElementById('remotes-container-modal'),
-    // ===================================================
+    brandFilterBar: document.getElementById('brand-filter-bar'),
 };
 
 export function getDOMElements() {
     return elements;
 }
 
-// ... (دوال renderCategoryFilter, populateCategoryDatalist, ICONS, showStatus تبقى كما هي)
 export function renderCategoryFilter() {
     const categories = [...new Set(appState.inventory.items.map(item => item.category).filter(Boolean))];
     elements.categoryFilterDropdown.innerHTML = '';
@@ -210,7 +209,6 @@ export const showStatus = (message, type, options = {}) => {
     }
 };
 
-
 export const toggleView = (viewToShow) => {
     appState.currentView = viewToShow;
     const isInventory = viewToShow === 'inventory';
@@ -240,7 +238,6 @@ export const toggleView = (viewToShow) => {
     }
 };
 
-// ... (بقية الدوال حتى openRemoteFinderModal تبقى كما هي)
 export const renderDashboard = () => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -575,54 +572,49 @@ export const populateSyncModal = () => {
 
 // --- Remote Finder UI Functions ---
 
-function renderBreadcrumbs() {
-    if (appState.remoteFinderView === 'brands') {
-        elements.breadcrumbs.innerHTML = `<span class="crumb-link" data-target="brands">الكل</span>`;
-    } else {
-        elements.breadcrumbs.innerHTML = `<span class="crumb-link" data-target="brands">الكل</span> <span class="crumb-separator">&gt;</span> <span>${sanitizeHTML(appState.selectedBrand)}</span>`;
-    }
-}
-
-function renderBrandsView() {
-    const searchTerm = elements.remoteFinderSearchInput.value.toLowerCase();
-    const uniqueMakes = [...new Set(appState.remoteFinderDB.map(car => car.make))];
-    
-    const filteredMakes = uniqueMakes.filter(make => make.toLowerCase().includes(searchTerm));
-
-    if (filteredMakes.length === 0) {
-        elements.remoteFinderResultsArea.innerHTML = '<p class="empty-state">لا توجد ماركات تطابق بحثك.</p>';
-        return;
-    }
-    
-    elements.remoteFinderResultsArea.innerHTML = `<div class="brand-grid">` + filteredMakes.map(make => `
-        <div class="brand-card" data-brand="${sanitizeHTML(make)}">
-            <iconify-icon class="brand-logo" icon="cbi:${sanitizeHTML(make.toLowerCase().replace(/\s/g, ''))}"></iconify-icon>
-            <h3>${sanitizeHTML(make)}</h3>
-        </div>
-    `).join('') + `</div>`;
+function renderBrandFilterBar() {
+    const uniqueMakes = ['الكل', ...new Set(appState.remoteFinderDB.map(car => car.make))];
+    const chipsHTML = uniqueMakes.map(make => {
+        const brandForFilter = make === 'الكل' ? null : make;
+        const isActive = appState.selectedBrand === brandForFilter;
+        const iconHTML = make === 'الكل' 
+            ? `<span class="material-symbols-outlined">select_all</span>` 
+            : `<iconify-icon class="brand-logo" icon="cbi:${sanitizeHTML(make.toLowerCase().replace(/\s/g, ''))}"></iconify-icon>`;
+        
+        return `<button class="brand-filter-chip ${isActive ? 'active' : ''}" data-brand="${sanitizeHTML(make)}">
+                    ${iconHTML}
+                    <span>${sanitizeHTML(make)}</span>
+                </button>`;
+    }).join('');
+    elements.brandFilterBar.innerHTML = chipsHTML;
 }
 
 function renderCarsView() {
+    let carsToRender = [...appState.remoteFinderDB];
+
+    if (appState.selectedBrand) {
+        carsToRender = carsToRender.filter(car => car.make === appState.selectedBrand);
+    }
+
     const searchTerm = elements.remoteFinderSearchInput.value.toLowerCase();
-    const carsOfBrand = appState.remoteFinderDB.filter(car => car.make === appState.selectedBrand);
-
-    const filteredCars = carsOfBrand.filter(car => {
-        if (!searchTerm) return true;
-        const carInfo = `${car.make} ${car.model} ${car.yearStart} ${car.yearEnd}`.toLowerCase();
-        if (carInfo.includes(searchTerm)) return true;
-        return (car.remotes || []).some(remote => {
-            const remoteInfo = `${remote.type} ${remote.frequency} ${remote.fccId}`.toLowerCase();
-            if (remoteInfo.includes(searchTerm)) return true;
-            return Object.values(remote.partNumbers).some(code => code.toLowerCase().includes(searchTerm));
+    if (searchTerm) {
+        carsToRender = carsToRender.filter(car => {
+            const carInfo = `${car.make} ${car.model} ${car.yearStart} ${car.yearEnd}`.toLowerCase();
+            if (carInfo.includes(searchTerm)) return true;
+            return (car.remotes || []).some(remote => {
+                const remoteInfo = `${remote.type} ${remote.frequency} ${remote.fccId}`.toLowerCase();
+                if (remoteInfo.includes(searchTerm)) return true;
+                return Object.values(remote.partNumbers).some(code => code.toLowerCase().includes(searchTerm));
+            });
         });
-    });
+    }
 
-    if (filteredCars.length === 0) {
-        elements.remoteFinderResultsArea.innerHTML = '<p class="empty-state">لا توجد سيارات تطابق بحثك في هذه الماركة.</p>';
+    if (carsToRender.length === 0) {
+        elements.remoteFinderResultsArea.innerHTML = '<p class="empty-state">لا توجد سيارات تطابق بحثك.</p>';
         return;
     }
 
-    elements.remoteFinderResultsArea.innerHTML = `<div class="results-grid">` + filteredCars.map(car => {
+    elements.remoteFinderResultsArea.innerHTML = `<div class="results-grid">` + carsToRender.map(car => {
         const yearRange = (car.yearStart && car.yearEnd) ? `${car.yearStart} - ${car.yearEnd}` : (car.yearStart || '');
         const country = car.country ? `(${sanitizeHTML(car.country)})` : '';
         const remotesHTML = (car.remotes || []).map(remote => {
@@ -654,7 +646,10 @@ function renderCarsView() {
         return `
             <div class="remote-card" data-id="${car.id}">
                 <div class="remote-card-header">
-                    <h3>${sanitizeHTML(car.make)} ${sanitizeHTML(car.model)}</h3>
+                    <div class="header-info">
+                        <iconify-icon class="brand-logo" icon="cbi:${sanitizeHTML(car.make.toLowerCase().replace(/\s/g, ''))}"></iconify-icon>
+                        <h3>${sanitizeHTML(car.make)} ${sanitizeHTML(car.model)}</h3>
+                    </div>
                     <div class="header-actions">
                         <span>${yearRange} ${country}</span>
                         <button class="icon-btn edit-btn" title="تعديل"><span class="material-symbols-outlined">edit</span></button>
@@ -667,12 +662,8 @@ function renderCarsView() {
 }
 
 export function renderRemoteFinder() {
-    renderBreadcrumbs();
-    if (appState.remoteFinderView === 'brands') {
-        renderBrandsView();
-    } else {
-        renderCarsView();
-    }
+    renderBrandFilterBar();
+    renderCarsView();
 }
 
 let remoteCounter = 0;

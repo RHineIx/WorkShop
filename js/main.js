@@ -854,7 +854,6 @@ function setupRemoteFinderListeners(elements) {
 
     elements.remoteFinderForm.addEventListener('submit', handleRemoteFinderFormSubmit);
 
-    // === FIX: Correctly handle clicks on dynamic buttons inside the form ===
     elements.remoteFinderForm.addEventListener('click', (e) => {
         const addPartBtn = e.target.closest('.add-part-number-btn');
         const removePartBtn = e.target.closest('.remove-part-btn');
@@ -865,43 +864,22 @@ function setupRemoteFinderListeners(elements) {
             e.preventDefault();
             const container = addPartBtn.previousElementSibling;
             if (container && container.classList.contains('part-numbers-container')) {
-                ui.addPartNumberEntry(container); // Call the exported UI function
+                ui.addPartNumberEntry(container);
             }
-            return;
-        }
-
-        if (addRemoteBtn) {
-            e.preventDefault();
-            ui.addRemoteSection(); // Call the exported UI function
-            return;
-        }
-
-        if (removePartBtn) {
+        } else if (removePartBtn) {
             e.preventDefault();
             removePartBtn.closest('.part-number-entry').remove();
-            return;
-        }
-
-        if (removeRemoteBtn) {
+        } else if (removeRemoteBtn) {
             e.preventDefault();
             removeRemoteBtn.closest('.remote-form-section').remove();
-            return;
+        } else if (addRemoteBtn) {
+            e.preventDefault();
+            ui.addRemoteSection();
         }
     });
-    // --- ========================================================== ---
 
     elements.remoteFinderResultsArea.addEventListener('click', (e) => {
-        const brandCard = e.target.closest('.brand-card');
         const remoteCard = e.target.closest('.remote-card');
-        
-        if (brandCard) {
-            appState.remoteFinderView = 'cars';
-            appState.selectedBrand = brandCard.dataset.brand;
-            elements.remoteFinderSearchInput.value = '';
-            ui.renderRemoteFinder();
-            return;
-        }
-
         if (remoteCard) {
             const cardId = remoteCard.dataset.id;
             if (e.target.closest('.edit-btn')) {
@@ -921,14 +899,20 @@ function setupRemoteFinderListeners(elements) {
             }
         }
     });
+    
+    elements.brandFilterBar.addEventListener('click', (e) => {
+        const chip = e.target.closest('.brand-filter-chip');
+        if (!chip) return;
 
-    elements.breadcrumbs.addEventListener('click', (e) => {
-        if (e.target.dataset.target === 'brands') {
-            appState.remoteFinderView = 'brands';
+        const brand = chip.dataset.brand === 'الكل' ? null : chip.dataset.brand;
+        
+        if (appState.selectedBrand === brand) {
             appState.selectedBrand = null;
-            elements.remoteFinderSearchInput.value = '';
-            ui.renderRemoteFinder();
+        } else {
+            appState.selectedBrand = brand;
         }
+        
+        ui.renderRemoteFinder();
     });
 }
 

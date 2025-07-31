@@ -12,7 +12,7 @@ export const appState = {
         lastArchiveTimestamp: null
     },
 
-    /** @type {Array<Object>} A new list to store supplier records. */
+    /** @type {Array<Object>} A list to store supplier records. */
     suppliers: [],
 
     /** @type {Array<Object>} The database for the remote code finder feature. */
@@ -21,16 +21,13 @@ export const appState = {
     /** @type {'inventory' | 'dashboard' | 'remote_finder'} The currently active view. */
     currentView: 'inventory',
     
-    /** @type {'brands' | 'cars'} The current sub-view for the remote finder. */
-    remoteFinderView: 'brands',
-    
-    /** @type {string|null} The selected brand in the remote finder. */
+    /** @type {string|null} The selected brand in the remote finder. null means 'All'. */
     selectedBrand: null,
 
     /** @type {'today' | 'week' | 'month'} The time period for the dashboard. */
     dashboardPeriod: 'today',
 
-    /** @type {Array<Object>} A new list to store sales records. */
+    /** @type {Array<Object>} A list to store sales records. */
     sales: [],
 
     /** @type {'all' | 'low_stock'} The currently active filter for the inventory grid. */
