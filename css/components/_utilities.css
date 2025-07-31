@@ -37,10 +37,10 @@
     transform: translateY(0) scale(1);
 }
 
-.toast__icon {
+.toast .toast__icon {
     display: flex;
     align-items: center;
-    font-size: 24px;
+    font-size: 28px;
 }
 
 /* Color Variants */
@@ -66,7 +66,8 @@
 }
 
 /* --- Other Global Styles & Utilities --- */
-/* NOTE: The old .status-indicator styles have been removed as they are no longer used. */
+/* NOTE: The old .status-indicator styles have been removed as they are no longer used.
+ */
 *::-webkit-scrollbar {
     width: 0 !important;
     background: transparent;

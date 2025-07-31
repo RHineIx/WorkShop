@@ -11,7 +11,7 @@
     cursor: pointer;
 }
 .stat-card .card-icon iconify-icon {
-    font-size: 32px;
+    font-size: 40px;
     color: var(--accent-color);
 }
 .stat-card.low-stock-alert .card-icon iconify-icon {
@@ -73,7 +73,7 @@
     color: var(--text-secondary);
 }
 .card-image-placeholder iconify-icon {
-    font-size: 40%;
+    font-size: 50%;
 }
 .card-info {
     padding: var(--spacing-sm);

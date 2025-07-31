@@ -109,7 +109,7 @@ dialog::backdrop {
     justify-content: center;
 }
 .item-image-details iconify-icon {
-    font-size: 80px;
+    font-size: 96px;
     color: var(--text-secondary);
 }
 .details-info-container {
@@ -175,7 +175,8 @@ dialog::backdrop {
     border-top: 1px solid var(--border-color);
     padding-top: var(--spacing-md);
 }
-.details-notes h3 {
+.details-notes h3,
+.details-supplier-info h3 {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
@@ -349,4 +350,8 @@ dialog::backdrop {
 .details-supplier-info p {
     margin-bottom: var(--spacing-sm);
     color: var(--text-secondary);
+}
+
+#image-placeholder iconify-icon {
+    font-size: 50px;
 }
