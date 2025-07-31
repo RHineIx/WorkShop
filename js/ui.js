@@ -674,10 +674,21 @@ function renderCarsView() {
     }).join('') + `</div>`;
 }
 
-
 export function renderRemoteFinder() {
     renderBrandFilterBar();
     renderCarsView();
+}
+
+/**
+ * Helper function to generate <option> tags for a <select> element.
+ * @param {string[]} optionsArray Array of option strings.
+ * @param {string} selectedValue The value that should be pre-selected.
+ * @returns {string} HTML string of option tags.
+ */
+function createOptions(optionsArray, selectedValue) {
+    return optionsArray.map(option =>
+        `<option value="${sanitizeHTML(option)}" ${option === selectedValue ? 'selected' : ''}>${sanitizeHTML(option)}</option>`
+    ).join('');
 }
 
 export function addPartNumberEntry(container, pnData = {}) {
@@ -710,6 +721,10 @@ export function addRemoteSection(remoteData = {}) {
     const container = elements.remotesContainerModal;
     const remoteNumber = container.querySelectorAll('.remote-form-section').length + 1;
 
+    const remoteTypes = ['بصمة', 'ريمونت'];
+    const frequencies = ['315 MHz', '433.92 MHz', '2.4 GHz'];
+    const batteryTypes = ['CR2032', 'CR2025', 'CR2016', 'CR1632'];
+
     const section = document.createElement('div');
     section.className = 'remote-form-section';
 
@@ -723,12 +738,18 @@ export function addRemoteSection(remoteData = {}) {
         <div class="form-row">
             <div class="form-group">
                 <label>النوع
-                    <input type="text" class="remote-type" value="${sanitizeHTML(remoteData.type || '')}" placeholder="مفتاح ذكي...">
+                    <select class="remote-type">
+                        <option value="">-- اختر النوع --</option>
+                        ${createOptions(remoteTypes, remoteData.type)}
+                    </select>
                 </label>
             </div>
             <div class="form-group">
                 <label>التردد
-                    <input type="text" class="remote-frequency" value="${sanitizeHTML(remoteData.frequency || '')}" placeholder="315 MHz...">
+                    <select class="remote-frequency">
+                        <option value="">-- اختر التردد --</option>
+                        ${createOptions(frequencies, remoteData.frequency)}
+                    </select>
                 </label>
             </div>
         </div>
@@ -740,7 +761,10 @@ export function addRemoteSection(remoteData = {}) {
             </div>
             <div class="form-group">
                 <label>البطارية
-                    <input type="text" class="remote-battery" value="${sanitizeHTML(remoteData.battery || '')}" placeholder="CR2032...">
+                     <select class="remote-battery">
+                        <option value="">-- اختر البطارية --</option>
+                        ${createOptions(batteryTypes, remoteData.battery)}
+                    </select>
                 </label>
             </div>
         </div>
@@ -766,6 +790,14 @@ export function openRemoteFinderModal(carId = null) {
     const uniqueMakes = [...new Set(appState.remoteFinderDB.map(car => car.make))];
     elements.makesDatalist.innerHTML = uniqueMakes.map(make => `<option value="${sanitizeHTML(make)}">`).join('');
     
+    const countryOptions = ['امريكي', 'خليجي', 'كندي', 'كوري', 'ياباني'];
+    const carCountrySelect = document.createElement('select');
+    carCountrySelect.id = 'car-country';
+    carCountrySelect.innerHTML = `<option value="">-- اختر البلد --</option>${createOptions(countryOptions, '')}`;
+    
+    const carCountryInput = elements.remoteFinderForm.querySelector('#car-country');
+    carCountryInput.replaceWith(carCountrySelect);
+    
     elements.remotesContainerModal.innerHTML = '';
 
     if (carId) {
@@ -777,7 +809,7 @@ export function openRemoteFinderModal(carId = null) {
         elements.remoteFinderForm.querySelector('#car-model').value = car.model;
         elements.remoteFinderForm.querySelector('#car-year-start').value = car.yearStart;
         elements.remoteFinderForm.querySelector('#car-year-end').value = car.yearEnd;
-        elements.remoteFinderForm.querySelector('#car-country').value = car.country;
+        elements.remoteFinderForm.querySelector('#car-country').value = car.country || '';
         
         if (car.remotes && car.remotes.length > 0) {
             car.remotes.forEach(remoteData => addRemoteSection(remoteData));
