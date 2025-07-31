@@ -1,5 +1,6 @@
 // js/api.js
 import { appState } from './state.js';
+import { getImage, storeImage } from './db.js'; // Import DB helpers
 
 // --- Custom Error for Handling Race Conditions ---
 /**
@@ -107,28 +108,52 @@ async function saveJsonToGitHub(filePath, dataObject, commitMessage) {
 // --- Exported GitHub API Functions ---
 
 /**
- * Fetches an image and returns a local Blob URL.
+ * Fetches an image, prioritizing local cache (memory -> IndexedDB) before fetching from GitHub.
  */
 export const fetchImageWithAuth = async (path) => {
+    if (!path) return null;
+
+    // 1. Check in-memory cache first (fastest)
     if (appState.imageCache.has(path)) {
         return appState.imageCache.get(path);
     }
-    if (!appState.syncConfig || !path) return null;
+
+    // 2. Check IndexedDB cache
+    try {
+        const cachedBlob = await getImage(path);
+        if (cachedBlob) {
+            const url = URL.createObjectURL(cachedBlob);
+            appState.imageCache.set(path, url); // Add to in-memory cache for this session
+            return url;
+        }
+    } catch (dbError) {
+        console.error('Error fetching from IndexedDB:', dbError);
+    }
+    
+    // 3. If not in any cache, fetch from GitHub
+    if (!appState.syncConfig) return null;
     const { username, repo, pat } = appState.syncConfig;
     const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
+    
     try {
         const response = await fetch(apiUrl, { headers: { 'Authorization': `token ${pat}` } });
-        if (!response.ok) throw new Error('Failed to fetch image');
+        if (!response.ok) throw new Error('Failed to fetch image from GitHub');
+        
         const data = await response.json();
-        const blob = b64toBlob(data.content, 'image/jpeg');
+        const blob = b64toBlob(data.content, 'image/webp'); // Assuming images are webp or jpeg
+        
+        // Store the fetched blob in IndexedDB for future use
+        await storeImage(path, blob);
+
         const url = URL.createObjectURL(blob);
-        appState.imageCache.set(path, url);
+        appState.imageCache.set(path, url); // Also cache in memory for current session
         return url;
     } catch (error) {
         console.error(`Failed to fetch image ${path}:`, error);
         return null;
     }
 };
+
 
 /**
  * Uploads an image file to the repo.
@@ -150,6 +175,7 @@ export const uploadImageToGitHub = async (imageBlob, originalFileName) => {
     const data = await response.json();
     return data.content.path;
 };
+
 /**
  * REFACTORED: Fetches the main inventory.json file.
  */
