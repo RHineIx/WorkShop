@@ -622,18 +622,21 @@ function renderCarsView() {
         const carMeta = `${yearRange} ${countryInfo}`.trim();
 
         const remotesHTML = (car.remotes || []).map(remote => {
-            const partNumbersHTML = Object.entries(remote.partNumbers).map(([vendor, code]) => 
-                `<div class="part-number-row">
+            const partNumbersHTML = Object.entries(remote.partNumbers).map(([vendor, code]) => {
+                const remoteTypeKeyword = remote.type === 'بصمة' ? 'Smart Key' : 'remote';
+                const searchQuery = `"${code}" ${car.make} ${car.model} ${remoteTypeKeyword}`;
+
+                return `<div class="part-number-row">
                     <span class="vendor-tag ${vendor.toLowerCase()}">${sanitizeHTML(vendor.toUpperCase())}</span>
                     <span class="part-code">${sanitizeHTML(code)}</span>
                     <div class="part-actions">
                         <button class="icon-btn copy-btn" title="نسخ" data-code="${sanitizeHTML(code)}"><iconify-icon icon="material-symbols:content-copy-outline-rounded"></iconify-icon></button>
-                        <a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(code)}" target="_blank" class="icon-btn" title="بحث عن صورة">
+                        <a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(searchQuery)}" target="_blank" class="icon-btn" title="بحث عن صورة">
                             <iconify-icon icon="material-symbols:image-search-outline-rounded"></iconify-icon>
                         </a>
                     </div>
-                </div>`
-            ).join('');
+                </div>`;
+            }).join('');
 
             return `
                 <div class="remote-section">
@@ -790,13 +793,15 @@ export function openRemoteFinderModal(carId = null) {
     const uniqueMakes = [...new Set(appState.remoteFinderDB.map(car => car.make))];
     elements.makesDatalist.innerHTML = uniqueMakes.map(make => `<option value="${sanitizeHTML(make)}">`).join('');
     
-    const countryOptions = ['امريكي', 'خليجي', 'كندي', 'كوري', 'ياباني'];
-    const carCountrySelect = document.createElement('select');
-    carCountrySelect.id = 'car-country';
-    carCountrySelect.innerHTML = `<option value="">-- اختر البلد --</option>${createOptions(countryOptions, '')}`;
-    
+    // This is a bit of a trick to replace the input with a select while keeping its position
     const carCountryInput = elements.remoteFinderForm.querySelector('#car-country');
-    carCountryInput.replaceWith(carCountrySelect);
+    if (carCountryInput && carCountryInput.tagName !== 'SELECT') {
+        const countryOptions = ['امريكي', 'خليجي', 'كندي', 'كوري', 'ياباني'];
+        const carCountrySelect = document.createElement('select');
+        carCountrySelect.id = 'car-country';
+        carCountrySelect.innerHTML = `<option value="">-- اختر البلد --</option>${createOptions(countryOptions, '')}`;
+        carCountryInput.replaceWith(carCountrySelect);
+    }
     
     elements.remotesContainerModal.innerHTML = '';
 
