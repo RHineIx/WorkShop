@@ -297,6 +297,8 @@ export function updateSaleTotal() {
 
 export function renderInventorySkeleton(count = 8) {
     elements.inventoryGrid.innerHTML = '';
+    const fragment = document.createDocumentFragment(); // Build in memory
+
     for (let i = 0; i < count; i++) {
         const skeletonCard = document.createElement('div');
         skeletonCard.className = 'skeleton-card';
@@ -308,8 +310,10 @@ export function renderInventorySkeleton(count = 8) {
                  <div class="skeleton skeleton-text w-50" style="margin-top: 12px;"></div>
             </div>
         `;
-        elements.inventoryGrid.appendChild(skeletonCard);
+        fragment.appendChild(skeletonCard); // Append to the fragment
     }
+
+    elements.inventoryGrid.appendChild(fragment); // Append to the DOM once
 }
 
 function getFilteredItems() {
@@ -676,6 +680,7 @@ function renderCarsView() {
             </div>`;
     }).join('') + `</div>`;
 }
+
 
 export function renderRemoteFinder() {
     renderBrandFilterBar();
