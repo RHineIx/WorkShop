@@ -192,18 +192,20 @@ const ICONS = {
   info: "material-symbols:info",
   warning: "material-symbols:warning-rounded",
 };
+
+export const hideSyncStatus = () => {
+  const syncToasts =
+    elements.toastContainer.querySelectorAll(".toast--syncing");
+  syncToasts.forEach(toast => {
+    toast.classList.remove("show");
+    toast.addEventListener("transitionend", () => toast.remove(), {
+      once: true,
+    });
+  });
+};
+
 export const showStatus = (message, type, options = {}) => {
   const { duration = 4000, showRefreshButton = false } = options;
-  const existingSyncingToast =
-    elements.toastContainer.querySelector(".toast--syncing");
-  if (existingSyncingToast) {
-    existingSyncingToast.classList.remove("show");
-    existingSyncingToast.addEventListener(
-      "transitionend",
-      () => existingSyncingToast.remove(),
-      { once: true }
-    );
-  }
 
   const toast = document.createElement("div");
   toast.className = `toast toast--${type}`;
@@ -231,7 +233,9 @@ export const showStatus = (message, type, options = {}) => {
   setTimeout(() => {
     toast.classList.add("show");
   }, 10);
-  if (type !== "syncing" && !showRefreshButton) {
+
+  // A duration of 0 means the toast is permanent until removed manually
+  if (duration > 0 && type !== "syncing" && !showRefreshButton) {
     setTimeout(() => {
       toast.classList.remove("show");
       toast.addEventListener("transitionend", () => toast.remove(), {

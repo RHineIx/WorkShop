@@ -84,6 +84,7 @@ async function performPreSaveConflictCheck() {
   ui.showStatus("التحقق من البيانات...", "syncing");
   const { data: latestInventory, sha: latestSha } = await api.fetchFromGitHub();
   if (latestSha !== appState.fileSha) {
+    ui.hideSyncStatus();
     ui.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
       showRefreshButton: true,
     });
@@ -92,6 +93,7 @@ async function performPreSaveConflictCheck() {
   // No conflict, update state with potentially newer data (even if sha is same, content might differ in memory)
   appState.inventory = latestInventory;
   appState.fileSha = latestSha;
+  ui.hideSyncStatus();
   return false; // No conflict
 }
 
@@ -147,6 +149,7 @@ async function handleSaleFormSubmit(e) {
       await api.saveSales();
       saveLocalData();
       ui.getDOMElements().saleModal.close();
+      ui.hideSyncStatus();
       ui.showStatus("تم تسجيل البيع بنجاح!", "success");
     } catch (saveError) {
       item.quantity = originalQuantity;
@@ -155,6 +158,7 @@ async function handleSaleFormSubmit(e) {
       throw saveError;
     }
   } catch (error) {
+    ui.hideSyncStatus();
     if (!(error instanceof ConflictError)) {
       ui.showStatus(`فشل تسجيل البيع: ${error.message}`, "error");
     }
@@ -234,12 +238,14 @@ async function handleItemFormSubmit(e) {
     saveLocalData();
 
     ui.getDOMElements().itemModal.close();
+    ui.hideSyncStatus();
     ui.showStatus("تم حفظ التغييرات بنجاح!", "success");
 
     if (appState.currentItemId === itemData.id) {
       ui.openDetailsModal(itemData.id);
     }
   } catch (error) {
+    ui.hideSyncStatus();
     ui.showStatus(`فشل الحفظ: ${error.message}`, "error");
   } finally {
     saveButton.disabled = false;
@@ -269,6 +275,7 @@ async function handleImageCleanup() {
       repoImage => !usedImages.has(repoImage.path)
     );
     if (orphanedImages.length === 0) {
+      ui.hideSyncStatus();
       ui.showStatus("لا توجد صور غير مستخدمة ليتم حذفها.", "success");
       return;
     }
@@ -286,10 +293,12 @@ async function handleImageCleanup() {
       );
       deletedCount++;
     }
+    ui.hideSyncStatus();
     ui.showStatus(`تم حذف ${deletedCount} صورة غير مستخدمة بنجاح.`, "success", {
       duration: 5000,
     });
   } catch (error) {
+    ui.hideSyncStatus();
     ui.showStatus(`حدث خطأ: ${error.message}`, "error", { duration: 5000 });
   }
 }
@@ -328,12 +337,14 @@ async function handleSupplierFormSubmit(e) {
     await api.saveSuppliers();
     ui.renderSupplierList();
     ui.populateSupplierDropdown(elements.itemSupplierSelect.value);
+    ui.hideSyncStatus();
     ui.showStatus(`تم ${actionText} المورّد بنجاح!`, "success");
     elements.supplierForm.reset();
     elements.supplierIdInput.value = "";
     elements.supplierFormTitle.textContent = "إضافة مورّد جديد";
     elements.cancelEditSupplierBtn.classList.add("view-hidden");
   } catch (error) {
+    ui.hideSyncStatus();
     ui.showStatus(`فشل حفظ المورّد: ${error.message}`, "error");
   }
 }
@@ -366,8 +377,10 @@ async function handleDeleteSupplier(supplierId) {
       saveLocalData();
       ui.renderSupplierList();
       ui.populateSupplierDropdown(ui.getDOMElements().itemSupplierSelect.value);
+      ui.hideSyncStatus();
       ui.showStatus("تم حذف المورّد بنجاح!", "success");
     } catch (error) {
+      ui.hideSyncStatus();
       ui.showStatus(`فشل حذف المورّد: ${error.message}`, "error");
     }
   }
@@ -426,6 +439,7 @@ async function handleManualArchive() {
     await api.saveToGitHub();
     saveLocalData();
     updateLastArchiveDateDisplay();
+    ui.hideSyncStatus();
     ui.showStatus(
       `تمت أرشفة ${archivesToCreate.length} شهر من السجلات بنجاح.`,
       "success",
@@ -433,6 +447,7 @@ async function handleManualArchive() {
     );
   } catch (error) {
     console.error("Manual archive failed:", error);
+    ui.hideSyncStatus();
     ui.showStatus(`فشلت عملية الأرشفة: ${error.message}`, "error", {
       duration: 5000,
     });
@@ -521,9 +536,11 @@ async function handleDownloadBackup() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(link.href);
+    ui.hideSyncStatus();
     ui.showStatus("تم تنزيل النسخة الاحتياطية بنجاح!", "success");
   } catch (error) {
     console.error("Backup failed:", error);
+    ui.hideSyncStatus();
     ui.showStatus(`فشل إنشاء النسخة الاحتياطية: ${error.message}`, "error", {
       duration: 5000,
     });
@@ -573,6 +590,7 @@ async function handleRestoreBackup(event) {
     appState.remoteFinderDB = remoteDbData;
 
     saveLocalData();
+    ui.hideSyncStatus();
     ui.showStatus(
       "تمت استعادة البيانات بنجاح! سيتم إعادة تحميل التطبيق.",
       "success",
@@ -583,6 +601,7 @@ async function handleRestoreBackup(event) {
     }, 4000);
   } catch (error) {
     console.error("Restore failed:", error);
+    ui.hideSyncStatus();
     ui.showStatus(`فشلت عملية الاستعادة: ${error.message}`, "error", {
       duration: 5000,
     });
@@ -644,8 +663,10 @@ async function handleRemoteFinderFormSubmit(e) {
     saveLocalData();
     ui.renderRemoteFinder();
     elements.remoteFinderModal.close();
+    ui.hideSyncStatus();
     ui.showStatus("تم الحفظ بنجاح!", "success");
   } catch (error) {
+    ui.hideSyncStatus();
     ui.showStatus(`فشل الحفظ: ${error.message}`, "error", { duration: 5000 });
   }
 }
@@ -882,9 +903,11 @@ function setupModalListeners(elements) {
           if (itemToUpdate) itemToUpdate.quantity = currentItem.quantity;
           await api.saveToGitHub();
           saveLocalData();
+          ui.hideSyncStatus();
           ui.showStatus("تم حفظ التغييرات بنجاح!", "success");
         }
       } catch (error) {
+        ui.hideSyncStatus();
         const originalItemIndex = appState.inventory.items.findIndex(
           i => i.id === itemBeforeEdit.id
         );
@@ -1069,9 +1092,11 @@ function setupModalListeners(elements) {
               sha,
               `Delete archive file: ${path}`
             );
+            ui.hideSyncStatus();
             ui.showStatus("تم حذف الأرشيف بنجاح!", "success");
             openArchiveBrowser();
           } catch (error) {
+            ui.hideSyncStatus();
             ui.showStatus(`فشل حذف الأرشيف: ${error.message}`, "error", {
               duration: 5000,
             });
@@ -1358,8 +1383,10 @@ async function initializeApp() {
       }
 
       saveLocalData();
+      ui.hideSyncStatus();
       ui.showStatus("تمت المزامنة بنجاح!", "success");
     } catch (error) {
+      ui.hideSyncStatus();
       ui.showStatus(`خطأ في المزامنة: ${error.message}`, "error", {
         duration: 5000,
       });
