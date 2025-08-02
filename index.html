@@ -445,16 +445,6 @@
           >.
         </p>
 
-        <label for="exchange-rate">سعر صرف الدولار (مقابل 1 دولار)</label>
-        <input
-          type="number"
-          id="exchange-rate"
-          step="5"
-          placeholder="e.g., 1460"
-        />
-
-        <hr class="maintenance-divider" />
-
         <label for="github-username">اسم المستخدم في GitHub</label>
         <input
           type="text"
@@ -482,52 +472,72 @@
           <button type="submit">حفظ الإعدادات</button>
           <button type="button" id="cancel-sync-btn">إلغاء</button>
         </div>
-        <div class="maintenance-actions">
-          <button
-            type="button"
-            id="manual-archive-btn"
-            class="cleanup-btn archive-btn"
-          >
-            <iconify-icon icon="material-symbols:archive"></iconify-icon>
-            أرشفة المبيعات القديمة
-          </button>
-          <p id="last-archive-date-display" class="last-archive-text">
-            آخر أرشفة: لم تتم بعد
-          </p>
+        
+        <hr class="maintenance-divider" />
+        
+        <button type="button" id="advanced-settings-toggle" class="advanced-settings-toggle">
+          <span>الإعدادات المتقدمة</span>
+          <iconify-icon icon="material-symbols:expand-more"></iconify-icon>
+        </button>
 
-          <hr class="maintenance-divider" />
-          <button
-            type="button"
-            id="view-archives-btn"
-            class="cleanup-btn archive-btn"
-          >
-            <iconify-icon icon="material-symbols:inventory"></iconify-icon>
-            عرض أرشيف المبيعات
-          </button>
-          <button type="button" id="cleanup-images-btn" class="cleanup-btn">
-            <iconify-icon icon="material-symbols:cleaning-services"></iconify-icon>
-            تنظيف الصور غير المستخدمة
-          </button>
+        <div id="advanced-settings-container" class="advanced-settings-container">
+          <div class="advanced-settings-wrapper">
+            <label for="exchange-rate">سعر صرف الدولار (مقابل 1 دولار)</label>
+            <input
+              type="number"
+              id="exchange-rate"
+              step="5"
+              placeholder="e.g., 1460"
+            />
 
-          <hr class="maintenance-divider" />
-          <button
-            type="button"
-            id="download-backup-btn"
-            class="cleanup-btn archive-btn"
-          >
-            <iconify-icon icon="material-symbols:download-for-offline"></iconify-icon>
-            تنزيل نسخة احتياطية محلية
-          </button>
-          <input
-            type="file"
-            id="restore-backup-input"
-            class="visually-hidden"
-            accept=".zip"
-          />
-          <label for="restore-backup-input" class="cleanup-btn archive-btn">
-            <iconify-icon icon="material-symbols:upload-file"></iconify-icon>
-            استعادة من نسخة احتياطية
-          </label>
+            <div class="maintenance-actions">
+              <button
+                type="button"
+                id="manual-archive-btn"
+                class="cleanup-btn archive-btn"
+              >
+                <iconify-icon icon="material-symbols:archive"></iconify-icon>
+                أرشفة المبيعات القديمة
+              </button>
+              <p id="last-archive-date-display" class="last-archive-text">
+                آخر أرشفة: لم تتم بعد
+              </p>
+    
+              <hr class="maintenance-divider" />
+              <button
+                type="button"
+                id="view-archives-btn"
+                class="cleanup-btn archive-btn"
+              >
+                <iconify-icon icon="material-symbols:inventory"></iconify-icon>
+                عرض أرشيف المبيعات
+              </button>
+              <button type="button" id="cleanup-images-btn" class="cleanup-btn">
+                <iconify-icon icon="material-symbols:cleaning-services"></iconify-icon>
+                تنظيف الصور غير المستخدمة
+              </button>
+    
+              <hr class="maintenance-divider" />
+              <button
+                type="button"
+                id="download-backup-btn"
+                class="cleanup-btn archive-btn"
+              >
+                <iconify-icon icon="material-symbols:download-for-offline"></iconify-icon>
+                تنزيل نسخة احتياطية محلية
+              </button>
+              <input
+                type="file"
+                id="restore-backup-input"
+                class="visually-hidden"
+                accept=".zip"
+              />
+              <label for="restore-backup-input" class="cleanup-btn archive-btn">
+                <iconify-icon icon="material-symbols:upload-file"></iconify-icon>
+                استعادة من نسخة احتياطية
+              </label>
+            </div>
+          </div>
         </div>
       </form>
     </dialog>
@@ -683,7 +693,7 @@
                     <div class="form-row">
                         <div class="form-group"><label for="car-year-start">من</label><input type="number" id="car-year-start" placeholder="2018"></div>
                         <div class="form-group"><label for="car-year-end">إلى</label><input type="number" id="car-year-end" placeholder="2022"></div>
-                        <div class="form-group"><label for="car-country">البلد</label><input type="text" id="car-country" placeholder="USA, GCC..."></div>
+                        <div class="form-group"><label>البلد<select id="car-country"></select></label></div>
                     </div>
                     <hr class="section-divider">
                     <div id="remotes-container-modal" class="remotes-container"></div>

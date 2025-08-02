@@ -783,6 +783,16 @@ function setupModalListeners(elements) {
         elements.syncModal.close();
         await initializeApp();
     });
+    
+    // NEW: Advanced settings toggle listener
+    const advancedSettingsToggle = document.getElementById('advanced-settings-toggle');
+    const advancedSettingsContainer = document.getElementById('advanced-settings-container');
+
+    advancedSettingsToggle.addEventListener('click', () => {
+        advancedSettingsToggle.classList.toggle('open');
+        advancedSettingsContainer.classList.toggle('open');
+    });
+
     elements.cleanupImagesBtn.addEventListener('click', handleImageCleanup);
     elements.downloadBackupBtn.addEventListener('click', handleDownloadBackup);
     elements.restoreBackupInput.addEventListener('change', handleRestoreBackup);

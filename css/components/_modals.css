@@ -56,8 +56,51 @@ dialog::backdrop {
     gap: var(--spacing-sm);
     flex-shrink: 0;
 }
+
+/* --- NEW: Advanced Settings Toggle Styles --- */
+.advanced-settings-toggle {
+    width: 100%;
+    background-color: transparent;
+    border: none;
+    padding: var(--spacing-sm) 0;
+    margin-top: var(--spacing-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-family: var(--font-family);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-secondary);
+}
+.advanced-settings-toggle iconify-icon {
+    font-size: 24px;
+    transition: transform 0.3s ease;
+}
+.advanced-settings-toggle.open iconify-icon {
+    transform: rotate(180deg);
+}
+
+.advanced-settings-container {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.4s ease-out;
+}
+.advanced-settings-container.open {
+    grid-template-rows: 1fr;
+}
+.advanced-settings-container > div {
+    overflow: hidden;
+}
+/* This wrapper is necessary for the animation to work correctly */
+.advanced-settings-wrapper {
+    padding-top: var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
 .maintenance-actions {
-    margin-top: var(--spacing-lg);
     padding-top: var(--spacing-md);
     border-top: 1px solid var(--border-color);
     display: flex;
@@ -298,36 +341,7 @@ dialog::backdrop {
     padding: var(--spacing-lg);
     gap: var(--spacing-lg);
 }
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: var(--spacing-md);
-    border-bottom: 1px solid var(--border-color);
-}
-.modal-header h3 {
-    font-size: 18px;
-    margin-bottom: 0;
-}
-.supplier-list {
-    max-height: 200px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-}
-.supplier-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--spacing-sm) var(--spacing-md);
-    background-color: var(--bg-color);
-    border-radius: var(--border-radius-sm);
-}
-.supplier-item-actions {
-    display: flex;
-    gap: var(--spacing-sm);
-}
+
 #supplier-form h4 {
     margin-bottom: var(--spacing-md);
     font-size: 16px;
@@ -340,13 +354,7 @@ dialog::backdrop {
 .details-supplier-info.view-hidden {
     display: none;
 }
-.details-supplier-info h3 {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-sm);
-    font-size: 16px;
-}
+
 .details-supplier-info p {
     margin-bottom: var(--spacing-sm);
     color: var(--text-secondary);
