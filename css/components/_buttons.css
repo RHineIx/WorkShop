@@ -189,8 +189,11 @@ label[for="restore-backup-input"]:hover {
   border-radius: var(--border-radius-sm);
   color: var(--text-secondary);
   cursor: pointer;
+  font-family: var(--font-family);
+  font-size: 14px;
   font-weight: 500;
   transition: all var(--transition-speed) ease;
+  margin-bottom: var(--spacing-sm);
 }
 .custom-file-upload-btn iconify-icon {
   font-size: 20px;
@@ -318,19 +321,4 @@ label[for="restore-backup-input"]:hover {
 }
 .close-modal-btn iconify-icon {
   font-size: 24px;
-}
-.paste-btn {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 5;
-  background-color: var(--bg-color);
-  border: 1px solid var(--border-color);
-}
-.paste-btn:hover {
-  background-color: var(--surface-color);
-  border-color: var(--accent-color);
-  color: var(--accent-color);
-  transform: translateY(0);
-  box-shadow: var(--shadow-light);
 }
