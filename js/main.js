@@ -76,17 +76,32 @@ function handlePriceConversion(iqdInput, usdInput) {
 
 // --- CORE LOGIC HANDLERS ---
 
+/**
+ * Checks for data conflicts before performing a save operation.
+ * @returns {Promise<boolean>} True if a conflict exists, false otherwise.
+ */
+async function performPreSaveConflictCheck() {
+  ui.showStatus("التحقق من البيانات...", "syncing");
+  const { data: latestInventory, sha: latestSha } = await api.fetchFromGitHub();
+  if (latestSha !== appState.fileSha) {
+    ui.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
+      showRefreshButton: true,
+    });
+    return true; // Conflict detected
+  }
+  // No conflict, update state with potentially newer data (even if sha is same, content might differ in memory)
+  appState.inventory = latestInventory;
+  appState.fileSha = latestSha;
+  return false; // No conflict
+}
+
 async function handleSaleFormSubmit(e) {
   e.preventDefault();
   const saveButton = document.getElementById("confirm-sale-btn");
   saveButton.disabled = true;
-  ui.showStatus("التحقق من البيانات...", "syncing");
+
   try {
-    const { sha: latestSha } = await api.fetchFromGitHub();
-    if (latestSha !== appState.fileSha) {
-      ui.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
-        showRefreshButton: true,
-      });
+    if (await performPreSaveConflictCheck()) {
       saveButton.disabled = false;
       return;
     }
@@ -98,6 +113,7 @@ async function handleSaleFormSubmit(e) {
       10
     );
     const salePrice = parseFloat(document.getElementById("sale-price").value);
+
     if (!item || item.quantity < quantityToSell || quantityToSell <= 0) {
       ui.showStatus("خطأ في البيانات أو الكمية غير متوفرة.", "error");
       saveButton.disabled = false;
@@ -154,21 +170,14 @@ async function handleItemFormSubmit(e) {
   e.preventDefault();
   const saveButton = document.getElementById("save-item-btn");
   saveButton.disabled = true;
-  ui.showStatus("التحقق من البيانات...", "syncing");
+
   try {
-    const { data: latestInventory, sha: latestSha } =
-      await api.fetchFromGitHub();
-    if (latestSha !== appState.fileSha) {
-      ui.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
-        showRefreshButton: true,
-      });
+    if (await performPreSaveConflictCheck()) {
       saveButton.disabled = false;
       return;
     }
 
     ui.showStatus("جاري الحفظ...", "syncing");
-    appState.inventory = latestInventory;
-    appState.fileSha = latestSha;
 
     const itemId = document.getElementById("item-id").value;
     let imagePath = null;
@@ -856,27 +865,18 @@ function setupModalListeners(elements) {
       currentItem &&
       itemBeforeEdit.quantity !== currentItem.quantity
     ) {
-      ui.showStatus("التحقق من البيانات...", "syncing");
       try {
-        const { data: latestInventory, sha: latestSha } =
-          await api.fetchFromGitHub();
-
-        if (latestSha !== appState.fileSha) {
-          ui.showStatus("البيانات غير محدّثة.", "error", {
-            showRefreshButton: true,
-          });
+        if (await performPreSaveConflictCheck()) {
+          // If conflict, revert local changes and refresh UI
           const originalItemIndex = appState.inventory.items.findIndex(
             (i) => i.id === itemBeforeEdit.id
           );
           if (originalItemIndex !== -1)
             appState.inventory.items[originalItemIndex] = itemBeforeEdit;
-
           ui.filterAndRenderItems();
         } else {
+          // No conflict, proceed with saving
           ui.showStatus("جاري حفظ تغيير الكمية...", "syncing");
-          appState.inventory = latestInventory;
-          appState.fileSha = latestSha;
-
           const itemToUpdate = appState.inventory.items.find(
             (i) => i.id === currentItem.id
           );

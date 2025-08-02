@@ -131,7 +131,6 @@ const elements = {
   remoteFinderModalTitle: document.getElementById("remote-finder-modal-title"),
   remoteCarIdInput: document.getElementById("remote-car-id"),
   addRemoteSectionBtn: document.getElementById("add-remote-section-btn"),
-  breadcrumbs: document.getElementById("breadcrumbs"),
   makesDatalist: document.getElementById("makes-list"),
   remotesContainerModal: document.getElementById("remotes-container-modal"),
   brandFilterBar: document.getElementById("brand-filter-bar"),

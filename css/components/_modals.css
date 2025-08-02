@@ -23,8 +23,7 @@ dialog::backdrop {
 #item-form,
 #sync-form,
 #sale-form,
-#remote-finder-form, /* Added remote finder form */
-.barcode-modal-content {
+#remote-finder-form /* Added remote finder form */ {
   overflow-y: auto;
   padding: var(--spacing-lg);
 }
@@ -42,8 +41,7 @@ dialog::backdrop {
 #item-form h3,
 #sync-form h3,
 #sale-form h3,
-.modal-header h3, /* Generalize for all modal headers */
-.barcode-modal-content h3 {
+.modal-header h3 /* Generalize for all modal headers */ {
   margin-bottom: 0;
   /* Let the header padding handle spacing */
   font-size: 18px;
