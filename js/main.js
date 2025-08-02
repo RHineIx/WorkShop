@@ -840,12 +840,22 @@ function setupModalListeners(elements) {
         } else {
             const item = e.target.closest('.archive-item');
             if (!item) return;
+
+            const detailsContainer = document.getElementById('archive-details-container');
+
+            // NEW: Toggle logic
+            if (item.classList.contains('active')) {
+                item.classList.remove('active');
+                detailsContainer.innerHTML = '<p>اختر شهراً من القائمة أعلاه لعرض تفاصيله.</p>';
+                return; 
+            }
+
             const container = item.parentElement;
-            if(container.querySelector('.active')) {
+            if (container.querySelector('.active')) {
                 container.querySelector('.active').classList.remove('active');
             }
             item.classList.add('active');
-            const detailsContainer = document.getElementById('archive-details-container');
+            
             detailsContainer.innerHTML = '<p>جاري تحميل البيانات...</p>';
             try {
                 const data = await api.fetchGitHubFile(item.dataset.path);
