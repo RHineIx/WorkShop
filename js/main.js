@@ -105,11 +105,13 @@ async function handleSaleFormSubmit(e) {
             itemName: item.name,
             quantitySold: quantityToSell,
             sellPriceIqd: appState.activeCurrency === 'IQD' ?
-                salePrice : item.sellPriceIqd,
-            costPriceIqd: item.costPriceIqd || 0,
+            salePrice : item.sellPriceIqd,
+            costPriceIqd: item.costPriceIqd ||
+            0,
             sellPriceUsd: appState.activeCurrency !== 'IQD' ?
-                salePrice : item.sellPriceUsd,
-            costPriceUsd: item.costPriceUsd || 0,
+            salePrice : item.sellPriceUsd,
+            costPriceUsd: item.costPriceUsd ||
+            0,
             saleDate: document.getElementById('sale-date').value,
             notes: document.getElementById('sale-notes').value,
             timestamp: new Date().toISOString()
@@ -173,19 +175,27 @@ async function handleItemFormSubmit(e) {
         }
         
         const itemData = {
-            id: itemId || `item_${Date.now()}`,
+            id: itemId ||
+            `item_${Date.now()}`,
             sku: document.getElementById('item-sku').value,
             name: document.getElementById('item-name').value,
             category: document.getElementById('item-category').value,
-            quantity: parseInt(document.getElementById('item-quantity').value, 10) || 0,
-            alertLevel: parseInt(document.getElementById('item-alert-level').value, 10) || 5,
-            costPriceIqd: parseFloat(document.getElementById('item-cost-price-iqd').value) || 0,
-            sellPriceIqd: parseFloat(document.getElementById('item-sell-price-iqd').value) || 0,
-            costPriceUsd: parseFloat(document.getElementById('item-cost-price-usd').value) || 0,
-            sellPriceUsd: parseFloat(document.getElementById('item-sell-price-usd').value) || 0,
+            quantity: parseInt(document.getElementById('item-quantity').value, 10) ||
+            0,
+            alertLevel: parseInt(document.getElementById('item-alert-level').value, 10) ||
+            5,
+            costPriceIqd: parseFloat(document.getElementById('item-cost-price-iqd').value) ||
+            0,
+            sellPriceIqd: parseFloat(document.getElementById('item-sell-price-iqd').value) ||
+            0,
+            costPriceUsd: parseFloat(document.getElementById('item-cost-price-usd').value) ||
+            0,
+            sellPriceUsd: parseFloat(document.getElementById('item-sell-price-usd').value) ||
+            0,
             notes: document.getElementById('item-notes').value,
             imagePath: imagePath,
-            supplierId: document.getElementById('item-supplier').value || null,
+            supplierId: document.getElementById('item-supplier').value ||
+            null,
         };
         
         const index = appState.inventory.items.findIndex(i => i.id === itemId);
@@ -303,7 +313,8 @@ async function handleDeleteSupplier(supplierId) {
                 appState.inventory.items.forEach(item => {
                     if (item.supplierId === supplierId) {
                         item.supplierId = null;
-                    }
+               
+                     }
                 });
                 await api.saveToGitHub();
             }
@@ -399,11 +410,13 @@ async function openArchiveBrowser() {
                 item.dataset.path = file.path;
                 const deleteButton = document.createElement('button');
                 deleteButton.className = 'archive-delete-btn';
+      
                 deleteButton.innerHTML = `<iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon>`;
                 deleteButton.title = 'حذف الأرشيف';
                 deleteButton.dataset.path = file.path;
                 deleteButton.dataset.sha = file.sha;
                 item.appendChild(itemText);
+                
                 item.appendChild(deleteButton);
                 
                 listContainer.appendChild(item);
@@ -486,9 +499,9 @@ async function handleRemoteFinderFormSubmit(e) {
     const elements = ui.getDOMElements();
     const form = elements.remoteFinderForm;
     const carId = elements.remoteCarIdInput.value;
-
     const carData = {
-        id: carId || `car_${Date.now()}`,
+        id: carId ||
+        `car_${Date.now()}`,
         make: form.querySelector('#car-make').value.trim(),
         model: form.querySelector('#car-model').value.trim(),
         yearStart: form.querySelector('#car-year-start').value.trim(),
@@ -496,7 +509,6 @@ async function handleRemoteFinderFormSubmit(e) {
         country: form.querySelector('#car-country').value.trim(),
         remotes: []
     };
-
     form.querySelectorAll('.remote-form-section').forEach(section => {
         const remote = {
             type: section.querySelector('.remote-type').value.trim(),
@@ -507,12 +519,14 @@ async function handleRemoteFinderFormSubmit(e) {
             partNumbers: {}
         };
 
+ 
         section.querySelectorAll('.part-number-entry').forEach(entry => {
             const vendor = entry.querySelector('.pn-vendor').value;
             const code = entry.querySelector('.pn-code').value.trim();
             if (vendor && code) {
                 if (remote.partNumbers[vendor]) {
                     remote.partNumbers[vendor] += `, ${code}`;
+    
                 } else {
                     remote.partNumbers[vendor] = code;
                 }
@@ -572,6 +586,7 @@ function setupInventoryListeners(elements) {
             ui.openDetailsModal(itemId);
         } else if (e.target.closest('.sell-btn')) {
             const item = appState.inventory.items.find(i => i.id === itemId);
+      
             if (item && item.quantity > 0) {
                 ui.openSaleModal(itemId);
             } else {
@@ -592,6 +607,7 @@ function setupInventoryListeners(elements) {
             appState.activeFilter = (appState.activeFilter === 'low_stock') ? 'all' : 'low_stock';
         } else {
             appState.activeFilter = 'all';
+  
             appState.selectedCategory = 'all';
             ui.renderCategoryFilter();
         }
@@ -626,24 +642,71 @@ function setupModalListeners(elements) {
     });
     elements.itemForm.addEventListener('submit', handleItemFormSubmit);
     elements.cancelItemBtn.addEventListener('click', () => elements.itemModal.close());
+    
+    // --- Image Handling Logic ---
+    function handleImageSelection(file) {
+        const { imagePreview, imagePlaceholder } = ui.getDOMElements();
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            ui.showStatus('الملف المحدد ليس صورة.', 'error');
+            return;
+        }
+
+        appState.selectedImageFile = file;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            imagePreview.src = event.target.result;
+            imagePreview.classList.remove('image-preview-hidden');
+            imagePlaceholder.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    }
+    
     elements.imageUploadInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            appState.selectedImageFile = file;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                elements.imagePreview.src = event.target.result;
-                elements.imagePreview.classList.remove('image-preview-hidden');
-                elements.imagePlaceholder.style.display = 'none';
-            };
-            reader.readAsDataURL(file);
+        handleImageSelection(e.target.files[0]);
+    });
+
+    elements.pasteImageBtn.addEventListener('click', async () => {
+        try {
+            if (!navigator.clipboard || !navigator.clipboard.read) {
+                 ui.showStatus('متصفحك لا يدعم لصق الصور.', 'error');
+                 return;
+            }
+            const permission = await navigator.permissions.query({ name: 'clipboard-read' });
+            if (permission.state === 'denied') {
+                throw new Error('تم رفض إذن الوصول إلى الحافظة.');
+            }
+
+            const clipboardItems = await navigator.clipboard.read();
+            let imageBlob = null;
+
+            for (const item of clipboardItems) {
+                const imageType = item.types.find(type => type.startsWith('image/'));
+                if (imageType) {
+                    imageBlob = await item.getType(imageType);
+                    break;
+                }
+            }
+
+            if (imageBlob) {
+                const file = new File([imageBlob], "pasted_image.png", { type: imageBlob.type });
+                handleImageSelection(file);
+                ui.showStatus('تم لصق الصورة بنجاح!', 'success');
+            } else {
+                ui.showStatus('لا توجد صورة في الحافظة.', 'warning');
+            }
+        } catch (error) {
+            console.error('Failed to paste image:', error);
+            ui.showStatus(`فشل لصق الصورة: ${error.message}`, 'error');
         }
     });
+    
     elements.regenerateSkuBtn.addEventListener('click', () => {
         const existingSkus = new Set(appState.inventory.items.map(item => item.sku));
         document.getElementById('item-sku').value = generateUniqueSKU(existingSkus);
     });
-
+    
     // Price conversion listeners
     const costIqdInput = document.getElementById('item-cost-price-iqd');
     const costUsdInput = document.getElementById('item-cost-price-usd');
@@ -652,8 +715,7 @@ function setupModalListeners(elements) {
 
     costIqdInput.addEventListener('input', () => handlePriceConversion(costIqdInput, costUsdInput));
     sellIqdInput.addEventListener('input', () => handlePriceConversion(sellIqdInput, sellUsdInput));
-
-
+    
     // Details Modal
     elements.detailsIncreaseBtn.addEventListener('click', () => {
         const item = appState.inventory.items.find(i => i.id === appState.currentItemId);
@@ -678,10 +740,12 @@ function setupModalListeners(elements) {
             ui.showStatus('التحقق من البيانات...', 'syncing');
             try {
                 const { data: latestInventory, sha: latestSha } = await api.fetchFromGitHub();
+ 
                 if (latestSha !== appState.fileSha) {
                     ui.showStatus('البيانات غير محدّثة.', 'error', { showRefreshButton: true });
                     const originalItemIndex = appState.inventory.items.findIndex(i => i.id === itemBeforeEdit.id);
                     if (originalItemIndex !== -1) appState.inventory.items[originalItemIndex] = itemBeforeEdit;
+ 
                     ui.filterAndRenderItems();
                 } else {
                     ui.showStatus('جاري حفظ تغيير الكمية...', 'syncing');
@@ -716,17 +780,19 @@ function setupModalListeners(elements) {
             const imagePathToDelete = itemToDelete?.imagePath;
             const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
             appState.inventory.items = appState.inventory.items.filter(item => item.id !== appState.currentItemId);
-            
+     
             elements.detailsModal.close();
             ui.filterAndRenderItems();
             ui.updateStats();
             try {
                 await api.saveToGitHub();
                 if (imagePathToDelete) {
+         
                     try {
                         const repoImages = await api.getGitHubDirectoryListing('images');
                         const imageFile = repoImages.find(file => file.path === imagePathToDelete);
-                        if (imageFile) await api.deleteFileFromGitHub(imageFile.path, imageFile.sha, `Cleanup: Delete image for item ${itemToDelete.name}`);
+                        if (imageFile) await api.deleteFileFromGitHub(imageFile.path, imageFile.sha, 
+                        `Cleanup: Delete image for item ${itemToDelete.name}`);
                     } catch (imageError) {
                         console.error('Failed to delete associated image:', imageError);
                     }
@@ -745,6 +811,7 @@ function setupModalListeners(elements) {
             }
         }
     });
+    
     // Sale Modal
     elements.saleForm.addEventListener('submit', handleSaleFormSubmit);
     elements.cancelSaleBtn.addEventListener('click', () => elements.saleModal.close());
@@ -778,17 +845,20 @@ function setupModalListeners(elements) {
         display.classList.remove('error');
 
         api.fetchLiveExchangeRate().then(rate => {
+        
             if (rate) {
                 const roundedRate = Math.round(rate);
                 display.innerHTML = `السعر الحالي: <span class="value">${roundedRate}</span>`;
                 display.onclick = () => {
                     input.value = roundedRate;
+            
                     input.focus();
                 };
             } else {
                 display.textContent = 'فشل تحديث السعر';
                 display.classList.add('error');
                 display.onclick = null;
+        
             }
         });
     });
@@ -802,7 +872,8 @@ function setupModalListeners(elements) {
         };
         appState.exchangeRate = parseFloat(document.getElementById('exchange-rate').value) || 0;
         saveConfig();
-        elements.syncModal.close();
+       
+         elements.syncModal.close();
         await initializeApp();
     });
     
@@ -813,7 +884,6 @@ function setupModalListeners(elements) {
         advancedSettingsToggle.classList.toggle('open');
         advancedSettingsContainer.classList.toggle('open');
     });
-
     elements.cleanupImagesBtn.addEventListener('click', handleImageCleanup);
     elements.downloadBackupBtn.addEventListener('click', handleDownloadBackup);
     elements.restoreBackupInput.addEventListener('change', handleRestoreBackup);
@@ -828,26 +898,28 @@ function setupModalListeners(elements) {
             const path = deleteButton.dataset.path;
             const sha = deleteButton.dataset.sha;
             if (confirm(`هل أنت متأكد من حذف هذا الأرشيف (${path}) نهائياً؟`)) {
-                ui.showStatus('جاري حذف الأرشيف...', 'syncing');
+           
+             ui.showStatus('جاري حذف الأرشيف...', 'syncing');
                 try {
                     await api.deleteFileFromGitHub(path, sha, `Delete archive file: ${path}`);
                     ui.showStatus('تم حذف الأرشيف بنجاح!', 'success');
                     openArchiveBrowser();
+     
                 } catch (error) {
                     ui.showStatus(`فشل حذف الأرشيف: ${error.message}`, 'error', { duration: 5000 });
                 }
             }
         } else {
             const item = e.target.closest('.archive-item');
+     
             if (!item) return;
 
             const detailsContainer = document.getElementById('archive-details-container');
-
             // NEW: Toggle logic
             if (item.classList.contains('active')) {
                 item.classList.remove('active');
                 detailsContainer.innerHTML = '<p>اختر شهراً من القائمة أعلاه لعرض تفاصيله.</p>';
-                return; 
+                return;
             }
 
             const container = item.parentElement;
@@ -905,13 +977,15 @@ function setupSupplierListeners(elements) {
         if (editBtn) {
             const supplier = appState.suppliers.find(s => s.id === editBtn.dataset.id);
             if(supplier) {
+   
                 elements.supplierFormTitle.textContent = 'تعديل مورّد';
                 elements.supplierIdInput.value = supplier.id;
                 document.getElementById('supplier-name').value = supplier.name;
                 document.getElementById('supplier-phone').value = supplier.phone;
                 elements.cancelEditSupplierBtn.classList.remove('view-hidden');
             }
-        }
+  
+           }
     });
     elements.cancelEditSupplierBtn.addEventListener('click', () => {
         elements.supplierForm.reset();
@@ -925,7 +999,6 @@ function setupRemoteFinderListeners(elements) {
     elements.addNewRemoteFinderBtn.addEventListener('click', () => ui.openRemoteFinderModal());
     elements.closeRemoteFinderModalBtn.addEventListener('click', () => elements.remoteFinderModal.close());
     elements.cancelRemoteFinderModalBtn.addEventListener('click', () => elements.remoteFinderModal.close());
-    
     elements.remoteFinderSearchInput.addEventListener('input', debounce(ui.renderRemoteFinder, 300));
     elements.remoteFinderForm.addEventListener('submit', handleRemoteFinderFormSubmit);
 
@@ -938,6 +1011,7 @@ function setupRemoteFinderListeners(elements) {
         if (addPartBtn) {
             e.preventDefault();
             const container = addPartBtn.previousElementSibling;
+           
             if (container && container.classList.contains('part-numbers-container')) {
                 ui.addPartNumberEntry(container);
             }
@@ -946,13 +1020,13 @@ function setupRemoteFinderListeners(elements) {
             removePartBtn.closest('.part-number-entry').remove();
         } else if (removeRemoteBtn) {
             e.preventDefault();
+       
             removeRemoteBtn.closest('.remote-form-section').remove();
         } else if (addRemoteBtn) {
             e.preventDefault();
             ui.addRemoteSection();
         }
     });
-
     elements.remoteFinderResultsArea.addEventListener('click', (e) => {
         const target = e.target;
         const remoteCard = target.closest('.remote-card');
@@ -963,11 +1037,13 @@ function setupRemoteFinderListeners(elements) {
         if (target.closest('.edit-btn')) {
             ui.openRemoteFinderModal(cardId);
         } else if (target.closest('.delete-btn')) {
+            
             if (confirm('هل أنت متأكد من رغبتك في حذف بيانات هذه السيارة نهائياً؟')) {
                 appState.remoteFinderDB = appState.remoteFinderDB.filter(c => c.id !== cardId);
                 api.saveRemoteFinderDB().then(() => {
                     saveLocalData();
                     ui.renderRemoteFinder();
+        
                     ui.showStatus('تم الحذف بنجاح', 'success');
                 }).catch(err => ui.showStatus(`فشل الحذف: ${err.message}`, 'error'));
             }
@@ -981,6 +1057,7 @@ function setupRemoteFinderListeners(elements) {
                     const originalIcon = icon.getAttribute('icon');
                     icon.setAttribute('icon', 'material-symbols:check');
                     setTimeout(() => {
+          
                         icon.setAttribute('icon', originalIcon);
                     }, 1500);
                 }
@@ -997,6 +1074,7 @@ function setupRemoteFinderListeners(elements) {
         if (appState.selectedBrand === brand) {
             appState.selectedBrand = null;
         } else {
+          
             appState.selectedBrand = brand;
         }
         

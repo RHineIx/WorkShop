@@ -24,6 +24,7 @@ const elements = {
     dashboardToggleBtn: document.getElementById('dashboard-toggle-btn'),
     remoteFinderToggleBtn: document.getElementById('remote-finder-toggle-btn'),
 
+  
     // View Containers
     inventoryViewContainer: document.getElementById('inventory-view-container'),
     dashboardViewContainer: document.getElementById('dashboard-view-container'),
@@ -61,6 +62,7 @@ const elements = {
     modalTitle: document.getElementById('modal-title'),
     itemIdInput: document.getElementById('item-id'),
     imageUploadInput: document.getElementById('item-image-upload'),
+    pasteImageBtn: document.getElementById('paste-image-btn'),
     imagePreview: document.getElementById('image-preview'),
     categoryDatalist: document.getElementById('category-list'),
     imagePlaceholder: document.getElementById('image-placeholder'),
@@ -88,7 +90,7 @@ const elements = {
     cleanupImagesBtn: document.getElementById('cleanup-images-btn'),
     downloadBackupBtn: document.getElementById('download-backup-btn'),
     restoreBackupInput: document.getElementById('restore-backup-input'),
-    
+  
     // Supplier UI Elements
     supplierManagerModal: document.getElementById('supplier-manager-modal'),
     closeSupplierManagerBtn: document.getElementById('close-supplier-manager-btn'),
@@ -108,6 +110,7 @@ const elements = {
     addNewRemoteFinderBtn: document.getElementById('add-new-remote-finder-btn'),
     remoteFinderModal: document.getElementById('remote-finder-modal'),
     closeRemoteFinderModalBtn: document.getElementById('close-remote-finder-modal-btn'),
+    
     cancelRemoteFinderModalBtn: document.getElementById('cancel-remote-finder-modal-btn'),
     remoteFinderForm: document.getElementById('remote-finder-form'),
     remoteFinderResultsArea: document.getElementById('remote-finder-results-area'),
@@ -166,7 +169,6 @@ const ICONS = {
     info: 'material-symbols:info',
     warning: 'material-symbols:warning-rounded'
 };
-
 export const showStatus = (message, type, options = {}) => {
     const { duration = 4000, showRefreshButton = false } = options;
     const existingSyncingToast = elements.toastContainer.querySelector('.toast--syncing');
@@ -237,7 +239,6 @@ export const toggleView = (viewToShow) => {
         renderRemoteFinder();
     }
 };
-
 export const renderDashboard = () => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -286,7 +287,6 @@ export const renderDashboard = () => {
         elements.bestsellersList.innerHTML = '<p>لا توجد مبيعات في هذه الفترة.</p>';
     }
 };
-
 export function updateSaleTotal() {
     const quantity = parseInt(elements.saleQuantityInput.value, 10) || 0;
     const unitPrice = parseFloat(document.getElementById('sale-price').value) || 0;
@@ -297,7 +297,8 @@ export function updateSaleTotal() {
 
 export function renderInventorySkeleton(count = 8) {
     elements.inventoryGrid.innerHTML = '';
-    const fragment = document.createDocumentFragment(); // Build in memory
+    const fragment = document.createDocumentFragment();
+    // Build in memory
 
     for (let i = 0; i < count; i++) {
         const skeletonCard = document.createElement('div');
@@ -310,10 +311,12 @@ export function renderInventorySkeleton(count = 8) {
                  <div class="skeleton skeleton-text w-50" style="margin-top: 12px;"></div>
             </div>
         `;
-        fragment.appendChild(skeletonCard); // Append to the fragment
+        fragment.appendChild(skeletonCard);
+        // Append to the fragment
     }
 
-    elements.inventoryGrid.appendChild(fragment); // Append to the DOM once
+    elements.inventoryGrid.appendChild(fragment);
+    // Append to the DOM once
 }
 
 function getFilteredItems() {
@@ -354,6 +357,7 @@ export function renderInventory(itemsToRender) {
         if (isLowStock) card.classList.add('low-stock');
         const isIQD = appState.activeCurrency === 'IQD';
         const price = isIQD ? (item.sellPriceIqd || 0) : (item.sellPriceUsd || 0);
+   
         const symbol = isIQD ? 'د.ع' : '$';
         const placeholder = `<div class="card-image-placeholder"><iconify-icon icon="material-symbols:key"></iconify-icon></div>`;
         card.innerHTML = `
@@ -366,7 +370,7 @@ export function renderInventory(itemsToRender) {
                 <div class="card-footer">
                     <div class="card-price">${price.toLocaleString()} ${symbol}</div>
                      <div class="card-actions">
-                        <button class="icon-btn sell-btn" title="بيع"><iconify-icon icon="material-symbols:shopping-cart-outline-rounded"></iconify-icon></button>
+                         <button class="icon-btn sell-btn" title="بيع"><iconify-icon icon="material-symbols:shopping-cart-outline-rounded"></iconify-icon></button>
                         <button class="icon-btn details-btn" title="عرض التفاصيل"><iconify-icon icon="material-symbols:more-vert"></iconify-icon></button>
                     </div>
                 </div>
@@ -409,7 +413,6 @@ export const updateCurrencyDisplay = () => {
         renderDashboard();
     }
 };
-
 export function renderSupplierList() {
     elements.supplierListContainer.innerHTML = '';
     if (appState.suppliers.length === 0) {
@@ -424,12 +427,13 @@ export function renderSupplierList() {
                 <strong>${sanitizeHTML(supplier.name)}</strong>
                 <div class="text-secondary">${sanitizeHTML(supplier.phone || '')}</div>
             </div>
+    
             <div class="supplier-item-actions">
                 <button class="icon-btn edit-supplier-btn" data-id="${supplier.id}" title="تعديل المورّد">
                     <iconify-icon icon="material-symbols:edit-outline-rounded"></iconify-icon>
                 </button>
                 <button class="icon-btn danger-btn delete-supplier-btn" data-id="${supplier.id}" title="حذف المورّد">
-                    <iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon>
+                     <iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon>
                 </button>
             </div>
         `;
@@ -468,7 +472,7 @@ export const openDetailsModal = (itemId) => {
     if (supplier) {
         elements.detailsSupplierName.textContent = sanitizeHTML(supplier.name);
         elements.detailsSupplierPhone.textContent = supplier.phone ?
-            sanitizeHTML(supplier.phone) : 'لا يوجد';
+        sanitizeHTML(supplier.phone) : 'لا يوجد';
         if (supplier.phone) {
             elements.detailsSupplierWhatsapp.href = `https://wa.me/${supplier.phone.replace(/[^0-9]/g, '')}`;
             elements.detailsSupplierWhatsapp.style.display = 'inline-flex';
@@ -529,6 +533,7 @@ export const openItemModal = (itemId = null) => {
                     if (blobUrl) {
                         elements.imagePreview.src = blobUrl;
                         elements.imagePreview.classList.remove('image-preview-hidden');
+    
                         elements.imagePlaceholder.style.display = 'none';
                     }
                 });
@@ -542,7 +547,6 @@ export const openItemModal = (itemId = null) => {
     }
     elements.itemModal.showModal();
 };
-
 export const openSaleModal = (itemId) => {
     const item = appState.inventory.items.find(i => i.id === itemId);
     if (!item) return;
@@ -556,7 +560,8 @@ export const openSaleModal = (itemId) => {
     const symbol = isIQD ? 'د.ع' : '$';
     elements.salePriceCurrency.textContent = symbol;
     salePriceInput.value = price;
-    salePriceInput.step = isIQD ? '250' : '0.01';
+    salePriceInput.step = isIQD ?
+    '250' : '0.01';
     saleQuantityInput.value = 1;
     saleQuantityInput.max = item.quantity;
     const today = new Date();
@@ -567,7 +572,6 @@ export const openSaleModal = (itemId) => {
     elements.saleModal.showModal();
     updateSaleTotal(); 
 };
-
 export const populateSyncModal = () => {
     if (appState.syncConfig) {
         elements.githubUsernameInput.value = appState.syncConfig.username;
@@ -576,7 +580,6 @@ export const populateSyncModal = () => {
     }
     elements.syncModal.showModal();
 };
-
 // --- Remote Finder UI Functions ---
 
 function renderBrandFilterBar() {
@@ -609,7 +612,8 @@ function renderCarsView() {
             if (carInfo.includes(searchTerm)) return true;
             return (car.remotes || []).some(remote => {
                 const remoteInfo = `${remote.type} ${remote.frequency} ${remote.fccId} ${remote.battery}`.toLowerCase();
-                 if (remoteInfo.includes(searchTerm)) return true;
+      
+                if (remoteInfo.includes(searchTerm)) return true;
                 return Object.values(remote.partNumbers).some(code => code.toLowerCase().includes(searchTerm));
             });
         });
@@ -627,16 +631,19 @@ function renderCarsView() {
 
         const remotesHTML = (car.remotes || []).map(remote => {
             const partNumbersHTML = Object.entries(remote.partNumbers).map(([vendor, code]) => {
+       
                 const remoteTypeKeyword = remote.type === 'بصمة' ? 'Smart Key' : 'remote';
                 const searchQuery = `"${code}" ${car.make} ${car.model} ${remoteTypeKeyword}`;
 
                 return `<div class="part-number-row">
                     <span class="vendor-tag ${vendor.toLowerCase()}">${sanitizeHTML(vendor.toUpperCase())}</span>
+                   
                     <span class="part-code">${sanitizeHTML(code)}</span>
                     <div class="part-actions">
                         <button class="icon-btn copy-btn" title="نسخ" data-code="${sanitizeHTML(code)}"><iconify-icon icon="material-symbols:content-copy-outline-rounded"></iconify-icon></button>
                         <a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(searchQuery)}" target="_blank" class="icon-btn" title="بحث عن صورة">
-                            <iconify-icon icon="material-symbols:image-search-outline-rounded"></iconify-icon>
+                  
+                           <iconify-icon icon="material-symbols:image-search-outline-rounded"></iconify-icon>
                         </a>
                     </div>
                 </div>`;
@@ -646,18 +653,24 @@ function renderCarsView() {
                 <div class="remote-section">
                     <h4 class="remote-type">${sanitizeHTML(remote.type || 'ريموت')}</h4>
                     <div class="info-badges">
-                        ${remote.frequency ? `<div class="info-badge"><iconify-icon icon="material-symbols:wifi-tethering-rounded"></iconify-icon><span class="value">${sanitizeHTML(remote.frequency)}</span></div>` : ''}
-                        ${remote.fccId ? `<div class="info-badge"><iconify-icon icon="material-symbols:badge-outline-rounded"></iconify-icon><span class="value">${sanitizeHTML(remote.fccId)}</span></div>` : ''}
-                        ${remote.battery ? `<div class="info-badge"><iconify-icon icon="material-symbols:battery-horiz-075-rounded"></iconify-icon><span class="value">${sanitizeHTML(remote.battery)}</span></div>` : ''}
+                        ${remote.frequency ?
+                        `<div class="info-badge"><iconify-icon icon="material-symbols:wifi-tethering-rounded"></iconify-icon><span class="value">${sanitizeHTML(remote.frequency)}</span></div>` : ''}
+                        ${remote.fccId ?
+                        `<div class="info-badge"><iconify-icon icon="material-symbols:badge-outline-rounded"></iconify-icon><span class="value">${sanitizeHTML(remote.fccId)}</span></div>` : ''}
+                        ${remote.battery ?
+                        `<div class="info-badge"><iconify-icon icon="material-symbols:battery-horiz-075-rounded"></iconify-icon><span class="value">${sanitizeHTML(remote.battery)}</span></div>` : ''}
                     </div>
                     <div class="part-numbers-list">${partNumbersHTML}</div>
-                    ${remote.notes ? `
+                    ${remote.notes ?
+                    `
                         <div class="notes-section">
                             <div class="notes-header">
                                 <iconify-icon icon="material-symbols:sticky-note-2-outline-rounded"></iconify-icon>
+             
                                 <span>ملاحظات</span>
                             </div>
                             <p class="notes-content">${sanitizeHTML(remote.notes)}</p>
+                        
                         </div>
                     ` : ''}
                 </div>`;
@@ -668,11 +681,13 @@ function renderCarsView() {
                 <header class="card-header">
                     <div class="car-title">
                         <iconify-icon class="brand-logo" icon="cbi:${sanitizeHTML(car.make.toLowerCase().replace(/\s/g, ''))}"></iconify-icon>
-                        <h3>${sanitizeHTML(car.make)} ${sanitizeHTML(car.model)}</h3>
+                   
+                         <h3>${sanitizeHTML(car.make)} ${sanitizeHTML(car.model)}</h3>
                     </div>
                     <span class="car-meta">${carMeta}</span>
                     <div class="header-actions">
                         <button class="icon-btn edit-btn" title="تعديل"><iconify-icon icon="material-symbols:edit-outline-rounded"></iconify-icon></button>
+    
                         <button class="icon-btn danger delete-btn" title="حذف"><iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon></button>
                     </div>
                 </header>
@@ -708,9 +723,12 @@ export function addPartNumberEntry(container, pnData = {}) {
         <div class="form-group">
             <label>الشركة
                 <select class="pn-vendor">
-                    <option value="oem" ${vendor === 'oem' ? 'selected' : ''}>OEM</option>
-                    <option value="keydiy" ${vendor === 'keydiy' ? 'selected' : ''}>Keydiy</option>
-                    <option value="xhorse" ${vendor === 'xhorse' ? 'selected' : ''}>Xhorse</option>
+                    <option value="oem" ${vendor === 'oem' ?
+                    'selected' : ''}>OEM</option>
+                    <option value="keydiy" ${vendor === 'keydiy' ?
+                    'selected' : ''}>Keydiy</option>
+                    <option value="xhorse" ${vendor === 'xhorse' ?
+                    'selected' : ''}>Xhorse</option>
                 </select>
             </label>
         </div>
@@ -718,7 +736,8 @@ export function addPartNumberEntry(container, pnData = {}) {
             <label>الكود
                 <input type="text" class="pn-code" placeholder="أدخل رقم القطعة..." value="${sanitizeHTML(code)}">
             </label>
-        </div>
+       
+         </div>
         <button type="button" class="icon-btn danger remove-part-btn" style="align-self: end; margin-bottom: 16px;">
             <iconify-icon icon="material-symbols:remove"></iconify-icon>
         </button>`;
@@ -728,14 +747,12 @@ export function addPartNumberEntry(container, pnData = {}) {
 export function addRemoteSection(remoteData = {}) {
     const container = elements.remotesContainerModal;
     const remoteNumber = container.querySelectorAll('.remote-form-section').length + 1;
-
     const remoteTypes = ['بصمة', 'ريمونت'];
     const frequencies = ['315 MHz', '433.92 MHz', '2.4 GHz'];
     const batteryTypes = ['CR2032', 'CR2025', 'CR2016', 'CR1632'];
 
     const section = document.createElement('div');
     section.className = 'remote-form-section';
-
     section.innerHTML = `
         <div class="form-section-header">
             <h4>الريموت #${remoteNumber}</h4>
@@ -745,39 +762,46 @@ export function addRemoteSection(remoteData = {}) {
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label>النوع
+ 
+               <label>النوع
                     <select class="remote-type">
                         <option value="">-- اختر النوع --</option>
                         ${createOptions(remoteTypes, remoteData.type)}
-                    </select>
+           
+                     </select>
                 </label>
             </div>
             <div class="form-group">
                 <label>التردد
                     <select class="remote-frequency">
-                        <option value="">-- اختر التردد --</option>
+             
+                         <option value="">-- اختر التردد --</option>
                         ${createOptions(frequencies, remoteData.frequency)}
                     </select>
                 </label>
             </div>
         </div>
-        <div class="form-row">
+    
+         <div class="form-row">
             <div class="form-group">
                 <label>FCC ID
-                    <input type="text" class="remote-fccId" value="${sanitizeHTML(remoteData.fccId || '')}" placeholder="HYQ14FBA...">
+                    <input type="text" class="remote-fccId" value="${sanitizeHTML(remoteData.fccId ||
+                    '')}" placeholder="HYQ14FBA...">
                 </label>
             </div>
             <div class="form-group">
                 <label>البطارية
                      <select class="remote-battery">
-                        <option value="">-- اختر البطارية --</option>
+                    
+                         <option value="">-- اختر البطارية --</option>
                         ${createOptions(batteryTypes, remoteData.battery)}
                     </select>
                 </label>
             </div>
         </div>
         <div class="form-group">
-            <label>ملاحظات
+  
+           <label>ملاحظات
                 <input type="text" class="remote-notes" value="${sanitizeHTML(remoteData.notes || '')}">
             </label>
         </div>
@@ -787,6 +811,7 @@ export function addRemoteSection(remoteData = {}) {
     
     const pnContainer = section.querySelector('.part-numbers-container');
     if (remoteData.partNumbers && Object.keys(remoteData.partNumbers).length > 0) {
+ 
         Object.entries(remoteData.partNumbers).forEach(([vendor, code]) => addPartNumberEntry(pnContainer, { vendor, code }));
     } else {
         addPartNumberEntry(pnContainer);
@@ -809,7 +834,6 @@ export function openRemoteFinderModal(carId = null) {
     }
     
     elements.remotesContainerModal.innerHTML = '';
-
     if (carId) {
         const car = appState.remoteFinderDB.find(c => c.id === carId);
         if (!car) return;

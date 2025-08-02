@@ -8,14 +8,17 @@
     />
     <title>إدارة مخزون ورشة المفاتيح</title>
 
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://rhineix.github.io/WorkShop/">
-    <meta property="og:title" content="إدارة المخزون">
-    <meta property="og:description" content="تطبيق ويب لإدارة مخزون الورشة">
-    <meta property="og:image" content="https://raw.githubusercontent.com/RHineIx/WorkShop/refs/heads/main/social-preview.jpg">
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://rhineix.github.io/WorkShop/" />
+    <meta property="og:title" content="إدارة المخزون" />
+    <meta property="og:description" content="تطبيق ويب لإدارة مخزون الورشة" />
+    <meta
+      property="og:image"
+      content="https://raw.githubusercontent.com/RHineIx/WorkShop/refs/heads/main/social-preview.jpg"
+    />
 
-    <link rel="icon" type="image/svg" href="Box.svg">
-    
+    <link rel="icon" type="image/svg" href="Box.svg" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -50,15 +53,19 @@
           title="لوحة المعلومات"
           class="control-button"
         >
-          <iconify-icon icon="material-symbols:monitoring-rounded"></iconify-icon>
+          <iconify-icon
+            icon="material-symbols:monitoring-rounded"
+          ></iconify-icon>
         </button>
-        
+
         <button
           id="remote-finder-toggle-btn"
           title="مكتشف أكواد الريموت"
           class="control-button"
         >
-          <iconify-icon icon="material-symbols:database-search-outline"></iconify-icon>
+          <iconify-icon
+            icon="material-symbols:database-search-outline"
+          ></iconify-icon>
         </button>
 
         <button
@@ -66,7 +73,9 @@
           title="إعدادات المزامنة"
           class="control-button"
         >
-          <iconify-icon icon="material-symbols:cloud-sync-outline-rounded"></iconify-icon>
+          <iconify-icon
+            icon="material-symbols:cloud-sync-outline-rounded"
+          ></iconify-icon>
         </button>
 
         <button
@@ -89,7 +98,9 @@
         <section id="stats-cards" class="stats-container">
           <div class="stat-card">
             <div class="card-icon">
-              <iconify-icon icon="material-symbols:inventory-2-outline-rounded"></iconify-icon>
+              <iconify-icon
+                icon="material-symbols:inventory-2-outline-rounded"
+              ></iconify-icon>
             </div>
             <div class="card-details">
               <div class="card-title">إجمالي المنتجات</div>
@@ -98,7 +109,9 @@
           </div>
           <div class="stat-card low-stock-alert">
             <div class="card-icon">
-              <iconify-icon icon="material-symbols:warning-outline-rounded"></iconify-icon>
+              <iconify-icon
+                icon="material-symbols:warning-outline-rounded"
+              ></iconify-icon>
             </div>
             <div class="card-details">
               <div class="card-title">تنبيهات انخفاض المخزون</div>
@@ -122,7 +135,9 @@
                 title="تصفية حسب الفئة"
                 aria-label="تصفية حسب الفئة"
               >
-                <iconify-icon icon="material-symbols:filter-list-rounded"></iconify-icon>
+                <iconify-icon
+                  icon="material-symbols:filter-list-rounded"
+                ></iconify-icon>
               </button>
               <div
                 id="category-filter-dropdown"
@@ -150,7 +165,9 @@
           <div id="dashboard-stats" class="stats-container">
             <div class="stat-card">
               <div class="card-icon">
-                <iconify-icon icon="material-symbols:point-of-sale"></iconify-icon>
+                <iconify-icon
+                  icon="material-symbols:point-of-sale"
+                ></iconify-icon>
               </div>
               <div class="card-details">
                 <div class="card-title">إجمالي المبيعات</div>
@@ -159,7 +176,9 @@
             </div>
             <div class="stat-card profit">
               <div class="card-icon">
-                <iconify-icon icon="material-symbols:trending-up"></iconify-icon>
+                <iconify-icon
+                  icon="material-symbols:trending-up"
+                ></iconify-icon>
               </div>
               <div class="card-details">
                 <div class="card-title">إجمالي الأرباح</div>
@@ -174,26 +193,32 @@
           </div>
         </section>
       </div>
-      
+
       <div id="remote-finder-view-container" class="view-hidden">
         <div class="dashboard-header">
-            <h2>مكتشف أكواد الريموت</h2>
+          <h2>مكتشف أكواد الريموت</h2>
         </div>
         <div class="remote-finder-controls">
-            <div id="breadcrumbs" class="breadcrumbs"></div>
-            <button id="add-new-remote-finder-btn" class="control-button primary-action">
-                <iconify-icon icon="material-symbols:add"></iconify-icon>
-                <span>إضافة جديد</span>
-            </button>
+          <div id="breadcrumbs" class="breadcrumbs"></div>
+          <button
+            id="add-new-remote-finder-btn"
+            class="control-button primary-action"
+          >
+            <iconify-icon icon="material-symbols:add"></iconify-icon>
+            <span>إضافة جديد</span>
+          </button>
         </div>
         <section class="search-area">
-            <input type="text" id="remote-finder-search-input" placeholder="ابحث بالسيارة، الموديل، أو رقم القطعة...">
+          <input
+            type="text"
+            id="remote-finder-search-input"
+            placeholder="ابحث بالسيارة، الموديل، أو رقم القطعة..."
+          />
         </section>
-        
+
         <div id="brand-filter-bar" class="brand-filter-bar"></div>
         <section id="remote-finder-results-area" class="results-area"></section>
       </div>
-      
     </main>
 
     <dialog id="details-modal">
@@ -258,7 +283,8 @@
             </div>
             <div class="details-notes">
               <h3>
-                <iconify-icon icon="material-symbols:notes"></iconify-icon> ملاحظات
+                <iconify-icon icon="material-symbols:notes"></iconify-icon>
+                ملاحظات
               </h3>
               <p id="details-notes-content"></p>
             </div>
@@ -268,7 +294,9 @@
               class="details-supplier-info view-hidden"
             >
               <h3>
-                <iconify-icon icon="material-symbols:business-center-outline-rounded"></iconify-icon>
+                <iconify-icon
+                  icon="material-symbols:business-center-outline-rounded"
+                ></iconify-icon>
                 معلومات المورّد
               </h3>
               <p>
@@ -292,10 +320,16 @@
         </div>
         <div class="details-actions">
           <button id="details-edit-btn" class="action-btn-details">
-            <iconify-icon icon="material-symbols:edit-outline-rounded"></iconify-icon> تعديل
+            <iconify-icon
+              icon="material-symbols:edit-outline-rounded"
+            ></iconify-icon>
+            تعديل
           </button>
           <button id="details-delete-btn" class="action-btn-details danger">
-            <iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon> حذف
+            <iconify-icon
+              icon="material-symbols:delete-outline-rounded"
+            ></iconify-icon>
+            حذف
           </button>
         </div>
       </div>
@@ -324,10 +358,22 @@
             accept="image/*"
             class="visually-hidden"
           />
-          <label for="item-image-upload" class="custom-file-upload-btn">
-            <iconify-icon icon="material-symbols:upload-file"></iconify-icon>
-            <span>اختر صورة</span>
-          </label>
+          <div class="image-upload-actions">
+            <label for="item-image-upload" class="custom-file-upload-btn">
+              <iconify-icon icon="material-symbols:upload-file"></iconify-icon>
+              <span>اختر صورة</span>
+            </label>
+            <button
+              type="button"
+              id="paste-image-btn"
+              class="custom-file-upload-btn"
+            >
+              <iconify-icon
+                icon="material-symbols:content-paste-go-outline"
+              ></iconify-icon>
+              <span>لصق صورة</span>
+            </button>
+          </div>
         </div>
 
         <label for="item-sku">SKU (رقم المنتج)</label>
@@ -363,7 +409,9 @@
             class="icon-btn"
             title="إدارة المورّدين"
           >
-            <iconify-icon icon="material-symbols:group-add-outline-rounded"></iconify-icon>
+            <iconify-icon
+              icon="material-symbols:group-add-outline-rounded"
+            ></iconify-icon>
           </button>
         </div>
         <div class="form-group-divider"></div>
@@ -472,19 +520,30 @@
           <button type="submit">حفظ الإعدادات</button>
           <button type="button" id="cancel-sync-btn">إلغاء</button>
         </div>
-        
+
         <hr class="maintenance-divider" />
-        
-        <button type="button" id="advanced-settings-toggle" class="advanced-settings-toggle">
+
+        <button
+          type="button"
+          id="advanced-settings-toggle"
+          class="advanced-settings-toggle"
+        >
           <span>الإعدادات المتقدمة</span>
           <iconify-icon icon="material-symbols:expand-more"></iconify-icon>
         </button>
 
-        <div id="advanced-settings-container" class="advanced-settings-container">
+        <div
+          id="advanced-settings-container"
+          class="advanced-settings-container"
+        >
           <div class="advanced-settings-wrapper">
             <div class="form-group-inline">
-                <label for="exchange-rate">سعر صرف الدولار (مقابل 1 دولار)</label>
-                <small id="live-exchange-rate-display" title="اضغط لاستخدام هذا السعر">جاري التحميل...</small>
+              <label for="exchange-rate">سعر صرف الدولار (مقابل 1 دولار)</label>
+              <small
+                id="live-exchange-rate-display"
+                title="اضغط لاستخدام هذا السعر"
+                >جاري التحميل...</small
+              >
             </div>
             <input
               type="number"
@@ -499,13 +558,15 @@
                 id="manual-archive-btn"
                 class="cleanup-btn archive-btn"
               >
-                <iconify-icon icon="material-symbols:archive-outline-rounded"></iconify-icon>
+                <iconify-icon
+                  icon="material-symbols:archive-outline-rounded"
+                ></iconify-icon>
                 أرشفة المبيعات القديمة
               </button>
               <p id="last-archive-date-display" class="last-archive-text">
                 آخر أرشفة: لم تتم بعد
               </p>
-    
+
               <hr class="maintenance-divider" />
               <button
                 type="button"
@@ -516,10 +577,12 @@
                 عرض أرشيف المبيعات
               </button>
               <button type="button" id="cleanup-images-btn" class="cleanup-btn">
-                <iconify-icon icon="streamline-plump:clean-broom-wipe"></iconify-icon>
+                <iconify-icon
+                  icon="streamline-plump:clean-broom-wipe"
+                ></iconify-icon>
                 تنظيف الصور غير المستخدمة
               </button>
-    
+
               <hr class="maintenance-divider" />
               <button
                 type="button"
@@ -674,40 +737,67 @@
         ></div>
       </div>
     </dialog>
-    
+
     <dialog id="remote-finder-modal">
-        <div class="modal-content">
-            <header class="modal-header">
-                <h3 id="remote-finder-modal-title">إضافة سيارة جديدة</h3>
-                <button id="close-remote-finder-modal-btn" class="icon-btn"><iconify-icon icon="material-symbols:close"></iconify-icon></button>
-            </header>
-            <div class="modal-body">
-                <form id="remote-finder-form">
-                    <input type="hidden" id="remote-car-id">
-                    <h4>معلومات السيارة</h4>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="car-make">الشركة</label>
-                            <input type="text" id="car-make" list="makes-list" required>
-                            <datalist id="makes-list"></datalist>
-                        </div>
-                        <div class="form-group"><label for="car-model">الموديل</label><input type="text" id="car-model" required></div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label for="car-year-start">من</label><input type="number" id="car-year-start" placeholder="2018"></div>
-                        <div class="form-group"><label for="car-year-end">إلى</label><input type="number" id="car-year-end" placeholder="2022"></div>
-                        <div class="form-group"><label>البلد<select id="car-country"></select></label></div>
-                    </div>
-                    <hr class="section-divider">
-                    <div id="remotes-container-modal" class="remotes-container"></div>
-                    <button type="button" class="add-btn" id="add-remote-section-btn">+ أضف ريموت آخر</button>
-                </form>
+      <div class="modal-content">
+        <header class="modal-header">
+          <h3 id="remote-finder-modal-title">إضافة سيارة جديدة</h3>
+          <button id="close-remote-finder-modal-btn" class="icon-btn">
+            <iconify-icon icon="material-symbols:close"></iconify-icon>
+          </button>
+        </header>
+        <div class="modal-body">
+          <form id="remote-finder-form">
+            <input type="hidden" id="remote-car-id" />
+            <h4>معلومات السيارة</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="car-make">الشركة</label>
+                <input type="text" id="car-make" list="makes-list" required />
+                <datalist id="makes-list"></datalist>
+              </div>
+              <div class="form-group">
+                <label for="car-model">الموديل</label
+                ><input type="text" id="car-model" required />
+              </div>
             </div>
-            <footer class="modal-footer">
-                <button type="button" class="control-button" id="cancel-remote-finder-modal-btn">إلغاء</button>
-                <button type="submit" form="remote-finder-form" class="control-button primary-action">حفظ</button>
-            </footer>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="car-year-start">من</label
+                ><input type="number" id="car-year-start" placeholder="2018" />
+              </div>
+              <div class="form-group">
+                <label for="car-year-end">إلى</label
+                ><input type="number" id="car-year-end" placeholder="2022" />
+              </div>
+              <div class="form-group">
+                <label>البلد<select id="car-country"></select></label>
+              </div>
+            </div>
+            <hr class="section-divider" />
+            <div id="remotes-container-modal" class="remotes-container"></div>
+            <button type="button" class="add-btn" id="add-remote-section-btn">
+              + أضف ريموت آخر
+            </button>
+          </form>
         </div>
+        <footer class="modal-footer">
+          <button
+            type="button"
+            class="control-button"
+            id="cancel-remote-finder-modal-btn"
+          >
+            إلغاء
+          </button>
+          <button
+            type="submit"
+            form="remote-finder-form"
+            class="control-button primary-action"
+          >
+            حفظ
+          </button>
+        </footer>
+      </div>
     </dialog>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>

@@ -120,6 +120,12 @@ appearance: textfield;
     margin-bottom: var(--spacing-md);
 }
 
+.image-upload-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    justify-content: center;
+}
+
 .image-preview-wrapper {
     width: 100px;
     height: 100px;
