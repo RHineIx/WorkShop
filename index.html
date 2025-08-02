@@ -341,6 +341,16 @@
         <input type="hidden" id="item-id" />
 
         <div class="image-upload-container">
+          <button
+            type="button"
+            id="paste-image-btn"
+            class="icon-btn paste-btn"
+            title="لصق صورة من الحافظة"
+          >
+            <iconify-icon
+              icon="fluent:clipboard-paste-16-regular"
+            ></iconify-icon>
+          </button>
           <div class="image-preview-wrapper">
             <img
               id="image-preview"
@@ -358,22 +368,10 @@
             accept="image/*"
             class="visually-hidden"
           />
-          <div class="image-upload-actions">
-            <label for="item-image-upload" class="custom-file-upload-btn">
-              <iconify-icon icon="material-symbols:upload-file"></iconify-icon>
-              <span>اختر صورة</span>
-            </label>
-            <button
-              type="button"
-              id="paste-image-btn"
-              class="custom-file-upload-btn"
-            >
-              <iconify-icon
-                icon="material-symbols:content-paste-go-outline"
-              ></iconify-icon>
-              <span>لصق صورة</span>
-            </button>
-          </div>
+          <label for="item-image-upload" class="custom-file-upload-btn">
+            <iconify-icon icon="material-symbols:upload-file"></iconify-icon>
+            <span>اختر صورة</span>
+          </label>
         </div>
 
         <label for="item-sku">SKU (رقم المنتج)</label>
