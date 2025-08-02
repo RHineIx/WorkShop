@@ -111,13 +111,16 @@ const elements = {
   detailsSupplierPhone: document.getElementById("details-supplier-phone"),
   detailsSupplierWhatsapp: document.getElementById("details-supplier-whatsapp"),
 
+  // Archive Modal
+  archiveBrowserModal: document.getElementById("archive-browser-modal"),
+  closeArchiveBrowserBtn: document.getElementById("close-archive-browser-btn"),
+
   // Remote Finder Elements
   addNewRemoteFinderBtn: document.getElementById("add-new-remote-finder-btn"),
   remoteFinderModal: document.getElementById("remote-finder-modal"),
   closeRemoteFinderModalBtn: document.getElementById(
     "close-remote-finder-modal-btn"
   ),
-
   cancelRemoteFinderModalBtn: document.getElementById(
     "cancel-remote-finder-modal-btn"
   ),
@@ -577,6 +580,9 @@ export const openDetailsModal = (itemId) => {
     elements.detailsImage.style.display = "none";
     elements.detailsImagePlaceholder.style.display = "flex";
   }
+
+  appState.modalStack.push(elements.detailsModal);
+  elements.detailsModal.appendChild(elements.toastContainer);
   elements.detailsModal.showModal();
 };
 
@@ -624,6 +630,8 @@ export const openItemModal = (itemId = null) => {
     elements.regenerateSkuBtn.style.display = "flex";
     populateSupplierDropdown();
   }
+  appState.modalStack.push(elements.itemModal);
+  elements.itemModal.appendChild(elements.toastContainer);
   elements.itemModal.showModal();
 };
 export const openSaleModal = (itemId) => {
@@ -647,6 +655,9 @@ export const openSaleModal = (itemId) => {
   const month = String(today.getMonth() + 1).padStart(2, "0");
   const day = String(today.getDate()).padStart(2, "0");
   document.getElementById("sale-date").value = `${year}-${month}-${day}`;
+
+  appState.modalStack.push(elements.saleModal);
+  elements.saleModal.appendChild(elements.toastContainer);
   elements.saleModal.showModal();
   updateSaleTotal();
 };
@@ -656,6 +667,8 @@ export const populateSyncModal = () => {
     elements.githubRepoInput.value = appState.syncConfig.repo;
     elements.githubPatInput.value = appState.syncConfig.pat;
   }
+  appState.modalStack.push(elements.syncModal);
+  elements.syncModal.appendChild(elements.toastContainer);
   elements.syncModal.showModal();
 };
 // --- Remote Finder UI Functions ---
@@ -1022,5 +1035,8 @@ export function openRemoteFinderModal(carId = null) {
     elements.remoteCarIdInput.value = "";
     addRemoteSection();
   }
+
+  appState.modalStack.push(elements.remoteFinderModal);
+  elements.remoteFinderModal.appendChild(elements.toastContainer);
   elements.remoteFinderModal.showModal();
 }

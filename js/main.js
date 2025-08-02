@@ -454,12 +454,15 @@ function updateLastArchiveDateDisplay() {
 }
 
 async function openArchiveBrowser() {
-  const modal = document.getElementById("archive-browser-modal");
+  const modal = ui.getDOMElements().archiveBrowserModal;
   const listContainer = document.getElementById("archive-list-container");
   const detailsContainer = document.getElementById("archive-details-container");
   listContainer.innerHTML = "<p>جاري تحميل قائمة الأرشيف...</p>";
   detailsContainer.innerHTML =
     "<p>اختر شهراً من القائمة أعلاه لعرض تفاصيله.</p>";
+
+  appState.modalStack.push(modal);
+  modal.appendChild(ui.getDOMElements().toastContainer);
   modal.showModal();
   try {
     const files = await api.getGitHubDirectoryListing("archives");
@@ -1051,6 +1054,9 @@ function setupModalListeners(elements) {
   document
     .getElementById("view-archives-btn")
     .addEventListener("click", openArchiveBrowser);
+  elements.closeArchiveBrowserBtn.addEventListener("click", () =>
+    elements.archiveBrowserModal.close()
+  );
   document
     .getElementById("archive-list-container")
     .addEventListener("click", async (e) => {
@@ -1120,11 +1126,33 @@ function setupModalListeners(elements) {
         }
       }
     });
-  document
-    .getElementById("close-archive-browser-btn")
-    .addEventListener("click", () =>
-      document.getElementById("archive-browser-modal").close()
-    );
+
+  // Modal Close Behavior Setup
+  function setupModalCloseBehavior(modalElement) {
+    modalElement.addEventListener("close", () => {
+      // Remove the closed modal from the stack
+      appState.modalStack = appState.modalStack.filter(
+        (m) => m !== modalElement
+      );
+
+      // If there's another modal in the stack, move the toast container to it
+      if (appState.modalStack.length > 0) {
+        const topModal = appState.modalStack[appState.modalStack.length - 1];
+        topModal.appendChild(elements.toastContainer);
+      } else {
+        // Otherwise, move it back to the body
+        document.body.appendChild(elements.toastContainer);
+      }
+    });
+  }
+
+  setupModalCloseBehavior(elements.detailsModal);
+  setupModalCloseBehavior(elements.itemModal);
+  setupModalCloseBehavior(elements.syncModal);
+  setupModalCloseBehavior(elements.saleModal);
+  setupModalCloseBehavior(elements.supplierManagerModal);
+  setupModalCloseBehavior(elements.archiveBrowserModal);
+  setupModalCloseBehavior(elements.remoteFinderModal);
 }
 
 function setupDashboardListeners(elements) {
@@ -1144,6 +1172,8 @@ function setupDashboardListeners(elements) {
 function setupSupplierListeners(elements) {
   elements.manageSuppliersBtn.addEventListener("click", () => {
     ui.renderSupplierList();
+    appState.modalStack.push(elements.supplierManagerModal);
+    elements.supplierManagerModal.appendChild(elements.toastContainer);
     elements.supplierManagerModal.showModal();
   });
   elements.closeSupplierManagerBtn.addEventListener("click", () => {
