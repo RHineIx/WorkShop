@@ -107,7 +107,7 @@ async function handleSaleFormSubmit(e) {
     }
 
     const itemId = document.getElementById("sale-item-id").value;
-    const item = appState.inventory.items.find((i) => i.id === itemId);
+    const item = appState.inventory.items.find(i => i.id === itemId);
     const quantityToSell = parseInt(
       document.getElementById("sale-quantity").value,
       10
@@ -181,7 +181,7 @@ async function handleItemFormSubmit(e) {
 
     const itemId = document.getElementById("item-id").value;
     let imagePath = null;
-    const existingItem = appState.inventory.items.find((i) => i.id === itemId);
+    const existingItem = appState.inventory.items.find(i => i.id === itemId);
     if (existingItem) {
       imagePath = existingItem.imagePath;
     }
@@ -220,7 +220,7 @@ async function handleItemFormSubmit(e) {
       supplierId: document.getElementById("item-supplier").value || null,
     };
 
-    const index = appState.inventory.items.findIndex((i) => i.id === itemId);
+    const index = appState.inventory.items.findIndex(i => i.id === itemId);
     if (index !== -1) {
       appState.inventory.items[index] = itemData;
     } else {
@@ -263,10 +263,10 @@ async function handleImageCleanup() {
   try {
     const allRepoImages = await api.getGitHubDirectoryListing("images");
     const usedImages = new Set(
-      appState.inventory.items.map((item) => item.imagePath).filter(Boolean)
+      appState.inventory.items.map(item => item.imagePath).filter(Boolean)
     );
     const orphanedImages = allRepoImages.filter(
-      (repoImage) => !usedImages.has(repoImage.path)
+      repoImage => !usedImages.has(repoImage.path)
     );
     if (orphanedImages.length === 0) {
       ui.showStatus("لا توجد صور غير مستخدمة ليتم حذفها.", "success");
@@ -306,16 +306,14 @@ async function handleSupplierFormSubmit(e) {
   }
 
   if (id) {
-    const supplier = appState.suppliers.find((s) => s.id === id);
+    const supplier = appState.suppliers.find(s => s.id === id);
     if (supplier) {
       supplier.name = name;
       supplier.phone = phone;
     }
   } else {
     if (
-      appState.suppliers.some(
-        (s) => s.name.toLowerCase() === name.toLowerCase()
-      )
+      appState.suppliers.some(s => s.name.toLowerCase() === name.toLowerCase())
     ) {
       ui.showStatus("هذا المورّد موجود بالفعل.", "error");
       return;
@@ -342,7 +340,7 @@ async function handleSupplierFormSubmit(e) {
 
 async function handleDeleteSupplier(supplierId) {
   const linkedProductsCount = appState.inventory.items.filter(
-    (item) => item.supplierId === supplierId
+    item => item.supplierId === supplierId
   ).length;
   let confirmMessage = "هل أنت متأكد من رغبتك في حذف هذا المورّد نهائياً؟";
   if (linkedProductsCount > 0) {
@@ -354,7 +352,7 @@ async function handleDeleteSupplier(supplierId) {
     ui.showStatus("جاري حذف المورّد...", "syncing");
     try {
       if (linkedProductsCount > 0) {
-        appState.inventory.items.forEach((item) => {
+        appState.inventory.items.forEach(item => {
           if (item.supplierId === supplierId) {
             item.supplierId = null;
           }
@@ -362,9 +360,7 @@ async function handleDeleteSupplier(supplierId) {
         await api.saveToGitHub();
       }
 
-      appState.suppliers = appState.suppliers.filter(
-        (s) => s.id !== supplierId
-      );
+      appState.suppliers = appState.suppliers.filter(s => s.id !== supplierId);
       await api.saveSuppliers();
 
       saveLocalData();
@@ -473,7 +469,7 @@ async function openArchiveBrowser() {
     listContainer.innerHTML = "";
     files
       .sort((a, b) => b.name.localeCompare(a.name))
-      .forEach((file) => {
+      .forEach(file => {
         const item = document.createElement("div");
         item.className = "archive-item";
         const itemText = document.createElement("span");
@@ -609,7 +605,7 @@ async function handleRemoteFinderFormSubmit(e) {
     country: form.querySelector("#car-country").value.trim(),
     remotes: [],
   };
-  form.querySelectorAll(".remote-form-section").forEach((section) => {
+  form.querySelectorAll(".remote-form-section").forEach(section => {
     const remote = {
       type: section.querySelector(".remote-type").value.trim(),
       frequency: section.querySelector(".remote-frequency").value.trim(),
@@ -619,7 +615,7 @@ async function handleRemoteFinderFormSubmit(e) {
       partNumbers: {},
     };
 
-    section.querySelectorAll(".part-number-entry").forEach((entry) => {
+    section.querySelectorAll(".part-number-entry").forEach(entry => {
       const vendor = entry.querySelector(".pn-vendor").value;
       const code = entry.querySelector(".pn-code").value.trim();
       if (vendor && code) {
@@ -636,7 +632,7 @@ async function handleRemoteFinderFormSubmit(e) {
   ui.showStatus("جاري حفظ البيانات...", "syncing");
   try {
     if (carId) {
-      const index = appState.remoteFinderDB.findIndex((c) => c.id === carId);
+      const index = appState.remoteFinderDB.findIndex(c => c.id === carId);
       if (index !== -1) {
         appState.remoteFinderDB[index] = carData;
       }
@@ -681,7 +677,7 @@ function setupViewToggleListeners(elements) {
 }
 
 function setupInventoryListeners(elements) {
-  elements.inventoryGrid.addEventListener("click", (e) => {
+  elements.inventoryGrid.addEventListener("click", e => {
     const card = e.target.closest(".product-card");
     if (!card) return;
 
@@ -689,7 +685,7 @@ function setupInventoryListeners(elements) {
     if (e.target.closest(".details-btn")) {
       ui.openDetailsModal(itemId);
     } else if (e.target.closest(".sell-btn")) {
-      const item = appState.inventory.items.find((i) => i.id === itemId);
+      const item = appState.inventory.items.find(i => i.id === itemId);
 
       if (item && item.quantity > 0) {
         ui.openSaleModal(itemId);
@@ -700,11 +696,11 @@ function setupInventoryListeners(elements) {
       }
     }
   });
-  elements.searchBar.addEventListener("input", (e) => {
+  elements.searchBar.addEventListener("input", e => {
     appState.searchTerm = e.target.value;
     ui.filterAndRenderItems();
   });
-  elements.statsContainer.addEventListener("click", (e) => {
+  elements.statsContainer.addEventListener("click", e => {
     const card = e.target.closest(".stat-card");
     if (!card) return;
     appState.searchTerm = "";
@@ -720,11 +716,11 @@ function setupInventoryListeners(elements) {
     }
     ui.filterAndRenderItems();
   });
-  elements.categoryFilterBtn.addEventListener("click", (e) => {
+  elements.categoryFilterBtn.addEventListener("click", e => {
     e.stopPropagation();
     elements.categoryFilterDropdown.classList.toggle("show");
   });
-  elements.categoryFilterDropdown.addEventListener("click", (e) => {
+  elements.categoryFilterDropdown.addEventListener("click", e => {
     const categoryItem = e.target.closest(".category-item");
     if (categoryItem) {
       appState.selectedCategory = categoryItem.dataset.category;
@@ -733,7 +729,7 @@ function setupInventoryListeners(elements) {
       elements.categoryFilterDropdown.classList.remove("show");
     }
   });
-  document.addEventListener("click", (e) => {
+  document.addEventListener("click", e => {
     if (!elements.searchContainer.contains(e.target)) {
       elements.categoryFilterDropdown.classList.remove("show");
     }
@@ -745,7 +741,7 @@ function setupModalListeners(elements) {
   elements.addItemBtn.addEventListener("click", () => {
     ui.openItemModal();
     const existingSkus = new Set(
-      appState.inventory.items.map((item) => item.sku)
+      appState.inventory.items.map(item => item.sku)
     );
     document.getElementById("item-sku").value = generateUniqueSKU(existingSkus);
   });
@@ -766,7 +762,7 @@ function setupModalListeners(elements) {
 
     appState.selectedImageFile = file;
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = event => {
       imagePreview.src = event.target.result;
       imagePreview.classList.remove("image-preview-hidden");
       imagePlaceholder.style.display = "none";
@@ -774,7 +770,7 @@ function setupModalListeners(elements) {
     reader.readAsDataURL(file);
   }
 
-  elements.imageUploadInput.addEventListener("change", (e) => {
+  elements.imageUploadInput.addEventListener("change", e => {
     handleImageSelection(e.target.files[0]);
   });
 
@@ -795,7 +791,7 @@ function setupModalListeners(elements) {
       let imageBlob = null;
 
       for (const item of clipboardItems) {
-        const imageType = item.types.find((type) => type.startsWith("image/"));
+        const imageType = item.types.find(type => type.startsWith("image/"));
         if (imageType) {
           imageBlob = await item.getType(imageType);
           break;
@@ -819,7 +815,7 @@ function setupModalListeners(elements) {
 
   elements.regenerateSkuBtn.addEventListener("click", () => {
     const existingSkus = new Set(
-      appState.inventory.items.map((item) => item.sku)
+      appState.inventory.items.map(item => item.sku)
     );
     document.getElementById("item-sku").value = generateUniqueSKU(existingSkus);
   });
@@ -840,7 +836,7 @@ function setupModalListeners(elements) {
   // Details Modal
   elements.detailsIncreaseBtn.addEventListener("click", () => {
     const item = appState.inventory.items.find(
-      (i) => i.id === appState.currentItemId
+      i => i.id === appState.currentItemId
     );
     if (item) {
       item.quantity++;
@@ -850,7 +846,7 @@ function setupModalListeners(elements) {
   });
   elements.detailsDecreaseBtn.addEventListener("click", () => {
     const item = appState.inventory.items.find(
-      (i) => i.id === appState.currentItemId
+      i => i.id === appState.currentItemId
     );
     if (item && item.quantity > 0) {
       item.quantity--;
@@ -861,7 +857,7 @@ function setupModalListeners(elements) {
   elements.closeDetailsModalBtn.addEventListener("click", async () => {
     const itemBeforeEdit = appState.itemStateBeforeEdit;
     const currentItem = appState.inventory.items.find(
-      (i) => i.id === appState.currentItemId
+      i => i.id === appState.currentItemId
     );
     if (
       itemBeforeEdit &&
@@ -872,7 +868,7 @@ function setupModalListeners(elements) {
         if (await performPreSaveConflictCheck()) {
           // If conflict, revert local changes and refresh UI
           const originalItemIndex = appState.inventory.items.findIndex(
-            (i) => i.id === itemBeforeEdit.id
+            i => i.id === itemBeforeEdit.id
           );
           if (originalItemIndex !== -1)
             appState.inventory.items[originalItemIndex] = itemBeforeEdit;
@@ -881,7 +877,7 @@ function setupModalListeners(elements) {
           // No conflict, proceed with saving
           ui.showStatus("جاري حفظ تغيير الكمية...", "syncing");
           const itemToUpdate = appState.inventory.items.find(
-            (i) => i.id === currentItem.id
+            i => i.id === currentItem.id
           );
           if (itemToUpdate) itemToUpdate.quantity = currentItem.quantity;
           await api.saveToGitHub();
@@ -890,7 +886,7 @@ function setupModalListeners(elements) {
         }
       } catch (error) {
         const originalItemIndex = appState.inventory.items.findIndex(
-          (i) => i.id === itemBeforeEdit.id
+          i => i.id === itemBeforeEdit.id
         );
         if (originalItemIndex !== -1)
           appState.inventory.items[originalItemIndex] = itemBeforeEdit;
@@ -914,12 +910,12 @@ function setupModalListeners(elements) {
       )
     ) {
       const itemToDelete = appState.inventory.items.find(
-        (item) => item.id === appState.currentItemId
+        item => item.id === appState.currentItemId
       );
       const imagePathToDelete = itemToDelete?.imagePath;
       const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
       appState.inventory.items = appState.inventory.items.filter(
-        (item) => item.id !== appState.currentItemId
+        item => item.id !== appState.currentItemId
       );
 
       elements.detailsModal.close();
@@ -931,7 +927,7 @@ function setupModalListeners(elements) {
           try {
             const repoImages = await api.getGitHubDirectoryListing("images");
             const imageFile = repoImages.find(
-              (file) => file.path === imagePathToDelete
+              file => file.path === imagePathToDelete
             );
             if (imageFile)
               await api.deleteFileFromGitHub(
@@ -998,7 +994,7 @@ function setupModalListeners(elements) {
     display.textContent = "جاري تحميل السعر...";
     display.classList.remove("error");
 
-    api.fetchLiveExchangeRate().then((rate) => {
+    api.fetchLiveExchangeRate().then(rate => {
       if (rate) {
         const roundedRate = Math.round(rate);
         display.innerHTML = `السعر الحالي: <span class="value">${roundedRate}</span>`;
@@ -1017,7 +1013,7 @@ function setupModalListeners(elements) {
   elements.cancelSyncBtn.addEventListener("click", () =>
     elements.syncModal.close()
   );
-  elements.syncForm.addEventListener("submit", async (e) => {
+  elements.syncForm.addEventListener("submit", async e => {
     e.preventDefault();
     appState.syncConfig = {
       username: elements.githubUsernameInput.value.trim(),
@@ -1059,7 +1055,7 @@ function setupModalListeners(elements) {
   );
   document
     .getElementById("archive-list-container")
-    .addEventListener("click", async (e) => {
+    .addEventListener("click", async e => {
       const deleteButton = e.target.closest(".archive-delete-btn");
       if (deleteButton) {
         e.stopPropagation();
@@ -1108,7 +1104,7 @@ function setupModalListeners(elements) {
           const data = await api.fetchGitHubFile(item.dataset.path);
           const symbol = appState.activeCurrency === "IQD" ? "د.ع" : "$";
           let tableHTML = `<table class="archive-table"><thead><tr><th>المنتج</th><th>الكمية</th><th>السعر</th><th>التاريخ</th></tr></thead><tbody>`;
-          data.forEach((sale) => {
+          data.forEach(sale => {
             const price =
               appState.activeCurrency === "IQD"
                 ? sale.sellPriceIqd
@@ -1131,9 +1127,7 @@ function setupModalListeners(elements) {
   function setupModalCloseBehavior(modalElement) {
     modalElement.addEventListener("close", () => {
       // Remove the closed modal from the stack
-      appState.modalStack = appState.modalStack.filter(
-        (m) => m !== modalElement
-      );
+      appState.modalStack = appState.modalStack.filter(m => m !== modalElement);
 
       // If there's another modal in the stack, move the toast container to it
       if (appState.modalStack.length > 0) {
@@ -1156,7 +1150,7 @@ function setupModalListeners(elements) {
 }
 
 function setupDashboardListeners(elements) {
-  elements.timeFilterControls.addEventListener("click", (e) => {
+  elements.timeFilterControls.addEventListener("click", e => {
     const button = e.target.closest(".time-filter-btn");
     if (button) {
       appState.dashboardPeriod = button.dataset.period;
@@ -1180,7 +1174,7 @@ function setupSupplierListeners(elements) {
     elements.supplierManagerModal.close();
   });
   elements.supplierForm.addEventListener("submit", handleSupplierFormSubmit);
-  elements.supplierListContainer.addEventListener("click", (e) => {
+  elements.supplierListContainer.addEventListener("click", e => {
     const deleteBtn = e.target.closest(".delete-supplier-btn");
     if (deleteBtn) {
       handleDeleteSupplier(deleteBtn.dataset.id);
@@ -1188,7 +1182,7 @@ function setupSupplierListeners(elements) {
     const editBtn = e.target.closest(".edit-supplier-btn");
     if (editBtn) {
       const supplier = appState.suppliers.find(
-        (s) => s.id === editBtn.dataset.id
+        s => s.id === editBtn.dataset.id
       );
       if (supplier) {
         elements.supplierFormTitle.textContent = "تعديل مورّد";
@@ -1226,7 +1220,7 @@ function setupRemoteFinderListeners(elements) {
     handleRemoteFinderFormSubmit
   );
 
-  elements.remoteFinderForm.addEventListener("click", (e) => {
+  elements.remoteFinderForm.addEventListener("click", e => {
     const addPartBtn = e.target.closest(".add-part-number-btn");
     const removePartBtn = e.target.closest(".remove-part-btn");
     const removeRemoteBtn = e.target.closest(".remove-remote-btn");
@@ -1251,7 +1245,7 @@ function setupRemoteFinderListeners(elements) {
       ui.addRemoteSection();
     }
   });
-  elements.remoteFinderResultsArea.addEventListener("click", (e) => {
+  elements.remoteFinderResultsArea.addEventListener("click", e => {
     const target = e.target;
     const remoteCard = target.closest(".remote-card");
     if (!remoteCard) return;
@@ -1263,7 +1257,7 @@ function setupRemoteFinderListeners(elements) {
     } else if (target.closest(".delete-btn")) {
       if (confirm("هل أنت متأكد من رغبتك في حذف بيانات هذه السيارة نهائياً؟")) {
         appState.remoteFinderDB = appState.remoteFinderDB.filter(
-          (c) => c.id !== cardId
+          c => c.id !== cardId
         );
         api
           .saveRemoteFinderDB()
@@ -1273,7 +1267,7 @@ function setupRemoteFinderListeners(elements) {
 
             ui.showStatus("تم الحذف بنجاح", "success");
           })
-          .catch((err) => ui.showStatus(`فشل الحذف: ${err.message}`, "error"));
+          .catch(err => ui.showStatus(`فشل الحذف: ${err.message}`, "error"));
       }
     } else if (target.closest(".copy-btn")) {
       const copyBtn = target.closest(".copy-btn");
@@ -1292,7 +1286,7 @@ function setupRemoteFinderListeners(elements) {
     }
   });
 
-  elements.brandFilterBar.addEventListener("click", (e) => {
+  elements.brandFilterBar.addEventListener("click", e => {
     const chip = e.target.closest(".brand-filter-chip");
     if (!chip) return;
 

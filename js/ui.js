@@ -146,7 +146,7 @@ export function getDOMElements() {
 export function renderCategoryFilter() {
   const categories = [
     ...new Set(
-      appState.inventory.items.map((item) => item.category).filter(Boolean)
+      appState.inventory.items.map(item => item.category).filter(Boolean)
     ),
   ];
   elements.categoryFilterDropdown.innerHTML = "";
@@ -158,7 +158,7 @@ export function renderCategoryFilter() {
     allItem.classList.add("active");
   }
   elements.categoryFilterDropdown.appendChild(allItem);
-  categories.forEach((category) => {
+  categories.forEach(category => {
     const categoryItem = document.createElement("div");
     categoryItem.className = "category-item";
     categoryItem.textContent = sanitizeHTML(category);
@@ -173,12 +173,12 @@ export function renderCategoryFilter() {
 export function populateCategoryDatalist() {
   const categories = [
     ...new Set(
-      appState.inventory.items.map((item) => item.category).filter(Boolean)
+      appState.inventory.items.map(item => item.category).filter(Boolean)
     ),
   ];
   const datalist = elements.categoryDatalist;
   datalist.innerHTML = "";
-  categories.forEach((category) => {
+  categories.forEach(category => {
     const option = document.createElement("option");
     option.value = sanitizeHTML(category);
     datalist.appendChild(option);
@@ -241,7 +241,7 @@ export const showStatus = (message, type, options = {}) => {
   }
 };
 
-export const toggleView = (viewToShow) => {
+export const toggleView = viewToShow => {
   appState.currentView = viewToShow;
   const isInventory = viewToShow === "inventory";
   const isDashboard = viewToShow === "dashboard";
@@ -290,7 +290,7 @@ export const renderDashboard = () => {
       break;
   }
   const filteredSales = appState.sales.filter(
-    (sale) =>
+    sale =>
       new Date(sale.saleDate) >= startDate && new Date(sale.saleDate) <= now
   );
   const isIQD = appState.activeCurrency === "IQD";
@@ -307,19 +307,19 @@ export const renderDashboard = () => {
   elements.totalSalesStat.textContent = `${totalSales.toLocaleString()} ${symbol}`;
   elements.totalProfitStat.textContent = `${totalProfit.toLocaleString()} ${symbol}`;
   const itemSales = {};
-  filteredSales.forEach((sale) => {
+  filteredSales.forEach(sale => {
     itemSales[sale.itemId] = (itemSales[sale.itemId] || 0) + sale.quantitySold;
   });
   const sortedBestsellers = Object.entries(itemSales)
     .map(([itemId, count]) => {
-      const item = appState.inventory.items.find((i) => i.id === itemId);
+      const item = appState.inventory.items.find(i => i.id === itemId);
       return { name: item ? item.name : "منتج محذوف", count };
     })
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
   elements.bestsellersList.innerHTML = "";
   if (sortedBestsellers.length > 0) {
-    sortedBestsellers.forEach((item) => {
+    sortedBestsellers.forEach(item => {
       const li = document.createElement("div");
       li.className = "bestseller-item";
       li.innerHTML = `<span class="bestseller-name">${sanitizeHTML(
@@ -367,15 +367,15 @@ export function renderInventorySkeleton(count = 8) {
 function getFilteredItems() {
   let items = [...appState.inventory.items];
   if (appState.activeFilter === "low_stock") {
-    items = items.filter((item) => item.quantity <= item.alertLevel);
+    items = items.filter(item => item.quantity <= item.alertLevel);
   }
   if (appState.selectedCategory && appState.selectedCategory !== "all") {
-    items = items.filter((item) => item.category === appState.selectedCategory);
+    items = items.filter(item => item.category === appState.selectedCategory);
   }
   if (appState.searchTerm) {
     const lowerCaseSearch = appState.searchTerm.toLowerCase();
     items = items.filter(
-      (item) =>
+      item =>
         item.name.toLowerCase().includes(lowerCaseSearch) ||
         (item.sku && item.sku.toLowerCase().includes(lowerCaseSearch))
     );
@@ -396,7 +396,7 @@ export function renderInventory(itemsToRender) {
     return;
   }
   const fragment = document.createDocumentFragment();
-  itemsToRender.forEach((item) => {
+  itemsToRender.forEach(item => {
     const card = document.createElement("div");
     card.className = "product-card";
     card.dataset.id = item.id;
@@ -431,7 +431,7 @@ export function renderInventory(itemsToRender) {
     fragment.appendChild(card);
     if (item.imagePath) {
       const imgElement = card.querySelector(".card-image");
-      fetchImageWithAuth(item.imagePath).then((blobUrl) => {
+      fetchImageWithAuth(item.imagePath).then(blobUrl => {
         if (blobUrl) imgElement.src = blobUrl;
       });
     }
@@ -443,11 +443,11 @@ export function renderInventory(itemsToRender) {
 export const updateStats = () => {
   elements.totalItemsStat.textContent = appState.inventory.items.length;
   elements.lowStockStat.textContent = appState.inventory.items.filter(
-    (item) => item.quantity <= item.alertLevel
+    item => item.quantity <= item.alertLevel
   ).length;
 };
 
-export const setTheme = (themeName) => {
+export const setTheme = themeName => {
   document.body.className = `theme-${themeName}`;
   const icon = elements.themeToggleBtn.querySelector("iconify-icon");
   if (icon) {
@@ -479,7 +479,7 @@ export function renderSupplierList() {
     elements.supplierListContainer.innerHTML = "<p>لا يوجد مورّدون حاليًا.</p>";
     return;
   }
-  appState.suppliers.forEach((supplier) => {
+  appState.suppliers.forEach(supplier => {
     const item = document.createElement("div");
     item.className = "supplier-item";
     item.innerHTML = `
@@ -510,7 +510,7 @@ export function renderSupplierList() {
 export function populateSupplierDropdown(selectedSupplierId = null) {
   const select = elements.itemSupplierSelect;
   select.innerHTML = '<option value="">-- اختر مورّد --</option>';
-  appState.suppliers.forEach((supplier) => {
+  appState.suppliers.forEach(supplier => {
     const option = document.createElement("option");
     option.value = supplier.id;
     option.textContent = sanitizeHTML(supplier.name);
@@ -521,8 +521,8 @@ export function populateSupplierDropdown(selectedSupplierId = null) {
   });
 }
 
-export const openDetailsModal = (itemId) => {
-  const item = appState.inventory.items.find((i) => i.id === itemId);
+export const openDetailsModal = itemId => {
+  const item = appState.inventory.items.find(i => i.id === itemId);
   if (!item) return;
   appState.currentItemId = itemId;
   appState.itemStateBeforeEdit = JSON.parse(JSON.stringify(item));
@@ -542,7 +542,7 @@ export const openDetailsModal = (itemId) => {
     item.sellPriceUsd || 0
   ).toLocaleString()}`;
   elements.detailsNotesContent.textContent = item.notes || "لا توجد ملاحظات.";
-  const supplier = appState.suppliers.find((s) => s.id === item.supplierId);
+  const supplier = appState.suppliers.find(s => s.id === item.supplierId);
   if (supplier) {
     elements.detailsSupplierName.textContent = sanitizeHTML(supplier.name);
     elements.detailsSupplierPhone.textContent = supplier.phone
@@ -566,7 +566,7 @@ export const openDetailsModal = (itemId) => {
     elements.detailsImagePlaceholder.style.display = "none";
     elements.detailsImage.src = "";
     elements.detailsImage.classList.add("skeleton");
-    fetchImageWithAuth(item.imagePath).then((blobUrl) => {
+    fetchImageWithAuth(item.imagePath).then(blobUrl => {
       if (blobUrl) {
         elements.detailsImage.src = blobUrl;
         elements.detailsImage.onload = () => {
@@ -594,7 +594,7 @@ export const openItemModal = (itemId = null) => {
   elements.imagePlaceholder.style.display = "flex";
   elements.regenerateSkuBtn.style.display = "none";
   if (itemId) {
-    const item = appState.inventory.items.find((i) => i.id === itemId);
+    const item = appState.inventory.items.find(i => i.id === itemId);
     if (item) {
       elements.modalTitle.textContent = "تعديل منتج";
       elements.itemIdInput.value = item.id;
@@ -614,7 +614,7 @@ export const openItemModal = (itemId = null) => {
       document.getElementById("item-notes").value = item.notes;
       populateSupplierDropdown(item.supplierId);
       if (item.imagePath) {
-        fetchImageWithAuth(item.imagePath).then((blobUrl) => {
+        fetchImageWithAuth(item.imagePath).then(blobUrl => {
           if (blobUrl) {
             elements.imagePreview.src = blobUrl;
             elements.imagePreview.classList.remove("image-preview-hidden");
@@ -634,8 +634,8 @@ export const openItemModal = (itemId = null) => {
   elements.itemModal.appendChild(elements.toastContainer);
   elements.itemModal.showModal();
 };
-export const openSaleModal = (itemId) => {
-  const item = appState.inventory.items.find((i) => i.id === itemId);
+export const openSaleModal = itemId => {
+  const item = appState.inventory.items.find(i => i.id === itemId);
   if (!item) return;
   elements.saleForm.reset();
   elements.saleItemIdInput.value = item.id;
@@ -676,10 +676,10 @@ export const populateSyncModal = () => {
 function renderBrandFilterBar() {
   const uniqueMakes = [
     "الكل",
-    ...new Set(appState.remoteFinderDB.map((car) => car.make)),
+    ...new Set(appState.remoteFinderDB.map(car => car.make)),
   ];
   const chipsHTML = uniqueMakes
-    .map((make) => {
+    .map(make => {
       const brandForFilter = make === "الكل" ? null : make;
       const isActive = appState.selectedBrand === brandForFilter;
       const iconHTML =
@@ -704,22 +704,22 @@ function renderCarsView() {
   let carsToRender = [...appState.remoteFinderDB];
   if (appState.selectedBrand) {
     carsToRender = carsToRender.filter(
-      (car) => car.make === appState.selectedBrand
+      car => car.make === appState.selectedBrand
     );
   }
 
   const searchTerm = elements.remoteFinderSearchInput.value.toLowerCase();
   if (searchTerm) {
-    carsToRender = carsToRender.filter((car) => {
+    carsToRender = carsToRender.filter(car => {
       const carInfo =
         `${car.make} ${car.model} ${car.yearStart} ${car.yearEnd}`.toLowerCase();
       if (carInfo.includes(searchTerm)) return true;
-      return (car.remotes || []).some((remote) => {
+      return (car.remotes || []).some(remote => {
         const remoteInfo =
           `${remote.type} ${remote.frequency} ${remote.fccId} ${remote.battery}`.toLowerCase();
 
         if (remoteInfo.includes(searchTerm)) return true;
-        return Object.values(remote.partNumbers).some((code) =>
+        return Object.values(remote.partNumbers).some(code =>
           code.toLowerCase().includes(searchTerm)
         );
       });
@@ -735,7 +735,7 @@ function renderCarsView() {
   elements.remoteFinderResultsArea.innerHTML =
     `<div class="results-grid">` +
     carsToRender
-      .map((car) => {
+      .map(car => {
         const yearRange =
           car.yearStart && car.yearEnd
             ? `${car.yearStart} - ${car.yearEnd}`
@@ -744,7 +744,7 @@ function renderCarsView() {
         const carMeta = `${yearRange} ${countryInfo}`.trim();
 
         const remotesHTML = (car.remotes || [])
-          .map((remote) => {
+          .map(remote => {
             const partNumbersHTML = Object.entries(remote.partNumbers)
               .map(([vendor, code]) => {
                 const remoteTypeKeyword =
@@ -862,7 +862,7 @@ export function renderRemoteFinder() {
 function createOptions(optionsArray, selectedValue) {
   return optionsArray
     .map(
-      (option) =>
+      option =>
         `<option value="${sanitizeHTML(option)}" ${
           option === selectedValue ? "selected" : ""
         }>${sanitizeHTML(option)}</option>`
@@ -990,10 +990,10 @@ export function addRemoteSection(remoteData = {}) {
 export function openRemoteFinderModal(carId = null) {
   elements.remoteFinderForm.reset();
   const uniqueMakes = [
-    ...new Set(appState.remoteFinderDB.map((car) => car.make)),
+    ...new Set(appState.remoteFinderDB.map(car => car.make)),
   ];
   elements.makesDatalist.innerHTML = uniqueMakes
-    .map((make) => `<option value="${sanitizeHTML(make)}">`)
+    .map(make => `<option value="${sanitizeHTML(make)}">`)
     .join("");
 
   // This is a bit of a trick to replace the input with a select while keeping its position
@@ -1012,7 +1012,7 @@ export function openRemoteFinderModal(carId = null) {
 
   elements.remotesContainerModal.innerHTML = "";
   if (carId) {
-    const car = appState.remoteFinderDB.find((c) => c.id === carId);
+    const car = appState.remoteFinderDB.find(c => c.id === carId);
     if (!car) return;
     elements.remoteFinderModalTitle.textContent = "تعديل بيانات السيارة";
     elements.remoteCarIdInput.value = car.id;
@@ -1026,7 +1026,7 @@ export function openRemoteFinderModal(carId = null) {
       car.country || "";
 
     if (car.remotes && car.remotes.length > 0) {
-      car.remotes.forEach((remoteData) => addRemoteSection(remoteData));
+      car.remotes.forEach(remoteData => addRemoteSection(remoteData));
     } else {
       addRemoteSection();
     }

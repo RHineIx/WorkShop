@@ -31,12 +31,12 @@ const b64toBlob = (b64Data, contentType = "", sliceSize = 512) => {
   return new Blob(byteArrays, { type: contentType });
 };
 
-const toBase64 = (file) =>
+const toBase64 = file =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => resolve(reader.result.split(",")[1]);
-    reader.onerror = (error) => reject(error);
+    reader.onerror = error => reject(error);
   });
 
 async function fetchJsonFromGitHub(filePath, defaultValue) {
@@ -141,7 +141,7 @@ export async function fetchLiveExchangeRate() {
 /**
  * Fetches an image, prioritizing local cache (memory -> IndexedDB) before fetching from GitHub.
  */
-export const fetchImageWithAuth = async (path) => {
+export const fetchImageWithAuth = async path => {
   if (!path) return null;
 
   // 1. Check in-memory cache first (fastest)
@@ -313,7 +313,7 @@ export const deleteFileFromGitHub = async (path, sha, message) => {
 /**
  * Fetches the contents of a directory from the GitHub repo.
  */
-export const getGitHubDirectoryListing = async (path) => {
+export const getGitHubDirectoryListing = async path => {
   if (!appState.syncConfig) return [];
   const { username, repo, pat } = appState.syncConfig;
   const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
@@ -355,7 +355,7 @@ export const createGitHubFile = async (path, content, message) => {
  * REFACTORED: Fetches the content of a specific file from GitHub.
  * Used for reading archive files. Returns only the data.
  */
-export const fetchGitHubFile = async (path) => {
+export const fetchGitHubFile = async path => {
   const result = await fetchJsonFromGitHub(path, null);
   return result ? result.data : null;
 };

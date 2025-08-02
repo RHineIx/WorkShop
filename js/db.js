@@ -18,19 +18,19 @@ function openImageDB() {
 
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-    request.onerror = (event) => {
+    request.onerror = event => {
       console.error("Database error:", event.target.error);
       reject("Error opening database.");
     };
 
-    request.onupgradeneeded = (event) => {
+    request.onupgradeneeded = event => {
       const dbInstance = event.target.result;
       if (!dbInstance.objectStoreNames.contains(STORE_NAME)) {
         dbInstance.createObjectStore(STORE_NAME);
       }
     };
 
-    request.onsuccess = (event) => {
+    request.onsuccess = event => {
       db = event.target.result;
       resolve(db);
     };
