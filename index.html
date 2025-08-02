@@ -435,7 +435,7 @@
 
     <dialog id="sync-modal">
       <form id="sync-form">
-        <h3>إعدادات المزامنة السحابية</h3>
+        <h3>إعدادات المزامنة والتطبيق</h3>
         <p>
           سيتم حفظ بياناتك في ملفات JSON داخل مستودع GitHub خاص.
           <a
@@ -444,6 +444,17 @@
             >كيفية إنشاء مفتاح وصول شخصي (PAT)</a
           >.
         </p>
+
+        <label for="exchange-rate">سعر صرف الدولار (مقابل 1 دولار)</label>
+        <input
+          type="number"
+          id="exchange-rate"
+          step="5"
+          placeholder="e.g., 1460"
+        />
+
+        <hr class="maintenance-divider" />
+
         <label for="github-username">اسم المستخدم في GitHub</label>
         <input
           type="text"

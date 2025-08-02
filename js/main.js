@@ -12,10 +12,15 @@ function loadConfig() {
     if (savedConfig) {
         appState.syncConfig = JSON.parse(savedConfig);
     }
+    const savedRate = localStorage.getItem('inventoryAppExchangeRate');
+    if (savedRate) {
+        appState.exchangeRate = parseFloat(savedRate);
+    }
 }
 
 function saveConfig() {
     localStorage.setItem('inventoryAppSyncConfig', JSON.stringify(appState.syncConfig));
+    localStorage.setItem('inventoryAppExchangeRate', appState.exchangeRate);
 }
 
 function loadLocalData() {
@@ -47,6 +52,21 @@ function saveLocalData() {
     localStorage.setItem('salesAppData', JSON.stringify(appState.sales));
     localStorage.setItem('suppliersAppData', JSON.stringify(appState.suppliers));
     localStorage.setItem('remoteFinderDB', JSON.stringify(appState.remoteFinderDB));
+}
+
+
+// --- PRICE CONVERSION LOGIC ---
+
+function handlePriceConversion(iqdInput, usdInput) {
+    const iqdValue = parseFloat(iqdInput.value);
+    const rate = appState.exchangeRate;
+
+    if (!isNaN(iqdValue) && iqdValue > 0 && rate > 0) {
+        const usdValue = iqdValue / rate;
+        usdInput.value = usdValue.toFixed(2); // Format to 2 decimal places
+    } else {
+        usdInput.value = 0;
+    }
 }
 
 
@@ -623,6 +643,17 @@ function setupModalListeners(elements) {
         const existingSkus = new Set(appState.inventory.items.map(item => item.sku));
         document.getElementById('item-sku').value = generateUniqueSKU(existingSkus);
     });
+
+    // Price conversion listeners
+    const costIqdInput = document.getElementById('item-cost-price-iqd');
+    const costUsdInput = document.getElementById('item-cost-price-usd');
+    const sellIqdInput = document.getElementById('item-sell-price-iqd');
+    const sellUsdInput = document.getElementById('item-sell-price-usd');
+
+    costIqdInput.addEventListener('input', () => handlePriceConversion(costIqdInput, costUsdInput));
+    sellIqdInput.addEventListener('input', () => handlePriceConversion(sellIqdInput, sellUsdInput));
+
+
     // Details Modal
     elements.detailsIncreaseBtn.addEventListener('click', () => {
         const item = appState.inventory.items.find(i => i.id === appState.currentItemId);
@@ -747,6 +778,7 @@ function setupModalListeners(elements) {
             repo: elements.githubRepoInput.value.trim(),
             pat: elements.githubPatInput.value.trim(),
         };
+        appState.exchangeRate = parseFloat(document.getElementById('exchange-rate').value) || 0;
         saveConfig();
         elements.syncModal.close();
         await initializeApp();
