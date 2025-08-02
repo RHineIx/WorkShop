@@ -118,13 +118,6 @@ appearance: textfield;
     padding: var(--spacing-md);
     border-radius: var(--border-radius-md);
     margin-bottom: var(--spacing-md);
-    transition: border-color 0.2s, background-color 0.2s;
-}
-
-.image-upload-container:focus {
-    outline: none;
-    border-color: var(--accent-color);
-    background-color: var(--bg-color);
 }
 
 .image-preview-wrapper {
@@ -160,7 +153,7 @@ appearance: textfield;
     justify-content: center;
 }
 
-#image-placeholder iconify-icon {
+#image-placeholder .material-symbols-outlined {
     font-size: 50px;
 }
 
@@ -244,9 +237,3 @@ select {
     text-align: center;
     padding-left: 12px;
 }
-
-.image-upload-actions {
-    display: flex;
-    gap: var(--spacing-sm);
-    justify-content: center;
-}}
