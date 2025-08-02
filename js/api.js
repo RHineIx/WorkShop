@@ -1,6 +1,6 @@
 // js/api.js
 import { appState } from './state.js';
-import { getImage, storeImage } from './db.js'; // Import DB helpers
+import { getImage, storeImage } from './db.js';
 
 // --- Custom Error for Handling Race Conditions ---
 /**
@@ -105,7 +105,29 @@ async function saveJsonToGitHub(filePath, dataObject, commitMessage) {
 }
 
 
-// --- Exported GitHub API Functions ---
+// --- Exported API Functions ---
+
+/**
+ * Fetches the live USD to IQD exchange rate.
+ * @returns {Promise<number|null>} The exchange rate, or null if failed.
+ */
+export async function fetchLiveExchangeRate() {
+    const url = 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json';
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        if (!data || !data.usd || typeof data.usd.iqd !== 'number') {
+            throw new Error('Invalid API response format');
+        }
+        return data.usd.iqd;
+    } catch (error) {
+        console.error('Failed to fetch exchange rate:', error);
+        return null;
+    }
+}
 
 /**
  * Fetches an image, prioritizing local cache (memory -> IndexedDB) before fetching from GitHub.

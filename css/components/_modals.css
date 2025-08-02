@@ -57,7 +57,7 @@ dialog::backdrop {
     flex-shrink: 0;
 }
 
-/* --- NEW: Advanced Settings Toggle Styles --- */
+/* --- Advanced Settings Toggle Styles --- */
 .advanced-settings-toggle {
     width: 100%;
     background-color: transparent;
@@ -92,12 +92,44 @@ dialog::backdrop {
 .advanced-settings-container > div {
     overflow: hidden;
 }
-/* This wrapper is necessary for the animation to work correctly */
+
 .advanced-settings-wrapper {
     padding-top: var(--spacing-md);
     display: flex;
     flex-direction: column;
     gap: var(--spacing-md);
+}
+
+.form-group-inline {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: var(--spacing-sm);
+}
+.form-group-inline label {
+    margin-bottom: 0;
+}
+#live-exchange-rate-display {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: color 0.2s ease;
+    user-select: none;
+}
+#live-exchange-rate-display:hover {
+    color: var(--accent-color);
+}
+#live-exchange-rate-display .value {
+    font-weight: 700;
+    color: var(--success-color);
+}
+#live-exchange-rate-display.error {
+    color: var(--danger-color);
+    cursor: default;
+}
+#live-exchange-rate-display.error:hover {
+    color: var(--danger-color);
 }
 
 .maintenance-actions {

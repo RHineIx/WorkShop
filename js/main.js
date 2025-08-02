@@ -769,7 +769,29 @@ function setupModalListeners(elements) {
     document.getElementById('sale-price').addEventListener('input', ui.updateSaleTotal);
 
     // Sync Modal & Maintenance
-    elements.syncSettingsBtn.addEventListener('click', ui.populateSyncModal);
+    elements.syncSettingsBtn.addEventListener('click', () => {
+        ui.populateSyncModal();
+        // Fetch the live rate when the modal is opened
+        const display = document.getElementById('live-exchange-rate-display');
+        const input = document.getElementById('exchange-rate');
+        display.textContent = 'جاري تحميل السعر...';
+        display.classList.remove('error');
+
+        api.fetchLiveExchangeRate().then(rate => {
+            if (rate) {
+                const roundedRate = Math.round(rate);
+                display.innerHTML = `السعر الحالي: <span class="value">${roundedRate}</span>`;
+                display.onclick = () => {
+                    input.value = roundedRate;
+                    input.focus();
+                };
+            } else {
+                display.textContent = 'فشل تحديث السعر';
+                display.classList.add('error');
+                display.onclick = null;
+            }
+        });
+    });
     elements.cancelSyncBtn.addEventListener('click', () => elements.syncModal.close());
     elements.syncForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -784,7 +806,6 @@ function setupModalListeners(elements) {
         await initializeApp();
     });
     
-    // NEW: Advanced settings toggle listener
     const advancedSettingsToggle = document.getElementById('advanced-settings-toggle');
     const advancedSettingsContainer = document.getElementById('advanced-settings-container');
 

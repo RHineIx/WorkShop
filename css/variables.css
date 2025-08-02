@@ -31,6 +31,7 @@ body.theme-light {
     --danger-color-hover: #c53030;
     --low-stock-bg: #feebc8;
     --secondary-currency-color: #2F855A; /* Green for USD */
+    --success-color: #38a169;
 }
 
 /* --- Dark Theme --- */
@@ -46,4 +47,5 @@ body.theme-dark {
     --danger-color-hover: #f56565;
     --low-stock-bg: #4a361d;
     --secondary-currency-color: #68D391; /* Lighter green for dark mode */
+    --success-color: #38a169;
 }
