@@ -34,6 +34,7 @@
 
 /* --- Category Filter Dropdown --- */
 .category-dropdown {
+  /* The simplest and most robust way to hide the element */
   display: none;
   position: absolute;
   top: calc(100% + 8px);
@@ -47,19 +48,11 @@
   max-height: 250px;
   overflow-y: auto;
   padding: var(--spacing-sm);
-  /* Make the dropdown non-interactive by default */
-  pointer-events: none;
-  opacity: 0;
-  transform: translateY(-10px);
-  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .category-dropdown.show {
+  /* When shown, it's a block element */
   display: block;
-  /* Make it interactive only when shown */
-  pointer-events: auto;
-  opacity: 1;
-  transform: translateY(0);
 }
 
 .category-item {
