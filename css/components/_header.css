@@ -34,7 +34,6 @@
 
 /* --- Category Filter Dropdown --- */
 .category-dropdown {
-  /* The simplest and most robust way to hide the element */
   display: none;
   position: absolute;
   top: calc(100% + 8px);
@@ -51,7 +50,6 @@
 }
 
 .category-dropdown.show {
-  /* When shown, it's a block element */
   display: block;
 }
 
