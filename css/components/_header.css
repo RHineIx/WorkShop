@@ -47,10 +47,19 @@
   max-height: 250px;
   overflow-y: auto;
   padding: var(--spacing-sm);
+  /* Make the dropdown non-interactive by default */
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .category-dropdown.show {
   display: block;
+  /* Make it interactive only when shown */
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .category-item {
