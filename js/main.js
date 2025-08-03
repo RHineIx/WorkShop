@@ -65,6 +65,7 @@ function saveLocalData() {
 function handlePriceConversion(iqdInput, usdInput) {
   const iqdValue = parseFloat(iqdInput.value);
   const rate = appState.exchangeRate;
+
   if (!isNaN(iqdValue) && iqdValue > 0 && rate > 0) {
     const usdValue = iqdValue / rate;
     usdInput.value = usdValue.toFixed(2); // Format to 2 decimal places
@@ -75,27 +76,40 @@ function handlePriceConversion(iqdInput, usdInput) {
 
 // --- CORE LOGIC HANDLERS ---
 
+/**
+ * Checks for data conflicts before performing a save operation.
+ * @returns {Promise<boolean>} True if a conflict exists, false otherwise.
+ */
+async function performPreSaveConflictCheck() {
+  ui.showStatus("التحقق من البيانات...", "syncing");
+  const { data: latestInventory, sha: latestSha } = await api.fetchFromGitHub();
+  if (latestSha !== appState.fileSha) {
+    ui.hideSyncStatus();
+    ui.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
+      showRefreshButton: true,
+    });
+    return true; // Conflict detected
+  }
+  // No conflict, update state with potentially newer data (even if sha is same, content might differ in memory)
+  appState.inventory = latestInventory;
+  appState.fileSha = latestSha;
+  ui.hideSyncStatus();
+  return false; // No conflict
+}
+
 async function handleSaleFormSubmit(e) {
   e.preventDefault();
   const saveButton = document.getElementById("confirm-sale-btn");
   saveButton.disabled = true;
 
   try {
-    ui.showStatus("التحقق من البيانات...", "syncing");
-    const checkResult = await api.fetchFromGitHub();
-    if (checkResult.sha !== null && checkResult.sha !== appState.fileSha) {
-      ui.hideSyncStatus();
-      ui.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
-        showRefreshButton: true,
-      });
+    if (await performPreSaveConflictCheck()) {
       saveButton.disabled = false;
       return;
     }
 
-    let latestInventory = checkResult.data;
-
     const itemId = document.getElementById("sale-item-id").value;
-    const item = latestInventory.items.find(i => i.id === itemId);
+    const item = appState.inventory.items.find(i => i.id === itemId);
     const quantityToSell = parseInt(
       document.getElementById("sale-quantity").value,
       10
@@ -103,15 +117,13 @@ async function handleSaleFormSubmit(e) {
     const salePrice = parseFloat(document.getElementById("sale-price").value);
 
     if (!item || item.quantity < quantityToSell || quantityToSell <= 0) {
-      ui.hideSyncStatus();
       ui.showStatus("خطأ في البيانات أو الكمية غير متوفرة.", "error");
       saveButton.disabled = false;
       return;
     }
 
-    ui.hideSyncStatus();
     ui.showStatus("جاري تسجيل البيع...", "syncing");
-
+    const originalQuantity = item.quantity;
     item.quantity -= quantityToSell;
 
     const saleRecord = {
@@ -129,11 +141,7 @@ async function handleSaleFormSubmit(e) {
       notes: document.getElementById("sale-notes").value,
       timestamp: new Date().toISOString(),
     };
-
-    appState.inventory = latestInventory;
-    appState.fileSha = checkResult.sha;
     appState.sales.push(saleRecord);
-
     ui.filterAndRenderItems();
 
     try {
@@ -144,8 +152,7 @@ async function handleSaleFormSubmit(e) {
       ui.hideSyncStatus();
       ui.showStatus("تم تسجيل البيع بنجاح!", "success");
     } catch (saveError) {
-      // Revert changes if save fails
-      item.quantity += quantityToSell;
+      item.quantity = originalQuantity;
       appState.sales.pop();
       ui.filterAndRenderItems();
       throw saveError;
@@ -167,16 +174,24 @@ async function handleItemFormSubmit(e) {
   e.preventDefault();
   const saveButton = document.getElementById("save-item-btn");
   saveButton.disabled = true;
-  ui.showStatus("جاري تجهيز البيانات...", "syncing");
 
   try {
+    if (await performPreSaveConflictCheck()) {
+      saveButton.disabled = false;
+      return;
+    }
+
+    ui.showStatus("جاري الحفظ...", "syncing");
+
     const itemId = document.getElementById("item-id").value;
     let imagePath = null;
+    const existingItem = appState.inventory.items.find(i => i.id === itemId);
+    if (existingItem) {
+      imagePath = existingItem.imagePath;
+    }
 
-    // Step 1: Handle the slow operation (image upload) first.
     if (appState.selectedImageFile) {
-      ui.hideSyncStatus();
-      ui.showStatus("جاري رفع الصورة...", "syncing");
+      ui.showStatus("جاري ضغط الصورة...", "syncing");
       const compressedImageBlob = await compressImage(
         appState.selectedImageFile,
         { quality: 0.7, maxWidth: 1024, maxHeight: 1024 }
@@ -187,33 +202,6 @@ async function handleItemFormSubmit(e) {
       );
     }
 
-    ui.hideSyncStatus();
-    ui.showStatus("التحقق من أحدث البيانات...", "syncing");
-
-    // Step 2: Fetch the latest data AFTER the slow operation is complete.
-    const checkResult = await api.fetchFromGitHub();
-    if (checkResult.sha !== null && checkResult.sha !== appState.fileSha) {
-      ui.hideSyncStatus();
-      ui.showStatus(
-        "البيانات غير محدّثة. تم تحديثها من جهاز آخر أثناء رفع الصورة.",
-        "error",
-        { showRefreshButton: true }
-      );
-      saveButton.disabled = false;
-      return;
-    }
-
-    let latestInventory = checkResult.data;
-
-    // If we uploaded a new image, use its path. Otherwise, keep the existing one.
-    if (!imagePath) {
-      const existingItem = latestInventory.items.find(i => i.id === itemId);
-      if (existingItem) {
-        imagePath = existingItem.imagePath;
-      }
-    }
-
-    // Step 3: Build the final item data
     const itemData = {
       id: itemId || `item_${Date.now()}`,
       sku: document.getElementById("item-sku").value,
@@ -236,24 +224,18 @@ async function handleItemFormSubmit(e) {
       supplierId: document.getElementById("item-supplier").value || null,
     };
 
-    // Step 4: Merge changes into the LATEST data
-    const index = latestInventory.items.findIndex(i => i.id === itemData.id);
+    const index = appState.inventory.items.findIndex(i => i.id === itemId);
     if (index !== -1) {
-      latestInventory.items[index] = itemData;
+      appState.inventory.items[index] = itemData;
     } else {
-      latestInventory.items.push(itemData);
+      appState.inventory.items.push(itemData);
     }
-
-    // Step 5: Update global state and save
-    appState.inventory = latestInventory;
-    appState.fileSha = checkResult.sha;
-
-    await api.saveToGitHub();
-    saveLocalData();
 
     ui.filterAndRenderItems();
     ui.renderCategoryFilter();
     ui.populateCategoryDatalist();
+    await api.saveToGitHub();
+    saveLocalData();
 
     ui.getDOMElements().itemModal.close();
     ui.hideSyncStatus();
@@ -665,6 +647,7 @@ async function handleRemoteFinderFormSubmit(e) {
     });
     carData.remotes.push(remote);
   });
+
   ui.showStatus("جاري حفظ البيانات...", "syncing");
   try {
     if (carId) {
@@ -787,6 +770,7 @@ function setupModalListeners(elements) {
   elements.cancelItemBtn.addEventListener("click", () =>
     elements.itemModal.close()
   );
+
   // --- Image Handling Logic ---
   function handleImageSelection(file) {
     const { imagePreview, imagePlaceholder } = ui.getDOMElements();
@@ -810,6 +794,7 @@ function setupModalListeners(elements) {
   elements.imageUploadInput.addEventListener("change", e => {
     handleImageSelection(e.target.files[0]);
   });
+
   elements.pasteImageBtn.addEventListener("click", async () => {
     try {
       if (!navigator.clipboard || !navigator.clipboard.read) {
@@ -855,6 +840,7 @@ function setupModalListeners(elements) {
     );
     document.getElementById("item-sku").value = generateUniqueSKU(existingSkus);
   });
+
   // Price conversion listeners
   const costIqdInput = document.getElementById("item-cost-price-iqd");
   const costUsdInput = document.getElementById("item-cost-price-usd");
@@ -867,6 +853,7 @@ function setupModalListeners(elements) {
   sellIqdInput.addEventListener("input", () =>
     handlePriceConversion(sellIqdInput, sellUsdInput)
   );
+
   // Details Modal
   elements.detailsIncreaseBtn.addEventListener("click", () => {
     const item = appState.inventory.items.find(
@@ -899,15 +886,8 @@ function setupModalListeners(elements) {
       itemBeforeEdit.quantity !== currentItem.quantity
     ) {
       try {
-        ui.showStatus("التحقق من البيانات...", "syncing");
-        const checkResult = await api.fetchFromGitHub();
-        if (checkResult.sha !== null && checkResult.sha !== appState.fileSha) {
-          ui.hideSyncStatus();
-          ui.showStatus(
-            "البيانات غير محدّثة. تم تحديثها من جهاز آخر.",
-            "error",
-            { showRefreshButton: true }
-          );
+        if (await performPreSaveConflictCheck()) {
+          // If conflict, revert local changes and refresh UI
           const originalItemIndex = appState.inventory.items.findIndex(
             i => i.id === itemBeforeEdit.id
           );
@@ -915,16 +895,12 @@ function setupModalListeners(elements) {
             appState.inventory.items[originalItemIndex] = itemBeforeEdit;
           ui.filterAndRenderItems();
         } else {
-          ui.hideSyncStatus();
+          // No conflict, proceed with saving
           ui.showStatus("جاري حفظ تغيير الكمية...", "syncing");
-          const itemToUpdate = checkResult.data.items.find(
+          const itemToUpdate = appState.inventory.items.find(
             i => i.id === currentItem.id
           );
           if (itemToUpdate) itemToUpdate.quantity = currentItem.quantity;
-
-          appState.inventory = checkResult.data;
-          appState.fileSha = checkResult.sha;
-
           await api.saveToGitHub();
           saveLocalData();
           ui.hideSyncStatus();
@@ -1031,6 +1007,7 @@ function setupModalListeners(elements) {
   document
     .getElementById("sale-price")
     .addEventListener("input", ui.updateSaleTotal);
+
   // Sync Modal & Maintenance
   elements.syncSettingsBtn.addEventListener("click", () => {
     ui.populateSyncModal();
@@ -1073,12 +1050,14 @@ function setupModalListeners(elements) {
     elements.syncModal.close();
     await initializeApp();
   });
+
   const advancedSettingsToggle = document.getElementById(
     "advanced-settings-toggle"
   );
   const advancedSettingsContainer = document.getElementById(
     "advanced-settings-container"
   );
+
   advancedSettingsToggle.addEventListener("click", () => {
     advancedSettingsToggle.classList.toggle("open");
     advancedSettingsContainer.classList.toggle("open");
@@ -1089,6 +1068,7 @@ function setupModalListeners(elements) {
   document
     .getElementById("manual-archive-btn")
     .addEventListener("click", handleManualArchive);
+
   // Archive Browser Modal
   document
     .getElementById("view-archives-btn")
@@ -1124,6 +1104,7 @@ function setupModalListeners(elements) {
         }
       } else {
         const item = e.target.closest(".archive-item");
+
         if (!item) return;
 
         const detailsContainer = document.getElementById(
@@ -1166,9 +1147,9 @@ function setupModalListeners(elements) {
         }
       }
     });
+
   // Modal Close Behavior Setup
   function setupModalCloseBehavior(modalElement) {
-    if (!modalElement) return; // Guard against undefined elements
     modalElement.addEventListener("close", () => {
       // Remove the closed modal from the stack
       appState.modalStack = appState.modalStack.filter(m => m !== modalElement);
@@ -1209,11 +1190,10 @@ function setupDashboardListeners(elements) {
 
 function setupSupplierListeners(elements) {
   elements.manageSuppliersBtn.addEventListener("click", () => {
-    const modal = elements.supplierManagerModal;
     ui.renderSupplierList();
-    appState.modalStack.push(modal);
-    modal.appendChild(elements.toastContainer);
-    modal.showModal();
+    appState.modalStack.push(elements.supplierManagerModal);
+    elements.supplierManagerModal.appendChild(elements.toastContainer);
+    elements.supplierManagerModal.showModal();
   });
   elements.closeSupplierManagerBtn.addEventListener("click", () => {
     elements.supplierManagerModal.close();
@@ -1264,6 +1244,7 @@ function setupRemoteFinderListeners(elements) {
     "submit",
     handleRemoteFinderFormSubmit
   );
+
   elements.remoteFinderForm.addEventListener("click", e => {
     const addPartBtn = e.target.closest(".add-part-number-btn");
     const removePartBtn = e.target.closest(".remove-part-btn");
@@ -1317,6 +1298,7 @@ function setupRemoteFinderListeners(elements) {
       const copyBtn = target.closest(".copy-btn");
       const codeToCopy = copyBtn.dataset.code;
       const icon = copyBtn.querySelector("iconify-icon");
+
       navigator.clipboard.writeText(codeToCopy).then(() => {
         if (icon) {
           const originalIcon = icon.getAttribute("icon");
@@ -1415,8 +1397,7 @@ async function initializeApp() {
   }
 
   updateLastArchiveDateDisplay();
-  ui.filterAndRenderItems();
-  // Render initial inventory view
+  ui.filterAndRenderItems(); // Render initial inventory view
   ui.renderCategoryFilter();
   ui.populateCategoryDatalist();
   ui.updateCurrencyDisplay();
