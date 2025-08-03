@@ -1000,19 +1000,21 @@ export function openRemoteFinderModal(carId = null) {
     .map(make => `<option value="${sanitizeHTML(make)}">`)
     .join("");
 
-  // This is a bit of a trick to replace the input with a select while keeping its position
-  const carCountryInput =
+  const carCountrySelect =
     elements.remoteFinderForm.querySelector("#car-country");
-  if (carCountryInput && carCountryInput.tagName !== "SELECT") {
-    const countryOptions = ["امريكي", "خليجي", "كندي", "كوري", "ياباني"];
-    const carCountrySelect = document.createElement("select");
-    carCountrySelect.id = "car-country";
-    carCountrySelect.innerHTML = `<option value="">-- اختر البلد --</option>${createOptions(
-      countryOptions,
-      ""
-    )}`;
-    carCountryInput.replaceWith(carCountrySelect);
-  }
+  const countryOptions = [
+    "امريكي",
+    "خليجي",
+    "كندي",
+    "كوري",
+    "ياباني",
+    "صيني",
+    "اوروبي",
+  ];
+  carCountrySelect.innerHTML = `<option value="">-- اختر البلد --</option>${createOptions(
+    countryOptions,
+    ""
+  )}`;
 
   elements.remotesContainerModal.innerHTML = "";
   if (carId) {
