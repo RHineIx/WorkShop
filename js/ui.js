@@ -138,7 +138,6 @@ const elements = {
   remotesContainerModal: document.getElementById("remotes-container-modal"),
   brandFilterBar: document.getElementById("brand-filter-bar"),
 };
-
 export function getDOMElements() {
   return elements;
 }
@@ -198,9 +197,10 @@ export const hideSyncStatus = () => {
     elements.toastContainer.querySelectorAll(".toast--syncing");
   syncToasts.forEach(toast => {
     toast.classList.remove("show");
-    toast.addEventListener("transitionend", () => toast.remove(), {
-      once: true,
-    });
+    // Use a timeout to guarantee removal after animation
+    setTimeout(() => {
+      toast.remove();
+    }, 500); // Should match the CSS transition duration
   });
 };
 
@@ -234,13 +234,18 @@ export const showStatus = (message, type, options = {}) => {
     toast.classList.add("show");
   }, 10);
 
-  // A duration of 0 means the toast is permanent until removed manually
+  // A duration of 0 means the toast is permanent until removed manually.
+  // We use a robust timeout-based removal instead of relying on transitionend event.
   if (duration > 0 && type !== "syncing" && !showRefreshButton) {
+    const transitionDuration = 500; // Corresponds to 0.5s in CSS
     setTimeout(() => {
       toast.classList.remove("show");
-      toast.addEventListener("transitionend", () => toast.remove(), {
-        once: true,
-      });
+      // Guarantee the element is removed from the DOM after the fade-out animation.
+      setTimeout(() => {
+        if (toast.parentElement) {
+          toast.remove();
+        }
+      }, transitionDuration);
     }, duration);
   }
 };
@@ -450,7 +455,6 @@ export const updateStats = () => {
     item => item.quantity <= item.alertLevel
   ).length;
 };
-
 export const setTheme = themeName => {
   document.body.className = `theme-${themeName}`;
   const icon = elements.themeToggleBtn.querySelector("iconify-icon");
@@ -503,7 +507,7 @@ export function renderSupplierList() {
                 <button class="icon-btn danger-btn delete-supplier-btn" data-id="${
                   supplier.id
                 }" title="حذف المورّد">
-                     <iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon>
+                    <iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon>
                 </button>
             </div>
         `;
@@ -589,7 +593,6 @@ export const openDetailsModal = itemId => {
   elements.detailsModal.appendChild(elements.toastContainer);
   elements.detailsModal.showModal();
 };
-
 export const openItemModal = (itemId = null) => {
   elements.itemForm.reset();
   appState.selectedImageFile = null;
@@ -759,7 +762,7 @@ function renderCarsView() {
                     <span class="vendor-tag ${vendor.toLowerCase()}">${sanitizeHTML(
                   vendor.toUpperCase()
                 )}</span>
-                   
+                    
                     <span class="part-code">${sanitizeHTML(code)}</span>
                     <div class="part-actions">
                         <button class="icon-btn copy-btn" title="نسخ" data-code="${sanitizeHTML(
@@ -768,14 +771,12 @@ function renderCarsView() {
                         <a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(
                           searchQuery
                         )}" target="_blank" class="icon-btn" title="بحث عن صورة">
-                  
                            <iconify-icon icon="material-symbols:image-search-outline-rounded"></iconify-icon>
                         </a>
                     </div>
                 </div>`;
               })
               .join("");
-
             return `
                 <div class="remote-section">
                     <h4 class="remote-type">${sanitizeHTML(
@@ -825,7 +826,6 @@ function renderCarsView() {
                 </div>`;
           })
           .join("");
-
         return `
             <div class="remote-card" data-id="${car.id}">
                 <header class="card-header">
@@ -999,7 +999,6 @@ export function openRemoteFinderModal(carId = null) {
   elements.makesDatalist.innerHTML = uniqueMakes
     .map(make => `<option value="${sanitizeHTML(make)}">`)
     .join("");
-
   const carCountrySelect =
     elements.remoteFinderForm.querySelector("#car-country");
   const countryOptions = [
@@ -1030,7 +1029,6 @@ export function openRemoteFinderModal(carId = null) {
       car.yearEnd;
     elements.remoteFinderForm.querySelector("#car-country").value =
       car.country || "";
-
     if (car.remotes && car.remotes.length > 0) {
       car.remotes.forEach(remoteData => addRemoteSection(remoteData));
     } else {
