@@ -143,7 +143,6 @@ export async function fetchLiveExchangeRate() {
  */
 export const fetchImageWithAuth = async path => {
   if (!path) return null;
-
   // 1. Check in-memory cache first (fastest)
   if (appState.imageCache.has(path)) {
     return appState.imageCache.get(path);
@@ -165,25 +164,30 @@ export const fetchImageWithAuth = async path => {
   if (!appState.syncConfig) return null;
   const { username, repo, pat } = appState.syncConfig;
   const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
-
   try {
     const response = await fetch(apiUrl, {
       headers: { Authorization: `token ${pat}` },
     });
-    if (!response.ok) throw new Error("Failed to fetch image from GitHub");
+    if (!response.ok) {
+      // If fetching from GitHub fails, log the error but don't crash.
+      console.error(
+        `GitHub image fetch failed for ${path}: ${response.statusText}`
+      );
+      return null; // Return null instead of throwing an error.
+    }
 
     const data = await response.json();
-    const blob = b64toBlob(data.content, "image/webp"); // Assuming images are webp or jpeg
+    const blob = b64toBlob(data.content, "image/webp");
 
     // Store the fetched blob in IndexedDB for future use
     await storeImage(path, blob);
-
     const url = URL.createObjectURL(blob);
     appState.imageCache.set(path, url); // Also cache in memory for current session
     return url;
   } catch (error) {
-    console.error(`Failed to fetch image ${path}:`, error);
-    return null;
+    // Catch any other network or parsing errors.
+    console.error(`Failed to fetch and process image ${path}:`, error);
+    return null; // Return null to prevent crashing the UI rendering.
   }
 };
 
