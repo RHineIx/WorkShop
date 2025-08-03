@@ -75,32 +75,19 @@ function handlePriceConversion(iqdInput, usdInput) {
 
 // --- CORE LOGIC HANDLERS ---
 
-/**
- * Fetches the latest data and checks for conflicts.
- * @returns {Promise<Object|null>} The latest {data, sha} object if no conflict, otherwise null.
- */
-async function fetchAndCheckConflict() {
-  ui.showStatus("التحقق من البيانات...", "syncing");
-  const result = await api.fetchFromGitHub(); // result is { data, sha }
-  if (result.sha !== null && result.sha !== appState.fileSha) {
-    ui.hideSyncStatus();
-    ui.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
-      showRefreshButton: true,
-    });
-    return null; // Conflict detected
-  }
-  ui.hideSyncStatus();
-  return result; // No conflict, return the fetched data and sha
-}
-
 async function handleSaleFormSubmit(e) {
   e.preventDefault();
   const saveButton = document.getElementById("confirm-sale-btn");
   saveButton.disabled = true;
 
   try {
-    const checkResult = await fetchAndCheckConflict();
-    if (checkResult === null) {
+    ui.showStatus("التحقق من البيانات...", "syncing");
+    const checkResult = await api.fetchFromGitHub();
+    if (checkResult.sha !== null && checkResult.sha !== appState.fileSha) {
+      ui.hideSyncStatus();
+      ui.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
+        showRefreshButton: true,
+      });
       saveButton.disabled = false;
       return;
     }
@@ -116,11 +103,13 @@ async function handleSaleFormSubmit(e) {
     const salePrice = parseFloat(document.getElementById("sale-price").value);
 
     if (!item || item.quantity < quantityToSell || quantityToSell <= 0) {
+      ui.hideSyncStatus();
       ui.showStatus("خطأ في البيانات أو الكمية غير متوفرة.", "error");
       saveButton.disabled = false;
       return;
     }
 
+    ui.hideSyncStatus();
     ui.showStatus("جاري تسجيل البيع...", "syncing");
 
     item.quantity -= quantityToSell;
@@ -178,26 +167,16 @@ async function handleItemFormSubmit(e) {
   e.preventDefault();
   const saveButton = document.getElementById("save-item-btn");
   saveButton.disabled = true;
+  ui.showStatus("جاري تجهيز البيانات...", "syncing");
+
   try {
-    const checkResult = await fetchAndCheckConflict();
-    if (checkResult === null) {
-      saveButton.disabled = false;
-      return;
-    }
-
-    let latestInventory = checkResult.data;
-
-    ui.showStatus("جاري الحفظ...", "syncing");
-
     const itemId = document.getElementById("item-id").value;
     let imagePath = null;
-    const existingItem = latestInventory.items.find(i => i.id === itemId);
-    if (existingItem) {
-      imagePath = existingItem.imagePath;
-    }
 
+    // Step 1: Handle the slow operation (image upload) first.
     if (appState.selectedImageFile) {
-      ui.showStatus("جاري ضغط الصورة...", "syncing");
+      ui.hideSyncStatus();
+      ui.showStatus("جاري رفع الصورة...", "syncing");
       const compressedImageBlob = await compressImage(
         appState.selectedImageFile,
         { quality: 0.7, maxWidth: 1024, maxHeight: 1024 }
@@ -208,6 +187,33 @@ async function handleItemFormSubmit(e) {
       );
     }
 
+    ui.hideSyncStatus();
+    ui.showStatus("التحقق من أحدث البيانات...", "syncing");
+
+    // Step 2: Fetch the latest data AFTER the slow operation is complete.
+    const checkResult = await api.fetchFromGitHub();
+    if (checkResult.sha !== null && checkResult.sha !== appState.fileSha) {
+      ui.hideSyncStatus();
+      ui.showStatus(
+        "البيانات غير محدّثة. تم تحديثها من جهاز آخر أثناء رفع الصورة.",
+        "error",
+        { showRefreshButton: true }
+      );
+      saveButton.disabled = false;
+      return;
+    }
+
+    let latestInventory = checkResult.data;
+
+    // If we uploaded a new image, use its path. Otherwise, keep the existing one.
+    if (!imagePath) {
+      const existingItem = latestInventory.items.find(i => i.id === itemId);
+      if (existingItem) {
+        imagePath = existingItem.imagePath;
+      }
+    }
+
+    // Step 3: Build the final item data
     const itemData = {
       id: itemId || `item_${Date.now()}`,
       sku: document.getElementById("item-sku").value,
@@ -230,6 +236,7 @@ async function handleItemFormSubmit(e) {
       supplierId: document.getElementById("item-supplier").value || null,
     };
 
+    // Step 4: Merge changes into the LATEST data
     const index = latestInventory.items.findIndex(i => i.id === itemData.id);
     if (index !== -1) {
       latestInventory.items[index] = itemData;
@@ -237,6 +244,7 @@ async function handleItemFormSubmit(e) {
       latestInventory.items.push(itemData);
     }
 
+    // Step 5: Update global state and save
     appState.inventory = latestInventory;
     appState.fileSha = checkResult.sha;
 
@@ -891,9 +899,15 @@ function setupModalListeners(elements) {
       itemBeforeEdit.quantity !== currentItem.quantity
     ) {
       try {
-        const checkResult = await fetchAndCheckConflict();
-        if (checkResult === null) {
-          // If conflict, revert local changes and refresh UI
+        ui.showStatus("التحقق من البيانات...", "syncing");
+        const checkResult = await api.fetchFromGitHub();
+        if (checkResult.sha !== null && checkResult.sha !== appState.fileSha) {
+          ui.hideSyncStatus();
+          ui.showStatus(
+            "البيانات غير محدّثة. تم تحديثها من جهاز آخر.",
+            "error",
+            { showRefreshButton: true }
+          );
           const originalItemIndex = appState.inventory.items.findIndex(
             i => i.id === itemBeforeEdit.id
           );
@@ -901,7 +915,7 @@ function setupModalListeners(elements) {
             appState.inventory.items[originalItemIndex] = itemBeforeEdit;
           ui.filterAndRenderItems();
         } else {
-          // No conflict, proceed with saving
+          ui.hideSyncStatus();
           ui.showStatus("جاري حفظ تغيير الكمية...", "syncing");
           const itemToUpdate = checkResult.data.items.find(
             i => i.id === currentItem.id
