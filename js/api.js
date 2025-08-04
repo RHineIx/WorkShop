@@ -1,7 +1,6 @@
 // js/api.js
 import { appState } from "./state.js";
 import { getImage, storeImage } from "./db.js";
-
 // --- Custom Error for Handling Race Conditions ---
 /**
  * Custom error class to identify when a file update fails due to a
@@ -30,7 +29,6 @@ const b64toBlob = (b64Data, contentType = "", sliceSize = 512) => {
   }
   return new Blob(byteArrays, { type: contentType });
 };
-
 const toBase64 = file =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -38,7 +36,6 @@ const toBase64 = file =>
     reader.onload = () => resolve(reader.result.split(",")[1]);
     reader.onerror = error => reject(error);
   });
-
 async function fetchJsonFromGitHub(filePath, defaultValue) {
   if (!appState.syncConfig) return null;
   const { username, repo, pat } = appState.syncConfig;
@@ -143,7 +140,6 @@ export async function fetchLiveExchangeRate() {
  */
 export const fetchImageWithAuth = async path => {
   if (!path) return null;
-
   // 1. Check in-memory cache first (fastest)
   if (appState.imageCache.has(path)) {
     return appState.imageCache.get(path);
@@ -154,7 +150,8 @@ export const fetchImageWithAuth = async path => {
     const cachedBlob = await getImage(path);
     if (cachedBlob) {
       const url = URL.createObjectURL(cachedBlob);
-      appState.imageCache.set(path, url); // Add to in-memory cache for this session
+      appState.imageCache.set(path, url);
+      // Add to in-memory cache for this session
       return url;
     }
   } catch (dbError) {
@@ -165,7 +162,6 @@ export const fetchImageWithAuth = async path => {
   if (!appState.syncConfig) return null;
   const { username, repo, pat } = appState.syncConfig;
   const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
-
   try {
     const response = await fetch(apiUrl, {
       headers: { Authorization: `token ${pat}` },
@@ -173,11 +169,11 @@ export const fetchImageWithAuth = async path => {
     if (!response.ok) throw new Error("Failed to fetch image from GitHub");
 
     const data = await response.json();
-    const blob = b64toBlob(data.content, "image/webp"); // Assuming images are webp or jpeg
+    const blob = b64toBlob(data.content, "image/webp");
+    // Assuming images are webp or jpeg
 
     // Store the fetched blob in IndexedDB for future use
     await storeImage(path, blob);
-
     const url = URL.createObjectURL(blob);
     appState.imageCache.set(path, url); // Also cache in memory for current session
     return url;
@@ -186,7 +182,6 @@ export const fetchImageWithAuth = async path => {
     return null;
   }
 };
-
 /**
  * Uploads an image file to the repo.
  */
@@ -211,7 +206,6 @@ export const uploadImageToGitHub = async (imageBlob, originalFileName) => {
   const data = await response.json();
   return data.content.path;
 };
-
 /**
  * REFACTORED: Fetches the main inventory.json file.
  */
@@ -275,24 +269,6 @@ export const saveSuppliers = async () => {
 };
 
 /**
- * Fetches the remote_finder_db.json file.
- */
-export const fetchRemoteFinderDB = async () => {
-  return await fetchJsonFromGitHub("remote_finder_db.json", []);
-};
-
-/**
- * Saves the remote finder database.
- */
-export const saveRemoteFinderDB = async () => {
-  appState.remoteFinderDBFileSha = await saveJsonToGitHub(
-    "remote_finder_db.json",
-    appState.remoteFinderDB,
-    "Update remote finder database"
-  );
-};
-
-/**
  * Deletes a file from the GitHub repository.
  */
 export const deleteFileFromGitHub = async (path, sha, message) => {
@@ -309,7 +285,6 @@ export const deleteFileFromGitHub = async (path, sha, message) => {
   }
   return response.ok;
 };
-
 /**
  * Fetches the contents of a directory from the GitHub repo.
  */
@@ -328,7 +303,6 @@ export const getGitHubDirectoryListing = async path => {
   const data = await response.json();
   return Array.isArray(data) ? data : [];
 };
-
 /**
  * Creates a new file on GitHub. Used for creating archive files.
  */

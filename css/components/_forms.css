@@ -1,8 +1,6 @@
 /* --- All Form & Input Styles --- */
 
-#search-bar,
-#remote-finder-search-input {
-  /* Added remote finder search */
+#search-bar {
   width: 100%;
   padding: 12px;
   font-size: 16px;
@@ -19,9 +17,7 @@
 #item-form label,
 #sync-form label,
 #sale-form label,
-#supplier-form label,
-#remote-finder-form label {
-  /* Added remote finder form */
+#supplier-form label {
   margin-bottom: var(--spacing-sm);
   display: block;
   font-size: 14px;
@@ -35,10 +31,7 @@
 #sync-form input,
 #sale-form input,
 #sale-form textarea,
-#supplier-form input,
-#remote-finder-form input, /* Added remote finder form */
-#remote-finder-form select {
-  /* Added remote finder form */
+#supplier-form input {
   width: 100%;
   padding: 12px;
   font-family: var(--font-family);
@@ -59,16 +52,13 @@
 #sync-form input:focus,
 #sale-form input:focus,
 #sale-form textarea:focus,
-#supplier-form input:focus,
-#remote-finder-form input:focus,
-#remote-finder-form select:focus {
+#supplier-form input:focus {
   outline: none;
   border-color: var(--accent-color);
 }
 
 #item-form textarea,
-#sale-form textarea,
-#remote-finder-form textarea {
+#sale-form textarea {
   min-height: 80px;
   width: 100%;
 }

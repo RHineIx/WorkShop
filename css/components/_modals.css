@@ -22,8 +22,7 @@ dialog::backdrop {
 }
 #item-form,
 #sync-form,
-#sale-form,
-#remote-finder-form /* Added remote finder form */ {
+#sale-form {
   overflow-y: auto;
   padding: var(--spacing-lg);
 }

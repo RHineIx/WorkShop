@@ -4,8 +4,7 @@
   color: var(--text-primary);
 }
 .app-title.active-view-btn,
-#dashboard-toggle-btn.active-view-btn,
-#remote-finder-toggle-btn.active-view-btn {
+#dashboard-toggle-btn.active-view-btn {
   color: var(--accent-color);
   font-weight: 700;
 }
