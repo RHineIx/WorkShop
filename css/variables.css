@@ -41,10 +41,10 @@ body.theme-dark {
     --border-color: #333333;
     --text-primary: #e0e0e0;
     --text-secondary: #888888;
-    --accent-color: #58a6ff;
-    --accent-color-hover: #7bbdff;
-    --danger-color: #fc8181;
-    --danger-color-hover: #f56565;
+    --accent-color: #3d83eb;
+    --accent-color-hover: #4da2f7;
+    --danger-color: #fd7777;
+    --danger-color-hover: #f05151;
     --low-stock-bg: #4a361d;
     --secondary-currency-color: #68D391; /* Lighter green for dark mode */
     --success-color: #38a169;

@@ -339,7 +339,8 @@ function getFilteredItems() {
     items = items.filter(
       item =>
         item.name.toLowerCase().includes(lowerCaseSearch) ||
-        (item.sku && item.sku.toLowerCase().includes(lowerCaseSearch))
+        (item.sku && item.sku.toLowerCase().includes(lowerCaseSearch)) ||
+        (item.notes && item.notes.toLowerCase().includes(lowerCaseSearch))
     );
   }
   return items;
