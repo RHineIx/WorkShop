@@ -165,22 +165,19 @@ const ICONS = {
   info: "material-symbols:info",
   warning: "material-symbols:warning-rounded",
 };
-
 export const hideSyncStatus = () => {
   const syncToasts =
     elements.toastContainer.querySelectorAll(".toast--syncing");
   syncToasts.forEach(toast => {
     toast.classList.remove("show");
-    // Use a timeout to guarantee removal after animation
     setTimeout(() => {
       toast.remove();
-    }, 500); // Should match the CSS transition duration
+    }, 500);
   });
 };
 
 export const showStatus = (message, type, options = {}) => {
   const { duration = 4000, showRefreshButton = false } = options;
-
   const toast = document.createElement("div");
   toast.className = `toast toast--${type}`;
   const iconName = ICONS[type] || "info";
@@ -193,7 +190,6 @@ export const showStatus = (message, type, options = {}) => {
   const messageSpan = document.createElement("span");
   messageSpan.textContent = message;
   toast.appendChild(messageSpan);
-
   if (showRefreshButton) {
     const refreshButton = document.createElement("button");
     refreshButton.textContent = "تحديث";
@@ -207,14 +203,10 @@ export const showStatus = (message, type, options = {}) => {
   setTimeout(() => {
     toast.classList.add("show");
   }, 10);
-
-  // A duration of 0 means the toast is permanent until removed manually.
-  // We use a robust timeout-based removal instead of relying on transitionend event.
   if (duration > 0 && type !== "syncing" && !showRefreshButton) {
-    const transitionDuration = 500; // Corresponds to 0.5s in CSS
+    const transitionDuration = 500;
     setTimeout(() => {
       toast.classList.remove("show");
-      // Guarantee the element is removed from the DOM after the fade-out animation.
       setTimeout(() => {
         if (toast.parentElement) {
           toast.remove();
@@ -316,7 +308,6 @@ export function updateSaleTotal() {
 export function renderInventorySkeleton(count = 8) {
   elements.inventoryGrid.innerHTML = "";
   const fragment = document.createDocumentFragment();
-  // Build in memory
 
   for (let i = 0; i < count; i++) {
     const skeletonCard = document.createElement("div");
@@ -330,11 +321,9 @@ export function renderInventorySkeleton(count = 8) {
             </div>
         `;
     fragment.appendChild(skeletonCard);
-    // Append to the fragment
   }
 
   elements.inventoryGrid.appendChild(fragment);
-  // Append to the DOM once
 }
 
 function getFilteredItems() {
@@ -381,7 +370,7 @@ export function renderInventory(itemsToRender) {
     const symbol = isIQD ? "د.ع" : "$";
     const placeholder = `<div class="card-image-placeholder"><iconify-icon icon="material-symbols:key"></iconify-icon></div>`;
     card.innerHTML = `
-            <div class="card-image-container">
+             <div class="card-image-container">
                 <div class="quantity-badge ${
                   isLowStock ? "low-stock" : ""
                 }">متبقي ${item.quantity}</div>
@@ -393,11 +382,12 @@ export function renderInventory(itemsToRender) {
             </div>
             <div class="card-info">
                 <div class="card-name">${sanitizeHTML(item.name)}</div>
+                <div class="card-sku">SKU: ${sanitizeHTML(item.sku || "")}</div>
                 <div class="card-footer">
                     <div class="card-price">${price.toLocaleString()} ${symbol}</div>
                      <div class="card-actions">
                          <button class="icon-btn sell-btn" title="بيع"><iconify-icon icon="material-symbols:shopping-cart-outline-rounded"></iconify-icon></button>
-                        <button class="icon-btn details-btn" title="عرض التفاصيل"><iconify-icon icon="material-symbols:more-vert"></iconify-icon></button>
+                         <button class="icon-btn details-btn" title="عرض التفاصيل"><iconify-icon icon="material-symbols:more-vert"></iconify-icon></button>
                     </div>
                 </div>
             </div>`;
@@ -419,7 +409,6 @@ export const updateStats = () => {
     item => item.quantity <= item.alertLevel
   ).length;
 };
-
 export const setTheme = themeName => {
   document.body.className = `theme-${themeName}`;
   const icon = elements.themeToggleBtn.querySelector("iconify-icon");
@@ -472,7 +461,7 @@ export function renderSupplierList() {
                 <button class="icon-btn danger-btn delete-supplier-btn" data-id="${
                   supplier.id
                 }" title="حذف المورّد">
-                     <iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon>
+                    <iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon>
                 </button>
             </div>
         `;
@@ -558,7 +547,6 @@ export const openDetailsModal = itemId => {
   elements.detailsModal.appendChild(elements.toastContainer);
   elements.detailsModal.showModal();
 };
-
 export const openItemModal = (itemId = null) => {
   elements.itemForm.reset();
   appState.selectedImageFile = null;
