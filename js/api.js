@@ -113,9 +113,34 @@ async function saveJsonToGitHub(filePath, dataObject, commitMessage) {
 // --- Exported API Functions ---
 
 /**
- * Fetches the live USD to IQD exchange rate.
- * @returns {Promise<number|null>} The exchange rate, or null if failed.
+ * Triggers the backup-to-telegram GitHub Action workflow.
  */
+export const triggerBackupWorkflow = async () => {
+  if (!appState.syncConfig) {
+    throw new Error("إعدادات المزامنة غير متوفرة.");
+  }
+  const { username, repo, pat } = appState.syncConfig;
+  const url = `https://api.github.com/repos/${username}/${repo}/actions/workflows/backup-to-telegram.yml/dispatches`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `token ${pat}`,
+      Accept: "application/vnd.github.v3+json",
+    },
+    body: JSON.stringify({
+      ref: "main", // or the name of your main branch
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `فشل في تشغيل عملية النسخ الاحتياطي: ${response.statusText}`
+    );
+  }
+  return response.status === 204; // 204 No Content is the success status
+};
+
 export async function fetchLiveExchangeRate() {
   const url =
     "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json";
@@ -135,30 +160,23 @@ export async function fetchLiveExchangeRate() {
   }
 }
 
-/**
- * Fetches an image, prioritizing local cache (memory -> IndexedDB) before fetching from GitHub.
- */
 export const fetchImageWithAuth = async path => {
   if (!path) return null;
-  // 1. Check in-memory cache first (fastest)
   if (appState.imageCache.has(path)) {
     return appState.imageCache.get(path);
   }
 
-  // 2. Check IndexedDB cache
   try {
     const cachedBlob = await getImage(path);
     if (cachedBlob) {
       const url = URL.createObjectURL(cachedBlob);
       appState.imageCache.set(path, url);
-      // Add to in-memory cache for this session
       return url;
     }
   } catch (dbError) {
     console.error("Error fetching from IndexedDB:", dbError);
   }
 
-  // 3. If not in any cache, fetch from GitHub
   if (!appState.syncConfig) return null;
   const { username, repo, pat } = appState.syncConfig;
   const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
@@ -170,21 +188,17 @@ export const fetchImageWithAuth = async path => {
 
     const data = await response.json();
     const blob = b64toBlob(data.content, "image/webp");
-    // Assuming images are webp or jpeg
 
-    // Store the fetched blob in IndexedDB for future use
     await storeImage(path, blob);
     const url = URL.createObjectURL(blob);
-    appState.imageCache.set(path, url); // Also cache in memory for current session
+    appState.imageCache.set(path, url);
     return url;
   } catch (error) {
     console.error(`Failed to fetch image ${path}:`, error);
     return null;
   }
 };
-/**
- * Uploads an image file to the repo.
- */
+
 export const uploadImageToGitHub = async (imageBlob, originalFileName) => {
   if (!appState.syncConfig) {
     throw new Error("يجب إعداد المزامنة أولاً لرفع الصور.");
@@ -206,24 +220,18 @@ export const uploadImageToGitHub = async (imageBlob, originalFileName) => {
   const data = await response.json();
   return data.content.path;
 };
-/**
- * REFACTORED: Fetches the main inventory.json file.
- */
+
 export const fetchFromGitHub = async () => {
   const result = await fetchJsonFromGitHub("inventory.json", {
     items: [],
     lastArchiveTimestamp: null,
   });
-  // Handle legacy format where inventory was just an array
   if (result && Array.isArray(result.data)) {
     result.data = { items: result.data, lastArchiveTimestamp: null };
   }
   return result;
 };
 
-/**
- * REFACTORED: Saves the main inventory data.
- */
 export const saveToGitHub = async () => {
   appState.fileSha = await saveJsonToGitHub(
     "inventory.json",
@@ -232,16 +240,10 @@ export const saveToGitHub = async () => {
   );
 };
 
-/**
- * REFACTORED: Fetches the sales.json file.
- */
 export const fetchSales = async () => {
   return await fetchJsonFromGitHub("sales.json", []);
 };
 
-/**
- * REFACTORED: Saves the sales data.
- */
 export const saveSales = async () => {
   appState.salesFileSha = await saveJsonToGitHub(
     "sales.json",
@@ -250,16 +252,10 @@ export const saveSales = async () => {
   );
 };
 
-/**
- * REFACTORED: Fetches the suppliers.json file.
- */
 export const fetchSuppliers = async () => {
   return await fetchJsonFromGitHub("suppliers.json", []);
 };
 
-/**
- * REFACTORED: Saves the suppliers data.
- */
 export const saveSuppliers = async () => {
   appState.suppliersFileSha = await saveJsonToGitHub(
     "suppliers.json",
@@ -268,9 +264,6 @@ export const saveSuppliers = async () => {
   );
 };
 
-/**
- * Deletes a file from the GitHub repository.
- */
 export const deleteFileFromGitHub = async (path, sha, message) => {
   if (!appState.syncConfig) return false;
   const { username, repo, pat } = appState.syncConfig;
@@ -285,9 +278,7 @@ export const deleteFileFromGitHub = async (path, sha, message) => {
   }
   return response.ok;
 };
-/**
- * Fetches the contents of a directory from the GitHub repo.
- */
+
 export const getGitHubDirectoryListing = async path => {
   if (!appState.syncConfig) return [];
   const { username, repo, pat } = appState.syncConfig;
@@ -303,9 +294,7 @@ export const getGitHubDirectoryListing = async path => {
   const data = await response.json();
   return Array.isArray(data) ? data : [];
 };
-/**
- * Creates a new file on GitHub. Used for creating archive files.
- */
+
 export const createGitHubFile = async (path, content, message) => {
   if (!appState.syncConfig) return;
   const { username, repo, pat } = appState.syncConfig;
@@ -318,17 +307,12 @@ export const createGitHubFile = async (path, content, message) => {
     body: JSON.stringify({ message, content: base64Content }),
   });
   if (!response.ok) {
-    // 422 is "Unprocessable Entity", often means file exists, which is not a critical error for archiving.
     if (response.status !== 422) {
       throw new Error(`Failed to create file ${path}: ${response.statusText}`);
     }
   }
 };
 
-/**
- * REFACTORED: Fetches the content of a specific file from GitHub.
- * Used for reading archive files. Returns only the data.
- */
 export const fetchGitHubFile = async path => {
   const result = await fetchJsonFromGitHub(path, null);
   return result ? result.data : null;

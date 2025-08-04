@@ -1,10 +1,14 @@
 // js/main.js
 import { appState } from "./state.js";
-import { generateUniqueSKU, compressImage, debounce } from "./utils.js";
+import {
+  generateUniqueSKU,
+  compressImage,
+  debounce,
+  sanitizeHTML,
+} from "./utils.js";
 import * as api from "./api.js";
 import { ConflictError } from "./api.js";
 import * as ui from "./ui.js";
-
 // --- LOCAL STORAGE & CONFIG ---
 
 function loadConfig() {
@@ -57,7 +61,6 @@ function saveLocalData() {
 function handlePriceConversion(iqdInput, usdInput) {
   const iqdValue = parseFloat(iqdInput.value);
   const rate = appState.exchangeRate;
-
   if (!isNaN(iqdValue) && iqdValue > 0 && rate > 0) {
     const usdValue = iqdValue / rate;
     usdInput.value = usdValue.toFixed(2); // Format to 2 decimal places
@@ -99,7 +102,6 @@ async function handleSaleFormSubmit(e) {
     ui.showStatus("جاري تسجيل البيع...", "syncing");
     const originalQuantity = item.quantity;
     item.quantity -= quantityToSell;
-
     const saleRecord = {
       saleId: `sale_${Date.now()}`,
       itemId: item.id,
@@ -164,7 +166,6 @@ async function handleItemFormSubmit(e) {
     ui.showStatus("جاري الحفظ...", "syncing");
     appState.inventory = latestInventory;
     appState.fileSha = latestSha;
-
     const itemId = document.getElementById("item-id").value;
     let imagePath = null;
     const existingItem = appState.inventory.items.find(i => i.id === itemId);
@@ -522,6 +523,35 @@ async function handleDownloadBackup() {
     ui.hideSyncStatus();
     ui.showStatus(`فشل إنشاء النسخة الاحتياطية: ${error.message}`, "error", {
       duration: 5000,
+    });
+  }
+}
+
+async function handleBackupToTelegram() {
+  if (!appState.syncConfig) {
+    ui.showStatus("يرجى إعداد المزامنة أولاً.", "error");
+    return;
+  }
+  if (
+    !confirm("هل أنت متأكد من رغبتك في إنشاء وإرسال نسخة احتياطية إلى تليجرام؟")
+  ) {
+    return;
+  }
+  ui.showStatus("جاري طلب النسخة الاحتياطية...", "syncing");
+  try {
+    const success = await api.triggerBackupWorkflow();
+    if (success) {
+      ui.hideSyncStatus();
+      ui.showStatus(
+        "تم إرسال الطلب بنجاح! ستصلك النسخة الاحتياطية على تليجرام قريبًا.",
+        "success",
+        { duration: 6000 }
+      );
+    }
+  } catch (error) {
+    ui.hideSyncStatus();
+    ui.showStatus(`فشل إرسال الطلب: ${error.message}`, "error", {
+      duration: 6000,
     });
   }
 }
@@ -920,11 +950,9 @@ function setupModalListeners(elements) {
   document
     .getElementById("sale-price")
     .addEventListener("input", ui.updateSaleTotal);
-
   // Sync Modal & Maintenance
   elements.syncSettingsBtn.addEventListener("click", () => {
     ui.populateSyncModal();
-    // Fetch the live rate when the modal is opened
     const display = document.getElementById("live-exchange-rate-display");
     const input = document.getElementById("exchange-rate");
     display.textContent = "جاري تحميل السعر...";
@@ -963,14 +991,12 @@ function setupModalListeners(elements) {
     elements.syncModal.close();
     await initializeApp();
   });
-
   const advancedSettingsToggle = document.getElementById(
     "advanced-settings-toggle"
   );
   const advancedSettingsContainer = document.getElementById(
     "advanced-settings-container"
   );
-
   advancedSettingsToggle.addEventListener("click", () => {
     advancedSettingsToggle.classList.toggle("open");
     advancedSettingsContainer.classList.toggle("open");
@@ -979,9 +1005,11 @@ function setupModalListeners(elements) {
   elements.downloadBackupBtn.addEventListener("click", handleDownloadBackup);
   elements.restoreBackupInput.addEventListener("change", handleRestoreBackup);
   document
+    .getElementById("backup-to-telegram-btn")
+    .addEventListener("click", handleBackupToTelegram);
+  document
     .getElementById("manual-archive-btn")
     .addEventListener("click", handleManualArchive);
-
   // Archive Browser Modal
   document
     .getElementById("view-archives-btn")
@@ -996,6 +1024,7 @@ function setupModalListeners(elements) {
         const sha = deleteButton.dataset.sha;
         if (confirm(`هل أنت متأكد من حذف هذا الأرشيف (${path}) نهائياً؟`)) {
           ui.showStatus("جاري حذف الأرشيف...", "syncing");
+
           try {
             await api.deleteFileFromGitHub(
               path,
@@ -1017,7 +1046,6 @@ function setupModalListeners(elements) {
         const detailsContainer = document.getElementById(
           "archive-details-container"
         );
-        // NEW: Toggle logic
         if (item.classList.contains("active")) {
           item.classList.remove("active");
           detailsContainer.innerHTML =
@@ -1046,6 +1074,11 @@ function setupModalListeners(elements) {
             }</td><td>${price.toLocaleString()} ${symbol}</td><td>${
               sale.saleDate
             }</td></tr>`;
+            if (sale.notes) {
+              tableHTML += `<tr class="archive-notes-row"><td colspan="4"><iconify-icon icon="material-symbols:notes-outline-rounded"></iconify-icon> ${sanitizeHTML(
+                sale.notes
+              )}</td></tr>`;
+            }
           });
           tableHTML += "</tbody></table>";
           detailsContainer.innerHTML = tableHTML;
@@ -1059,19 +1092,15 @@ function setupModalListeners(elements) {
     .addEventListener("click", () =>
       document.getElementById("archive-browser-modal").close()
     );
-  // Modal Close Behavior Setup
   function setupModalCloseBehavior(modalElement) {
-    if (!modalElement) return; // Guard against undefined elements
+    if (!modalElement) return;
     modalElement.addEventListener("close", () => {
-      // Remove the closed modal from the stack
       appState.modalStack = appState.modalStack.filter(m => m !== modalElement);
 
-      // If there's another modal in the stack, move the toast container to it
       if (appState.modalStack.length > 0) {
         const topModal = appState.modalStack[appState.modalStack.length - 1];
         topModal.appendChild(elements.toastContainer);
       } else {
-        // Otherwise, move it back to the body
         document.body.appendChild(elements.toastContainer);
       }
     });
@@ -1196,7 +1225,6 @@ async function initializeApp() {
 
   updateLastArchiveDateDisplay();
   ui.filterAndRenderItems();
-  // Render initial inventory view
   ui.renderCategoryFilter();
   ui.populateCategoryDatalist();
   ui.updateCurrencyDisplay();

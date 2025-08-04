@@ -117,7 +117,7 @@
               <input
                 type="text"
                 id="search-bar"
-                placeholder="ابحث بالاسم أو الرمز..."
+                placeholder="ابحث بالاسم أو الرمز أو الملاحظات..."
               />
               <button
                 id="category-filter-btn"
@@ -548,14 +548,24 @@
               </button>
 
               <hr class="maintenance-divider" />
-              <button
-                type="button"
-                id="download-backup-btn"
-                class="cleanup-btn archive-btn"
-              >
-                <iconify-icon icon="mage:archive"></iconify-icon>
-                تنزيل نسخة احتياطية محلية
-              </button>
+              <div class="backup-actions-group">
+                <button
+                  type="button"
+                  id="download-backup-btn"
+                  class="cleanup-btn archive-btn"
+                >
+                  <iconify-icon icon="mage:archive"></iconify-icon>
+                  تنزيل نسخة احتياطية محلية
+                </button>
+                <button
+                  type="button"
+                  id="backup-to-telegram-btn"
+                  class="icon-btn telegram-btn"
+                  title="إرسال إلى تليجرام"
+                >
+                  <iconify-icon icon="mingcute:telegram-fill"></iconify-icon>
+                </button>
+              </div>
               <input
                 type="file"
                 id="restore-backup-input"

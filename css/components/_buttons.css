@@ -142,12 +142,12 @@
   border-color: var(--accent-color);
   color: white;
 }
-label[for="restore-backup-input"] {
+label[for="restore-backup-input"].cleanup-btn {
   color: var(--accent-color) !important;
   font-weight: bold !important;
   text-align: center;
 }
-label[for="restore-backup-input"]:hover {
+label[for="restore-backup-input"].cleanup-btn:hover {
   color: white !important;
 }
 .action-btn-details {
@@ -321,4 +321,28 @@ label[for="restore-backup-input"]:hover {
 }
 .close-modal-btn iconify-icon {
   font-size: 24px;
+}
+
+/* --- NEW/MODIFIED BUTTON STYLES FOR BACKUP --- */
+.backup-actions-group {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.backup-actions-group .cleanup-btn {
+  flex-grow: 1; /* Make the main button fill available space */
+  width: auto;
+}
+
+.icon-btn.telegram-btn {
+  border-color: #0088cc;
+  color: #0088cc;
+  width: 48px; /* Slightly larger for better touch target */
+  height: 48px;
+}
+
+.icon-btn.telegram-btn:hover {
+  background-color: #0088cc;
+  color: white;
 }
