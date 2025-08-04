@@ -22,14 +22,10 @@ const elements = {
   currencyToggleBtn: document.getElementById("currency-toggle-btn"),
   inventoryToggleBtn: document.getElementById("inventory-toggle-btn"),
   dashboardToggleBtn: document.getElementById("dashboard-toggle-btn"),
-  remoteFinderToggleBtn: document.getElementById("remote-finder-toggle-btn"),
 
   // View Containers
   inventoryViewContainer: document.getElementById("inventory-view-container"),
   dashboardViewContainer: document.getElementById("dashboard-view-container"),
-  remoteFinderViewContainer: document.getElementById(
-    "remote-finder-view-container"
-  ),
 
   // Dashboard Elements
   timeFilterControls: document.getElementById("time-filter-controls"),
@@ -114,30 +110,8 @@ const elements = {
   // Archive Modal
   archiveBrowserModal: document.getElementById("archive-browser-modal"),
   closeArchiveBrowserBtn: document.getElementById("close-archive-browser-btn"),
-
-  // Remote Finder Elements
-  addNewRemoteFinderBtn: document.getElementById("add-new-remote-finder-btn"),
-  remoteFinderModal: document.getElementById("remote-finder-modal"),
-  closeRemoteFinderModalBtn: document.getElementById(
-    "close-remote-finder-modal-btn"
-  ),
-  cancelRemoteFinderModalBtn: document.getElementById(
-    "cancel-remote-finder-modal-btn"
-  ),
-  remoteFinderForm: document.getElementById("remote-finder-form"),
-  remoteFinderResultsArea: document.getElementById(
-    "remote-finder-results-area"
-  ),
-  remoteFinderSearchInput: document.getElementById(
-    "remote-finder-search-input"
-  ),
-  remoteFinderModalTitle: document.getElementById("remote-finder-modal-title"),
-  remoteCarIdInput: document.getElementById("remote-car-id"),
-  addRemoteSectionBtn: document.getElementById("add-remote-section-btn"),
-  makesDatalist: document.getElementById("makes-list"),
-  remotesContainerModal: document.getElementById("remotes-container-modal"),
-  brandFilterBar: document.getElementById("brand-filter-bar"),
 };
+
 export function getDOMElements() {
   return elements;
 }
@@ -254,31 +228,21 @@ export const toggleView = viewToShow => {
   appState.currentView = viewToShow;
   const isInventory = viewToShow === "inventory";
   const isDashboard = viewToShow === "dashboard";
-  const isRemoteFinder = viewToShow === "remote_finder";
 
   elements.inventoryViewContainer.classList.toggle("view-hidden", !isInventory);
   elements.dashboardViewContainer.classList.toggle("view-hidden", !isDashboard);
-  elements.remoteFinderViewContainer.classList.toggle(
-    "view-hidden",
-    !isRemoteFinder
-  );
 
   elements.inventoryToggleBtn.classList.remove("active-view-btn");
   elements.dashboardToggleBtn.classList.remove("active-view-btn");
-  elements.remoteFinderToggleBtn.classList.remove("active-view-btn");
 
   if (isInventory) {
     elements.inventoryToggleBtn.classList.add("active-view-btn");
   } else if (isDashboard) {
     elements.dashboardToggleBtn.classList.add("active-view-btn");
-  } else if (isRemoteFinder) {
-    elements.remoteFinderToggleBtn.classList.add("active-view-btn");
   }
 
   if (isDashboard) {
     renderDashboard();
-  } else if (isRemoteFinder) {
-    renderRemoteFinder();
   }
 };
 export const renderDashboard = () => {
@@ -455,6 +419,7 @@ export const updateStats = () => {
     item => item.quantity <= item.alertLevel
   ).length;
 };
+
 export const setTheme = themeName => {
   document.body.className = `theme-${themeName}`;
   const icon = elements.themeToggleBtn.querySelector("iconify-icon");
@@ -507,7 +472,7 @@ export function renderSupplierList() {
                 <button class="icon-btn danger-btn delete-supplier-btn" data-id="${
                   supplier.id
                 }" title="حذف المورّد">
-                    <iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon>
+                     <iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon>
                 </button>
             </div>
         `;
@@ -593,6 +558,7 @@ export const openDetailsModal = itemId => {
   elements.detailsModal.appendChild(elements.toastContainer);
   elements.detailsModal.showModal();
 };
+
 export const openItemModal = (itemId = null) => {
   elements.itemForm.reset();
   appState.selectedImageFile = null;
@@ -678,369 +644,3 @@ export const populateSyncModal = () => {
   elements.syncModal.appendChild(elements.toastContainer);
   elements.syncModal.showModal();
 };
-// --- Remote Finder UI Functions ---
-
-function renderBrandFilterBar() {
-  const uniqueMakes = [
-    "الكل",
-    ...new Set(appState.remoteFinderDB.map(car => car.make)),
-  ];
-  const chipsHTML = uniqueMakes
-    .map(make => {
-      const brandForFilter = make === "الكل" ? null : make;
-      const isActive = appState.selectedBrand === brandForFilter;
-      const iconHTML =
-        make === "الكل"
-          ? `<iconify-icon class="brand-logo" icon="material-symbols:select-all"></iconify-icon>`
-          : `<iconify-icon class="brand-logo" icon="cbi:${sanitizeHTML(
-              make.toLowerCase().replace(/\s/g, "")
-            )}"></iconify-icon>`;
-
-      return `<button class="brand-filter-chip ${
-        isActive ? "active" : ""
-      }" data-brand="${sanitizeHTML(make)}">
-                    ${iconHTML}
-                    <span>${sanitizeHTML(make)}</span>
-                </button>`;
-    })
-    .join("");
-  elements.brandFilterBar.innerHTML = chipsHTML;
-}
-
-function renderCarsView() {
-  let carsToRender = [...appState.remoteFinderDB];
-  if (appState.selectedBrand) {
-    carsToRender = carsToRender.filter(
-      car => car.make === appState.selectedBrand
-    );
-  }
-
-  const searchTerm = elements.remoteFinderSearchInput.value.toLowerCase();
-  if (searchTerm) {
-    carsToRender = carsToRender.filter(car => {
-      const carInfo =
-        `${car.make} ${car.model} ${car.yearStart} ${car.yearEnd}`.toLowerCase();
-      if (carInfo.includes(searchTerm)) return true;
-      return (car.remotes || []).some(remote => {
-        const remoteInfo =
-          `${remote.type} ${remote.frequency} ${remote.fccId} ${remote.battery}`.toLowerCase();
-
-        if (remoteInfo.includes(searchTerm)) return true;
-        return Object.values(remote.partNumbers).some(code =>
-          code.toLowerCase().includes(searchTerm)
-        );
-      });
-    });
-  }
-
-  if (carsToRender.length === 0) {
-    elements.remoteFinderResultsArea.innerHTML =
-      '<p class="empty-state">لا توجد سيارات تطابق بحثك.</p>';
-    return;
-  }
-
-  elements.remoteFinderResultsArea.innerHTML =
-    `<div class="results-grid">` +
-    carsToRender
-      .map(car => {
-        const yearRange =
-          car.yearStart && car.yearEnd
-            ? `${car.yearStart} - ${car.yearEnd}`
-            : car.yearStart || "";
-        const countryInfo = car.country ? `(${sanitizeHTML(car.country)})` : "";
-        const carMeta = `${yearRange} ${countryInfo}`.trim();
-
-        const remotesHTML = (car.remotes || [])
-          .map(remote => {
-            const partNumbersHTML = Object.entries(remote.partNumbers)
-              .map(([vendor, code]) => {
-                const remoteTypeKeyword =
-                  remote.type === "بصمة" ? "Smart Key" : "remote";
-                const searchQuery = `"${code}" ${car.make} ${car.model} ${remoteTypeKeyword}`;
-
-                return `<div class="part-number-row">
-                    <span class="vendor-tag ${vendor.toLowerCase()}">${sanitizeHTML(
-                  vendor.toUpperCase()
-                )}</span>
-                    
-                    <span class="part-code">${sanitizeHTML(code)}</span>
-                    <div class="part-actions">
-                        <button class="icon-btn copy-btn" title="نسخ" data-code="${sanitizeHTML(
-                          code
-                        )}"><iconify-icon icon="material-symbols:content-copy-outline-rounded"></iconify-icon></button>
-                        <a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(
-                          searchQuery
-                        )}" target="_blank" class="icon-btn" title="بحث عن صورة">
-                           <iconify-icon icon="material-symbols:image-search-outline-rounded"></iconify-icon>
-                        </a>
-                    </div>
-                </div>`;
-              })
-              .join("");
-            return `
-                <div class="remote-section">
-                    <h4 class="remote-type">${sanitizeHTML(
-                      remote.type || "ريموت"
-                    )}</h4>
-                    <div class="info-badges">
-                        ${
-                          remote.frequency
-                            ? `<div class="info-badge"><iconify-icon icon="material-symbols:wifi-tethering-rounded"></iconify-icon><span class="value">${sanitizeHTML(
-                                remote.frequency
-                              )}</span></div>`
-                            : ""
-                        }
-                        ${
-                          remote.fccId
-                            ? `<div class="info-badge"><iconify-icon icon="material-symbols:badge-outline-rounded"></iconify-icon><span class="value">${sanitizeHTML(
-                                remote.fccId
-                              )}</span></div>`
-                            : ""
-                        }
-                        ${
-                          remote.battery
-                            ? `<div class="info-badge"><iconify-icon icon="material-symbols:battery-horiz-075-rounded"></iconify-icon><span class="value">${sanitizeHTML(
-                                remote.battery
-                              )}</span></div>`
-                            : ""
-                        }
-                    </div>
-                    <div class="part-numbers-list">${partNumbersHTML}</div>
-                    ${
-                      remote.notes
-                        ? `
-                        <div class="notes-section">
-                            <div class="notes-header">
-                                <iconify-icon icon="material-symbols:sticky-note-2-outline-rounded"></iconify-icon>
-             
-                                <span>ملاحظات</span>
-                            </div>
-                            <p class="notes-content">${sanitizeHTML(
-                              remote.notes
-                            )}</p>
-                        
-                        </div>
-                    `
-                        : ""
-                    }
-                </div>`;
-          })
-          .join("");
-        return `
-            <div class="remote-card" data-id="${car.id}">
-                <header class="card-header">
-                    <div class="car-title">
-                        <iconify-icon class="brand-logo" icon="cbi:${sanitizeHTML(
-                          car.make.toLowerCase().replace(/\s/g, "")
-                        )}"></iconify-icon>
-                   
-                         <h3>${sanitizeHTML(car.make)} ${sanitizeHTML(
-          car.model
-        )}</h3>
-                    </div>
-                    <span class="car-meta">${carMeta}</span>
-                    <div class="header-actions">
-                        <button class="icon-btn edit-btn" title="تعديل"><iconify-icon icon="material-symbols:edit-outline-rounded"></iconify-icon></button>
-    
-                        <button class="icon-btn danger delete-btn" title="حذف"><iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon></button>
-                    </div>
-                </header>
-                <div class="card-body">${remotesHTML}</div>
-            </div>`;
-      })
-      .join("") +
-    `</div>`;
-}
-
-export function renderRemoteFinder() {
-  renderBrandFilterBar();
-  renderCarsView();
-}
-
-/**
- * Helper function to generate <option> tags for a <select> element.
- * @param {string[]} optionsArray Array of option strings.
- * @param {string} selectedValue The value that should be pre-selected.
- * @returns {string} HTML string of option tags.
- */
-function createOptions(optionsArray, selectedValue) {
-  return optionsArray
-    .map(
-      option =>
-        `<option value="${sanitizeHTML(option)}" ${
-          option === selectedValue ? "selected" : ""
-        }>${sanitizeHTML(option)}</option>`
-    )
-    .join("");
-}
-
-export function addPartNumberEntry(container, pnData = {}) {
-  const entry = document.createElement("div");
-  entry.className = "part-number-entry";
-  const vendor = pnData.vendor || "oem";
-  const code = pnData.code || "";
-  entry.innerHTML = `
-        <div class="form-group">
-            <label>الشركة
-                <select class="pn-vendor">
-                    <option value="oem" ${
-                      vendor === "oem" ? "selected" : ""
-                    }>OEM</option>
-                    <option value="keydiy" ${
-                      vendor === "keydiy" ? "selected" : ""
-                    }>Keydiy</option>
-                    <option value="xhorse" ${
-                      vendor === "xhorse" ? "selected" : ""
-                    }>Xhorse</option>
-                </select>
-            </label>
-        </div>
-        <div class="form-group">
-            <label>الكود
-                <input type="text" class="pn-code" placeholder="أدخل رقم القطعة..." value="${sanitizeHTML(
-                  code
-                )}">
-            </label>
-       
-         </div>
-        <button type="button" class="icon-btn danger remove-part-btn" style="align-self: end; margin-bottom: 16px;">
-            <iconify-icon icon="material-symbols:remove"></iconify-icon>
-        </button>`;
-  container.appendChild(entry);
-}
-
-export function addRemoteSection(remoteData = {}) {
-  const container = elements.remotesContainerModal;
-  const remoteNumber =
-    container.querySelectorAll(".remote-form-section").length + 1;
-  const remoteTypes = ["بصمة", "ريمونت"];
-  const frequencies = ["315 MHz", "433.92 MHz", "2.4 GHz"];
-  const batteryTypes = ["CR2032", "CR2025", "CR2016", "CR1632"];
-
-  const section = document.createElement("div");
-  section.className = "remote-form-section";
-  section.innerHTML = `
-        <div class="form-section-header">
-            <h4>الريموت #${remoteNumber}</h4>
-            <button type="button" class="icon-btn danger remove-remote-btn">
-                <iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon>
-            </button>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
- 
-               <label>النوع
-                    <select class="remote-type">
-                        <option value="">-- اختر النوع --</option>
-                        ${createOptions(remoteTypes, remoteData.type)}
-           
-                     </select>
-                </label>
-            </div>
-            <div class="form-group">
-                <label>التردد
-                    <select class="remote-frequency">
-             
-                         <option value="">-- اختر التردد --</option>
-                        ${createOptions(frequencies, remoteData.frequency)}
-                    </select>
-                </label>
-            </div>
-        </div>
-    
-         <div class="form-row">
-            <div class="form-group">
-                <label>FCC ID
-                    <input type="text" class="remote-fccId" value="${sanitizeHTML(
-                      remoteData.fccId || ""
-                    )}" placeholder="HYQ14FBA...">
-                </label>
-            </div>
-            <div class="form-group">
-                <label>البطارية
-                     <select class="remote-battery">
-                    
-                         <option value="">-- اختر البطارية --</option>
-                        ${createOptions(batteryTypes, remoteData.battery)}
-                    </select>
-                </label>
-            </div>
-        </div>
-        <div class="form-group">
-  
-           <label>ملاحظات
-                <input type="text" class="remote-notes" value="${sanitizeHTML(
-                  remoteData.notes || ""
-                )}">
-            </label>
-        </div>
-        <div class="part-numbers-container"></div>
-        <button type="button" class="add-btn add-part-number-btn">+ أضف رقم قطعة</button>`;
-  container.appendChild(section);
-
-  const pnContainer = section.querySelector(".part-numbers-container");
-  if (
-    remoteData.partNumbers &&
-    Object.keys(remoteData.partNumbers).length > 0
-  ) {
-    Object.entries(remoteData.partNumbers).forEach(([vendor, code]) =>
-      addPartNumberEntry(pnContainer, { vendor, code })
-    );
-  } else {
-    addPartNumberEntry(pnContainer);
-  }
-}
-
-export function openRemoteFinderModal(carId = null) {
-  elements.remoteFinderForm.reset();
-  const uniqueMakes = [
-    ...new Set(appState.remoteFinderDB.map(car => car.make)),
-  ];
-  elements.makesDatalist.innerHTML = uniqueMakes
-    .map(make => `<option value="${sanitizeHTML(make)}">`)
-    .join("");
-  const carCountrySelect =
-    elements.remoteFinderForm.querySelector("#car-country");
-  const countryOptions = [
-    "امريكي",
-    "خليجي",
-    "كندي",
-    "كوري",
-    "ياباني",
-    "صيني",
-    "اوروبي",
-  ];
-  carCountrySelect.innerHTML = `<option value="">-- اختر البلد --</option>${createOptions(
-    countryOptions,
-    ""
-  )}`;
-
-  elements.remotesContainerModal.innerHTML = "";
-  if (carId) {
-    const car = appState.remoteFinderDB.find(c => c.id === carId);
-    if (!car) return;
-    elements.remoteFinderModalTitle.textContent = "تعديل بيانات السيارة";
-    elements.remoteCarIdInput.value = car.id;
-    elements.remoteFinderForm.querySelector("#car-make").value = car.make;
-    elements.remoteFinderForm.querySelector("#car-model").value = car.model;
-    elements.remoteFinderForm.querySelector("#car-year-start").value =
-      car.yearStart;
-    elements.remoteFinderForm.querySelector("#car-year-end").value =
-      car.yearEnd;
-    elements.remoteFinderForm.querySelector("#car-country").value =
-      car.country || "";
-    if (car.remotes && car.remotes.length > 0) {
-      car.remotes.forEach(remoteData => addRemoteSection(remoteData));
-    } else {
-      addRemoteSection();
-    }
-  } else {
-    elements.remoteFinderModalTitle.textContent = "إضافة سيارة جديدة";
-    elements.remoteCarIdInput.value = "";
-    addRemoteSection();
-  }
-
-  appState.modalStack.push(elements.remoteFinderModal);
-  elements.remoteFinderModal.appendChild(elements.toastContainer);
-  elements.remoteFinderModal.showModal();
-}

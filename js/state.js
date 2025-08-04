@@ -16,17 +16,9 @@ export const appState = {
    */
   suppliers: [],
 
-  /** @type {Array<Object>} The database for the remote code finder feature.
-   */
-  remoteFinderDB: [],
-
-  /** @type {'inventory' | 'dashboard' | 'remote_finder'} The currently active view.
+  /** @type {'inventory' | 'dashboard'} The currently active view.
    */
   currentView: "inventory",
-
-  /** @type {string|null} The selected brand in the remote finder.
-    null means 'All'. */
-  selectedBrand: null,
 
   /** @type {'today' | 'week' |
     'month'} The time period for the dashboard. */
@@ -75,10 +67,6 @@ export const appState = {
   /** @type {string|null} The SHA hash of the new suppliers.json file.
    */
   suppliersFileSha: null,
-
-  /** @type {string|null} The SHA hash for the remote_finder_db.json file.
-   */
-  remoteFinderDBFileSha: null,
 
   /** @type {boolean} A flag to prevent multiple concurrent sync operations.
    */

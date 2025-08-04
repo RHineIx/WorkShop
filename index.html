@@ -59,16 +59,6 @@
         </button>
 
         <button
-          id="remote-finder-toggle-btn"
-          title="مكتشف أكواد الريموت"
-          class="control-button"
-        >
-          <iconify-icon
-            icon="material-symbols:database-search-outline"
-          ></iconify-icon>
-        </button>
-
-        <button
           id="sync-settings-btn"
           title="إعدادات المزامنة"
           class="control-button"
@@ -192,31 +182,6 @@
             <div id="bestsellers-list" class="bestsellers-list"></div>
           </div>
         </section>
-      </div>
-
-      <div id="remote-finder-view-container" class="view-hidden">
-        <div class="dashboard-header">
-          <h2>مكتشف أكواد الريموت</h2>
-        </div>
-        <div class="remote-finder-controls">
-          <button
-            id="add-new-remote-finder-btn"
-            class="control-button primary-action"
-          >
-            <iconify-icon icon="material-symbols:add"></iconify-icon>
-            <span>إضافة جديد</span>
-          </button>
-        </div>
-        <section class="search-area">
-          <input
-            type="text"
-            id="remote-finder-search-input"
-            placeholder="ابحث بالسيارة، الموديل، أو رقم القطعة..."
-          />
-        </section>
-
-        <div id="brand-filter-bar" class="brand-filter-bar"></div>
-        <section id="remote-finder-results-area" class="results-area"></section>
       </div>
     </main>
 
@@ -734,68 +699,6 @@
           id="archive-details-container"
           class="archive-details-container"
         ></div>
-      </div>
-    </dialog>
-
-    <dialog id="remote-finder-modal">
-      <div class="modal-content">
-        <header class="modal-header">
-          <h3 id="remote-finder-modal-title">إضافة سيارة جديدة</h3>
-          <button id="close-remote-finder-modal-btn" class="icon-btn">
-            <iconify-icon icon="material-symbols:close"></iconify-icon>
-          </button>
-        </header>
-        <div class="modal-body">
-          <form id="remote-finder-form">
-            <input type="hidden" id="remote-car-id" />
-            <h4>معلومات السيارة</h4>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="car-make">الشركة</label>
-                <input type="text" id="car-make" list="makes-list" required />
-                <datalist id="makes-list"></datalist>
-              </div>
-              <div class="form-group">
-                <label for="car-model">الموديل</label
-                ><input type="text" id="car-model" required />
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="car-year-start">من</label
-                ><input type="number" id="car-year-start" placeholder="2018" />
-              </div>
-              <div class="form-group">
-                <label for="car-year-end">إلى</label
-                ><input type="number" id="car-year-end" placeholder="2022" />
-              </div>
-              <div class="form-group">
-                <label>البلد<select id="car-country"></select></label>
-              </div>
-            </div>
-            <hr class="section-divider" />
-            <div id="remotes-container-modal" class="remotes-container"></div>
-            <button type="button" class="add-btn" id="add-remote-section-btn">
-              + أضف ريموت آخر
-            </button>
-          </form>
-        </div>
-        <footer class="modal-footer">
-          <button
-            type="button"
-            class="control-button"
-            id="cancel-remote-finder-modal-btn"
-          >
-            إلغاء
-          </button>
-          <button
-            type="submit"
-            form="remote-finder-form"
-            class="control-button primary-action"
-          >
-            حفظ
-          </button>
-        </footer>
       </div>
     </dialog>
 
