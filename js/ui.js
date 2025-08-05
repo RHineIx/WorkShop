@@ -40,6 +40,7 @@ const elements = {
   detailsImagePlaceholder: document.getElementById("details-image-placeholder"),
   detailsName: document.getElementById("details-name"),
   detailsSku: document.getElementById("details-sku"),
+  detailsPnGridContainer: document.getElementById("details-pn-grid-container"),
   detailsQuantityValue: document.getElementById("details-quantity-value"),
   detailsDecreaseBtn: document.getElementById("details-decrease-btn"),
   detailsIncreaseBtn: document.getElementById("details-increase-btn"),
@@ -317,7 +318,8 @@ export function renderInventorySkeleton(count = 8) {
                 <div class="skeleton skeleton-text"></div>
                 <div class="skeleton skeleton-text w-75"></div>
                  <div class="skeleton skeleton-text w-50" style="margin-top: 12px;"></div>
-            </div>
+            
+        </div>
         `;
     fragment.appendChild(skeletonCard);
   }
@@ -531,6 +533,82 @@ export const openDetailsModal = itemId => {
     item.sellPriceUsd || 0
   ).toLocaleString()}`;
   elements.detailsNotesContent.textContent = item.notes || "لا توجد ملاحظات.";
+
+  // Render Part Numbers
+  const pnContainer = elements.detailsPnGridContainer;
+  pnContainer.innerHTML = "";
+  pnContainer.classList.add("view-hidden");
+
+  const handleTagClick = tagElement => {
+    if (tagElement.classList.contains("copied")) return;
+
+    const originalText = tagElement.textContent;
+    const textToCopy = originalText.trim();
+
+    navigator.clipboard
+      .writeText(textToCopy)
+      .then(() => {
+        tagElement.innerHTML = `<span class="copied-feedback">تم النسخ!</span>`;
+        tagElement.classList.add("copied");
+
+        setTimeout(() => {
+          tagElement.textContent = originalText;
+          tagElement.classList.remove("copied");
+        }, 1500);
+      })
+      .catch(() => {
+        showStatus("فشل النسخ إلى الحافظة", "error");
+      });
+  };
+
+  if (item.oemPartNumber || item.compatiblePartNumber) {
+    const pnGrid = document.createElement("div");
+    pnGrid.className = "details-pn-grid";
+
+    if (item.oemPartNumber) {
+      const label = document.createElement("div");
+      label.className = "pn-grid-label";
+      label.textContent = "رمز OEM";
+      pnGrid.appendChild(label);
+
+      const valueContainer = document.createElement("div");
+      valueContainer.className = "pn-grid-value";
+      const tag = document.createElement("span");
+      tag.className = "pn-copy-tag";
+      tag.textContent = item.oemPartNumber;
+      tag.addEventListener("click", () => handleTagClick(tag));
+      valueContainer.appendChild(tag);
+      pnGrid.appendChild(valueContainer);
+    }
+
+    if (item.compatiblePartNumber) {
+      const label = document.createElement("div");
+      label.className = "pn-grid-label";
+      label.textContent = "الرموز المتوافقة";
+      pnGrid.appendChild(label);
+
+      const valueContainer = document.createElement("div");
+      valueContainer.className = "pn-grid-value";
+      const compatiblePns = item.compatiblePartNumber
+        .split(",")
+        .map(pn => pn.trim())
+        .filter(Boolean);
+
+      compatiblePns.forEach(pn => {
+        const tag = document.createElement("span");
+        tag.className = "pn-copy-tag";
+        tag.textContent = pn;
+        tag.addEventListener("click", () => handleTagClick(tag));
+        valueContainer.appendChild(tag);
+      });
+      pnGrid.appendChild(valueContainer);
+    }
+
+    pnContainer.appendChild(pnGrid);
+    pnContainer.classList.remove("view-hidden");
+  }
+
+  // Render Supplier Info
   const supplier = appState.suppliers.find(s => s.id === item.supplierId);
   if (supplier) {
     elements.detailsSupplierName.textContent = sanitizeHTML(supplier.name);
@@ -589,6 +667,9 @@ export const openItemModal = (itemId = null) => {
       document.getElementById("item-sku").value = item.sku;
       document.getElementById("item-name").value = item.name;
       document.getElementById("item-category").value = item.category;
+      document.getElementById("item-oem-pn").value = item.oemPartNumber || "";
+      document.getElementById("item-compatible-pn").value =
+        item.compatiblePartNumber || "";
       document.getElementById("item-quantity").value = item.quantity;
       document.getElementById("item-alert-level").value = item.alertLevel;
       document.getElementById("item-cost-price-iqd").value =

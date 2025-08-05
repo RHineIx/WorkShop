@@ -191,6 +191,10 @@ async function handleItemFormSubmit(e) {
       sku: document.getElementById("item-sku").value,
       name: document.getElementById("item-name").value,
       category: document.getElementById("item-category").value,
+      oemPartNumber: document.getElementById("item-oem-pn").value.trim(),
+      compatiblePartNumber: document
+        .getElementById("item-compatible-pn")
+        .value.trim(),
       quantity:
         parseInt(document.getElementById("item-quantity").value, 10) || 0,
       alertLevel:

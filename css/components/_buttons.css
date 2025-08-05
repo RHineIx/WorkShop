@@ -67,7 +67,8 @@
   width: 40px;
   height: 40px;
   padding: 0;
-  border-radius: var(--border-radius-sm); /* Changed from 50% */
+  border-radius: var(--border-radius-sm);
+  /* Changed from 50% */
   background-color: var(--bg-color);
   color: var(--text-secondary);
   border: 1px solid var(--border-color);
@@ -105,7 +106,8 @@
 }
 .details-btn:hover {
   border-color: var(--accent-color);
-  color: var(--accent-color);
+  background-color: var(--accent-color);
+  color: white;
 }
 .cleanup-btn {
   width: 100%;
@@ -189,7 +191,8 @@ label[for="restore-backup-input"].cleanup-btn:hover {
   border-radius: var(--border-radius-sm);
   color: var(--text-primary);
   cursor: pointer;
-  font-family: var(--font-family); /* Explicitly set font */
+  font-family: var(--font-family);
+  /* Explicitly set font */
   font-size: 14px;
   font-weight: 600;
   transition: all var(--transition-speed) ease;

@@ -406,3 +406,57 @@ dialog::backdrop {
 #image-placeholder iconify-icon {
   font-size: 50px;
 }
+
+/* --- Part Number Styles --- */
+.details-pn-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--spacing-md) var(--spacing-md);
+  align-items: start;
+  border-top: 1px solid var(--border-color);
+  padding-top: var(--spacing-md);
+  margin-top: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+.pn-grid-label {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-secondary);
+  padding-top: 5px;
+}
+.pn-grid-value {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+.pn-copy-tag {
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  padding: 5px 12px;
+  border-radius: var(--border-radius-sm);
+  font-family: "Roboto Mono", monospace;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  direction: ltr;
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+  position: relative;
+}
+.pn-copy-tag:hover {
+  border-color: var(--accent-color);
+  background-color: var(--accent-soft-bg);
+  color: var(--accent-soft-text);
+  transform: translateY(-2px);
+}
+.pn-copy-tag.copied {
+  color: var(--success-color);
+  border-color: var(--success-color);
+  background-color: var(--bg-color);
+  cursor: default;
+  transform: translateY(0);
+}
+.copied-feedback {
+  font-family: var(--font-family);
+  font-weight: 700;
+}
