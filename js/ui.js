@@ -330,18 +330,22 @@ export function renderInventorySkeleton(count = 8) {
 function getFilteredItems() {
   let items = [...appState.inventory.items];
   if (appState.activeFilter === "low_stock") {
-    items = items.filter(item => item.quantity <= item.alertLevel);
+    items = items.filter((item) => item.quantity <= item.alertLevel);
   }
   if (appState.selectedCategory && appState.selectedCategory !== "all") {
-    items = items.filter(item => item.category === appState.selectedCategory);
+    items = items.filter((item) => item.category === appState.selectedCategory);
   }
   if (appState.searchTerm) {
     const lowerCaseSearch = appState.searchTerm.toLowerCase();
     items = items.filter(
-      item =>
+      (item) =>
         item.name.toLowerCase().includes(lowerCaseSearch) ||
         (item.sku && item.sku.toLowerCase().includes(lowerCaseSearch)) ||
-        (item.notes && item.notes.toLowerCase().includes(lowerCaseSearch))
+        (item.notes && item.notes.toLowerCase().includes(lowerCaseSearch)) ||
+        (item.oemPartNumber &&
+          item.oemPartNumber.toLowerCase().includes(lowerCaseSearch)) ||
+        (item.compatiblePartNumber &&
+          item.compatiblePartNumber.toLowerCase().includes(lowerCaseSearch))
     );
   }
   return items;
