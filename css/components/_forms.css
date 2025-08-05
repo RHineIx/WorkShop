@@ -18,10 +18,10 @@
 #sync-form label,
 #sale-form label,
 #supplier-form label {
-  margin-bottom: var(--spacing-sm);
   display: block;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
+  margin-bottom: var(--spacing-sm);
   color: var(--text-secondary);
 }
 
@@ -33,19 +33,15 @@
 #sale-form textarea,
 #supplier-form input {
   width: 100%;
-  padding: 12px;
+  padding: 12px var(--spacing-md);
   font-family: var(--font-family);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-sm);
-  background-color: var(--bg-color);
+  background-color: var(--surface-color);
   color: var(--text-primary);
   font-size: 16px;
-  box-sizing: border-box;
-  resize: vertical;
-  margin-bottom: var(--spacing-md);
-  transition: border-color 0.2s;
+  transition: all var(--transition-speed);
 }
-
 #item-form input:focus,
 #item-form textarea:focus,
 #item-form select:focus,
@@ -55,17 +51,25 @@
 #supplier-form input:focus {
   outline: none;
   border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px var(--accent-soft-bg);
 }
 
 #item-form textarea,
 #sale-form textarea {
   min-height: 80px;
   width: 100%;
+  resize: vertical;
 }
 
 .form-row {
   display: flex;
   flex-direction: column;
+  gap: var(--spacing-md);
+}
+@media (min-width: 576px) {
+  .form-row {
+    flex-direction: row;
+  }
 }
 
 .form-group {
@@ -76,12 +80,10 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-md);
 }
 
 .sku-container input {
   flex-grow: 1;
-  margin-bottom: 0 !important;
 }
 
 input:read-only {
@@ -100,6 +102,27 @@ input[type="number"] {
   appearance: textfield;
 }
 
+/* NEW: Fieldset styles */
+fieldset {
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-md) var(--spacing-md) var(--spacing-lg);
+  margin-top: var(--spacing-lg);
+  background-color: var(--fieldset-bg);
+}
+legend {
+  padding: 0 var(--spacing-sm);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--accent-color);
+}
+.fieldset-content {
+  margin-top: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
 .image-upload-container {
   display: flex;
   flex-direction: column;
@@ -107,19 +130,13 @@ input[type="number"] {
   gap: var(--spacing-md);
   border: 2px dashed var(--border-color);
   padding: var(--spacing-md);
-  border-radius: var(--border-radius-md);
-  margin-bottom: var(--spacing-md);
-}
-
-.image-upload-actions {
-  display: flex;
-  gap: var(--spacing-sm);
-  justify-content: center;
+  border-radius: var(--border-radius-sm);
+  background-color: var(--surface-color);
 }
 
 .image-preview-wrapper {
-  width: 100px;
-  height: 100px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   position: relative;
   overflow: hidden;
@@ -135,22 +152,13 @@ input[type="number"] {
   height: 100%;
   object-fit: cover;
 }
-
 #image-preview.image-preview-hidden {
   display: none;
 }
-
 #image-placeholder {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  color: var(--text-secondary);
 }
-
-#image-placeholder .material-symbols-outlined {
+#image-placeholder iconify-icon {
   font-size: 50px;
 }
 
@@ -164,7 +172,6 @@ input[type="number"] {
   border-radius: var(--border-radius-sm);
   background-color: var(--surface-color);
   color: var(--text-primary);
-  margin: 0 !important;
   -moz-appearance: textfield;
   appearance: textfield;
 }
@@ -173,7 +180,6 @@ input[type="number"] {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-md);
 }
 
 .supplier-selection-container select {
@@ -190,22 +196,10 @@ select {
   padding-left: 36px !important;
 }
 
-.supplier-selection-container select,
-#item-form input,
-#item-form textarea {
-  width: 100%;
-  padding: 12px;
-  font-family: var(--font-family);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
-  background-color: var(--bg-color);
-  color: var(--text-primary);
-  font-size: 16px;
-}
-
-.form-group-divider {
-  border-top: 1px solid var(--border-color);
-  margin: var(--spacing-lg) 0;
+.pricing-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
 }
 
 .input-with-currency {
@@ -215,7 +209,7 @@ select {
 .currency-symbol {
   position: absolute;
   left: 12px;
-  top: 35%;
+  top: 50%;
   transform: translateY(-50%);
   color: var(--text-secondary);
   font-weight: bold;

@@ -308,7 +308,6 @@ export function updateSaleTotal() {
 export function renderInventorySkeleton(count = 8) {
   elements.inventoryGrid.innerHTML = "";
   const fragment = document.createDocumentFragment();
-
   for (let i = 0; i < count; i++) {
     const skeletonCard = document.createElement("div");
     skeletonCard.className = "skeleton-card";
@@ -351,6 +350,7 @@ export function filterAndRenderItems() {
   renderInventory(itemsToRender);
 }
 
+// --- MODIFIED RENDERINVENTORY FUNCTION ---
 export function renderInventory(itemsToRender) {
   elements.inventoryGrid.innerHTML = "";
   if (itemsToRender.length === 0) {
@@ -363,35 +363,62 @@ export function renderInventory(itemsToRender) {
     const card = document.createElement("div");
     card.className = "product-card";
     card.dataset.id = item.id;
-    const isLowStock = item.quantity <= item.alertLevel;
+
+    const isLowStock = item.quantity > 0 && item.quantity <= item.alertLevel;
+    const isOutOfStock = item.quantity === 0;
+
     if (isLowStock) card.classList.add("low-stock");
+    if (isOutOfStock) card.classList.add("out-of-stock");
+
+    let badgeText = `متوفر: ${item.quantity}`;
+    let badgeClass = "";
+    if (isLowStock) {
+      badgeText = `منخفض: ${item.quantity}`;
+      badgeClass = "low-stock";
+    }
+    if (isOutOfStock) {
+      badgeText = `نفد المخزون`;
+      badgeClass = "out-of-stock";
+    }
+
     const isIQD = appState.activeCurrency === "IQD";
     const price = isIQD ? item.sellPriceIqd || 0 : item.sellPriceUsd || 0;
-
     const symbol = isIQD ? "د.ع" : "$";
     const placeholder = `<div class="card-image-placeholder"><iconify-icon icon="material-symbols:key"></iconify-icon></div>`;
+
     card.innerHTML = `
-             <div class="card-image-container">
-                <div class="quantity-badge ${
-                  isLowStock ? "low-stock" : ""
-                }">متبقي ${item.quantity}</div>
-               ${
-                 item.imagePath
-                   ? `<img class="card-image" alt="${sanitizeHTML(item.name)}">`
-                   : placeholder
-               }
-            </div>
-            <div class="card-info">
-                <div class="card-name">${sanitizeHTML(item.name)}</div>
-                <div class="card-sku">SKU: ${sanitizeHTML(item.sku || "")}</div>
-                <div class="card-footer">
-                    <div class="card-price">${price.toLocaleString()} ${symbol}</div>
-                     <div class="card-actions">
-                         <button class="icon-btn sell-btn" title="بيع"><iconify-icon icon="material-symbols:shopping-cart-outline-rounded"></iconify-icon></button>
-                         <button class="icon-btn details-btn" title="عرض التفاصيل"><iconify-icon icon="material-symbols:more-vert"></iconify-icon></button>
-                    </div>
-                </div>
-            </div>`;
+      <div class="card-image-container">
+        <div class="quantity-badge ${badgeClass}">${badgeText}</div>
+        ${
+          item.imagePath
+            ? `<img class="card-image" alt="${sanitizeHTML(item.name)}">`
+            : placeholder
+        }
+      </div>
+      <div class="card-info">
+        ${
+          item.category
+            ? `<div class="card-category-tag">${sanitizeHTML(
+                item.category
+              )}</div>`
+            : ""
+        }
+        <h3 class="card-name">${sanitizeHTML(item.name)}</h3>
+        <p class="card-sku">SKU: ${sanitizeHTML(item.sku || "")}</p>
+        <div class="card-footer">
+          <div class="card-price">${price.toLocaleString()} ${symbol}</div>
+          <div class="card-actions">
+            <button class="icon-btn sell-btn" title="بيع" ${
+              isOutOfStock ? "disabled" : ""
+            }>
+                <iconify-icon icon="material-symbols:shopping-cart-outline-rounded"></iconify-icon>
+            </button>
+            <button class="icon-btn details-btn" title="عرض التفاصيل">
+                <iconify-icon icon="material-symbols:more-vert"></iconify-icon>
+            </button>
+          </div>
+        </div>
+      </div>`;
     fragment.appendChild(card);
     if (item.imagePath) {
       const imgElement = card.querySelector(".card-image");
@@ -452,7 +479,6 @@ export function renderSupplierList() {
                   supplier.phone || ""
                 )}</div>
             </div>
-    
             <div class="supplier-item-actions">
                 <button class="icon-btn edit-supplier-btn" data-id="${
                   supplier.id
