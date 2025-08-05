@@ -242,6 +242,7 @@ export const renderDashboard = () => {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   let startDate;
+
   switch (appState.dashboardPeriod) {
     case "week":
       startDate = new Date(today);
@@ -255,10 +256,16 @@ export const renderDashboard = () => {
       startDate = today;
       break;
   }
-  const filteredSales = appState.sales.filter(
-    sale =>
-      new Date(sale.saleDate) >= startDate && new Date(sale.saleDate) <= now
-  );
+  const filteredSales = appState.sales.filter(sale => {
+      // FIX: Manually parse the date string "YYYY-MM-DD" to create a date
+      // in the user's local timezone, ensuring accurate comparison.
+      const [year, month, day] = sale.saleDate.split('-').map(Number);
+      // The month is 0-indexed in JavaScript's Date, so we subtract 1.
+      const saleDate = new Date(year, month - 1, day);
+      
+      return saleDate >= startDate && saleDate <= now;
+  });
+
   const isIQD = appState.activeCurrency === "IQD";
   const totalSales = filteredSales.reduce(
     (sum, sale) => sum + (isIQD ? sale.sellPriceIqd : sale.sellPriceUsd),
