@@ -109,11 +109,15 @@ async function handleSaleFormSubmit(e) {
       itemName: item.name,
       quantitySold: quantityToSell,
       sellPriceIqd:
-        appState.activeCurrency === "IQD" ? salePrice : item.sellPriceIqd,
-      costPriceIqd: item.costPriceIqd || 0,
+        appState.activeCurrency === "IQD" ?
+      salePrice : item.sellPriceIqd,
+      costPriceIqd: item.costPriceIqd ||
+      0,
       sellPriceUsd:
-        appState.activeCurrency !== "IQD" ? salePrice : item.sellPriceUsd,
-      costPriceUsd: item.costPriceUsd || 0,
+        appState.activeCurrency !== "IQD" ?
+      salePrice : item.sellPriceUsd,
+      costPriceUsd: item.costPriceUsd ||
+      0,
       saleDate: document.getElementById("sale-date").value,
       notes: document.getElementById("sale-notes").value,
       timestamp: new Date().toISOString(),
@@ -188,7 +192,8 @@ async function handleItemFormSubmit(e) {
     }
 
     const itemData = {
-      id: itemId || `item_${Date.now()}`,
+      id: itemId ||
+      `item_${Date.now()}`,
       sku: document.getElementById("item-sku").value,
       name: document.getElementById("item-name").value,
       category: document.getElementById("item-category").value,
@@ -197,20 +202,27 @@ async function handleItemFormSubmit(e) {
         .getElementById("item-compatible-pn")
         .value.trim(),
       quantity:
-        parseInt(document.getElementById("item-quantity").value, 10) || 0,
+        parseInt(document.getElementById("item-quantity").value, 10) ||
+      0,
       alertLevel:
-        parseInt(document.getElementById("item-alert-level").value, 10) || 5,
+        parseInt(document.getElementById("item-alert-level").value, 10) ||
+      5,
       costPriceIqd:
-        parseFloat(document.getElementById("item-cost-price-iqd").value) || 0,
+        parseFloat(document.getElementById("item-cost-price-iqd").value) ||
+      0,
       sellPriceIqd:
-        parseFloat(document.getElementById("item-sell-price-iqd").value) || 0,
+        parseFloat(document.getElementById("item-sell-price-iqd").value) ||
+      0,
       costPriceUsd:
-        parseFloat(document.getElementById("item-cost-price-usd").value) || 0,
+        parseFloat(document.getElementById("item-cost-price-usd").value) ||
+      0,
       sellPriceUsd:
-        parseFloat(document.getElementById("item-sell-price-usd").value) || 0,
+        parseFloat(document.getElementById("item-sell-price-usd").value) ||
+      0,
       notes: document.getElementById("item-notes").value,
       imagePath: imagePath,
-      supplierId: document.getElementById("item-supplier").value || null,
+      supplierId: document.getElementById("item-supplier").value ||
+      null,
     };
 
     const index = appState.inventory.items.findIndex(i => i.id === itemId);
@@ -532,7 +544,7 @@ async function handleDownloadBackup() {
   }
 }
 
-async function handleBackupToTelegram() {
+async function handleBackupTo Telegram() {
   if (!appState.syncConfig) {
     ui.showStatus("يرجى إعداد المزامنة أولاً.", "error");
     return;
