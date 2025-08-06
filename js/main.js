@@ -69,7 +69,7 @@ function handlePriceConversion(iqdInput, usdInput) {
   const rate = appState.exchangeRate;
   if (!isNaN(iqdValue) && iqdValue > 0 && rate > 0) {
     const usdValue = iqdValue / rate;
-    usdInput.value = usdValue.toFixed(2);
+    usdInput.value = usdValue.toFixed(2); // Format to 2 decimal places
   } else {
     usdInput.value = 0;
   }
@@ -636,6 +636,7 @@ async function saveQuantityChanges(currentItem) {
       ui.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
         showRefreshButton: true,
       });
+      // Revert local changes because we can't save
       const originalItemIndex = appState.inventory.items.findIndex(
         i => i.id === itemBeforeEdit.id
       );
@@ -643,7 +644,7 @@ async function saveQuantityChanges(currentItem) {
         appState.inventory.items[originalItemIndex] = itemBeforeEdit;
       }
       ui.filterAndRenderItems();
-      return;
+      return; // Stop the save process
     }
 
     ui.showStatus("جاري حفظ تغيير الكمية...", "syncing");
@@ -660,6 +661,7 @@ async function saveQuantityChanges(currentItem) {
     saveLocalData();
     ui.showStatus("تم حفظ التغييرات بنجاح!", "success");
   } catch (error) {
+    // Revert on error
     const originalItemIndex = appState.inventory.items.findIndex(
       i => i.id === itemBeforeEdit.id
     );
@@ -779,6 +781,7 @@ function setupModalListeners(elements) {
       const { cropperModal, cropperImage, paddingDisplay, bgColorInput } =
         ui.getDOMElements();
 
+      // Reset controls to default when opening
       cropperPadding = 0.1;
       cropperBgColor = "#FFFFFF";
       paddingDisplay.textContent = `${Math.round(cropperPadding * 100)}%`;
@@ -803,7 +806,7 @@ function setupModalListeners(elements) {
 
   elements.imageUploadInput.addEventListener("change", e => {
     handleImageSelection(e.target.files[0]);
-    e.target.value = "";
+    e.target.value = ""; // Reset input
   });
 
   elements.pasteImageBtn.addEventListener("click", async () => {
@@ -820,25 +823,20 @@ function setupModalListeners(elements) {
       }
 
       const clipboardItems = await navigator.clipboard.read();
-      if (clipboardItems.length === 0) {
-        ui.showStatus("لا توجد بيانات في الحافظة.", "warning");
-        return;
+      let imageBlob = null;
+
+      for (const item of clipboardItems) {
+        const imageType = item.types.find(type => type.startsWith("image/"));
+        if (imageType) {
+          imageBlob = await item.getType(imageType);
+          break;
+        }
       }
 
-      const clipboardItem = clipboardItems[0];
-      const imageType = clipboardItem.types.find(type =>
-        type.startsWith("image/")
-      );
-
-      if (imageType) {
-        const imageBlob = await clipboardItem.getType(imageType);
-        const file = new File(
-          [imageBlob],
-          `pasted_image.${imageType.split("/")[1]}`,
-          {
-            type: imageBlob.type,
-          }
-        );
+      if (imageBlob) {
+        const file = new File([imageBlob], "pasted_image.png", {
+          type: imageBlob.type,
+        });
         handleImageSelection(file);
       } else {
         ui.showStatus("لا توجد صورة في الحافظة.", "warning");
@@ -1253,18 +1251,6 @@ function setupDashboardListeners(elements) {
         .classList.remove("active");
       button.classList.add("active");
       ui.renderDashboard();
-    }
-  });
-
-  elements.dashboardViewContainer.addEventListener("click", e => {
-    const toggleBtn = e.target.closest(".expand-toggle-btn");
-    if (toggleBtn) {
-      const mainRow = toggleBtn.closest("tr");
-      const detailsRow = mainRow.nextElementSibling;
-      if (detailsRow && detailsRow.classList.contains("log-details-row")) {
-        detailsRow.classList.toggle("visible");
-        toggleBtn.classList.toggle("expanded");
-      }
     }
   });
 }
