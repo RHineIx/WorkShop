@@ -1,0 +1,185 @@
+/* css/components/_dashboard.css */
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+}
+  
+.time-filter-controls {
+    display: flex;
+    gap: var(--spacing-sm);
+    background-color: var(--bg-color);
+    padding: 4px;
+    border-radius: var(--border-radius-sm);
+}
+  
+.time-filter-btn {
+    padding: 6px 12px;
+    border: none;
+    background-color: transparent;
+    color: var(--text-secondary);
+    font-weight: 500;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-speed) ease;
+}
+  
+.time-filter-btn.active {
+    background-color: var(--surface-color);
+    color: var(--text-primary);
+    font-weight: 700;
+    box-shadow: var(--shadow-light);
+}
+
+.bestsellers-container {
+    margin-top: var(--spacing-lg);
+    background-color: var(--surface-color);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+}
+  
+.bestsellers-container h3 {
+    margin-top:0;
+    margin-bottom: var(--spacing-md);
+}
+
+.bestsellers-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+  
+.bestseller-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm);
+    background-color: var(--bg-color);
+    border-radius: var(--border-radius-sm);
+}
+  
+.bestseller-name {
+    font-weight: 500;
+}
+  
+.bestseller-count {
+    font-weight: 700;
+    color: var(--accent-color);
+    background-color: var(--surface-color);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+}
+
+/* Sales Log Styles */
+.sales-log-container {
+    margin-top: var(--spacing-lg);
+    background-color: var(--surface-color);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-lg);
+    border: 1px solid var(--border-color);
+    overflow-x: auto; /* Enable horizontal scroll on small screens */
+}
+
+.sales-log-container h3 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-md);
+}
+
+.sales-log-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.sales-log-table th, 
+.sales-log-table td {
+    padding: 12px var(--spacing-sm);
+    text-align: right;
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.sales-log-table thead {
+    background-color: var(--bg-color);
+}
+
+.sales-log-table th {
+    font-weight: 700;
+}
+
+.sales-log-table tbody tr:last-of-type td {
+    border-bottom: none;
+}
+
+.sales-log-table .profit-positive {
+    color: var(--success-color);
+    font-weight: 500;
+}
+
+.sales-log-table .profit-negative {
+    color: var(--danger-color);
+    font-weight: 500;
+}
+
+.log-details-row {
+    display: none; /* Hidden by default */
+}
+
+.log-details-row.visible {
+    display: table-row;
+}
+
+.log-details-cell {
+    background-color: var(--bg-color);
+    padding: var(--spacing-md);
+}
+
+.log-details-content p {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-size: 13px;
+    white-space: normal;
+}
+
+.log-details-content p strong {
+    color: var(--text-primary);
+}
+
+.log-details-content p span {
+    font-family: 'Roboto Mono', monospace;
+    direction: ltr;
+    display: inline-block;
+    background-color: var(--surface-color);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.log-details-content .notes-section {
+    margin-top: var(--spacing-sm);
+    font-style: italic;
+    white-space: pre-wrap;
+    color: var(--text-secondary);
+}
+
+.expand-toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.expand-toggle-btn iconify-icon {
+    font-size: 20px;
+    transition: transform 0.2s ease-in-out;
+}
+
+.expand-toggle-btn.expanded iconify-icon {
+    transform: rotate(180deg);
+}

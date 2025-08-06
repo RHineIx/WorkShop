@@ -32,6 +32,7 @@ const elements = {
   totalSalesStat: document.getElementById("total-sales-stat"),
   totalProfitStat: document.getElementById("total-profit-stat"),
   bestsellersList: document.getElementById("bestsellers-list"),
+  salesLogContent: document.getElementById("sales-log-content"),
 
   // Details Modal
   detailsModal: document.getElementById("details-modal"),
@@ -319,6 +320,94 @@ export const toggleView = viewToShow => {
     renderDashboard();
   }
 };
+
+function renderSalesLog(filteredSales) {
+  if (filteredSales.length === 0) {
+    elements.salesLogContent.innerHTML = "<p>لا توجد مبيعات في هذه الفترة.</p>";
+    return;
+  }
+
+  const isIQD = appState.activeCurrency === "IQD";
+  const symbol = isIQD ? "د.ع" : "$";
+
+  const tableRows = filteredSales
+    .map(sale => {
+      const item =
+        appState.inventory.items.find(i => i.id === sale.itemId) || {};
+
+      const sellPrice = isIQD ? sale.sellPriceIqd : sale.sellPriceUsd;
+      const costPrice = isIQD ? sale.costPriceIqd : sale.costPriceUsd;
+      const profit = (sellPrice - costPrice) * sale.quantitySold;
+
+      const profitClass = profit >= 0 ? "profit-positive" : "profit-negative";
+
+      const hasDetails = item.sku || item.oemPartNumber || sale.notes;
+
+      return `
+            <tr>
+                <td>${sale.saleDate}</td>
+                <td>${sanitizeHTML(sale.itemName)}</td>
+                <td>${sale.quantitySold}</td>
+                <td>${sellPrice.toLocaleString()} ${symbol}</td>
+                <td class="${profitClass}">${profit.toLocaleString()} ${symbol}</td>
+                <td>
+                    ${
+                      hasDetails
+                        ? `<button class="expand-toggle-btn"><iconify-icon icon="material-symbols:expand-more"></iconify-icon></button>`
+                        : ""
+                    }
+                </td>
+            </tr>
+            <tr class="log-details-row">
+                <td colspan="6" class="log-details-cell">
+                    <div class="log-details-content">
+                        ${
+                          item.sku
+                            ? `<p><strong>SKU:</strong> <span>${sanitizeHTML(
+                                item.sku
+                              )}</span></p>`
+                            : ""
+                        }
+                        ${
+                          item.oemPartNumber
+                            ? `<p><strong>OEM:</strong> <span>${sanitizeHTML(
+                                item.oemPartNumber
+                              )}</span></p>`
+                            : ""
+                        }
+                        ${
+                          sale.notes
+                            ? `<div class="notes-section">${sanitizeHTML(
+                                sale.notes
+                              )}</div>`
+                            : ""
+                        }
+                    </div>
+                </td>
+            </tr>
+        `;
+    })
+    .join("");
+
+  elements.salesLogContent.innerHTML = `
+        <table class="sales-log-table">
+            <thead>
+                <tr>
+                    <th>التاريخ</th>
+                    <th>المنتج</th>
+                    <th>الكمية</th>
+                    <th>سعر البيع</th>
+                    <th>الربح</th>
+                    <th>تفاصيل</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${tableRows}
+            </tbody>
+        </table>
+    `;
+}
+
 export const renderDashboard = () => {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -337,26 +426,31 @@ export const renderDashboard = () => {
       startDate = today;
       break;
   }
-  const filteredSales = appState.sales.filter(sale => {
-    const [year, month, day] = sale.saleDate.split("-").map(Number);
-    const saleDate = new Date(year, month - 1, day);
-
-    return saleDate >= startDate && saleDate <= now;
-  });
+  const filteredSales = appState.sales
+    .filter(sale => {
+      const [year, month, day] = sale.saleDate.split("-").map(Number);
+      const saleDate = new Date(year, month - 1, day);
+      return saleDate >= startDate && saleDate <= now;
+    })
+    .sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate)); // Sort by most recent
 
   const isIQD = appState.activeCurrency === "IQD";
   const totalSales = filteredSales.reduce(
-    (sum, sale) => sum + (isIQD ? sale.sellPriceIqd : sale.sellPriceUsd),
+    (sum, sale) =>
+      sum + (isIQD ? sale.sellPriceIqd : sale.sellPriceUsd) * sale.quantitySold,
     0
   );
   const totalCost = filteredSales.reduce(
-    (sum, sale) => sum + (isIQD ? sale.costPriceIqd : sale.costPriceUsd),
+    (sum, sale) =>
+      sum + (isIQD ? sale.costPriceIqd : sale.costPriceUsd) * sale.quantitySold,
     0
   );
+
   const totalProfit = totalSales - totalCost;
   const symbol = isIQD ? "د.ع" : "$";
   elements.totalSalesStat.textContent = `${totalSales.toLocaleString()} ${symbol}`;
   elements.totalProfitStat.textContent = `${totalProfit.toLocaleString()} ${symbol}`;
+
   const itemSales = {};
   filteredSales.forEach(sale => {
     itemSales[sale.itemId] = (itemSales[sale.itemId] || 0) + sale.quantitySold;
@@ -381,6 +475,8 @@ export const renderDashboard = () => {
   } else {
     elements.bestsellersList.innerHTML = "<p>لا توجد مبيعات في هذه الفترة.</p>";
   }
+
+  renderSalesLog(filteredSales);
 };
 export function updateSaleTotal() {
   const quantity = parseInt(elements.saleQuantityInput.value, 10) || 0;
