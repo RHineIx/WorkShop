@@ -544,7 +544,7 @@ async function handleDownloadBackup() {
   }
 }
 
-async function handleBackupTo Telegram() {
+async function handleBackupToTelegram() {
   if (!appState.syncConfig) {
     ui.showStatus("يرجى إعداد المزامنة أولاً.", "error");
     return;
