@@ -9,6 +9,7 @@ import {
 import * as api from "./api.js";
 import { ConflictError } from "./api.js";
 import * as ui from "./ui.js";
+
 // --- LOCAL STORAGE & CONFIG ---
 
 function loadConfig() {
@@ -619,6 +620,55 @@ async function handleRestoreBackup(event) {
   }
 }
 
+// --- NEW HELPER FUNCTION TO SAVE QUANTITY CHANGES ---
+async function saveQuantityChanges(currentItem) {
+  ui.showStatus("التحقق من البيانات...", "syncing");
+  const itemBeforeEdit = appState.itemStateBeforeEdit;
+  try {
+    const { data: latestInventory, sha: latestSha } =
+      await api.fetchFromGitHub();
+
+    if (latestSha !== appState.fileSha) {
+      ui.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
+        showRefreshButton: true,
+      });
+      // Revert local changes because we can't save
+      const originalItemIndex = appState.inventory.items.findIndex(
+        i => i.id === itemBeforeEdit.id
+      );
+      if (originalItemIndex !== -1) {
+        appState.inventory.items[originalItemIndex] = itemBeforeEdit;
+      }
+      ui.filterAndRenderItems();
+      return; // Stop the save process
+    }
+
+    ui.showStatus("جاري حفظ تغيير الكمية...", "syncing");
+    appState.inventory = latestInventory;
+    appState.fileSha = latestSha;
+
+    const itemToUpdate = appState.inventory.items.find(
+      i => i.id === currentItem.id
+    );
+    if (itemToUpdate) {
+      itemToUpdate.quantity = currentItem.quantity;
+    }
+    await api.saveToGitHub();
+    saveLocalData();
+    ui.showStatus("تم حفظ التغييرات بنجاح!", "success");
+  } catch (error) {
+    // Revert on error
+    const originalItemIndex = appState.inventory.items.findIndex(
+      i => i.id === itemBeforeEdit.id
+    );
+    if (originalItemIndex !== -1) {
+      appState.inventory.items[originalItemIndex] = itemBeforeEdit;
+    }
+    ui.filterAndRenderItems();
+    ui.showStatus("فشل حفظ التغييرات.", "error", { duration: 4000 });
+  }
+}
+
 // --- EVENT LISTENER SETUP ---
 
 function setupGeneralListeners(elements) {
@@ -816,59 +866,42 @@ function setupModalListeners(elements) {
       ui.filterAndRenderItems();
     }
   });
+
+  // --- MODIFIED: Details Modal Close Button Listener ---
   elements.closeDetailsModalBtn.addEventListener("click", async () => {
     const itemBeforeEdit = appState.itemStateBeforeEdit;
     const currentItem = appState.inventory.items.find(
       i => i.id === appState.currentItemId
     );
+
+    // Check if quantity has changed
     if (
       itemBeforeEdit &&
       currentItem &&
       itemBeforeEdit.quantity !== currentItem.quantity
     ) {
-      ui.showStatus("التحقق من البيانات...", "syncing");
-      try {
-        const { data: latestInventory, sha: latestSha } =
-          await api.fetchFromGitHub();
-
-        if (latestSha !== appState.fileSha) {
-          ui.showStatus("البيانات غير محدّثة.", "error", {
-            showRefreshButton: true,
-          });
-          const originalItemIndex = appState.inventory.items.findIndex(
-            i => i.id === itemBeforeEdit.id
-          );
-          if (originalItemIndex !== -1)
-            appState.inventory.items[originalItemIndex] = itemBeforeEdit;
-          ui.filterAndRenderItems();
-        } else {
-          ui.showStatus("جاري حفظ تغيير الكمية...", "syncing");
-          appState.inventory = latestInventory;
-          appState.fileSha = latestSha;
-
-          const itemToUpdate = appState.inventory.items.find(
-            i => i.id === currentItem.id
-          );
-          if (itemToUpdate) itemToUpdate.quantity = currentItem.quantity;
-          await api.saveToGitHub();
-          saveLocalData();
-          ui.showStatus("تم حفظ التغييرات بنجاح!", "success");
-        }
-      } catch (error) {
+      // Ask user for confirmation
+      if (confirm("هناك تغييرات غير محفوظة في الكمية. هل تريد حفظها؟")) {
+        // User wants to save, call the save function
+        await saveQuantityChanges(currentItem);
+      } else {
+        // User does not want to save, revert the changes
         const originalItemIndex = appState.inventory.items.findIndex(
           i => i.id === itemBeforeEdit.id
         );
-        if (originalItemIndex !== -1)
+        if (originalItemIndex !== -1) {
           appState.inventory.items[originalItemIndex] = itemBeforeEdit;
-        ui.filterAndRenderItems();
-        ui.showStatus("فشل حفظ التغييرات.", "error", { duration: 4000 });
+        }
+        ui.filterAndRenderItems(); // Update UI to show the reverted quantity
       }
     }
 
+    // Cleanup and close modal (this runs in all cases)
     appState.itemStateBeforeEdit = null;
     appState.currentItemId = null;
     elements.detailsModal.close();
   });
+
   elements.detailsEditBtn.addEventListener("click", () => {
     elements.detailsModal.close();
     ui.openItemModal(appState.currentItemId);
