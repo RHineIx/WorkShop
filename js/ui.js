@@ -85,6 +85,7 @@ const elements = {
   githubRepoInput: document.getElementById("github-repo"),
   githubPatInput: document.getElementById("github-pat"),
   exchangeRateInput: document.getElementById("exchange-rate"),
+  rateLimitDisplay: document.getElementById("rate-limit-display"),
   cleanupImagesBtn: document.getElementById("cleanup-images-btn"),
   downloadBackupBtn: document.getElementById("download-backup-btn"),
   restoreBackupInput: document.getElementById("restore-backup-input"),
@@ -121,8 +122,80 @@ const elements = {
   bgColorInput: document.getElementById("bg-color-input"),
 };
 
+const imageObserver = new IntersectionObserver(
+  (entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+        const imagePath = img.dataset.src;
+
+        img.parentElement.classList.add("loading");
+
+        fetchImageWithAuth(imagePath).then(blobUrl => {
+          if (blobUrl) {
+            img.src = blobUrl;
+            img.onload = () => {
+              img.parentElement.classList.remove("loading");
+            };
+          } else {
+            img.parentElement.classList.remove("loading");
+          }
+        });
+
+        img.classList.remove("lazy");
+        observer.unobserve(img);
+      }
+    });
+  },
+  {
+    rootMargin: "0px 0px 200px 0px",
+  }
+);
+
 export function getDOMElements() {
   return elements;
+}
+
+let countdownInterval = null;
+
+export function updateRateLimitDisplay() {
+  const { limit, remaining, reset } = appState.rateLimit;
+  const indicator = document.querySelector(".rate-limit-indicator");
+
+  if (limit === null || remaining === null) {
+    indicator.classList.remove("visible", "high", "medium", "low");
+    if (elements.rateLimitDisplay) elements.rateLimitDisplay.textContent = "";
+    return;
+  }
+
+  indicator.classList.add("visible");
+  const percentage = (remaining / limit) * 100;
+
+  indicator.classList.remove("high", "medium", "low");
+  if (percentage > 50) {
+    indicator.classList.add("high");
+  } else if (percentage > 10) {
+    indicator.classList.add("medium");
+  } else {
+    indicator.classList.add("low");
+  }
+
+  const updateDisplay = () => {
+    const now = Math.floor(Date.now() / 1000);
+    const secondsUntilReset = reset - now;
+    if (secondsUntilReset <= 0) {
+      elements.rateLimitDisplay.textContent = `${remaining}/${limit} طلبات متبقية.`;
+      clearInterval(countdownInterval);
+    } else {
+      const minutes = Math.floor(secondsUntilReset / 60);
+      const seconds = secondsUntilReset % 60;
+      elements.rateLimitDisplay.textContent = `${remaining}/${limit} طلبات متبقية | إعادة التعيين بعد ${minutes}د ${seconds}ث`;
+    }
+  };
+
+  clearInterval(countdownInterval);
+  updateDisplay();
+  countdownInterval = setInterval(updateDisplay, 1000);
 }
 
 export function renderCategoryFilter() {
@@ -408,7 +481,9 @@ export function renderInventory(itemsToRender) {
         <div class="quantity-badge ${badgeClass}">${badgeText}</div>
         ${
           item.imagePath
-            ? `<img class="card-image" alt="${sanitizeHTML(item.name)}">`
+            ? `<img class="card-image lazy" data-src="${
+                item.imagePath
+              }" alt="${sanitizeHTML(item.name)}">`
             : placeholder
         }
       </div>
@@ -437,14 +512,13 @@ export function renderInventory(itemsToRender) {
         </div>
       </div>`;
     fragment.appendChild(card);
-    if (item.imagePath) {
-      const imgElement = card.querySelector(".card-image");
-      fetchImageWithAuth(item.imagePath).then(blobUrl => {
-        if (blobUrl) imgElement.src = blobUrl;
-      });
-    }
   });
   elements.inventoryGrid.appendChild(fragment);
+
+  const lazyImages =
+    elements.inventoryGrid.querySelectorAll(".card-image.lazy");
+  lazyImages.forEach(img => imageObserver.observe(img));
+
   updateStats();
 }
 

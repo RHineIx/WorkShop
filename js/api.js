@@ -1,6 +1,8 @@
 // js/api.js
 import { appState } from "./state.js";
 import { getImage, storeImage } from "./db.js";
+import { updateRateLimitDisplay } from "./ui.js";
+
 // --- Custom Error for Handling Race Conditions ---
 /**
  * Custom error class to identify when a file update fails due to a
@@ -11,6 +13,41 @@ export class ConflictError extends Error {
     super(message);
     this.name = "ConflictError";
   }
+}
+
+// --- Central API Fetch Function ---
+/**
+ * A centralized fetch wrapper to handle authentication and rate limit headers.
+ * @param {string} url The URL to fetch.
+ * @param {object} options The options for the fetch call.
+ * @returns {Promise<Response>} The fetch response.
+ */
+async function apiFetch(url, options = {}) {
+  if (!appState.syncConfig || !appState.syncConfig.pat) {
+    throw new Error("GitHub PAT is not configured.");
+  }
+  const { pat } = appState.syncConfig;
+
+  const headers = {
+    Authorization: `token ${pat}`,
+    Accept: "application/vnd.github.v3+json",
+    ...options.headers,
+  };
+
+  const response = await fetch(url, { ...options, headers });
+
+  // Update rate limit status from headers
+  if (response.headers.has("x-ratelimit-limit")) {
+    appState.rateLimit = {
+      limit: parseInt(response.headers.get("x-ratelimit-limit"), 10),
+      remaining: parseInt(response.headers.get("x-ratelimit-remaining"), 10),
+      reset: parseInt(response.headers.get("x-ratelimit-reset"), 10),
+    };
+    // Call the UI update function
+    updateRateLimitDisplay();
+  }
+
+  return response;
 }
 
 // --- Internal API Helper Functions ---
@@ -38,13 +75,11 @@ const toBase64 = file =>
   });
 async function fetchJsonFromGitHub(filePath, defaultValue) {
   if (!appState.syncConfig) return null;
-  const { username, repo, pat } = appState.syncConfig;
+  const { username, repo } = appState.syncConfig;
   const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${filePath}`;
   try {
-    const response = await fetch(apiUrl, {
-      headers: { Authorization: `token ${pat}` },
-      cache: "no-cache",
-    });
+    const response = await apiFetch(apiUrl, { cache: "no-cache" });
+
     if (response.status === 404) {
       console.log(`${filePath} not found. A new one will be created on save.`);
       return { data: defaultValue, sha: null };
@@ -68,15 +103,12 @@ async function fetchJsonFromGitHub(filePath, defaultValue) {
 
 async function saveJsonToGitHub(filePath, dataObject, commitMessage) {
   if (!appState.syncConfig) throw new Error("Sync config is not set.");
-  const { username, repo, pat } = appState.syncConfig;
+  const { username, repo } = appState.syncConfig;
   const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${filePath}`;
 
   let latestSha = null;
   try {
-    const remoteFile = await fetch(apiUrl, {
-      headers: { Authorization: `token ${pat}` },
-      cache: "no-cache",
-    });
+    const remoteFile = await apiFetch(apiUrl, { cache: "no-cache" });
     if (remoteFile.ok) {
       latestSha = (await remoteFile.json()).sha;
     }
@@ -92,9 +124,8 @@ async function saveJsonToGitHub(filePath, dataObject, commitMessage) {
     content: content,
     sha: latestSha,
   };
-  const response = await fetch(apiUrl, {
+  const response = await apiFetch(apiUrl, {
     method: "PUT",
-    headers: { Authorization: `token ${pat}` },
     body: JSON.stringify(body),
   });
   if (response.status === 409) {
@@ -119,20 +150,14 @@ export const triggerBackupWorkflow = async () => {
   if (!appState.syncConfig) {
     throw new Error("إعدادات المزامنة غير متوفرة.");
   }
-  const { username, repo, pat } = appState.syncConfig;
+  const { username, repo } = appState.syncConfig;
   const url = `https://api.github.com/repos/${username}/${repo}/actions/workflows/backup-to-telegram.yml/dispatches`;
-
-  const response = await fetch(url, {
+  const response = await apiFetch(url, {
     method: "POST",
-    headers: {
-      Authorization: `token ${pat}`,
-      Accept: "application/vnd.github.v3+json",
-    },
     body: JSON.stringify({
-      ref: "main", // or the name of your main branch
+      ref: "main",
     }),
   });
-
   if (!response.ok) {
     throw new Error(
       `فشل في تشغيل عملية النسخ الاحتياطي: ${response.statusText}`
@@ -140,7 +165,6 @@ export const triggerBackupWorkflow = async () => {
   }
   return response.status === 204; // 204 No Content is the success status
 };
-
 export async function fetchLiveExchangeRate() {
   const url =
     "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json";
@@ -178,17 +202,14 @@ export const fetchImageWithAuth = async path => {
   }
 
   if (!appState.syncConfig) return null;
-  const { username, repo, pat } = appState.syncConfig;
+  const { username, repo } = appState.syncConfig;
   const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
   try {
-    const response = await fetch(apiUrl, {
-      headers: { Authorization: `token ${pat}` },
-    });
+    const response = await apiFetch(apiUrl);
     if (!response.ok) throw new Error("Failed to fetch image from GitHub");
 
     const data = await response.json();
     const blob = b64toBlob(data.content, "image/webp");
-
     await storeImage(path, blob);
     const url = URL.createObjectURL(blob);
     appState.imageCache.set(path, url);
@@ -198,18 +219,16 @@ export const fetchImageWithAuth = async path => {
     return null;
   }
 };
-
 export const uploadImageToGitHub = async (imageBlob, originalFileName) => {
   if (!appState.syncConfig) {
     throw new Error("يجب إعداد المزامنة أولاً لرفع الصور.");
   }
   const base64content = await toBase64(imageBlob);
-  const { username, repo, pat } = appState.syncConfig;
+  const { username, repo } = appState.syncConfig;
   const fileName = `img_${Date.now()}_${originalFileName.replace(/\s/g, "_")}`;
   const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/images/${fileName}`;
-  const response = await fetch(apiUrl, {
+  const response = await apiFetch(apiUrl, {
     method: "PUT",
-    headers: { Authorization: `token ${pat}` },
     body: JSON.stringify({
       message: `Upload image: ${fileName}`,
       content: base64content,
@@ -220,7 +239,6 @@ export const uploadImageToGitHub = async (imageBlob, originalFileName) => {
   const data = await response.json();
   return data.content.path;
 };
-
 export const fetchFromGitHub = async () => {
   const result = await fetchJsonFromGitHub("inventory.json", {
     items: [],
@@ -243,7 +261,6 @@ export const saveToGitHub = async () => {
 export const fetchSales = async () => {
   return await fetchJsonFromGitHub("sales.json", []);
 };
-
 export const saveSales = async () => {
   appState.salesFileSha = await saveJsonToGitHub(
     "sales.json",
@@ -255,7 +272,6 @@ export const saveSales = async () => {
 export const fetchSuppliers = async () => {
   return await fetchJsonFromGitHub("suppliers.json", []);
 };
-
 export const saveSuppliers = async () => {
   appState.suppliersFileSha = await saveJsonToGitHub(
     "suppliers.json",
@@ -266,11 +282,10 @@ export const saveSuppliers = async () => {
 
 export const deleteFileFromGitHub = async (path, sha, message) => {
   if (!appState.syncConfig) return false;
-  const { username, repo, pat } = appState.syncConfig;
+  const { username, repo } = appState.syncConfig;
   const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
-  const response = await fetch(apiUrl, {
+  const response = await apiFetch(apiUrl, {
     method: "DELETE",
-    headers: { Authorization: `token ${pat}` },
     body: JSON.stringify({ message, sha }),
   });
   if (!response.ok) {
@@ -278,15 +293,11 @@ export const deleteFileFromGitHub = async (path, sha, message) => {
   }
   return response.ok;
 };
-
 export const getGitHubDirectoryListing = async path => {
   if (!appState.syncConfig) return [];
-  const { username, repo, pat } = appState.syncConfig;
+  const { username, repo } = appState.syncConfig;
   const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
-  const response = await fetch(apiUrl, {
-    headers: { Authorization: `token ${pat}` },
-    cache: "no-cache",
-  });
+  const response = await apiFetch(apiUrl, { cache: "no-cache" });
   if (!response.ok) {
     if (response.status === 404) return [];
     throw new Error("فشل الوصول إلى المجلد المحدد.");
@@ -294,16 +305,14 @@ export const getGitHubDirectoryListing = async path => {
   const data = await response.json();
   return Array.isArray(data) ? data : [];
 };
-
 export const createGitHubFile = async (path, content, message) => {
   if (!appState.syncConfig) return;
-  const { username, repo, pat } = appState.syncConfig;
+  const { username, repo } = appState.syncConfig;
   const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
 
   const base64Content = btoa(unescape(encodeURIComponent(content)));
-  const response = await fetch(apiUrl, {
+  const response = await apiFetch(apiUrl, {
     method: "PUT",
-    headers: { Authorization: `token ${pat}` },
     body: JSON.stringify({ message, content: base64Content }),
   });
   if (!response.ok) {

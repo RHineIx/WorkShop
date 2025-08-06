@@ -54,6 +54,17 @@ dialog::backdrop {
   flex-shrink: 0;
 }
 
+.rate-limit-display {
+  display: block;
+  text-align: center;
+  padding: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  border-radius: var(--border-radius-sm);
+  background-color: var(--bg-color);
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
 /* --- Advanced Settings Toggle Styles --- */
 .advanced-settings-toggle {
   width: 100%;
