@@ -84,6 +84,7 @@ const elements = {
   githubUsernameInput: document.getElementById("github-username"),
   githubRepoInput: document.getElementById("github-repo"),
   githubPatInput: document.getElementById("github-pat"),
+  exchangeRateInput: document.getElementById("exchange-rate"),
   cleanupImagesBtn: document.getElementById("cleanup-images-btn"),
   downloadBackupBtn: document.getElementById("download-backup-btn"),
   restoreBackupInput: document.getElementById("restore-backup-input"),
@@ -264,10 +265,7 @@ export const renderDashboard = () => {
       break;
   }
   const filteredSales = appState.sales.filter(sale => {
-    // FIX: Manually parse the date string "YYYY-MM-DD" to create a date
-    // in the user's local timezone, ensuring accurate comparison.
     const [year, month, day] = sale.saleDate.split("-").map(Number);
-    // The month is 0-indexed in JavaScript's Date, so we subtract 1.
     const saleDate = new Date(year, month - 1, day);
 
     return saleDate >= startDate && saleDate <= now;
@@ -370,7 +368,6 @@ export function filterAndRenderItems() {
   renderInventory(itemsToRender);
 }
 
-// --- MODIFIED RENDERINVENTORY FUNCTION ---
 export function renderInventory(itemsToRender) {
   elements.inventoryGrid.innerHTML = "";
   if (itemsToRender.length === 0) {
@@ -551,7 +548,6 @@ export const openDetailsModal = itemId => {
     item.sellPriceUsd || 0
   ).toLocaleString()}`;
   elements.detailsNotesContent.textContent = item.notes || "لا توجد ملاحظات.";
-  // Render Part Numbers
   const pnContainer = elements.detailsPnGridContainer;
   pnContainer.innerHTML = "";
   pnContainer.classList.add("view-hidden");
@@ -622,7 +618,6 @@ export const openDetailsModal = itemId => {
     pnContainer.classList.remove("view-hidden");
   }
 
-  // Render Supplier Info
   const supplier = appState.suppliers.find(s => s.id === item.supplierId);
   if (supplier) {
     elements.detailsSupplierName.textContent = sanitizeHTML(supplier.name);
@@ -749,6 +744,11 @@ export const populateSyncModal = () => {
     elements.githubUsernameInput.value = appState.syncConfig.username;
     elements.githubRepoInput.value = appState.syncConfig.repo;
     elements.githubPatInput.value = appState.syncConfig.pat;
+  }
+  if (appState.exchangeRate) {
+    elements.exchangeRateInput.value = appState.exchangeRate;
+  } else {
+    elements.exchangeRateInput.value = "";
   }
   appState.modalStack.push(elements.syncModal);
   elements.syncModal.appendChild(elements.toastContainer);
