@@ -44,7 +44,6 @@ const elements = {
   detailsQuantityValue: document.getElementById("details-quantity-value"),
   detailsDecreaseBtn: document.getElementById("details-decrease-btn"),
   detailsIncreaseBtn: document.getElementById("details-increase-btn"),
-
   detailsNotesContent: document.getElementById("details-notes-content"),
   detailsEditBtn: document.getElementById("details-edit-btn"),
   detailsDeleteBtn: document.getElementById("details-delete-btn"),
@@ -111,6 +110,14 @@ const elements = {
   // Archive Modal
   archiveBrowserModal: document.getElementById("archive-browser-modal"),
   closeArchiveBrowserBtn: document.getElementById("close-archive-browser-btn"),
+
+  // Cropper Modal
+  cropperModal: document.getElementById("cropper-modal"),
+  cropperImage: document.getElementById("cropper-image"),
+  paddingDisplay: document.getElementById("padding-display"),
+  increasePaddingBtn: document.getElementById("increase-padding-btn"),
+  decreasePaddingBtn: document.getElementById("decrease-padding-btn"),
+  bgColorInput: document.getElementById("bg-color-input"),
 };
 
 export function getDOMElements() {
@@ -257,13 +264,13 @@ export const renderDashboard = () => {
       break;
   }
   const filteredSales = appState.sales.filter(sale => {
-      // FIX: Manually parse the date string "YYYY-MM-DD" to create a date
-      // in the user's local timezone, ensuring accurate comparison.
-      const [year, month, day] = sale.saleDate.split('-').map(Number);
-      // The month is 0-indexed in JavaScript's Date, so we subtract 1.
-      const saleDate = new Date(year, month - 1, day);
-      
-      return saleDate >= startDate && saleDate <= now;
+    // FIX: Manually parse the date string "YYYY-MM-DD" to create a date
+    // in the user's local timezone, ensuring accurate comparison.
+    const [year, month, day] = sale.saleDate.split("-").map(Number);
+    // The month is 0-indexed in JavaScript's Date, so we subtract 1.
+    const saleDate = new Date(year, month - 1, day);
+
+    return saleDate >= startDate && saleDate <= now;
   });
 
   const isIQD = appState.activeCurrency === "IQD";
@@ -337,15 +344,15 @@ export function renderInventorySkeleton(count = 8) {
 function getFilteredItems() {
   let items = [...appState.inventory.items];
   if (appState.activeFilter === "low_stock") {
-    items = items.filter((item) => item.quantity <= item.alertLevel);
+    items = items.filter(item => item.quantity <= item.alertLevel);
   }
   if (appState.selectedCategory && appState.selectedCategory !== "all") {
-    items = items.filter((item) => item.category === appState.selectedCategory);
+    items = items.filter(item => item.category === appState.selectedCategory);
   }
   if (appState.searchTerm) {
     const lowerCaseSearch = appState.searchTerm.toLowerCase();
     items = items.filter(
-      (item) =>
+      item =>
         item.name.toLowerCase().includes(lowerCaseSearch) ||
         (item.sku && item.sku.toLowerCase().includes(lowerCaseSearch)) ||
         (item.notes && item.notes.toLowerCase().includes(lowerCaseSearch)) ||
@@ -544,18 +551,15 @@ export const openDetailsModal = itemId => {
     item.sellPriceUsd || 0
   ).toLocaleString()}`;
   elements.detailsNotesContent.textContent = item.notes || "لا توجد ملاحظات.";
-
   // Render Part Numbers
   const pnContainer = elements.detailsPnGridContainer;
   pnContainer.innerHTML = "";
   pnContainer.classList.add("view-hidden");
-
   const handleTagClick = tagElement => {
     if (tagElement.classList.contains("copied")) return;
 
     const originalText = tagElement.textContent;
     const textToCopy = originalText.trim();
-
     navigator.clipboard
       .writeText(textToCopy)
       .then(() => {
@@ -604,7 +608,6 @@ export const openDetailsModal = itemId => {
         .split(",")
         .map(pn => pn.trim())
         .filter(Boolean);
-
       compatiblePns.forEach(pn => {
         const tag = document.createElement("span");
         tag.className = "pn-copy-tag";

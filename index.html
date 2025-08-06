@@ -27,6 +27,11 @@
     />
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
 
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css"
+    />
+
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body class="theme-light">
@@ -768,8 +773,44 @@
       </div>
     </dialog>
 
+    <dialog id="cropper-modal">
+      <div class="cropper-modal-header">
+        <h3>اقتصاص الصورة</h3>
+      </div>
+      <div class="cropper-modal-body">
+        <div class="cropper-image-container">
+          <img id="cropper-image" src="" alt="صورة للاقتصاص" />
+        </div>
+        <div class="cropper-controls">
+          <div class="control-set">
+            <label>حجم الإطار</label>
+            <div class="padding-controls">
+              <button id="decrease-padding-btn" class="icon-btn" title="إنقاص">
+                <iconify-icon icon="material-symbols:remove"></iconify-icon>
+              </button>
+              <span id="padding-display">10%</span>
+              <button id="increase-padding-btn" class="icon-btn" title="زيادة">
+                <iconify-icon icon="material-symbols:add"></iconify-icon>
+              </button>
+            </div>
+          </div>
+          <div class="control-set">
+            <label for="bg-color-input">لون الإطار</label>
+            <input type="color" id="bg-color-input" value="#FFFFFF" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="crop-image-btn" class="primary-action">
+          اقتصاص وتأكيد
+        </button>
+        <button type="button" id="cancel-crop-btn">إلغاء</button>
+      </div>
+    </dialog>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
     <script type="module" src="js/main.js"></script>
   </body>
 </html>

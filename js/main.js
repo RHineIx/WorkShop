@@ -10,6 +10,11 @@ import * as api from "./api.js";
 import { ConflictError } from "./api.js";
 import * as ui from "./ui.js";
 
+// --- GLOBAL VARIABLES ---
+let cropper = null;
+let cropperPadding = 0.1;
+let cropperBgColor = "#FFFFFF";
+
 // --- LOCAL STORAGE & CONFIG ---
 
 function loadConfig() {
@@ -109,15 +114,11 @@ async function handleSaleFormSubmit(e) {
       itemName: item.name,
       quantitySold: quantityToSell,
       sellPriceIqd:
-        appState.activeCurrency === "IQD" ?
-      salePrice : item.sellPriceIqd,
-      costPriceIqd: item.costPriceIqd ||
-      0,
+        appState.activeCurrency === "IQD" ? salePrice : item.sellPriceIqd,
+      costPriceIqd: item.costPriceIqd || 0,
       sellPriceUsd:
-        appState.activeCurrency !== "IQD" ?
-      salePrice : item.sellPriceUsd,
-      costPriceUsd: item.costPriceUsd ||
-      0,
+        appState.activeCurrency !== "IQD" ? salePrice : item.sellPriceUsd,
+      costPriceUsd: item.costPriceUsd || 0,
       saleDate: document.getElementById("sale-date").value,
       notes: document.getElementById("sale-notes").value,
       timestamp: new Date().toISOString(),
@@ -192,8 +193,7 @@ async function handleItemFormSubmit(e) {
     }
 
     const itemData = {
-      id: itemId ||
-      `item_${Date.now()}`,
+      id: itemId || `item_${Date.now()}`,
       sku: document.getElementById("item-sku").value,
       name: document.getElementById("item-name").value,
       category: document.getElementById("item-category").value,
@@ -202,27 +202,20 @@ async function handleItemFormSubmit(e) {
         .getElementById("item-compatible-pn")
         .value.trim(),
       quantity:
-        parseInt(document.getElementById("item-quantity").value, 10) ||
-      0,
+        parseInt(document.getElementById("item-quantity").value, 10) || 0,
       alertLevel:
-        parseInt(document.getElementById("item-alert-level").value, 10) ||
-      5,
+        parseInt(document.getElementById("item-alert-level").value, 10) || 5,
       costPriceIqd:
-        parseFloat(document.getElementById("item-cost-price-iqd").value) ||
-      0,
+        parseFloat(document.getElementById("item-cost-price-iqd").value) || 0,
       sellPriceIqd:
-        parseFloat(document.getElementById("item-sell-price-iqd").value) ||
-      0,
+        parseFloat(document.getElementById("item-sell-price-iqd").value) || 0,
       costPriceUsd:
-        parseFloat(document.getElementById("item-cost-price-usd").value) ||
-      0,
+        parseFloat(document.getElementById("item-cost-price-usd").value) || 0,
       sellPriceUsd:
-        parseFloat(document.getElementById("item-sell-price-usd").value) ||
-      0,
+        parseFloat(document.getElementById("item-sell-price-usd").value) || 0,
       notes: document.getElementById("item-notes").value,
       imagePath: imagePath,
-      supplierId: document.getElementById("item-supplier").value ||
-      null,
+      supplierId: document.getElementById("item-supplier").value || null,
     };
 
     const index = appState.inventory.items.findIndex(i => i.id === itemId);
@@ -632,7 +625,6 @@ async function handleRestoreBackup(event) {
   }
 }
 
-// --- NEW HELPER FUNCTION TO SAVE QUANTITY CHANGES ---
 async function saveQuantityChanges(currentItem) {
   ui.showStatus("التحقق من البيانات...", "syncing");
   const itemBeforeEdit = appState.itemStateBeforeEdit;
@@ -777,29 +769,46 @@ function setupModalListeners(elements) {
   elements.cancelItemBtn.addEventListener("click", () =>
     elements.itemModal.close()
   );
-  // --- Image Handling Logic ---
-  function handleImageSelection(file) {
-    const { imagePreview, imagePlaceholder } = ui.getDOMElements();
-    if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
+  function handleImageSelection(file) {
+    if (!file || !file.type.startsWith("image/")) {
       ui.showStatus("الملف المحدد ليس صورة.", "error");
       return;
     }
 
-    appState.selectedImageFile = file;
     const reader = new FileReader();
     reader.onload = event => {
-      imagePreview.src = event.target.result;
-      imagePreview.classList.remove("image-preview-hidden");
-      imagePlaceholder.style.display = "none";
+      const { cropperModal, cropperImage, paddingDisplay, bgColorInput } =
+        ui.getDOMElements();
+
+      // Reset controls to default when opening
+      cropperPadding = 0.1;
+      cropperBgColor = "#FFFFFF";
+      paddingDisplay.textContent = `${Math.round(cropperPadding * 100)}%`;
+      bgColorInput.value = cropperBgColor;
+
+      cropperImage.src = event.target.result;
+      cropperModal.showModal();
+
+      if (cropper) {
+        cropper.destroy();
+      }
+
+      cropper = new Cropper(cropperImage, {
+        aspectRatio: 1,
+        viewMode: 1,
+        background: false,
+        autoCropArea: 0.8,
+      });
     };
     reader.readAsDataURL(file);
   }
 
   elements.imageUploadInput.addEventListener("change", e => {
     handleImageSelection(e.target.files[0]);
+    e.target.value = ""; // Reset input
   });
+
   elements.pasteImageBtn.addEventListener("click", async () => {
     try {
       if (!navigator.clipboard || !navigator.clipboard.read) {
@@ -829,7 +838,6 @@ function setupModalListeners(elements) {
           type: imageBlob.type,
         });
         handleImageSelection(file);
-        ui.showStatus("تم لصق الصورة بنجاح!", "success");
       } else {
         ui.showStatus("لا توجد صورة في الحافظة.", "warning");
       }
@@ -839,13 +847,91 @@ function setupModalListeners(elements) {
     }
   });
 
+  document.getElementById("cancel-crop-btn").addEventListener("click", () => {
+    ui.getDOMElements().cropperModal.close();
+    if (cropper) {
+      cropper.destroy();
+      cropper = null;
+    }
+  });
+
+  document.getElementById("crop-image-btn").addEventListener("click", () => {
+    if (!cropper) return;
+
+    const croppedCanvas = cropper.getCroppedCanvas();
+    if (!croppedCanvas) return;
+
+    const cropWidth = croppedCanvas.width;
+    const cropHeight = croppedCanvas.height;
+
+    const finalSize =
+      Math.max(cropWidth, cropHeight) / (1 - cropperPadding * 2);
+    const finalCanvas = document.createElement("canvas");
+    finalCanvas.width = finalSize;
+    finalCanvas.height = finalSize;
+    const ctx = finalCanvas.getContext("2d");
+
+    ctx.fillStyle = cropperBgColor;
+    ctx.fillRect(0, 0, finalSize, finalSize);
+
+    const x = (finalSize - cropWidth) / 2;
+    const y = (finalSize - cropHeight) / 2;
+    ctx.drawImage(croppedCanvas, x, y);
+
+    finalCanvas.toBlob(
+      blob => {
+        const { imagePreview, imagePlaceholder } = ui.getDOMElements();
+        const file = new File([blob], "cropped_image.webp", {
+          type: "image/webp",
+        });
+        appState.selectedImageFile = file;
+
+        const reader = new FileReader();
+        reader.onload = event => {
+          imagePreview.src = event.target.result;
+          imagePreview.classList.remove("image-preview-hidden");
+          imagePlaceholder.style.display = "none";
+        };
+        reader.readAsDataURL(file);
+
+        ui.getDOMElements().cropperModal.close();
+        cropper.destroy();
+        cropper = null;
+      },
+      "image/webp",
+      0.8
+    );
+  });
+
+  elements.decreasePaddingBtn.addEventListener("click", () => {
+    if (cropperPadding > 0) {
+      cropperPadding = Math.max(0, cropperPadding - 0.05);
+      elements.paddingDisplay.textContent = `${Math.round(
+        cropperPadding * 100
+      )}%`;
+    }
+  });
+
+  elements.increasePaddingBtn.addEventListener("click", () => {
+    if (cropperPadding < 0.4) {
+      cropperPadding = Math.min(0.4, cropperPadding + 0.05);
+      elements.paddingDisplay.textContent = `${Math.round(
+        cropperPadding * 100
+      )}%`;
+    }
+  });
+
+  elements.bgColorInput.addEventListener("input", e => {
+    cropperBgColor = e.target.value;
+  });
+
   elements.regenerateSkuBtn.addEventListener("click", () => {
     const existingSkus = new Set(
       appState.inventory.items.map(item => item.sku)
     );
     document.getElementById("item-sku").value = generateUniqueSKU(existingSkus);
   });
-  // Price conversion listeners
+
   const costIqdInput = document.getElementById("item-cost-price-iqd");
   const costUsdInput = document.getElementById("item-cost-price-usd");
   const sellIqdInput = document.getElementById("item-sell-price-iqd");
@@ -857,7 +943,7 @@ function setupModalListeners(elements) {
   sellIqdInput.addEventListener("input", () =>
     handlePriceConversion(sellIqdInput, sellUsdInput)
   );
-  // Details Modal
+
   elements.detailsIncreaseBtn.addEventListener("click", () => {
     const item = appState.inventory.items.find(
       i => i.id === appState.currentItemId
@@ -879,36 +965,30 @@ function setupModalListeners(elements) {
     }
   });
 
-  // --- MODIFIED: Details Modal Close Button Listener ---
   elements.closeDetailsModalBtn.addEventListener("click", async () => {
     const itemBeforeEdit = appState.itemStateBeforeEdit;
     const currentItem = appState.inventory.items.find(
       i => i.id === appState.currentItemId
     );
 
-    // Check if quantity has changed
     if (
       itemBeforeEdit &&
       currentItem &&
       itemBeforeEdit.quantity !== currentItem.quantity
     ) {
-      // Ask user for confirmation
       if (confirm("هناك تغييرات غير محفوظة في الكمية. هل تريد حفظها؟")) {
-        // User wants to save, call the save function
         await saveQuantityChanges(currentItem);
       } else {
-        // User does not want to save, revert the changes
         const originalItemIndex = appState.inventory.items.findIndex(
           i => i.id === itemBeforeEdit.id
         );
         if (originalItemIndex !== -1) {
           appState.inventory.items[originalItemIndex] = itemBeforeEdit;
         }
-        ui.filterAndRenderItems(); // Update UI to show the reverted quantity
+        ui.filterAndRenderItems();
       }
     }
 
-    // Cleanup and close modal (this runs in all cases)
     appState.itemStateBeforeEdit = null;
     appState.currentItemId = null;
     elements.detailsModal.close();
@@ -973,7 +1053,6 @@ function setupModalListeners(elements) {
     }
   });
 
-  // Sale Modal
   elements.saleForm.addEventListener("submit", handleSaleFormSubmit);
   elements.cancelSaleBtn.addEventListener("click", () =>
     elements.saleModal.close()
@@ -999,7 +1078,7 @@ function setupModalListeners(elements) {
   document
     .getElementById("sale-price")
     .addEventListener("input", ui.updateSaleTotal);
-  // Sync Modal & Maintenance
+
   elements.syncSettingsBtn.addEventListener("click", () => {
     ui.populateSyncModal();
     const display = document.getElementById("live-exchange-rate-display");
@@ -1013,7 +1092,6 @@ function setupModalListeners(elements) {
         display.innerHTML = `السعر الحالي: <span class="value">${roundedRate}</span>`;
         display.onclick = () => {
           input.value = roundedRate;
-
           input.focus();
         };
       } else {
@@ -1059,7 +1137,7 @@ function setupModalListeners(elements) {
   document
     .getElementById("manual-archive-btn")
     .addEventListener("click", handleManualArchive);
-  // Archive Browser Modal
+
   document
     .getElementById("view-archives-btn")
     .addEventListener("click", openArchiveBrowser);
