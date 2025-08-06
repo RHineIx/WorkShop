@@ -9,6 +9,7 @@ import {
 import * as api from "./api.js";
 import { ConflictError } from "./api.js";
 import * as ui from "./ui.js";
+
 // --- LOCAL STORAGE & CONFIG ---
 
 function loadConfig() {
@@ -108,11 +109,15 @@ async function handleSaleFormSubmit(e) {
       itemName: item.name,
       quantitySold: quantityToSell,
       sellPriceIqd:
-        appState.activeCurrency === "IQD" ? salePrice : item.sellPriceIqd,
-      costPriceIqd: item.costPriceIqd || 0,
+        appState.activeCurrency === "IQD" ?
+      salePrice : item.sellPriceIqd,
+      costPriceIqd: item.costPriceIqd ||
+      0,
       sellPriceUsd:
-        appState.activeCurrency !== "IQD" ? salePrice : item.sellPriceUsd,
-      costPriceUsd: item.costPriceUsd || 0,
+        appState.activeCurrency !== "IQD" ?
+      salePrice : item.sellPriceUsd,
+      costPriceUsd: item.costPriceUsd ||
+      0,
       saleDate: document.getElementById("sale-date").value,
       notes: document.getElementById("sale-notes").value,
       timestamp: new Date().toISOString(),
@@ -187,7 +192,8 @@ async function handleItemFormSubmit(e) {
     }
 
     const itemData = {
-      id: itemId || `item_${Date.now()}`,
+      id: itemId ||
+      `item_${Date.now()}`,
       sku: document.getElementById("item-sku").value,
       name: document.getElementById("item-name").value,
       category: document.getElementById("item-category").value,
@@ -196,20 +202,27 @@ async function handleItemFormSubmit(e) {
         .getElementById("item-compatible-pn")
         .value.trim(),
       quantity:
-        parseInt(document.getElementById("item-quantity").value, 10) || 0,
+        parseInt(document.getElementById("item-quantity").value, 10) ||
+      0,
       alertLevel:
-        parseInt(document.getElementById("item-alert-level").value, 10) || 5,
+        parseInt(document.getElementById("item-alert-level").value, 10) ||
+      5,
       costPriceIqd:
-        parseFloat(document.getElementById("item-cost-price-iqd").value) || 0,
+        parseFloat(document.getElementById("item-cost-price-iqd").value) ||
+      0,
       sellPriceIqd:
-        parseFloat(document.getElementById("item-sell-price-iqd").value) || 0,
+        parseFloat(document.getElementById("item-sell-price-iqd").value) ||
+      0,
       costPriceUsd:
-        parseFloat(document.getElementById("item-cost-price-usd").value) || 0,
+        parseFloat(document.getElementById("item-cost-price-usd").value) ||
+      0,
       sellPriceUsd:
-        parseFloat(document.getElementById("item-sell-price-usd").value) || 0,
+        parseFloat(document.getElementById("item-sell-price-usd").value) ||
+      0,
       notes: document.getElementById("item-notes").value,
       imagePath: imagePath,
-      supplierId: document.getElementById("item-supplier").value || null,
+      supplierId: document.getElementById("item-supplier").value ||
+      null,
     };
 
     const index = appState.inventory.items.findIndex(i => i.id === itemId);
@@ -531,7 +544,7 @@ async function handleDownloadBackup() {
   }
 }
 
-async function handleBackupToTelegram() {
+async function handleBackupTo Telegram() {
   if (!appState.syncConfig) {
     ui.showStatus("يرجى إعداد المزامنة أولاً.", "error");
     return;
@@ -616,6 +629,55 @@ async function handleRestoreBackup(event) {
     });
   } finally {
     event.target.value = "";
+  }
+}
+
+// --- NEW HELPER FUNCTION TO SAVE QUANTITY CHANGES ---
+async function saveQuantityChanges(currentItem) {
+  ui.showStatus("التحقق من البيانات...", "syncing");
+  const itemBeforeEdit = appState.itemStateBeforeEdit;
+  try {
+    const { data: latestInventory, sha: latestSha } =
+      await api.fetchFromGitHub();
+
+    if (latestSha !== appState.fileSha) {
+      ui.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
+        showRefreshButton: true,
+      });
+      // Revert local changes because we can't save
+      const originalItemIndex = appState.inventory.items.findIndex(
+        i => i.id === itemBeforeEdit.id
+      );
+      if (originalItemIndex !== -1) {
+        appState.inventory.items[originalItemIndex] = itemBeforeEdit;
+      }
+      ui.filterAndRenderItems();
+      return; // Stop the save process
+    }
+
+    ui.showStatus("جاري حفظ تغيير الكمية...", "syncing");
+    appState.inventory = latestInventory;
+    appState.fileSha = latestSha;
+
+    const itemToUpdate = appState.inventory.items.find(
+      i => i.id === currentItem.id
+    );
+    if (itemToUpdate) {
+      itemToUpdate.quantity = currentItem.quantity;
+    }
+    await api.saveToGitHub();
+    saveLocalData();
+    ui.showStatus("تم حفظ التغييرات بنجاح!", "success");
+  } catch (error) {
+    // Revert on error
+    const originalItemIndex = appState.inventory.items.findIndex(
+      i => i.id === itemBeforeEdit.id
+    );
+    if (originalItemIndex !== -1) {
+      appState.inventory.items[originalItemIndex] = itemBeforeEdit;
+    }
+    ui.filterAndRenderItems();
+    ui.showStatus("فشل حفظ التغييرات.", "error", { duration: 4000 });
   }
 }
 
@@ -816,59 +878,42 @@ function setupModalListeners(elements) {
       ui.filterAndRenderItems();
     }
   });
+
+  // --- MODIFIED: Details Modal Close Button Listener ---
   elements.closeDetailsModalBtn.addEventListener("click", async () => {
     const itemBeforeEdit = appState.itemStateBeforeEdit;
     const currentItem = appState.inventory.items.find(
       i => i.id === appState.currentItemId
     );
+
+    // Check if quantity has changed
     if (
       itemBeforeEdit &&
       currentItem &&
       itemBeforeEdit.quantity !== currentItem.quantity
     ) {
-      ui.showStatus("التحقق من البيانات...", "syncing");
-      try {
-        const { data: latestInventory, sha: latestSha } =
-          await api.fetchFromGitHub();
-
-        if (latestSha !== appState.fileSha) {
-          ui.showStatus("البيانات غير محدّثة.", "error", {
-            showRefreshButton: true,
-          });
-          const originalItemIndex = appState.inventory.items.findIndex(
-            i => i.id === itemBeforeEdit.id
-          );
-          if (originalItemIndex !== -1)
-            appState.inventory.items[originalItemIndex] = itemBeforeEdit;
-          ui.filterAndRenderItems();
-        } else {
-          ui.showStatus("جاري حفظ تغيير الكمية...", "syncing");
-          appState.inventory = latestInventory;
-          appState.fileSha = latestSha;
-
-          const itemToUpdate = appState.inventory.items.find(
-            i => i.id === currentItem.id
-          );
-          if (itemToUpdate) itemToUpdate.quantity = currentItem.quantity;
-          await api.saveToGitHub();
-          saveLocalData();
-          ui.showStatus("تم حفظ التغييرات بنجاح!", "success");
-        }
-      } catch (error) {
+      // Ask user for confirmation
+      if (confirm("هناك تغييرات غير محفوظة في الكمية. هل تريد حفظها؟")) {
+        // User wants to save, call the save function
+        await saveQuantityChanges(currentItem);
+      } else {
+        // User does not want to save, revert the changes
         const originalItemIndex = appState.inventory.items.findIndex(
           i => i.id === itemBeforeEdit.id
         );
-        if (originalItemIndex !== -1)
+        if (originalItemIndex !== -1) {
           appState.inventory.items[originalItemIndex] = itemBeforeEdit;
-        ui.filterAndRenderItems();
-        ui.showStatus("فشل حفظ التغييرات.", "error", { duration: 4000 });
+        }
+        ui.filterAndRenderItems(); // Update UI to show the reverted quantity
       }
     }
 
+    // Cleanup and close modal (this runs in all cases)
     appState.itemStateBeforeEdit = null;
     appState.currentItemId = null;
     elements.detailsModal.close();
   });
+
   elements.detailsEditBtn.addEventListener("click", () => {
     elements.detailsModal.close();
     ui.openItemModal(appState.currentItemId);
