@@ -9,87 +9,11 @@ import {
 import * as api from "./api.js";
 import { ConflictError } from "./api.js";
 import * as ui from "./ui.js";
-import { getSyncQueue, clearSyncQueue } from "./db.js";
 
 // --- GLOBAL VARIABLES ---
 let cropper = null;
 let cropperPadding = 0.1;
 let cropperBgColor = "#FFFFFF";
-
-// --- SYNC QUEUE PROCESSING ---
-async function processSyncQueue() {
-  if (!navigator.onLine || !appState.syncConfig) {
-    return;
-  }
-
-  const queue = await getSyncQueue();
-  if (queue.length === 0) {
-    return;
-  }
-
-  ui.showStatus(
-    `جاري مزامنة ${queue.length} من التغييرات المعلقة...`,
-    "syncing"
-  );
-
-  try {
-    const [inventoryResult, salesResult, suppliersResult] = await Promise.all([
-      api.fetchFromGitHub(),
-      api.fetchSales(),
-      api.fetchSuppliers(),
-    ]);
-
-    appState.inventory = inventoryResult.data;
-    appState.fileSha = inventoryResult.sha;
-    appState.sales = salesResult.data;
-    appState.salesFileSha = salesResult.sha;
-    appState.suppliers = suppliersResult.data;
-    appState.suppliersFileSha = suppliersResult.sha;
-
-    for (const operation of queue) {
-      if (operation.type === "SAVE_INVENTORY") {
-        appState.inventory = operation.payload;
-      }
-      if (operation.type === "SAVE_SALES") {
-        appState.sales = operation.payload;
-      }
-      if (operation.type === "SAVE_SUPPLIERS") {
-        appState.suppliers = operation.payload;
-      }
-    }
-
-    // Perform saves sequentially to avoid race conditions
-    await api.saveToGitHub();
-    await api.saveSales();
-    await api.saveSuppliers();
-
-    await clearSyncQueue();
-    saveLocalData();
-    ui.hideSyncStatus();
-    ui.showStatus("تمت مزامنة جميع التغييرات بنجاح!", "success");
-  } catch (error) {
-    console.error("Sync queue processing failed:", error);
-    ui.hideSyncStatus();
-
-    if (error instanceof ConflictError) {
-      ui.showStatus(
-        "تعارض في البيانات. تم تحديث البيانات من جهاز آخر. يرجى إعادة إجراء التغييرات.",
-        "error",
-        { duration: 8000 }
-      );
-      await clearSyncQueue(); // Clear the invalid queue
-      // Force a reload of fresh data from server into the app state
-      initializeApp();
-    } else {
-      ui.showStatus(`فشلت مزامنة التغييرات المعلقة: ${error.message}`, "error");
-    }
-  } finally {
-    ui.filterAndRenderItems();
-    if (appState.currentView === "dashboard") {
-      ui.renderDashboard();
-    }
-  }
-}
 
 // --- LOCAL STORAGE & CONFIG ---
 
@@ -157,8 +81,17 @@ async function handleSaleFormSubmit(e) {
   e.preventDefault();
   const saveButton = document.getElementById("confirm-sale-btn");
   saveButton.disabled = true;
-
+  ui.showStatus("التحقق من البيانات...", "syncing");
   try {
+    const { sha: latestSha } = await api.fetchFromGitHub();
+    if (latestSha !== appState.fileSha) {
+      ui.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
+        showRefreshButton: true,
+      });
+      saveButton.disabled = false;
+      return;
+    }
+
     const itemId = document.getElementById("sale-item-id").value;
     const item = appState.inventory.items.find(i => i.id === itemId);
     const quantityToSell = parseInt(
@@ -172,6 +105,8 @@ async function handleSaleFormSubmit(e) {
       return;
     }
 
+    ui.showStatus("جاري تسجيل البيع...", "syncing");
+    const originalQuantity = item.quantity;
     item.quantity -= quantityToSell;
     const saleRecord = {
       saleId: `sale_${Date.now()}`,
@@ -189,20 +124,26 @@ async function handleSaleFormSubmit(e) {
       timestamp: new Date().toISOString(),
     };
     appState.sales.push(saleRecord);
-
     ui.filterAndRenderItems();
-    saveLocalData();
 
-    await Promise.all([api.saveToGitHub(), api.saveSales()]);
-
-    ui.getDOMElements().saleModal.close();
-    ui.showStatus(
-      navigator.onLine ? "تم تسجيل البيع بنجاح!" : "تم حفظ البيع محلياً.",
-      "success"
-    );
+    try {
+      await api.saveToGitHub();
+      await api.saveSales();
+      saveLocalData();
+      ui.getDOMElements().saleModal.close();
+      ui.hideSyncStatus();
+      ui.showStatus("تم تسجيل البيع بنجاح!", "success");
+    } catch (saveError) {
+      item.quantity = originalQuantity;
+      appState.sales.pop();
+      ui.filterAndRenderItems();
+      throw saveError;
+    }
   } catch (error) {
-    console.error("Sale failed:", error);
-    ui.showStatus(`فشل تسجيل البيع: ${error.message}`, "error");
+    ui.hideSyncStatus();
+    if (!(error instanceof ConflictError)) {
+      ui.showStatus(`فشل تسجيل البيع: ${error.message}`, "error");
+    }
   } finally {
     if (appState.currentView === "dashboard") {
       ui.renderDashboard();
@@ -215,8 +156,22 @@ async function handleItemFormSubmit(e) {
   e.preventDefault();
   const saveButton = document.getElementById("save-item-btn");
   saveButton.disabled = true;
-
+  ui.showStatus("التحقق من البيانات...", "syncing");
   try {
+    const { data: latestInventory, sha: latestSha } =
+      await api.fetchFromGitHub();
+    if (latestSha !== appState.fileSha) {
+      ui.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
+        showRefreshButton: true,
+      });
+      saveButton.disabled = false;
+      return;
+    }
+
+    ui.hideSyncStatus();
+    ui.showStatus("جاري الحفظ...", "syncing");
+    appState.inventory = latestInventory;
+    appState.fileSha = latestSha;
     const itemId = document.getElementById("item-id").value;
     let imagePath = null;
     const existingItem = appState.inventory.items.find(i => i.id === itemId);
@@ -225,11 +180,14 @@ async function handleItemFormSubmit(e) {
     }
 
     if (appState.selectedImageFile) {
-      if (!navigator.onLine) {
-        ui.showStatus("سيتم رفع الصورة عند عودة الإتصال.", "info");
-      }
-      imagePath = await api.uploadImageToGitHub(
+      ui.hideSyncStatus();
+      ui.showStatus("جاري ضغط الصورة...", "syncing");
+      const compressedImageBlob = await compressImage(
         appState.selectedImageFile,
+        { quality: 0.7, maxWidth: 1024, maxHeight: 1024 }
+      );
+      imagePath = await api.uploadImageToGitHub(
+        compressedImageBlob,
         appState.selectedImageFile.name
       );
     }
@@ -270,19 +228,18 @@ async function handleItemFormSubmit(e) {
     ui.filterAndRenderItems();
     ui.renderCategoryFilter();
     ui.populateCategoryDatalist();
-    saveLocalData();
     await api.saveToGitHub();
+    saveLocalData();
 
     ui.getDOMElements().itemModal.close();
-    ui.showStatus(
-      navigator.onLine ? "تم حفظ التغييرات بنجاح!" : "تم حفظ التغييرات محلياً.",
-      "success"
-    );
+    ui.hideSyncStatus();
+    ui.showStatus("تم حفظ التغييرات بنجاح!", "success");
 
     if (appState.currentItemId === itemData.id) {
       ui.openDetailsModal(itemData.id);
     }
   } catch (error) {
+    ui.hideSyncStatus();
     ui.showStatus(`فشل الحفظ: ${error.message}`, "error");
   } finally {
     saveButton.disabled = false;
@@ -291,10 +248,6 @@ async function handleItemFormSubmit(e) {
 }
 
 async function handleImageCleanup() {
-  if (!navigator.onLine) {
-    ui.showStatus("هذه الميزة تتطلب اتصالاً بالإنترنت.", "error");
-    return;
-  }
   if (!appState.syncConfig) {
     ui.showStatus("يرجى إعداد المزامنة أولاً.", "error", { duration: 5000 });
     return;
@@ -373,23 +326,19 @@ async function handleSupplierFormSubmit(e) {
   }
 
   const actionText = id ? "تعديل" : "إضافة";
-
+  ui.showStatus(`جاري ${actionText} المورّد...`, "syncing");
   try {
-    saveLocalData();
     await api.saveSuppliers();
     ui.renderSupplierList();
     ui.populateSupplierDropdown(elements.itemSupplierSelect.value);
-    ui.showStatus(
-      navigator.onLine
-        ? `تم ${actionText} المورّد بنجاح!`
-        : `تم حفظ المورّد محلياً.`,
-      "success"
-    );
+    ui.hideSyncStatus();
+    ui.showStatus(`تم ${actionText} المورّد بنجاح!`, "success");
     elements.supplierForm.reset();
     elements.supplierIdInput.value = "";
     elements.supplierFormTitle.textContent = "إضافة مورّد جديد";
     elements.cancelEditSupplierBtn.classList.add("view-hidden");
   } catch (error) {
+    ui.hideSyncStatus();
     ui.showStatus(`فشل حفظ المورّد: ${error.message}`, "error");
   }
 }
@@ -405,25 +354,27 @@ async function handleDeleteSupplier(supplierId) {
   }
 
   if (confirm(confirmMessage)) {
-    if (linkedProductsCount > 0) {
-      appState.inventory.items.forEach(item => {
-        if (item.supplierId === supplierId) {
-          item.supplierId = null;
-        }
-      });
-    }
-    appState.suppliers = appState.suppliers.filter(s => s.id !== supplierId);
-
+    ui.showStatus("جاري حذف المورّد...", "syncing");
     try {
+      if (linkedProductsCount > 0) {
+        appState.inventory.items.forEach(item => {
+          if (item.supplierId === supplierId) {
+            item.supplierId = null;
+          }
+        });
+        await api.saveToGitHub();
+      }
+
+      appState.suppliers = appState.suppliers.filter(s => s.id !== supplierId);
+      await api.saveSuppliers();
+
       saveLocalData();
-      await Promise.all([api.saveToGitHub(), api.saveSuppliers()]);
       ui.renderSupplierList();
       ui.populateSupplierDropdown(ui.getDOMElements().itemSupplierSelect.value);
-      ui.showStatus(
-        navigator.onLine ? "تم حذف المورّد بنجاح!" : "تم الحذف محلياً.",
-        "success"
-      );
+      ui.hideSyncStatus();
+      ui.showStatus("تم حذف المورّد بنجاح!", "success");
     } catch (error) {
+      ui.hideSyncStatus();
       ui.showStatus(`فشل حذف المورّد: ${error.message}`, "error");
     }
   }
@@ -1370,9 +1321,6 @@ function setupSupplierListeners(elements) {
 function setupEventListeners() {
   const elements = ui.getDOMElements();
 
-  // Listen for online/offline events
-  window.addEventListener("online", processSyncQueue);
-
   setupGeneralListeners(elements);
   setupViewToggleListeners(elements);
   setupInventoryListeners(elements);
@@ -1382,6 +1330,7 @@ function setupEventListeners() {
 }
 
 // --- INITIALIZATION ---
+
 async function initializeApp() {
   console.log("Initializing Inventory Management App...");
   setupEventListeners();
@@ -1393,47 +1342,32 @@ async function initializeApp() {
 
   ui.renderInventorySkeleton();
   if (appState.syncConfig) {
-    if (navigator.onLine) {
-      ui.showStatus("جاري مزامنة البيانات...", "syncing");
-      try {
-        await processSyncQueue(); // Process old changes first if any
-
-        const [inventoryResult, salesResult, suppliersResult] =
-          await Promise.all([
-            api.fetchFromGitHub(),
-            api.fetchSales(),
-            api.fetchSuppliers(),
-          ]);
-        if (inventoryResult) {
-          appState.inventory = inventoryResult.data;
-          appState.fileSha = inventoryResult.sha;
-        }
-        if (salesResult) {
-          appState.sales = salesResult.data;
-          appState.salesFileSha = salesResult.sha;
-        }
-        if (suppliersResult) {
-          appState.suppliers = suppliersResult.data;
-          appState.suppliersFileSha = suppliersResult.sha;
-        }
-
-        saveLocalData();
-        ui.hideSyncStatus();
-        ui.showStatus("تمت المزامنة بنجاح!", "success");
-      } catch (error) {
-        ui.hideSyncStatus();
-        ui.showStatus(
-          `خطأ في المزامنة الأولية: ${error.message}, سيتم استخدام البيانات المحلية.`,
-          "error",
-          { duration: 7000 }
-        );
-        loadLocalData();
-      }
-    } else {
-      ui.showStatus(
-        "التطبيق يعمل بدون اتصال. سيتم عرض البيانات المحلية.",
-        "info"
+    ui.showStatus("جاري مزامنة البيانات...", "syncing");
+    try {
+      const [inventoryResult, salesResult, suppliersResult] = await Promise.all(
+        [api.fetchFromGitHub(), api.fetchSales(), api.fetchSuppliers()]
       );
+      if (inventoryResult) {
+        appState.inventory = inventoryResult.data;
+        appState.fileSha = inventoryResult.sha;
+      }
+      if (salesResult) {
+        appState.sales = salesResult.data;
+        appState.salesFileSha = salesResult.sha;
+      }
+      if (suppliersResult) {
+        appState.suppliers = suppliersResult.data;
+        appState.suppliersFileSha = suppliersResult.sha;
+      }
+
+      saveLocalData();
+      ui.hideSyncStatus();
+      ui.showStatus("تمت المزامنة بنجاح!", "success");
+    } catch (error) {
+      ui.hideSyncStatus();
+      ui.showStatus(`خطأ في المزامنة: ${error.message}`, "error", {
+        duration: 5000,
+      });
       loadLocalData();
     }
   } else {
