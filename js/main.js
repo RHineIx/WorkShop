@@ -114,10 +114,12 @@ async function handleSaleFormSubmit(e) {
       itemName: item.name,
       quantitySold: quantityToSell,
       sellPriceIqd:
-        appState.activeCurrency === "IQD" ? salePrice : item.sellPriceIqd,
+        appState.activeCurrency === "IQD" ?
+        salePrice : item.sellPriceIqd,
       costPriceIqd: item.costPriceIqd || 0,
       sellPriceUsd:
-        appState.activeCurrency !== "IQD" ? salePrice : item.sellPriceUsd,
+        appState.activeCurrency !== "IQD" ?
+        salePrice : item.sellPriceUsd,
       costPriceUsd: item.costPriceUsd || 0,
       saleDate: document.getElementById("sale-date").value,
       notes: document.getElementById("sale-notes").value,
@@ -631,7 +633,6 @@ async function saveQuantityChanges(currentItem) {
   try {
     const { data: latestInventory, sha: latestSha } =
       await api.fetchFromGitHub();
-
     if (latestSha !== appState.fileSha) {
       ui.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
         showRefreshButton: true,
@@ -767,7 +768,6 @@ function setupModalListeners(elements) {
   elements.cancelItemBtn.addEventListener("click", () =>
     elements.itemModal.close()
   );
-
   function handleImageSelection(file) {
     if (!file || !file.type.startsWith("image/")) {
       ui.showStatus("الملف المحدد ليس صورة.", "error");
@@ -778,7 +778,6 @@ function setupModalListeners(elements) {
     reader.onload = event => {
       const { cropperModal, cropperImage, paddingDisplay, bgColorInput } =
         ui.getDOMElements();
-
       cropperPadding = 0.1;
       cropperBgColor = "#FFFFFF";
       paddingDisplay.textContent = `${Math.round(cropperPadding * 100)}%`;
@@ -786,7 +785,6 @@ function setupModalListeners(elements) {
 
       cropperImage.src = event.target.result;
       cropperModal.showModal();
-
       if (cropper) {
         cropper.destroy();
       }
@@ -805,7 +803,6 @@ function setupModalListeners(elements) {
     handleImageSelection(e.target.files[0]);
     e.target.value = "";
   });
-
   elements.pasteImageBtn.addEventListener("click", async () => {
     try {
       if (!navigator.clipboard || !navigator.clipboard.read) {
@@ -856,7 +853,6 @@ function setupModalListeners(elements) {
       cropper = null;
     }
   });
-
   document.getElementById("crop-image-btn").addEventListener("click", () => {
     if (!cropper) return;
 
@@ -887,7 +883,6 @@ function setupModalListeners(elements) {
           type: "image/webp",
         });
         appState.selectedImageFile = file;
-
         const reader = new FileReader();
         reader.onload = event => {
           imagePreview.src = event.target.result;
@@ -904,7 +899,6 @@ function setupModalListeners(elements) {
       0.8
     );
   });
-
   elements.decreasePaddingBtn.addEventListener("click", () => {
     if (cropperPadding > 0) {
       cropperPadding = Math.max(0, cropperPadding - 0.05);
@@ -913,7 +907,6 @@ function setupModalListeners(elements) {
       )}%`;
     }
   });
-
   elements.increasePaddingBtn.addEventListener("click", () => {
     if (cropperPadding < 0.4) {
       cropperPadding = Math.min(0.4, cropperPadding + 0.05);
@@ -922,30 +915,25 @@ function setupModalListeners(elements) {
       )}%`;
     }
   });
-
   elements.bgColorInput.addEventListener("input", e => {
     cropperBgColor = e.target.value;
   });
-
   elements.regenerateSkuBtn.addEventListener("click", () => {
     const existingSkus = new Set(
       appState.inventory.items.map(item => item.sku)
     );
     document.getElementById("item-sku").value = generateUniqueSKU(existingSkus);
   });
-
   const costIqdInput = document.getElementById("item-cost-price-iqd");
   const costUsdInput = document.getElementById("item-cost-price-usd");
   const sellIqdInput = document.getElementById("item-sell-price-iqd");
   const sellUsdInput = document.getElementById("item-sell-price-usd");
-
   costIqdInput.addEventListener("input", () =>
     handlePriceConversion(costIqdInput, costUsdInput)
   );
   sellIqdInput.addEventListener("input", () =>
     handlePriceConversion(sellIqdInput, sellUsdInput)
   );
-
   elements.detailsIncreaseBtn.addEventListener("click", () => {
     const item = appState.inventory.items.find(
       i => i.id === appState.currentItemId
@@ -966,7 +954,6 @@ function setupModalListeners(elements) {
       ui.filterAndRenderItems();
     }
   });
-
   elements.closeDetailsModalBtn.addEventListener("click", async () => {
     const itemBeforeEdit = appState.itemStateBeforeEdit;
     const currentItem = appState.inventory.items.find(
@@ -995,7 +982,6 @@ function setupModalListeners(elements) {
     appState.currentItemId = null;
     elements.detailsModal.close();
   });
-
   elements.detailsEditBtn.addEventListener("click", () => {
     elements.detailsModal.close();
     ui.openItemModal(appState.currentItemId);
@@ -1080,7 +1066,6 @@ function setupModalListeners(elements) {
   document
     .getElementById("sale-price")
     .addEventListener("input", ui.updateSaleTotal);
-
   elements.syncSettingsBtn.addEventListener("click", () => {
     ui.populateSyncModal();
     const display = document.getElementById("live-exchange-rate-display");
@@ -1139,7 +1124,6 @@ function setupModalListeners(elements) {
   document
     .getElementById("manual-archive-btn")
     .addEventListener("click", handleManualArchive);
-
   document
     .getElementById("view-archives-btn")
     .addEventListener("click", openArchiveBrowser);
@@ -1255,7 +1239,6 @@ function setupDashboardListeners(elements) {
       ui.renderDashboard();
     }
   });
-
   elements.dashboardViewContainer.addEventListener("click", e => {
     // Handler for collapsible sections (Bestsellers, Sales Log)
     const collapsibleHeader = e.target.closest(".collapsible-header");
@@ -1331,6 +1314,30 @@ function setupEventListeners() {
 
 // --- INITIALIZATION ---
 
+function handleUrlShortcuts() {
+  const hash = window.location.hash;
+  if (!hash) return;
+
+  switch (hash) {
+    case '#add-item':
+      // We wrap this in a timeout to ensure the main thread is free
+      // and any initial rendering has completed.
+      setTimeout(() => {
+        ui.openItemModal();
+        const existingSkus = new Set(
+          appState.inventory.items.map(item => item.sku)
+        );
+        document.getElementById("item-sku").value = generateUniqueSKU(existingSkus);
+      }, 100);
+      break;
+    case '#dashboard':
+      setTimeout(() => {
+        ui.toggleView('dashboard');
+      }, 100);
+      break;
+  }
+}
+
 async function initializeApp() {
   console.log("Initializing Inventory Management App...");
   setupEventListeners();
@@ -1379,6 +1386,9 @@ async function initializeApp() {
   ui.renderCategoryFilter();
   ui.populateCategoryDatalist();
   ui.updateCurrencyDisplay();
+  
+  handleUrlShortcuts();
+
   console.log("App Initialized Successfully.");
 }
 
