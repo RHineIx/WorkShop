@@ -471,3 +471,12 @@ dialog::backdrop {
   font-family: var(--font-family);
   font-weight: 700;
 }
+.app-version {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--border-color);
+  direction: ltr; /* To ensure hash and branch name display correctly */
+}
