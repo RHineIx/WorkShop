@@ -121,6 +121,16 @@ const elements = {
   increasePaddingBtn: document.getElementById("increase-padding-btn"),
   decreasePaddingBtn: document.getElementById("decrease-padding-btn"),
   bgColorInput: document.getElementById("bg-color-input"),
+
+  // App Version
+  appVersionDisplay: document.getElementById("app-version-display"),
+};
+
+export const displayVersionInfo = (versionData) => {
+  if (versionData && elements.appVersionDisplay) {
+    const { hash, branch } = versionData;
+    elements.appVersionDisplay.textContent = `Version: ${hash} (Branch: ${branch})`;
+  }
 };
 
 const imageObserver = new IntersectionObserver(
