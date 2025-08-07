@@ -1347,6 +1347,17 @@ async function initializeApp() {
   appState.activeCurrency = savedCurrency;
   ui.setTheme(savedTheme);
 
+  // Fetch version info
+  try {
+    const response = await fetch('version.json?t=' + Date.now()); // Add timestamp to prevent caching
+    if (response.ok) {
+      const versionData = await response.json();
+      ui.displayVersionInfo(versionData);
+    }
+  } catch (error) {
+    console.error("Could not fetch version info:", error);
+  }
+
   ui.renderInventorySkeleton();
   if (appState.syncConfig) {
     ui.showStatus("جاري مزامنة البيانات...", "syncing");
