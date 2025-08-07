@@ -16,6 +16,22 @@
       "src": "icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
+    },
+  ],
+  "shortcuts": [
+    {
+      "name": "إضافة منتج جديد",
+      "short_name": "إضافة منتج",
+      "description": "فتح نافذة إضافة منتج جديد إلى المخزون",
+      "url": "/index.html#add-item",
+      "icons": [{ "src": "icons/add.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "لوحة المعلومات",
+      "short_name": "الداشبورد",
+      "description": "عرض لوحة معلومات المبيعات والأرباح",
+      "url": "/index.html#dashboard",
+      "icons": [{ "src": "icons/dashboard.png", "sizes": "96x96" }]
     }
   ]
 }
