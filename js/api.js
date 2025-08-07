@@ -1,13 +1,9 @@
 // js/api.js
 import { appState } from "./state.js";
-import { getImage, storeImage } from "./db.js";
+import { getImage, storeImage, addToSyncQueue } from "./db.js";
 import { updateRateLimitDisplay } from "./ui.js";
 
 // --- Custom Error for Handling Race Conditions ---
-/**
- * Custom error class to identify when a file update fails due to a
- * version mismatch (409 Conflict from GitHub API).
- */
 export class ConflictError extends Error {
   constructor(message) {
     super(message);
@@ -16,12 +12,6 @@ export class ConflictError extends Error {
 }
 
 // --- Central API Fetch Function ---
-/**
- * A centralized fetch wrapper to handle authentication and rate limit headers.
- * @param {string} url The URL to fetch.
- * @param {object} options The options for the fetch call.
- * @returns {Promise<Response>} The fetch response.
- */
 async function apiFetch(url, options = {}) {
   if (!appState.syncConfig || !appState.syncConfig.pat) {
     throw new Error("GitHub PAT is not configured.");
@@ -36,14 +26,12 @@ async function apiFetch(url, options = {}) {
 
   const response = await fetch(url, { ...options, headers });
 
-  // Update rate limit status from headers
   if (response.headers.has("x-ratelimit-limit")) {
     appState.rateLimit = {
       limit: parseInt(response.headers.get("x-ratelimit-limit"), 10),
       remaining: parseInt(response.headers.get("x-ratelimit-remaining"), 10),
       reset: parseInt(response.headers.get("x-ratelimit-reset"), 10),
     };
-    // Call the UI update function
     updateRateLimitDisplay();
   }
 
@@ -101,20 +89,10 @@ async function fetchJsonFromGitHub(filePath, defaultValue) {
   }
 }
 
-async function saveJsonToGitHub(filePath, dataObject, commitMessage) {
+async function saveJsonToGitHub(filePath, dataObject, commitMessage, sha) {
   if (!appState.syncConfig) throw new Error("Sync config is not set.");
   const { username, repo } = appState.syncConfig;
   const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${filePath}`;
-
-  let latestSha = null;
-  try {
-    const remoteFile = await apiFetch(apiUrl, { cache: "no-cache" });
-    if (remoteFile.ok) {
-      latestSha = (await remoteFile.json()).sha;
-    }
-  } catch (e) {
-    // File probably doesn't exist, which is fine.
-  }
 
   const content = btoa(
     unescape(encodeURIComponent(JSON.stringify(dataObject, null, 2)))
@@ -122,7 +100,7 @@ async function saveJsonToGitHub(filePath, dataObject, commitMessage) {
   const body = {
     message: `${commitMessage} - ${new Date().toISOString()}`,
     content: content,
-    sha: latestSha,
+    sha: sha,
   };
   const response = await apiFetch(apiUrl, {
     method: "PUT",
@@ -143,9 +121,6 @@ async function saveJsonToGitHub(filePath, dataObject, commitMessage) {
 
 // --- Exported API Functions ---
 
-/**
- * Triggers the backup-to-telegram GitHub Action workflow.
- */
 export const triggerBackupWorkflow = async () => {
   if (!appState.syncConfig) {
     throw new Error("إعدادات المزامنة غير متوفرة.");
@@ -163,7 +138,7 @@ export const triggerBackupWorkflow = async () => {
       `فشل في تشغيل عملية النسخ الاحتياطي: ${response.statusText}`
     );
   }
-  return response.status === 204; // 204 No Content is the success status
+  return response.status === 204;
 };
 export async function fetchLiveExchangeRate() {
   const url =
@@ -220,6 +195,14 @@ export const fetchImageWithAuth = async path => {
   }
 };
 export const uploadImageToGitHub = async (imageBlob, originalFileName) => {
+  if (!navigator.onLine) {
+    await addToSyncQueue({
+      type: "UPLOAD_IMAGE",
+      payload: { imageBlob, originalFileName },
+    });
+    return `offline_${Date.now()}_${originalFileName}`;
+  }
+
   if (!appState.syncConfig) {
     throw new Error("يجب إعداد المزامنة أولاً لرفع الصور.");
   }
@@ -251,10 +234,18 @@ export const fetchFromGitHub = async () => {
 };
 
 export const saveToGitHub = async () => {
+  if (!navigator.onLine) {
+    await addToSyncQueue({
+      type: "SAVE_INVENTORY",
+      payload: appState.inventory,
+    });
+    return;
+  }
   appState.fileSha = await saveJsonToGitHub(
     "inventory.json",
     appState.inventory,
-    "Update inventory data"
+    "Update inventory data",
+    appState.fileSha
   );
 };
 
@@ -262,10 +253,15 @@ export const fetchSales = async () => {
   return await fetchJsonFromGitHub("sales.json", []);
 };
 export const saveSales = async () => {
+  if (!navigator.onLine) {
+    await addToSyncQueue({ type: "SAVE_SALES", payload: appState.sales });
+    return;
+  }
   appState.salesFileSha = await saveJsonToGitHub(
     "sales.json",
     appState.sales,
-    "Update sales data"
+    "Update sales data",
+    appState.salesFileSha
   );
 };
 
@@ -273,10 +269,18 @@ export const fetchSuppliers = async () => {
   return await fetchJsonFromGitHub("suppliers.json", []);
 };
 export const saveSuppliers = async () => {
+  if (!navigator.onLine) {
+    await addToSyncQueue({
+      type: "SAVE_SUPPLIERS",
+      payload: appState.suppliers,
+    });
+    return;
+  }
   appState.suppliersFileSha = await saveJsonToGitHub(
     "suppliers.json",
     appState.suppliers,
-    "Update suppliers data"
+    "Update suppliers data",
+    appState.suppliersFileSha
   );
 };
 
