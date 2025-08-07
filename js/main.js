@@ -33,7 +33,6 @@ async function processSyncQueue() {
   );
 
   try {
-    // Fetch the latest SHAs before processing the queue
     const [inventoryResult, salesResult, suppliersResult] = await Promise.all([
       api.fetchFromGitHub(),
       api.fetchSales(),
@@ -47,7 +46,6 @@ async function processSyncQueue() {
     appState.suppliers = suppliersResult.data;
     appState.suppliersFileSha = suppliersResult.sha;
 
-    // Apply queued changes on top of the latest data
     for (const operation of queue) {
       if (operation.type === "SAVE_INVENTORY") {
         appState.inventory = operation.payload;
@@ -60,12 +58,10 @@ async function processSyncQueue() {
       }
     }
 
-    // Save the final merged state
-    await Promise.all([
-      api.saveToGitHub(),
-      api.saveSales(),
-      api.saveSuppliers(),
-    ]);
+    // Perform saves sequentially to avoid race conditions
+    await api.saveToGitHub();
+    await api.saveSales();
+    await api.saveSuppliers();
 
     await clearSyncQueue();
     saveLocalData();
@@ -74,9 +70,20 @@ async function processSyncQueue() {
   } catch (error) {
     console.error("Sync queue processing failed:", error);
     ui.hideSyncStatus();
-    ui.showStatus(`فشلت مزامنة التغييرات المعلقة: ${error.message}`, "error");
+
+    if (error instanceof ConflictError) {
+      ui.showStatus(
+        "تعارض في البيانات. تم تحديث البيانات من جهاز آخر. يرجى إعادة إجراء التغييرات.",
+        "error",
+        { duration: 8000 }
+      );
+      await clearSyncQueue(); // Clear the invalid queue
+      // Force a reload of fresh data from server into the app state
+      initializeApp();
+    } else {
+      ui.showStatus(`فشلت مزامنة التغييرات المعلقة: ${error.message}`, "error");
+    }
   } finally {
-    // Re-render UI with latest data
     ui.filterAndRenderItems();
     if (appState.currentView === "dashboard") {
       ui.renderDashboard();
@@ -186,7 +193,6 @@ async function handleSaleFormSubmit(e) {
     ui.filterAndRenderItems();
     saveLocalData();
 
-    // Attempt to sync, will be queued if offline
     await Promise.all([api.saveToGitHub(), api.saveSales()]);
 
     ui.getDOMElements().saleModal.close();
@@ -220,12 +226,8 @@ async function handleItemFormSubmit(e) {
 
     if (appState.selectedImageFile) {
       if (!navigator.onLine) {
-        ui.showStatus(
-          "لا يمكن رفع الصور بدون اتصال. سيتم رفعها عند المزامنة.",
-          "warning"
-        );
+        ui.showStatus("سيتم رفع الصورة عند عودة الإتصال.", "info");
       }
-      // Image upload is handled by the sync queue if offline
       imagePath = await api.uploadImageToGitHub(
         appState.selectedImageFile,
         appState.selectedImageFile.name
@@ -1380,7 +1382,6 @@ function setupEventListeners() {
 }
 
 // --- INITIALIZATION ---
-
 async function initializeApp() {
   console.log("Initializing Inventory Management App...");
   setupEventListeners();
@@ -1395,6 +1396,8 @@ async function initializeApp() {
     if (navigator.onLine) {
       ui.showStatus("جاري مزامنة البيانات...", "syncing");
       try {
+        await processSyncQueue(); // Process old changes first if any
+
         const [inventoryResult, salesResult, suppliersResult] =
           await Promise.all([
             api.fetchFromGitHub(),
@@ -1417,9 +1420,6 @@ async function initializeApp() {
         saveLocalData();
         ui.hideSyncStatus();
         ui.showStatus("تمت المزامنة بنجاح!", "success");
-
-        // After initial sync, process any offline changes
-        await processSyncQueue();
       } catch (error) {
         ui.hideSyncStatus();
         ui.showStatus(
