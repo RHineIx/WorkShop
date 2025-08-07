@@ -132,16 +132,21 @@ const imageObserver = new IntersectionObserver(
 
         img.parentElement.classList.add("loading");
 
-        fetchImageWithAuth(imagePath).then(blobUrl => {
-          if (blobUrl) {
-            img.src = blobUrl;
-            img.onload = () => {
+        fetchImageWithAuth(imagePath)
+          .then(blobUrl => {
+            if (blobUrl) {
+              img.src = blobUrl;
+              img.onload = () => {
+                img.parentElement.classList.remove("loading");
+              };
+            } else {
               img.parentElement.classList.remove("loading");
-            };
-          } else {
+            }
+          })
+          .catch(error => {
+            console.error(`Failed to lazy-load image ${imagePath}:`, error);
             img.parentElement.classList.remove("loading");
-          }
-        });
+          });
 
         img.classList.remove("lazy");
         observer.unobserve(img);
