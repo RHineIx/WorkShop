@@ -32,6 +32,7 @@ const elements = {
   totalSalesStat: document.getElementById("total-sales-stat"),
   totalProfitStat: document.getElementById("total-profit-stat"),
   bestsellersList: document.getElementById("bestsellers-list"),
+  salesLogContent: document.getElementById("sales-log-content"),
 
   // Details Modal
   detailsModal: document.getElementById("details-modal"),
@@ -319,6 +320,123 @@ export const toggleView = viewToShow => {
     renderDashboard();
   }
 };
+
+function renderSalesLog(filteredSales) {
+  if (filteredSales.length === 0) {
+    elements.salesLogContent.innerHTML =
+      "<div><p>لا توجد مبيعات في هذه الفترة.</p></div>";
+    return;
+  }
+
+  const isIQD = appState.activeCurrency === "IQD";
+  const symbol = isIQD ? "د.ع" : "$";
+
+  const salesByDay = filteredSales.reduce((acc, sale) => {
+    const date = sale.saleDate;
+    if (!acc[date]) {
+      acc[date] = [];
+    }
+    acc[date].push(sale);
+    return acc;
+  }, {});
+
+  const logHTML = Object.entries(salesByDay)
+    .map(([date, sales]) => {
+      const dateObj = new Date(date);
+      const dayHeader = new Intl.DateTimeFormat("ar-SA-u-nu-latn", {
+        dateStyle: "full",
+      }).format(dateObj);
+
+      const salesCardsHTML = sales
+        .map(sale => {
+          const item =
+            appState.inventory.items.find(i => i.id === sale.itemId) || {};
+          const sellPrice = isIQD ? sale.sellPriceIqd : sale.sellPriceUsd;
+          const costPrice = isIQD ? sale.costPriceIqd : sale.costPriceUsd;
+          const totalSellPrice = sellPrice * sale.quantitySold;
+          const profit = (sellPrice - costPrice) * sale.quantitySold;
+          const profitClass =
+            profit >= 0 ? "profit-positive" : "profit-negative";
+          const profitIcon =
+            profit >= 0
+              ? "material-symbols:trending-up-rounded"
+              : "material-symbols:trending-down-rounded";
+
+          const saleTime = new Date(sale.timestamp).toLocaleTimeString(
+            "ar-IQ",
+            {
+              hour: "numeric",
+              minute: "numeric",
+              hour12: true,
+            }
+          );
+
+          return `
+                <div class="sale-item">
+                    <div class="item-header">
+                        <div class="item-info">
+                            <div class="item-product-name">${sanitizeHTML(
+                              sale.itemName
+                            )}</div>
+                            <div class="item-product-sku">${sanitizeHTML(
+                              item.sku || "N/A"
+                            )}</div>
+                        </div>
+                        <div class="item-meta">
+                            <div class="meta-label">الكمية</div>
+                            <div class="meta-value">x${sale.quantitySold}</div>
+                        </div>
+                        <div class="item-meta">
+                            <div class="meta-label">الإجمالي</div>
+                            <div class="meta-value meta-price">${totalSellPrice.toLocaleString()}</div>
+                        </div>
+                        <div class="sale-datetime">
+                            التاريخ: ${sale.saleDate} | الوقت: ${saleTime}
+                        </div>
+                    </div>
+                    <div class="item-details">
+                        <ul class="details-list">
+                            <li class="${profitClass}">
+                                <div class="detail-label-group">
+                                    <iconify-icon icon="${profitIcon}"></iconify-icon>
+                                    <span class="label">الربح</span>
+                                </div>
+                                <span class="value">${profit.toLocaleString()} ${symbol}</span>
+                            </li>
+                            ${
+                              sale.notes
+                                ? `<li>
+                                <div class="detail-label-group">
+                                    <iconify-icon icon="solar:notes-outline"></iconify-icon>
+                                    <span class="label">ملاحظات</span>
+                                </div>
+                                <span class="value">${sanitizeHTML(
+                                  sale.notes
+                                )}</span>
+                            </li>`
+                                : ""
+                            }
+                        </ul>
+                    </div>
+                </div>
+            `;
+        })
+        .join("");
+
+      return `
+            <div class="day-group">
+                <h3 class="day-header">${dayHeader}</h3>
+                <div class="sales-list">
+                    ${salesCardsHTML}
+                </div>
+            </div>
+        `;
+    })
+    .join("");
+
+  elements.salesLogContent.innerHTML = `<div>${logHTML}</div>`;
+}
+
 export const renderDashboard = () => {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -337,26 +455,31 @@ export const renderDashboard = () => {
       startDate = today;
       break;
   }
-  const filteredSales = appState.sales.filter(sale => {
-    const [year, month, day] = sale.saleDate.split("-").map(Number);
-    const saleDate = new Date(year, month - 1, day);
-
-    return saleDate >= startDate && saleDate <= now;
-  });
+  const filteredSales = appState.sales
+    .filter(sale => {
+      const [year, month, day] = sale.saleDate.split("-").map(Number);
+      const saleDate = new Date(year, month - 1, day);
+      return saleDate >= startDate && saleDate <= now;
+    })
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
   const isIQD = appState.activeCurrency === "IQD";
   const totalSales = filteredSales.reduce(
-    (sum, sale) => sum + (isIQD ? sale.sellPriceIqd : sale.sellPriceUsd),
+    (sum, sale) =>
+      sum + (isIQD ? sale.sellPriceIqd : sale.sellPriceUsd) * sale.quantitySold,
     0
   );
   const totalCost = filteredSales.reduce(
-    (sum, sale) => sum + (isIQD ? sale.costPriceIqd : sale.costPriceUsd),
+    (sum, sale) =>
+      sum + (isIQD ? sale.costPriceIqd : sale.costPriceUsd) * sale.quantitySold,
     0
   );
+
   const totalProfit = totalSales - totalCost;
   const symbol = isIQD ? "د.ع" : "$";
   elements.totalSalesStat.textContent = `${totalSales.toLocaleString()} ${symbol}`;
   elements.totalProfitStat.textContent = `${totalProfit.toLocaleString()} ${symbol}`;
+
   const itemSales = {};
   filteredSales.forEach(sale => {
     itemSales[sale.itemId] = (itemSales[sale.itemId] || 0) + sale.quantitySold;
@@ -381,6 +504,8 @@ export const renderDashboard = () => {
   } else {
     elements.bestsellersList.innerHTML = "<p>لا توجد مبيعات في هذه الفترة.</p>";
   }
+
+  renderSalesLog(filteredSales);
 };
 export function updateSaleTotal() {
   const quantity = parseInt(elements.saleQuantityInput.value, 10) || 0;

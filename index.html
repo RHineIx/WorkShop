@@ -173,7 +173,7 @@
             <div class="stat-card profit">
               <div class="card-icon">
                 <iconify-icon
-                  icon="material-symbols:trending-up"
+                  icon="material-symbols:trending-up-rounded"
                 ></iconify-icon>
               </div>
               <div class="card-details">
@@ -183,9 +183,25 @@
             </div>
           </div>
 
-          <div class="bestsellers-container">
-            <h3>الأكثر مبيعًا</h3>
-            <div id="bestsellers-list" class="bestsellers-list"></div>
+          <div class="collapsible-section">
+            <button
+              class="collapsible-header"
+              data-target="bestsellers-content"
+            >
+              <h3>الأكثر مبيعًا</h3>
+              <iconify-icon icon="material-symbols:expand-less"></iconify-icon>
+            </button>
+            <div id="bestsellers-content" class="collapsible-content">
+              <div id="bestsellers-list" class="bestsellers-list"></div>
+            </div>
+          </div>
+
+          <div class="collapsible-section">
+            <button class="collapsible-header" data-target="sales-log-content">
+              <h3>سجل المبيعات</h3>
+              <iconify-icon icon="material-symbols:expand-less"></iconify-icon>
+            </button>
+            <div id="sales-log-content" class="collapsible-content"></div>
           </div>
         </section>
       </div>
