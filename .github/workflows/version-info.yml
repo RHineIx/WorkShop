@@ -6,6 +6,10 @@ on:
       - main
       # Add other branches you want this to run on, e.g., - develop
 
+# NEW: Grant write permissions to the workflow
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
