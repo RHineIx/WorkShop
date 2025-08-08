@@ -136,9 +136,8 @@
                 </select>
               </div>
             </div>
-            <!-- Mobile Search and Sort Container -->
-            <div class="search-and-sort-container">
-              <div id="search-container" class="search-container">
+            <!-- Search Container (Now a direct child of inventory-header) -->
+            <div id="search-container" class="search-container">
                 <input
                   type="text"
                   id="search-bar"
@@ -158,20 +157,19 @@
                   id="category-filter-dropdown"
                   class="category-dropdown"
                 ></div>
-              </div>
-              <!-- Mobile Sort Button -->
-              <div class="sort-container-mobile">
-                <label for="sort-options-mobile" class="visually-hidden"
-                  >فرز حسب</label
-                >
-                <select id="sort-options-mobile">
-                  <option value="default">فرز افتراضي</option>
-                  <option value="date_desc">الأحدث أولاً</option>
-                  <option value="name_asc">الاسم (أ - ي)</option>
-                  <option value="quantity_asc">الكمية (الأقل أولاً)</option>
-                  <option value="quantity_desc">الكمية (الأكثر أولاً)</option>
-                </select>
-              </div>
+            </div>
+            <!-- Mobile Sort Button Only Container -->
+            <div class="sort-container-mobile">
+              <label for="sort-options-mobile" class="visually-hidden"
+                >فرز حسب</label
+              >
+              <select id="sort-options-mobile">
+                <option value="default">فرز افتراضي</option>
+                <option value="date_desc">الأحدث أولاً</option>
+                <option value="name_asc">الاسم (أ - ي)</option>
+                <option value="quantity_asc">الكمية (الأقل أولاً)</option>
+                <option value="quantity_desc">الكمية (الأكثر أولاً)</option>
+              </select>
             </div>
           </div>
           <div id="inventory-grid" class="inventory-grid"></div>
