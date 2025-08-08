@@ -15,7 +15,12 @@ let cropper = null;
 let cropperPadding = 0.1;
 let cropperBgColor = "#FFFFFF";
 let pressTimer = null;
-let longPressTriggered = false; // Flag to resolve click/long-press conflict
+let longPressTriggered = false;
+
+// Variables to detect scroll vs. long press
+let startX = 0;
+let startY = 0;
+const moveThreshold = 10; // The distance in pixels to count as a scroll
 
 // --- LOCAL STORAGE & CONFIG ---
 
@@ -824,16 +829,34 @@ async function saveQuantityChanges(currentItem) {
 
 // --- MULTI-SELECT FEATURE LOGIC ---
 function handlePointerDown(e) {
-  const card = e.target.closest(".product-card");
-  if (!card || e.target.closest(".icon-btn")) return;
+  const card = e.target.closest('.product-card');
+  if (!card || e.target.closest('.icon-btn')) return;
 
-  longPressTriggered = false; // Reset flag on new touch
+  // Record start position for scroll detection
+  startX = e.clientX;
+  startY = e.clientY;
+
+  longPressTriggered = false;
   pressTimer = setTimeout(() => {
-    longPressTriggered = true;
-    if (!appState.isSelectionModeActive) {
-      enterSelectionMode(card);
-    }
+      longPressTriggered = true;
+      if (!appState.isSelectionModeActive) {
+          enterSelectionMode(card);
+      }
   }, 500);
+}
+
+function handlePointerMove(e) {
+  // If there's no active timer, no need to check for movement
+  if (!pressTimer) return;
+
+  const deltaX = Math.abs(e.clientX - startX);
+  const deltaY = Math.abs(e.clientY - startY);
+
+  // If the pointer has moved more than the threshold, it's a scroll
+  if (deltaX > moveThreshold || deltaY > moveThreshold) {
+      clearTimeout(pressTimer); // Cancel the long press
+      pressTimer = null;
+  }
 }
 
 function handlePointerUp() {
@@ -841,51 +864,46 @@ function handlePointerUp() {
 }
 
 function handleGridClick(e) {
-  const card = e.target.closest(".product-card");
+  const card = e.target.closest('.product-card');
   if (!card) return;
 
-  // If long press just happened, swallow this click event and reset.
   if (longPressTriggered) {
-    longPressTriggered = false;
-    return;
+      longPressTriggered = false;
+      return;
   }
-
-  // If not a long press, clear any pending timer.
+  
   clearTimeout(pressTimer);
 
-  // If we are in selection mode, any click on the card is for selection.
   if (appState.isSelectionModeActive) {
-    toggleSelection(card);
-    return;
+      toggleSelection(card);
+      return;
   }
-
-  // --- Normal click logic (not in selection mode) ---
+  
   const itemId = card.dataset.id;
-  if (e.target.closest(".sell-btn")) {
-    const item = appState.inventory.items.find(i => i.id === itemId);
-    if (item && item.quantity > 0) {
-      ui.openSaleModal(itemId);
-    } else {
-      ui.showStatus("هذا المنتج نافد من المخزون.", "error");
-    }
-  } else if (e.target.closest(".details-btn")) {
-    ui.openDetailsModal(itemId);
+  if (e.target.closest('.sell-btn')) {
+      const item = appState.inventory.items.find(i => i.id === itemId);
+      if (item && item.quantity > 0) {
+          ui.openSaleModal(itemId);
+      } else {
+          ui.showStatus("هذا المنتج نافد من المخزون.", "error");
+      }
+  } else if (e.target.closest('.details-btn')) {
+      ui.openDetailsModal(itemId);
   }
-  // If the click is on the card body itself (not on a button), nothing will happen.
 }
 
 function enterSelectionMode(card) {
   appState.isSelectionModeActive = true;
-  ui.getDOMElements().inventoryGrid.classList.add("selection-mode");
+  ui.getDOMElements().inventoryGrid.classList.add('selection-mode');
   if (card) {
-    toggleSelection(card);
+      toggleSelection(card);
   }
 }
 
 function exitSelectionMode() {
   appState.isSelectionModeActive = false;
   appState.selectedItemIds.clear();
-  ui.filterAndRenderItems(); // Re-renders and removes selection classes
+  ui.filterAndRenderItems();
   ui.updateBulkActionsBar();
 }
 
@@ -894,89 +912,80 @@ function toggleSelection(card) {
   if (!id) return;
 
   if (appState.selectedItemIds.has(id)) {
-    appState.selectedItemIds.delete(id);
-    card.classList.remove("selected");
+      appState.selectedItemIds.delete(id);
+      card.classList.remove('selected');
   } else {
-    appState.selectedItemIds.add(id);
-    card.classList.add("selected");
+      appState.selectedItemIds.add(id);
+      card.classList.add('selected');
   }
 
   if (appState.selectedItemIds.size === 0) {
-    exitSelectionMode();
+      exitSelectionMode();
   } else {
-    ui.updateBulkActionsBar();
+      ui.updateBulkActionsBar();
   }
 }
 
 async function handleBulkCategoryChange(e) {
   e.preventDefault();
-  const newCategory = e.target.elements["bulk-item-category"].value.trim();
+  const newCategory = e.target.elements['bulk-item-category'].value.trim();
   if (!newCategory) return;
-
+  
   ui.showStatus("التحقق من البيانات...", "syncing");
   try {
     const { sha: latestSha } = await api.fetchFromGitHub();
     if (latestSha !== appState.fileSha) {
-      ui.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
-        showRefreshButton: true,
-      });
-      return;
+        ui.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", { showRefreshButton: true });
+        return;
     }
-
+    
     appState.selectedItemIds.forEach(id => {
-      const item = appState.inventory.items.find(i => i.id === id);
-      if (item) item.category = newCategory;
+        const item = appState.inventory.items.find(i => i.id === id);
+        if (item) item.category = newCategory;
     });
 
     await api.saveToGitHub();
     saveLocalData();
-    ui.showStatus(
-      `تم تحديث فئة ${appState.selectedItemIds.size} عناصر بنجاح.`,
-      "success"
-    );
+    ui.showStatus(`تم تحديث فئة ${appState.selectedItemIds.size} عناصر بنجاح.`, 'success');
   } catch (error) {
-    ui.showStatus(`فشل تحديث الفئة: ${error.message}`, "error");
+      ui.showStatus(`فشل تحديث الفئة: ${error.message}`, "error");
   } finally {
-    ui.getDOMElements().bulkCategoryModal.close();
-    exitSelectionMode();
-    ui.populateCategoryDatalist();
-    ui.renderCategoryFilter();
+      ui.getDOMElements().bulkCategoryModal.close();
+      exitSelectionMode();
+      ui.populateCategoryDatalist();
+      ui.renderCategoryFilter();
   }
 }
 
 async function handleBulkSupplierChange(e) {
   e.preventDefault();
-  const newSupplierId = e.target.elements["bulk-item-supplier"].value;
+  const newSupplierId = e.target.elements['bulk-item-supplier'].value;
   if (!newSupplierId) return;
 
   ui.showStatus("التحقق من البيانات...", "syncing");
   try {
-    const { sha: latestSha } = await api.fetchFromGitHub();
-    if (latestSha !== appState.fileSha) {
-      ui.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
-        showRefreshButton: true,
+      const { sha: latestSha } = await api.fetchFromGitHub();
+      if (latestSha !== appState.fileSha) {
+          ui.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", { showRefreshButton: true });
+          return;
+      }
+
+      appState.selectedItemIds.forEach(id => {
+          const item = appState.inventory.items.find(i => i.id === id);
+          if (item) item.supplierId = newSupplierId;
       });
-      return;
-    }
 
-    appState.selectedItemIds.forEach(id => {
-      const item = appState.inventory.items.find(i => i.id === id);
-      if (item) item.supplierId = newSupplierId;
-    });
-
-    await api.saveToGitHub();
-    saveLocalData();
-    ui.showStatus(
-      `تم تحديث مورّد ${appState.selectedItemIds.size} عناصر بنجاح.`,
-      "success"
-    );
+      await api.saveToGitHub();
+      saveLocalData();
+      ui.showStatus(`تم تحديث مورّد ${appState.selectedItemIds.size} عناصر بنجاح.`, 'success');
   } catch (error) {
-    ui.showStatus(`فشل تحديث المورّد: ${error.message}`, "error");
+      ui.showStatus(`فشل تحديث المورّد: ${error.message}`, "error");
   } finally {
-    ui.getDOMElements().bulkSupplierModal.close();
-    exitSelectionMode();
+      ui.getDOMElements().bulkSupplierModal.close();
+      exitSelectionMode();
   }
 }
+
 
 // --- EVENT LISTENER SETUP ---
 
@@ -993,24 +1002,23 @@ function setupGeneralListeners(elements) {
 }
 
 function setupViewToggleListeners(elements) {
-  elements.inventoryToggleBtn.addEventListener("click", () => {
+  elements.inventoryToggleBtn.addEventListener("click", () =>{
     if (appState.isSelectionModeActive) exitSelectionMode();
     ui.toggleView("inventory");
   });
-  elements.dashboardToggleBtn.addEventListener("click", () => {
+  elements.dashboardToggleBtn.addEventListener("click", () =>{
     if (appState.isSelectionModeActive) exitSelectionMode();
     ui.toggleView("dashboard");
   });
 }
 
 function setupInventoryListeners(elements) {
-  // Replace the old simple click listener with the new advanced handlers
-  elements.inventoryGrid.addEventListener("pointerdown", handlePointerDown);
-  elements.inventoryGrid.addEventListener("pointerup", handlePointerUp);
-  elements.inventoryGrid.addEventListener("click", handleGridClick);
-  elements.inventoryGrid.addEventListener("contextmenu", e =>
-    e.preventDefault()
-  );
+  // Add all pointer/touch/click listeners for the grid
+  elements.inventoryGrid.addEventListener('pointerdown', handlePointerDown);
+  elements.inventoryGrid.addEventListener('pointermove', handlePointerMove);
+  elements.inventoryGrid.addEventListener('pointerup', handlePointerUp);
+  elements.inventoryGrid.addEventListener('click', handleGridClick);
+  elements.inventoryGrid.addEventListener('contextmenu', e => e.preventDefault());
 
   elements.searchBar.addEventListener(
     "input",
@@ -1514,36 +1522,22 @@ function setupModalListeners(elements) {
     );
 
   // Bulk Actions Modals
-  const {
-    bulkCategoryModal,
-    bulkSupplierModal,
-    bulkCategoryForm,
-    bulkSupplierForm,
-  } = elements;
-  document
-    .getElementById("bulk-change-category-btn")
-    .addEventListener("click", () => {
+  const { bulkCategoryModal, bulkSupplierModal, bulkCategoryForm, bulkSupplierForm } = elements;
+  document.getElementById('bulk-change-category-btn').addEventListener('click', () => {
       bulkCategoryForm.reset();
       bulkCategoryModal.showModal();
-    });
-  document
-    .getElementById("bulk-change-supplier-btn")
-    .addEventListener("click", () => {
+  });
+  document.getElementById('bulk-change-supplier-btn').addEventListener('click', () => {
       ui.populateBulkSupplierDropdown();
       bulkSupplierForm.reset();
       bulkSupplierModal.showModal();
-    });
-  document
-    .getElementById("cancel-selection-btn")
-    .addEventListener("click", exitSelectionMode);
-  bulkCategoryForm.addEventListener("submit", handleBulkCategoryChange);
-  bulkSupplierForm.addEventListener("submit", handleBulkSupplierChange);
-  bulkCategoryModal
-    .querySelector("[data-close]")
-    .addEventListener("click", () => bulkCategoryModal.close());
-  bulkSupplierModal
-    .querySelector("[data-close]")
-    .addEventListener("click", () => bulkSupplierModal.close());
+  });
+  document.getElementById('cancel-selection-btn').addEventListener('click', exitSelectionMode);
+  bulkCategoryForm.addEventListener('submit', handleBulkCategoryChange);
+  bulkSupplierForm.addEventListener('submit', handleBulkSupplierChange);
+  bulkCategoryModal.querySelector('[data-close]').addEventListener('click', () => bulkCategoryModal.close());
+  bulkSupplierModal.querySelector('[data-close]').addEventListener('click', () => bulkSupplierModal.close());
+
 
   function setupModalCloseBehavior(modalElement) {
     if (!modalElement) return;
@@ -1780,4 +1774,4 @@ if ("serviceWorker" in navigator) {
         console.log("ServiceWorker registration failed: ", err);
       });
   });
-}
+      }
