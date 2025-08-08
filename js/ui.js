@@ -122,6 +122,11 @@ const elements = {
   decreasePaddingBtn: document.getElementById("decrease-padding-btn"),
   bgColorInput: document.getElementById("bg-color-input"),
 
+  // NEW: Magic Link Elements
+  generateMagicLinkBtn: document.getElementById("generate-magic-link-btn"),
+  magicLinkContainer: document.getElementById("magic-link-container"),
+  magicLinkOutput: document.getElementById("magic-link-output"),
+
   // App Version
   appVersionDisplay: document.getElementById("app-version-display"),
 };
