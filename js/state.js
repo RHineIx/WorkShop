@@ -33,6 +33,9 @@ export const appState = {
   /** @type {string} The currently selected category for filtering. 'all' means no filter. */
   selectedCategory: "all",
 
+  /** @type {string} The currently selected sort option. */
+  currentSortOption: "default",
+
   /** @type {string|null} The ID of the item currently being viewed in the details modal. */
   currentItemId: null,
 

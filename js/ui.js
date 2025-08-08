@@ -14,6 +14,7 @@ const elements = {
   searchContainer: document.getElementById("search-container"),
   categoryFilterBtn: document.getElementById("category-filter-btn"),
   categoryFilterDropdown: document.getElementById("category-filter-dropdown"),
+  sortOptions: document.getElementById("sort-options"),
 
   // Header
   themeToggleBtn: document.getElementById("theme-toggle-btn"),
@@ -159,6 +160,11 @@ const imageObserver = new IntersectionObserver(
               img.src = blobUrl;
               img.onload = () => {
                 img.parentElement.classList.remove("loading");
+              };
+              img.onerror = () => {
+                // If blob URL fails, remove image and show placeholder
+                img.parentElement.classList.remove("loading");
+                img.remove();
               };
             } else {
               img.parentElement.classList.remove("loading");
@@ -555,6 +561,8 @@ export function renderInventorySkeleton(count = 8) {
 
 function getFilteredItems() {
   let items = [...appState.inventory.items];
+
+  // Apply filters
   if (appState.activeFilter === "low_stock") {
     items = items.filter(item => item.quantity <= item.alertLevel);
   }
@@ -574,6 +582,30 @@ function getFilteredItems() {
           item.compatiblePartNumber.toLowerCase().includes(lowerCaseSearch))
     );
   }
+
+  // Apply sorting
+  switch (appState.currentSortOption) {
+    case "name_asc":
+      items.sort((a, b) => a.name.localeCompare(b.name, "ar"));
+      break;
+    case "quantity_asc":
+      items.sort((a, b) => a.quantity - b.quantity);
+      break;
+    case "quantity_desc":
+      items.sort((a, b) => b.quantity - a.quantity);
+      break;
+    case "date_desc":
+      items.sort((a, b) => {
+        const timeA = parseInt(a.id.split("_")[1], 10);
+        const timeB = parseInt(b.id.split("_")[1], 10);
+        return timeB - timeA;
+      });
+      break;
+    default:
+      // Default sort (usually insertion order) remains unchanged
+      break;
+  }
+
   return items;
 }
 
