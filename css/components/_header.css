@@ -51,31 +51,43 @@
   box-shadow: 0 0 8px #dc3545;
 }
 
-/* --- NEW: Sticky/Floating Inventory Header --- */
+/* --- NEW: Floating & Glassy Inventory Header --- */
 .inventory-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--spacing-lg);
-  
-  /* Sticky positioning */
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+
+  /* Sticky positioning for floating effect */
   position: sticky;
-  top: calc(var(--spacing-sm) + env(safe-area-inset-top)); /* Stick below the main page controls */
-  z-index: 50; /* Ensure it's above the grid but below the main header */
-  
-  /* Sizing and Spacing */
-  padding: var(--spacing-md);
-  margin-left: calc(-1 * var(--spacing-md));
-  margin-right: calc(-1 * var(--spacing-md));
-  width: calc(100% + (2 * var(--spacing-md)));
+  top: 75px; /* 65px for main header + 10px top margin */
+  z-index: 50;
+
+  /* Inset/Floating layout */
+  left: var(--spacing-md);
+  right: var(--spacing-md);
+  width: auto;
+  border-radius: 16px;
+  box-shadow: var(--shadow-strong);
 
   /* Glassmorphism Effect */
   background-color: rgba(var(--surface-color-rgb), 0.8);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--border-color);
-  
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+
   transition: top 0.3s ease;
+}
+
+.inventory-header h2 {
+  /* NEW: Add text-shadow for readability */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+body.theme-dark .inventory-header h2 {
+  /* A slightly different shadow for dark mode */
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 .search-container {
@@ -136,4 +148,18 @@
   background-color: var(--accent-color);
   color: white;
   font-weight: 700;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 639px) {
+  .inventory-header h2 {
+    font-size: 1.125rem; /* 18px */
+  }
+
+  .inventory-header {
+    /* Adjust spacing for mobile to be closer to edges */
+    left: var(--spacing-sm);
+    right: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
 }
