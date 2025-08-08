@@ -174,22 +174,54 @@ body.theme-dark .inventory-header h2 {
   font-weight: 700;
 }
 
-/* Responsive adjustments for mobile */
+/* css/components/_header.css */
+
+/* Add a rule to hide the label on small screens */
+.sort-container label {
+    display: none;
+}
+
+/* On mobile, shrink the select and make it an icon */
 @media (max-width: 639px) {
-  .inventory-header-main {
-    flex-basis: 100%; /* Make title and sort take full width */
-    justify-content: space-between;
-  }
-  #search-container {
-    flex-basis: 100%; /* Make search take full width on the next line */
-  }
-  .inventory-header h2 {
-    font-size: 1.125rem; /* 18px */
+  .inventory-header {
+    /* Adjust padding to account for the new layout */
+    padding: var(--spacing-sm) var(--spacing-md);
   }
 
-  .inventory-header {
-    left: var(--spacing-sm);
-    right: var(--spacing-sm);
-    padding: var(--spacing-sm) var(--spacing-md);
+  .inventory-header-main {
+    /* This container now only holds the title */
+    flex-basis: 100%;
+    justify-content: space-between;
+  }
+  
+  .inventory-header-main .sort-container {
+      display: none; /* Hide the old sort container */
+  }
+
+  #search-container {
+    flex-basis: 100%;
+    /* Re-order search container to be on its own line */
+    order: 1; 
+  }
+  
+  /* Add a new container to hold the search and the sort button */
+  .search-and-sort-container {
+      display: flex;
+      gap: var(--spacing-sm);
+      width: 100%;
+  }
+
+  /* Style the sort button to be an icon on mobile */
+  .sort-container-mobile {
+      display: block;
+  }
+
+  .sort-container-mobile #sort-options {
+      width: 48px;
+      padding: 10px 14px;
+      text-indent: -9999px; /* Hide text */
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='%23718096' viewBox='0 0 24 24'%3E%3Cpath d='M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z'/%3E%3C/svg%3E");
+      background-size: 20px;
+      background-position: center;
   }
 }
