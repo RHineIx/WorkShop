@@ -51,10 +51,38 @@
   box-shadow: 0 0 8px #dc3545;
 }
 
+/* --- NEW: Sticky/Floating Inventory Header --- */
+.inventory-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+  
+  /* Sticky positioning */
+  position: sticky;
+  top: calc(var(--spacing-sm) + env(safe-area-inset-top)); /* Stick below the main page controls */
+  z-index: 50; /* Ensure it's above the grid but below the main header */
+  
+  /* Sizing and Spacing */
+  padding: var(--spacing-md);
+  margin-left: calc(-1 * var(--spacing-md));
+  margin-right: calc(-1 * var(--spacing-md));
+  width: calc(100% + (2 * var(--spacing-md)));
+
+  /* Glassmorphism Effect */
+  background-color: rgba(var(--surface-color-rgb), 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border-color);
+  
+  transition: top 0.3s ease;
+}
+
 .search-container {
   position: relative;
   width: 100%;
 }
+
 @media (min-width: 640px) {
   .search-container {
     width: 350px;
