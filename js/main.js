@@ -863,10 +863,16 @@ function setupInventoryListeners(elements) {
       }
     }
   });
-  elements.searchBar.addEventListener("input", e => {
-    appState.searchTerm = e.target.value;
-    ui.filterAndRenderItems();
-  });
+
+  // Debounce the search input event listener
+  elements.searchBar.addEventListener(
+    "input",
+    debounce(e => {
+      appState.searchTerm = e.target.value;
+      ui.filterAndRenderItems();
+    }, 500)
+  );
+
   elements.statsContainer.addEventListener("click", e => {
     const card = e.target.closest(".stat-card");
     if (!card) return;

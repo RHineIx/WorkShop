@@ -344,3 +344,22 @@ label[for="restore-backup-input"].cleanup-btn:hover {
   background-color: #0088cc;
   color: white;
 }
+
+/* --- Enhanced Button Interaction --- */
+.control-button,
+.icon-btn,
+.modal-actions button,
+.custom-file-upload-btn,
+.cleanup-btn {
+  /* Add transition for the transform property */
+  transition: all var(--transition-speed) ease, transform 0.1s ease;
+}
+
+.control-button:active,
+.icon-btn:active,
+.modal-actions button:active,
+.custom-file-upload-btn:active,
+.cleanup-btn:active {
+  /* Add a subtle scale down on click */
+  transform: scale(0.96);
+}
