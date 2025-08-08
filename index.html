@@ -598,6 +598,16 @@
             <input type="number" id="exchange-rate" placeholder="e.g., 1460" />
 
             <div class="maintenance-actions">
+              <hr class="maintenance-divider" />
+              <button type="button" id="generate-magic-link-btn" class="cleanup-btn archive-btn">
+                <iconify-icon icon="material-symbols:magic-button"></iconify-icon>
+                إنشاء رابط الإعداد السحري
+              </button>
+              <p id="magic-link-container" class="magic-link-container view-hidden">
+                <span class="magic-link-warning">هذا الرابط سري للغاية، تعامل معه ككلمة مرور.</span>
+                <input type="text" id="magic-link-output" readonly />
+              </p>
+              <hr class="maintenance-divider" />
               <button
                 type="button"
                 id="manual-archive-btn"
