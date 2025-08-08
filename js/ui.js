@@ -90,6 +90,9 @@ const elements = {
   cleanupImagesBtn: document.getElementById("cleanup-images-btn"),
   downloadBackupBtn: document.getElementById("download-backup-btn"),
   restoreBackupInput: document.getElementById("restore-backup-input"),
+  generateMagicLinkBtn: document.getElementById("generate-magic-link-btn"),
+  magicLinkContainer: document.getElementById("magic-link-container"),
+  magicLinkOutput: document.getElementById("magic-link-output"),
 
   // Supplier UI Elements
   supplierManagerModal: document.getElementById("supplier-manager-modal"),
@@ -122,16 +125,11 @@ const elements = {
   decreasePaddingBtn: document.getElementById("decrease-padding-btn"),
   bgColorInput: document.getElementById("bg-color-input"),
 
-  // NEW: Magic Link Elements
-  generateMagicLinkBtn: document.getElementById("generate-magic-link-btn"),
-  magicLinkContainer: document.getElementById("magic-link-container"),
-  magicLinkOutput: document.getElementById("magic-link-output"),
-
   // App Version
   appVersionDisplay: document.getElementById("app-version-display"),
 };
 
-export const displayVersionInfo = (versionData) => {
+export const displayVersionInfo = versionData => {
   if (versionData && elements.appVersionDisplay) {
     const { hash, branch } = versionData;
     elements.appVersionDisplay.textContent = `Version: ${hash} (Branch: ${branch})`;
@@ -182,7 +180,6 @@ let countdownInterval = null;
 export function updateRateLimitDisplay() {
   const { limit, remaining, reset } = appState.rateLimit;
   const indicator = document.querySelector(".rate-limit-indicator");
-
   if (limit === null || remaining === null) {
     indicator.classList.remove("visible", "high", "medium", "low");
     if (elements.rateLimitDisplay) elements.rateLimitDisplay.textContent = "";
@@ -268,6 +265,7 @@ const ICONS = {
   info: "material-symbols:info",
   warning: "material-symbols:warning-rounded",
 };
+
 export const hideSyncStatus = () => {
   const syncToasts =
     elements.toastContainer.querySelectorAll(".toast--syncing");
@@ -293,6 +291,7 @@ export const showStatus = (message, type, options = {}) => {
   const messageSpan = document.createElement("span");
   messageSpan.textContent = message;
   toast.appendChild(messageSpan);
+
   if (showRefreshButton) {
     const refreshButton = document.createElement("button");
     refreshButton.textContent = "تحديث";
@@ -303,9 +302,11 @@ export const showStatus = (message, type, options = {}) => {
   }
 
   elements.toastContainer.appendChild(toast);
+
   setTimeout(() => {
     toast.classList.add("show");
   }, 10);
+
   if (duration > 0 && type !== "syncing" && !showRefreshButton) {
     const transitionDuration = 500;
     setTimeout(() => {
@@ -390,7 +391,6 @@ function renderSalesLog(filteredSales) {
               hour12: true,
             }
           );
-
           return `
                 <div class="sale-item">
                     <div class="item-header">
@@ -453,7 +453,6 @@ function renderSalesLog(filteredSales) {
         `;
     })
     .join("");
-
   elements.salesLogContent.innerHTML = `<div>${logHTML}</div>`;
 }
 
@@ -482,7 +481,6 @@ export const renderDashboard = () => {
       return saleDate >= startDate && saleDate <= now;
     })
     .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
   const isIQD = appState.activeCurrency === "IQD";
   const totalSales = filteredSales.reduce(
     (sum, sale) =>
@@ -494,7 +492,6 @@ export const renderDashboard = () => {
       sum + (isIQD ? sale.costPriceIqd : sale.costPriceUsd) * sale.quantitySold,
     0
   );
-
   const totalProfit = totalSales - totalCost;
   const symbol = isIQD ? "د.ع" : "$";
   elements.totalSalesStat.textContent = `${totalSales.toLocaleString()} ${symbol}`;
@@ -527,6 +524,7 @@ export const renderDashboard = () => {
 
   renderSalesLog(filteredSales);
 };
+
 export function updateSaleTotal() {
   const quantity = parseInt(elements.saleQuantityInput.value, 10) || 0;
   const unitPrice =
@@ -621,16 +619,23 @@ export function renderInventory(itemsToRender) {
     const symbol = isIQD ? "د.ع" : "$";
     const placeholder = `<div class="card-image-placeholder"><iconify-icon icon="material-symbols:key"></iconify-icon></div>`;
 
+    let imageHtml = placeholder;
+    if (item.imagePath) {
+      if (item.imagePath.startsWith("http")) {
+        imageHtml = `<img class="card-image" src="${
+          item.imagePath
+        }" alt="${sanitizeHTML(item.name)}">`;
+      } else {
+        imageHtml = `<img class="card-image lazy" data-src="${
+          item.imagePath
+        }" alt="${sanitizeHTML(item.name)}">`;
+      }
+    }
+
     card.innerHTML = `
       <div class="card-image-container">
         <div class="quantity-badge ${badgeClass}">${badgeText}</div>
-        ${
-          item.imagePath
-            ? `<img class="card-image lazy" data-src="${
-                item.imagePath
-              }" alt="${sanitizeHTML(item.name)}">`
-            : placeholder
-        }
+        ${imageHtml}
       </div>
       <div class="card-info">
         ${
@@ -659,7 +664,6 @@ export function renderInventory(itemsToRender) {
     fragment.appendChild(card);
   });
   elements.inventoryGrid.appendChild(fragment);
-
   const lazyImages =
     elements.inventoryGrid.querySelectorAll(".card-image.lazy");
   lazyImages.forEach(img => imageObserver.observe(img));
@@ -673,6 +677,7 @@ export const updateStats = () => {
     item => item.quantity <= item.alertLevel
   ).length;
 };
+
 export const setTheme = themeName => {
   document.body.className = `theme-${themeName}`;
   const icon = elements.themeToggleBtn.querySelector("iconify-icon");
@@ -699,6 +704,7 @@ export const updateCurrencyDisplay = () => {
     renderDashboard();
   }
 };
+
 export function renderSupplierList() {
   elements.supplierListContainer.innerHTML = "";
   if (appState.suppliers.length === 0) {
@@ -767,12 +773,12 @@ export const openDetailsModal = itemId => {
     item.sellPriceUsd || 0
   ).toLocaleString()}`;
   elements.detailsNotesContent.textContent = item.notes || "لا توجد ملاحظات.";
+
   const pnContainer = elements.detailsPnGridContainer;
   pnContainer.innerHTML = "";
   pnContainer.classList.add("view-hidden");
   const handleTagClick = tagElement => {
     if (tagElement.classList.contains("copied")) return;
-
     const originalText = tagElement.textContent;
     const textToCopy = originalText.trim();
     navigator.clipboard
@@ -800,7 +806,6 @@ export const openDetailsModal = itemId => {
       label.className = "pn-grid-label";
       label.textContent = "رمز OEM";
       pnGrid.appendChild(label);
-
       const valueContainer = document.createElement("div");
       valueContainer.className = "pn-grid-value";
       const tag = document.createElement("span");
@@ -856,21 +861,26 @@ export const openDetailsModal = itemId => {
   } else {
     elements.supplierDetailsContainer.classList.add("view-hidden");
   }
+
   if (item.imagePath) {
     elements.detailsImage.style.display = "block";
     elements.detailsImagePlaceholder.style.display = "none";
     elements.detailsImage.src = "";
-    elements.detailsImage.classList.add("skeleton");
-    fetchImageWithAuth(item.imagePath).then(blobUrl => {
-      if (blobUrl) {
-        elements.detailsImage.src = blobUrl;
-        elements.detailsImage.onload = () => {
+    if (item.imagePath.startsWith("http")) {
+      elements.detailsImage.src = item.imagePath;
+    } else {
+      elements.detailsImage.classList.add("skeleton");
+      fetchImageWithAuth(item.imagePath).then(blobUrl => {
+        if (blobUrl) {
+          elements.detailsImage.src = blobUrl;
+          elements.detailsImage.onload = () => {
+            elements.detailsImage.classList.remove("skeleton");
+          };
+        } else {
           elements.detailsImage.classList.remove("skeleton");
-        };
-      } else {
-        elements.detailsImage.classList.remove("skeleton");
-      }
-    });
+        }
+      });
+    }
   } else {
     elements.detailsImage.style.display = "none";
     elements.detailsImagePlaceholder.style.display = "flex";
@@ -880,6 +890,7 @@ export const openDetailsModal = itemId => {
   elements.detailsModal.appendChild(elements.toastContainer);
   elements.detailsModal.showModal();
 };
+
 export const openItemModal = (itemId = null) => {
   elements.itemForm.reset();
   appState.selectedImageFile = null;
@@ -931,6 +942,7 @@ export const openItemModal = (itemId = null) => {
   elements.itemModal.appendChild(elements.toastContainer);
   elements.itemModal.showModal();
 };
+
 export const openSaleModal = itemId => {
   const item = appState.inventory.items.find(i => i.id === itemId);
   if (!item) return;
@@ -958,6 +970,7 @@ export const openSaleModal = itemId => {
   elements.saleModal.showModal();
   updateSaleTotal();
 };
+
 export const populateSyncModal = () => {
   if (appState.syncConfig) {
     elements.githubUsernameInput.value = appState.syncConfig.username;

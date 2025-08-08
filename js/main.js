@@ -36,14 +36,13 @@ function saveConfig() {
   localStorage.setItem("inventoryAppExchangeRate", appState.exchangeRate);
 }
 
-// --- NEW: Magic Link Logic ---
 function handleMagicLink() {
-  if (!window.location.hash.startsWith('#setup=')) {
-    return false; // No magic link found
+  if (!window.location.hash.startsWith("#setup=")) {
+    return false;
   }
 
   try {
-    const encodedData = window.location.hash.substring(7); // Remove #setup=
+    const encodedData = window.location.hash.substring(7);
     const decodedJson = atob(encodedData);
     const config = JSON.parse(decodedJson);
 
@@ -51,43 +50,45 @@ function handleMagicLink() {
       appState.syncConfig = config;
       saveConfig();
       ui.showStatus("تم الإعداد بنجاح!", "success");
-
-      // Clean the URL
-      history.replaceState(null, '', window.location.pathname + window.location.search);
-      return true; // Magic link was processed
+      history.replaceState(
+        null,
+        "",
+        window.location.pathname + window.location.search
+      );
+      return true;
     }
   } catch (error) {
     console.error("Failed to process magic link:", error);
     ui.showStatus("فشل معالجة رابط الإعداد.", "error");
-    // Clean the URL even if it fails
-    history.replaceState(null, '', window.location.pathname + window.location.search);
+    history.replaceState(
+      null,
+      "",
+      window.location.pathname + window.location.search
+    );
   }
   return false;
 }
 
 function generateMagicLink() {
-    if (!appState.syncConfig) {
-        ui.showStatus("يجب حفظ الإعدادات أولاً.", "error");
-        return;
-    }
-
-    const { magicLinkContainer, magicLinkOutput } = ui.getDOMElements();
-    
-    const configJson = JSON.stringify(appState.syncConfig);
-    const encodedData = btoa(configJson);
-    const url = `${window.location.origin}${window.location.pathname}#setup=${encodedData}`;
-
-    magicLinkOutput.value = url;
-    magicLinkContainer.classList.remove("view-hidden");
-
-    magicLinkOutput.onclick = () => {
-        magicLinkOutput.select();
-        navigator.clipboard.writeText(url).then(() => {
-            ui.showStatus("تم نسخ الرابط إلى الحافظة!", "success", { duration: 2000 });
-        });
-    };
+  if (!appState.syncConfig) {
+    ui.showStatus("يجب حفظ الإعدادات أولاً.", "error");
+    return;
+  }
+  const { magicLinkContainer, magicLinkOutput } = ui.getDOMElements();
+  const configJson = JSON.stringify(appState.syncConfig);
+  const encodedData = btoa(configJson);
+  const url = `${window.location.origin}${window.location.pathname}#setup=${encodedData}`;
+  magicLinkOutput.value = url;
+  magicLinkContainer.classList.remove("view-hidden");
+  magicLinkOutput.onclick = () => {
+    magicLinkOutput.select();
+    navigator.clipboard.writeText(url).then(() => {
+      ui.showStatus("تم نسخ الرابط إلى الحافظة!", "success", {
+        duration: 2000,
+      });
+    });
+  };
 }
-
 
 function loadLocalData() {
   const savedInventory = localStorage.getItem("inventoryAppData");
@@ -115,8 +116,104 @@ function saveLocalData() {
   localStorage.setItem("suppliersAppData", JSON.stringify(appState.suppliers));
 }
 
-// --- PRICE CONVERSION LOGIC ---
+// --- CSV Import Handler ---
+async function handleCsvImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
 
+  ui.showStatus("جاري معالجة ملف CSV...", "syncing");
+
+  Papa.parse(file, {
+    header: true,
+    skipEmptyLines: true,
+    complete: async results => {
+      const newProducts = [];
+      let modifiedSkuCount = 0;
+      const existingSkus = new Set(
+        appState.inventory.items.map(item => item.sku)
+      );
+
+      for (const row of results.data) {
+        let sku = row.Slug ? String(row.Slug).trim() : null;
+        if (!sku || !row.Name) {
+          continue; // Skip rows without essential data
+        }
+
+        if (existingSkus.has(sku)) {
+          modifiedSkuCount++;
+          let counter = 2;
+          let newSku = `${sku}-${counter}`;
+          while (existingSkus.has(newSku)) {
+            counter++;
+            newSku = `${sku}-${counter}`;
+          }
+          sku = newSku; // Use the new unique SKU
+        }
+
+        const newProduct = {
+          id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          name: String(row.Name).trim(),
+          sku: sku,
+          category: String(row.Collection || "").trim(),
+          quantity: parseInt(row.Quantity, 10) || 0,
+          alertLevel: 5, // Default value
+          sellPriceIqd: parseFloat(row.Price) || 0,
+          costPriceIqd: 0,
+          sellPriceUsd: 0,
+          costPriceUsd: 0,
+          notes: String(row.Description || "").trim(),
+          imagePath: String(row.Image || "").trim(),
+          supplierId: null,
+          oemPartNumber: "",
+          compatiblePartNumber: "",
+        };
+        newProducts.push(newProduct);
+        existingSkus.add(sku); // Add to set to prevent future duplicates within the same file
+      }
+
+      if (newProducts.length === 0) {
+        ui.hideSyncStatus();
+        ui.showStatus(`لم يتم العثور على منتجات جديدة للاستيراد.`, "info");
+        return;
+      }
+
+      appState.inventory.items.push(...newProducts);
+
+      try {
+        ui.showStatus(`جاري حفظ ${newProducts.length} منتج جديد...`, "syncing");
+        await api.saveToGitHub();
+        saveLocalData();
+        ui.filterAndRenderItems();
+        ui.populateCategoryDatalist();
+        ui.hideSyncStatus();
+        ui.showStatus(
+          `تم استيراد ${newProducts.length} منتج. تم تعديل ${modifiedSkuCount} SKU مكرر.`,
+          "success"
+        );
+      } catch (error) {
+        ui.hideSyncStatus();
+        ui.showStatus(
+          `فشل حفظ البيانات بعد الاستيراد: ${error.message}`,
+          "error"
+        );
+        // Revert changes if save fails
+        appState.inventory.items.splice(
+          appState.inventory.items.length - newProducts.length,
+          newProducts.length
+        );
+      } finally {
+        event.target.value = ""; // Reset file input
+      }
+    },
+    error: error => {
+      ui.hideSyncStatus();
+      ui.showStatus(`فشل في قراءة ملف CSV: ${error.message}`, "error");
+      event.target.value = ""; // Reset file input
+    },
+  });
+}
+
+// --- PRICE CONVERSION LOGIC ---
 function handlePriceConversion(iqdInput, usdInput) {
   const iqdValue = parseFloat(iqdInput.value);
   const rate = appState.exchangeRate;
@@ -167,12 +264,10 @@ async function handleSaleFormSubmit(e) {
       itemName: item.name,
       quantitySold: quantityToSell,
       sellPriceIqd:
-        appState.activeCurrency === "IQD" ?
-        salePrice : item.sellPriceIqd,
+        appState.activeCurrency === "IQD" ? salePrice : item.sellPriceIqd,
       costPriceIqd: item.costPriceIqd || 0,
       sellPriceUsd:
-        appState.activeCurrency !== "IQD" ?
-        salePrice : item.sellPriceUsd,
+        appState.activeCurrency !== "IQD" ? salePrice : item.sellPriceUsd,
       costPriceUsd: item.costPriceUsd || 0,
       saleDate: document.getElementById("sale-date").value,
       notes: document.getElementById("sale-notes").value,
@@ -1366,9 +1461,13 @@ function setupEventListeners() {
   setupDashboardListeners(elements);
   setupSupplierListeners(elements);
 
-  // Add listener for the new button
   if (elements.generateMagicLinkBtn) {
     elements.generateMagicLinkBtn.addEventListener("click", generateMagicLink);
+  }
+
+  const csvImportInput = document.getElementById("csv-import-input");
+  if (csvImportInput) {
+    csvImportInput.addEventListener("change", handleCsvImport);
   }
 }
 
@@ -1378,26 +1477,24 @@ function handleUrlShortcuts() {
   const hash = window.location.hash;
   if (!hash) return;
 
-  if (hash.startsWith('#setup=')) {
-    // This is handled by initializeApp now
+  if (hash.startsWith("#setup=")) {
     return;
   }
 
   switch (hash) {
-    case '#add-item':
-      // We wrap this in a timeout to ensure the main thread is free
-      // and any initial rendering has completed.
+    case "#add-item":
       setTimeout(() => {
         ui.openItemModal();
         const existingSkus = new Set(
           appState.inventory.items.map(item => item.sku)
         );
-        document.getElementById("item-sku").value = generateUniqueSKU(existingSkus);
+        document.getElementById("item-sku").value =
+          generateUniqueSKU(existingSkus);
       }, 100);
       break;
-    case '#dashboard':
+    case "#dashboard":
       setTimeout(() => {
-        ui.toggleView('dashboard');
+        ui.toggleView("dashboard");
       }, 100);
       break;
   }
@@ -1405,8 +1502,7 @@ function handleUrlShortcuts() {
 
 async function initializeApp() {
   console.log("Initializing Inventory Management App...");
-  
-  // Process magic link FIRST, before anything else.
+
   const magicLinkProcessed = handleMagicLink();
 
   setupEventListeners();
@@ -1416,9 +1512,8 @@ async function initializeApp() {
   appState.activeCurrency = savedCurrency;
   ui.setTheme(savedTheme);
 
-  // Fetch version info
   try {
-    const response = await fetch('version.json?t=' + Date.now()); // Add timestamp to prevent caching
+    const response = await fetch("version.json?t=" + Date.now());
     if (response.ok) {
       const versionData = await response.json();
       ui.displayVersionInfo(versionData);
@@ -1468,7 +1563,7 @@ async function initializeApp() {
   ui.renderCategoryFilter();
   ui.populateCategoryDatalist();
   ui.updateCurrencyDisplay();
-  
+
   handleUrlShortcuts();
 
   console.log("App Initialized Successfully.");
@@ -1478,14 +1573,18 @@ async function initializeApp() {
 initializeApp();
 
 // --- Register Service Worker ---
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/sw.js")
       .then(registration => {
-        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        console.log(
+          "ServiceWorker registration successful with scope: ",
+          registration.scope
+        );
       })
       .catch(err => {
-        console.log('ServiceWorker registration failed: ', err);
+        console.log("ServiceWorker registration failed: ", err);
       });
   });
 }

@@ -8,8 +8,8 @@
     />
     <title>إدارة مخزون ورشة المفاتيح</title>
 
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2a69c7">
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#2a69c7" />
 
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://rhineix.github.io/WorkShop/" />
@@ -29,6 +29,7 @@
       rel="stylesheet"
     />
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/papaparse/5.4.1/papaparse.min.js"></script>
 
     <link
       rel="stylesheet"
@@ -599,15 +600,27 @@
 
             <div class="maintenance-actions">
               <hr class="maintenance-divider" />
-              <button type="button" id="generate-magic-link-btn" class="cleanup-btn archive-btn">
-                <iconify-icon icon="material-symbols:magic-button"></iconify-icon>
+              <button
+                type="button"
+                id="generate-magic-link-btn"
+                class="cleanup-btn archive-btn"
+              >
+                <iconify-icon
+                  icon="material-symbols:magic-button"
+                ></iconify-icon>
                 إنشاء رابط الإعداد السحري
               </button>
-              <p id="magic-link-container" class="magic-link-container view-hidden">
-                <span class="magic-link-warning">هذا الرابط سري للغاية، تعامل معه ككلمة مرور.</span>
+              <p
+                id="magic-link-container"
+                class="magic-link-container view-hidden"
+              >
+                <span class="magic-link-warning"
+                  >هذا الرابط سري للغاية، تعامل معه ككلمة مرور.</span
+                >
                 <input type="text" id="magic-link-output" readonly />
               </p>
               <hr class="maintenance-divider" />
+
               <button
                 type="button"
                 id="manual-archive-btn"
@@ -618,6 +631,20 @@
                 ></iconify-icon>
                 أرشفة المبيعات القديمة
               </button>
+
+              <input
+                type="file"
+                id="csv-import-input"
+                class="visually-hidden"
+                accept=".csv"
+              />
+              <label for="csv-import-input" class="cleanup-btn archive-btn">
+                <iconify-icon
+                  icon="material-symbols:upload-file"
+                ></iconify-icon>
+                استيراد من ملف CSV
+              </label>
+
               <p id="last-archive-date-display" class="last-archive-text">
                 آخر أرشفة: لم تتم بعد
               </p>
