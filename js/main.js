@@ -20,7 +20,7 @@ let longPressTriggered = false;
 // Variables to detect scroll vs. long press
 let startX = 0;
 let startY = 0;
-const moveThreshold = 6; // The distance in pixels to count as a scroll
+const moveThreshold = 5; // The distance in pixels to count as a scroll
 
 // --- LOCAL STORAGE & CONFIG ---
 
@@ -832,11 +832,10 @@ function handlePointerDown(e) {
   const card = e.target.closest('.product-card');
   if (!card || e.target.closest('.icon-btn')) return;
 
-  // Record start position for scroll detection
   startX = e.clientX;
   startY = e.clientY;
-
   longPressTriggered = false;
+
   pressTimer = setTimeout(() => {
       longPressTriggered = true;
       if (!appState.isSelectionModeActive) {
@@ -846,15 +845,13 @@ function handlePointerDown(e) {
 }
 
 function handlePointerMove(e) {
-  // If there's no active timer, no need to check for movement
   if (!pressTimer) return;
 
   const deltaX = Math.abs(e.clientX - startX);
   const deltaY = Math.abs(e.clientY - startY);
 
-  // If the pointer has moved more than the threshold, it's a scroll
   if (deltaX > moveThreshold || deltaY > moveThreshold) {
-      clearTimeout(pressTimer); // Cancel the long press
+      clearTimeout(pressTimer);
       pressTimer = null;
   }
 }
@@ -901,10 +898,16 @@ function enterSelectionMode(card) {
 }
 
 function exitSelectionMode() {
-  appState.isSelectionModeActive = false;
-  appState.selectedItemIds.clear();
-  ui.filterAndRenderItems();
-  ui.updateBulkActionsBar();
+    appState.isSelectionModeActive = false;
+    appState.selectedItemIds.clear();
+  
+    const elements = ui.getDOMElements();
+    elements.inventoryGrid.classList.remove('selection-mode');
+  
+    const selectedCards = elements.inventoryGrid.querySelectorAll('.product-card.selected');
+    selectedCards.forEach(card => card.classList.remove('selected'));
+  
+    ui.updateBulkActionsBar();
 }
 
 function toggleSelection(card) {
