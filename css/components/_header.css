@@ -101,11 +101,9 @@ body.theme-dark .inventory-header h2 {
 /* --- Sort Container Styles (Desktop) --- */
 .sort-container {
   position: relative;
-}
-.sort-container {
-  display: flex;
+  display: flex; /* Display the desktop sort container by default */
   align-items: center;
-  gap: 0.5rem; /* Adjust as needed */
+  gap: 0.5rem;
 }
 .sort-container label {
     display: block;
@@ -177,6 +175,11 @@ body.theme-dark .inventory-header h2 {
   font-weight: 700;
 }
 
+/* NEW: Hide the mobile search and sort container by default */
+.search-and-sort-container {
+    display: none;
+}
+
 /* Responsive adjustments for mobile */
 @media (max-width: 639px) {
   .inventory-header {
@@ -193,10 +196,12 @@ body.theme-dark .inventory-header h2 {
     font-size: 1.125rem; /* 18px */
   }
   
+  /* NEW: Hide the desktop sort container on mobile */
   .inventory-header-main .sort-container {
-    display: none; /* Hide the desktop sort container */
+    display: none;
   }
 
+  /* NEW: Show the mobile search and sort container on mobile */
   .search-and-sort-container {
     display: flex;
     gap: var(--spacing-sm);
@@ -251,196 +256,5 @@ body.theme-dark .inventory-header h2 {
     left: var(--spacing-sm);
     right: var(--spacing-sm);
     padding: var(--spacing-sm) var(--spacing-md);
-  }
-}
-  opacity: 1;
-}
-
-.rate-limit-indicator.high {
-  background-color: #28a745; /* Green */
-  box-shadow: 0 0 8px #28a745;
-}
-
-.rate-limit-indicator.medium {
-  background-color: #ffc107;
-  /* Yellow */
-  box-shadow: 0 0 8px #ffc107;
-}
-
-.rate-limit-indicator.low {
-  background-color: #dc3545;
-  /* Red */
-  box-shadow: 0 0 8px #dc3545;
-}
-
-/* --- NEW: Floating & Glassy Inventory Header --- */
-.inventory-header {
-  display: flex;
-  flex-wrap: wrap; /* Allow wrapping on small screens */
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-sm) var(--spacing-md);
-  margin-bottom: var(--spacing-md);
-  position: sticky;
-  top: 60px;
-  z-index: 50;
-  left: var(--spacing-md);
-  right: var(--spacing-md);
-  width: auto;
-  border-radius: 12px;
-  box-shadow: var(--shadow-strong);
-  background-color: rgba(var(--surface-color-rgb), 0.8);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid var(--border-color);
-  transition: top 0.3s ease;
-}
-
-.inventory-header-main {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  flex-grow: 1;
-}
-
-#search-container {
-  flex-grow: 1; /* Allow search to grow */
-  min-width: 200px; /* Prevent search from getting too small */
-}
-
-.inventory-header h2 {
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-body.theme-dark .inventory-header h2 {
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-}
-
-/* --- Sort Container Styles --- */
-.sort-container {
-  position: relative;
-}
-.sort-container {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem; /* Adjust as needed */
-}
-#sort-options {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  background-color: var(--surface-color);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
-  padding: 10px 36px 10px 12px;
-  font-family: var(--font-family);
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-primary);
-  cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 20 20'%3E%3Cpath fill='none' stroke='%23718096' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m8 10 4 4 4-4'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  transition: all var(--transition-speed) ease;
-}
-#sort-options:hover {
-  border-color: var(--accent-color);
-}
-#sort-options:focus {
-  outline: none;
-  border-color: var(--accent-color);
-  box-shadow: 0 0 0 3px var(--accent-soft-bg);
-}
-
-/* --- Category Filter Dropdown --- */
-.category-dropdown {
-  display: none;
-  position: absolute;
-  top: calc(100% + 8px);
-  background-color: var(--surface-color);
-  border-radius: var(--border-radius-md);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-strong);
-  z-index: 200;
-  max-height: 250px;
-  overflow-y: auto;
-  padding: var(--spacing-sm);
-}
-
-.category-dropdown.show {
-  display: block;
-}
-
-.category-item {
-  padding: 10px 12px;
-  cursor: pointer;
-  border-radius: var(--border-radius-sm);
-  font-weight: 500;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: background-color 0.2s ease;
-}
-
-.category-item:hover {
-  background-color: var(--bg-color);
-}
-
-.category-item.active {
-  background-color: var(--accent-color);
-  color: white;
-  font-weight: 700;
-}
-
-/* css/components/_header.css */
-
-/* Add a rule to hide the label on small screens */
-.sort-container label {
-    display: none;
-}
-
-/* On mobile, shrink the select and make it an icon */
-@media (max-width: 639px) {
-  .inventory-header {
-    /* Adjust padding to account for the new layout */
-    padding: var(--spacing-sm) var(--spacing-md);
-  }
-
-  .inventory-header-main {
-    /* This container now only holds the title */
-    flex-basis: 100%;
-    justify-content: space-between;
-  }
-  
-  .inventory-header-main .sort-container {
-      display: none; /* Hide the old sort container */
-  }
-
-  #search-container {
-    flex-basis: 100%;
-    /* Re-order search container to be on its own line */
-    order: 1; 
-  }
-  
-  /* Add a new container to hold the search and the sort button */
-  .search-and-sort-container {
-      display: flex;
-      gap: var(--spacing-sm);
-      width: 100%;
-  }
-
-  /* Style the sort button to be an icon on mobile */
-  .sort-container-mobile {
-      display: block;
-  }
-
-  .sort-container-mobile #sort-options {
-      width: 48px;
-      padding: 10px 14px;
-      text-indent: -9999px; /* Hide text */
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='%23718096' viewBox='0 0 24 24'%3E%3Cpath d='M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z'/%3E%3C/svg%3E");
-      background-size: 20px;
-      background-position: center;
   }
 }
