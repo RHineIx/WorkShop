@@ -480,3 +480,30 @@ dialog::backdrop {
   border-top: 1px solid var(--border-color);
   direction: ltr; /* To ensure hash and branch name display correctly */
 }
+.magic-link-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.magic-link-warning {
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--warning-color);
+  text-align: center;
+}
+
+#magic-link-output {
+  width: 100%;
+  padding: 8px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 12px;
+  direction: ltr;
+  text-align: left;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-color);
+  border-radius: var(--border-radius-sm);
+  color: var(--text-secondary);
+  cursor: copy;
+}
