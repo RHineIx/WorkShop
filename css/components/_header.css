@@ -54,6 +54,243 @@
   box-shadow: 0 0 8px #dc3545;
 }
 
+/* --- Floating & Glassy Inventory Header --- */
+.inventory-header {
+  display: flex;
+  flex-wrap: wrap; /* Allow wrapping on small screens */
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  position: sticky;
+  top: 60px;
+  z-index: 50;
+  left: var(--spacing-md);
+  right: var(--spacing-md);
+  width: auto;
+  border-radius: 12px;
+  box-shadow: var(--shadow-strong);
+  background-color: rgba(var(--surface-color-rgb), 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+  transition: top 0.3s ease;
+}
+
+.inventory-header-main {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-grow: 1;
+}
+
+/* On desktop, search and sort are flexible siblings */
+#search-container {
+  flex-grow: 1;
+  min-width: 200px;
+}
+
+/* Hide the mobile sort container by default (desktop view) */
+.sort-container-mobile {
+  display: none;
+}
+
+.inventory-header h2 {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+body.theme-dark .inventory-header h2 {
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* --- Sort Container Styles (Desktop) --- */
+.sort-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.sort-container label {
+    display: block;
+}
+#sort-options {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  padding: 10px 36px 10px 12px;
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='%23718096' viewBox='0 0 32 32'%3E%3Cpath d='m21.4 15.6 2.6 2.6 2.6-2.6L28 17l-4 4-4-4zm0-2.2 2.6-2.6 2.6 2.6L28 12l-4-4-4 4zM26 4H4c-1.1 0-2 .9-2 2v3.2c0 .5.2 1 .6 1.4L10 18v8c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2v-4h-2v4h-4v-8.8l-.6-.6L4 9.2V6h22z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  transition: all var(--transition-speed) ease;
+}
+#sort-options:hover {
+  border-color: var(--accent-color);
+}
+#sort-options:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px var(--accent-soft-bg);
+}
+
+/* --- Category Filter Dropdown --- */
+.category-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  background-color: var(--surface-color);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-strong);
+  z-index: 200;
+  max-height: 250px;
+  overflow-y: auto;
+  padding: var(--spacing-sm);
+}
+
+.category-dropdown.show {
+  display: block;
+}
+
+.category-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-radius: var(--border-radius-sm);
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s ease;
+}
+
+.category-item:hover {
+  background-color: var(--bg-color);
+}
+
+.category-item.active {
+  background-color: var(--accent-color);
+  color: white;
+  font-weight: 700;
+}
+
+
+/* Responsive adjustments for mobile */
+@media (max-width: 639px) {
+  .inventory-header {
+    flex-direction: column; /* Stack children vertically */
+    align-items: stretch; /* Stretch children to full width */
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+  
+  /* Make the main header row (title + desktop sort) take the full width, with space between */
+  .inventory-header-main {
+    flex-basis: 100%;
+    justify-content: space-between;
+  }
+  
+  .inventory-header-main h2 {
+    font-size: 1.125rem; /* 18px */
+  }
+  
+  /* Hide the desktop sort container on mobile */
+  .inventory-header-main .sort-container {
+    display: none;
+  }
+
+  /* Make search container take the full width on mobile */
+  #search-container {
+    flex-basis: 100%;
+    min-width: 0;
+  }
+
+  /* Show the mobile sort container on mobile and place it next to search */
+  .sort-container-mobile {
+    display: block;
+    width: 48px; /* Give it a fixed width */
+    flex-shrink: 0; /* Prevent it from shrinking */
+  }
+
+  /* Make the search and sort container row for mobile */
+  .inventory-header-mobile-row {
+    display: flex;
+    gap: var(--spacing-sm);
+  }
+  
+  /* Style the sort button to be an icon on mobile */
+  .sort-container-mobile #sort-options-mobile {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    padding: 10px 14px;
+    width: 48px;
+    height: 48px;
+    font-family: var(--font-family);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+    text-indent: -9999px; /* Hide text */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='%23718096' viewBox='0 0 24 24'%3E%3Cpath d='M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    transition: all var(--transition-speed) ease;
+  }
+
+  .sort-container-mobile #sort-options-mobile:hover {
+    border-color: var(--accent-color);
+  }
+  
+  .sort-container-mobile #sort-options-mobile:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px var(--accent-soft-bg);
+  }
+
+  .inventory-header {
+    left: var(--spacing-sm);
+    right: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+}
+
+@media (min-width: 640px) {
+  /* On desktop, hide the mobile sort and search container */
+  .sort-container-mobile {
+    display: none !important;
+  }
+}
+  opacity: 1;
+}
+
+.rate-limit-indicator.high {
+  background-color: #28a745; /* Green */
+  box-shadow: 0 0 8px #28a745;
+}
+
+.rate-limit-indicator.medium {
+  background-color: #ffc107;
+  /* Yellow */
+  box-shadow: 0 0 8px #ffc107;
+}
+
+.rate-limit-indicator.low {
+  background-color: #dc3545;
+  /* Red */
+  box-shadow: 0 0 8px #dc3545;
+}
+
 /* --- NEW: Floating & Glassy Inventory Header --- */
 .inventory-header {
   display: flex;
