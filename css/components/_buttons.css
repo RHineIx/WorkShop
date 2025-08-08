@@ -141,11 +141,12 @@
   border-color: var(--accent-color);
   color: white;
 }
-label[for="restore-backup-input"].cleanup-btn {
+label[for="restore-backup-input"].cleanup-btn,
+label[for="csv-import-input"].cleanup-btn {
   color: var(--accent-color) !important;
-  font-weight: bold !important;
   text-align: center;
 }
+label[for="csv-import-input"].cleanup-btn:hover,
 label[for="restore-backup-input"].cleanup-btn:hover {
   color: white !important;
 }

@@ -630,19 +630,6 @@
                 أرشفة المبيعات القديمة
               </button>
 
-              <input
-                type="file"
-                id="csv-import-input"
-                class="visually-hidden"
-                accept=".csv"
-              />
-              <label for="csv-import-input" class="cleanup-btn archive-btn">
-                <iconify-icon
-                  icon="material-symbols:upload-file"
-                ></iconify-icon>
-                استيراد من ملف CSV
-              </label>
-
               <p id="last-archive-date-display" class="last-archive-text">
                 آخر أرشفة: لم تتم بعد
               </p>
@@ -689,8 +676,20 @@
                 accept=".zip"
               />
               <label for="restore-backup-input" class="cleanup-btn archive-btn">
-                <iconify-icon icon="solar:archive-up-linear"></iconify-icon>
+                <iconify-icon icon="hugeicons:zip-02"></iconify-icon>
                 استعادة من نسخة احتياطية
+              </label>
+              <input
+                type="file"
+                id="csv-import-input"
+                class="visually-hidden"
+                accept=".csv"
+              />
+              <label for="csv-import-input" class="cleanup-btn archive-btn">
+                <iconify-icon
+                  icon="hugeicons:csv-02"
+                ></iconify-icon>
+                استيراد من ملف CSV
               </label>
             </div>
           </div>
