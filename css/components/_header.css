@@ -27,7 +27,8 @@
   border-radius: 50%;
   background-color: var(--text-secondary); /* Default color */
   border: 1px solid var(--surface-color);
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3); /* Subtle glow */
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  /* Subtle glow */
   transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
   opacity: 0;
 }
@@ -42,12 +43,14 @@
 }
 
 .rate-limit-indicator.medium {
-  background-color: #ffc107; /* Yellow */
+  background-color: #ffc107;
+  /* Yellow */
   box-shadow: 0 0 8px #ffc107;
 }
 
 .rate-limit-indicator.low {
-  background-color: #dc3545; /* Red */
+  background-color: #dc3545;
+  /* Red */
   box-shadow: 0 0 8px #dc3545;
 }
 
@@ -70,7 +73,6 @@
   width: auto;
   border-radius: 12px;
   box-shadow: var(--shadow-strong);
-
   /* Glassmorphism Effect */
   background-color: rgba(var(--surface-color-rgb), 0.8);
   backdrop-filter: blur(10px);
@@ -88,11 +90,6 @@
 body.theme-dark .inventory-header h2 {
   /* A slightly different shadow for dark mode */
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-}
-
-.search-container {
-  position: relative;
-  width: 100%;
 }
 
 @media (min-width: 640px) {
@@ -113,8 +110,6 @@ body.theme-dark .inventory-header h2 {
   display: none;
   position: absolute;
   top: calc(100% + 8px);
-  left: 0;
-  width: 100%;
   background-color: var(--surface-color);
   border-radius: var(--border-radius-md);
   border: 1px solid var(--border-color);
@@ -153,7 +148,8 @@ body.theme-dark .inventory-header h2 {
 /* Responsive adjustments for mobile */
 @media (max-width: 639px) {
   .inventory-header h2 {
-    font-size: 1.125rem; /* 18px */
+    font-size: 1.125rem;
+    /* 18px */
   }
 
   .inventory-header {
