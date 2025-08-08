@@ -188,6 +188,7 @@ body.theme-dark .inventory-header h2 {
     flex-direction: column; /* Stack children vertically */
     align-items: stretch; /* Stretch children to full width */
     gap: var(--spacing-md);
+    flex-wrap: nowrap;
     padding: var(--spacing-sm) var(--spacing-md);
   }
   
