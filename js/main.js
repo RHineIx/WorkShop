@@ -1002,6 +1002,19 @@ async function handleBulkSupplierChange(e) {
 }
 
 // --- EVENT LISTENER SETUP ---
+// A single, cohesive function to handle the sorting logic for both dropdowns
+const handleSortChange = e => {
+  appState.currentSortOption = e.target.value;
+
+  // Sync the other dropdown's value
+  if (e.target.id === 'sort-options' && ui.getDOMElements().sortOptionsMobile) {
+    ui.getDOMElements().sortOptionsMobile.value = e.target.value;
+  } else if (e.target.id === 'sort-options-mobile' && ui.getDOMElements().sortOptions) {
+    ui.getDOMElements().sortOptions.value = e.target.value;
+  }
+  
+  ui.filterAndRenderItems();
+};
 
 function setupGeneralListeners(elements) {
   elements.themeToggleBtn.addEventListener("click", () => {
@@ -1044,10 +1057,13 @@ function setupInventoryListeners(elements) {
     }, 500)
   );
 
-  elements.sortOptions.addEventListener("change", e => {
-    appState.currentSortOption = e.target.value;
-    ui.filterAndRenderItems();
-  });
+  // NEW: Attach the single event handler to both sort elements
+  if (elements.sortOptions) {
+    elements.sortOptions.addEventListener("change", handleSortChange);
+  }
+  if (elements.sortOptionsMobile) {
+    elements.sortOptionsMobile.addEventListener("change", handleSortChange);
+  }
 
   elements.statsContainer.addEventListener("click", e => {
     const card = e.target.closest(".stat-card");
