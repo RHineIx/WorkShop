@@ -36,6 +36,59 @@ function saveConfig() {
   localStorage.setItem("inventoryAppExchangeRate", appState.exchangeRate);
 }
 
+// --- NEW: Magic Link Logic ---
+function handleMagicLink() {
+  if (!window.location.hash.startsWith('#setup=')) {
+    return false; // No magic link found
+  }
+
+  try {
+    const encodedData = window.location.hash.substring(7); // Remove #setup=
+    const decodedJson = atob(encodedData);
+    const config = JSON.parse(decodedJson);
+
+    if (config.username && config.repo && config.pat) {
+      appState.syncConfig = config;
+      saveConfig();
+      ui.showStatus("تم الإعداد بنجاح!", "success");
+
+      // Clean the URL
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+      return true; // Magic link was processed
+    }
+  } catch (error) {
+    console.error("Failed to process magic link:", error);
+    ui.showStatus("فشل معالجة رابط الإعداد.", "error");
+    // Clean the URL even if it fails
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+  }
+  return false;
+}
+
+function generateMagicLink() {
+    if (!appState.syncConfig) {
+        ui.showStatus("يجب حفظ الإعدادات أولاً.", "error");
+        return;
+    }
+
+    const { magicLinkContainer, magicLinkOutput } = ui.getDOMElements();
+    
+    const configJson = JSON.stringify(appState.syncConfig);
+    const encodedData = btoa(configJson);
+    const url = `${window.location.origin}${window.location.pathname}#setup=${encodedData}`;
+
+    magicLinkOutput.value = url;
+    magicLinkContainer.classList.remove("view-hidden");
+
+    magicLinkOutput.onclick = () => {
+        magicLinkOutput.select();
+        navigator.clipboard.writeText(url).then(() => {
+            ui.showStatus("تم نسخ الرابط إلى الحافظة!", "success", { duration: 2000 });
+        });
+    };
+}
+
+
 function loadLocalData() {
   const savedInventory = localStorage.getItem("inventoryAppData");
   if (savedInventory) {
@@ -1068,6 +1121,8 @@ function setupModalListeners(elements) {
     .addEventListener("input", ui.updateSaleTotal);
   elements.syncSettingsBtn.addEventListener("click", () => {
     ui.populateSyncModal();
+    const { magicLinkContainer } = ui.getDOMElements();
+    magicLinkContainer.classList.add("view-hidden");
     const display = document.getElementById("live-exchange-rate-display");
     const input = document.getElementById("exchange-rate");
     display.textContent = "جاري تحميل السعر...";
@@ -1310,6 +1365,11 @@ function setupEventListeners() {
   setupModalListeners(elements);
   setupDashboardListeners(elements);
   setupSupplierListeners(elements);
+
+  // Add listener for the new button
+  if (elements.generateMagicLinkBtn) {
+    elements.generateMagicLinkBtn.addEventListener("click", generateMagicLink);
+  }
 }
 
 // --- INITIALIZATION ---
@@ -1317,6 +1377,11 @@ function setupEventListeners() {
 function handleUrlShortcuts() {
   const hash = window.location.hash;
   if (!hash) return;
+
+  if (hash.startsWith('#setup=')) {
+    // This is handled by initializeApp now
+    return;
+  }
 
   switch (hash) {
     case '#add-item':
@@ -1340,6 +1405,10 @@ function handleUrlShortcuts() {
 
 async function initializeApp() {
   console.log("Initializing Inventory Management App...");
+  
+  // Process magic link FIRST, before anything else.
+  const magicLinkProcessed = handleMagicLink();
+
   setupEventListeners();
   loadConfig();
   const savedTheme = localStorage.getItem("inventoryAppTheme") || "light";
@@ -1380,7 +1449,9 @@ async function initializeApp() {
 
       saveLocalData();
       ui.hideSyncStatus();
-      ui.showStatus("تمت المزامنة بنجاح!", "success");
+      if (!magicLinkProcessed) {
+        ui.showStatus("تمت المزامنة بنجاح!", "success");
+      }
     } catch (error) {
       ui.hideSyncStatus();
       ui.showStatus(`خطأ في المزامنة: ${error.message}`, "error", {
@@ -1406,7 +1477,7 @@ async function initializeApp() {
 // Start the application
 initializeApp();
 
-// --- NEW: Register Service Worker ---
+// --- Register Service Worker ---
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
