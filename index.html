@@ -136,40 +136,42 @@
                 </select>
               </div>
             </div>
-            <!-- Search Container (Now a direct child of inventory-header) -->
-            <div id="search-container" class="search-container">
-                <input
-                  type="text"
-                  id="search-bar"
-                  placeholder="ابحث في المنتجات..."
-                />
-                <button
-                  id="category-filter-btn"
-                  class="icon-btn category-filter-toggle-btn"
-                  title="تصفية حسب الفئة"
-                  aria-label="تصفية حسب الفئة"
-                >
-                  <iconify-icon
-                    icon="material-symbols:filter-list-rounded"
-                  ></iconify-icon>
-                </button>
-                <div
-                  id="category-filter-dropdown"
-                  class="category-dropdown"
-                ></div>
-            </div>
-            <!-- Mobile Sort Button Only Container -->
-            <div class="sort-container-mobile">
-              <label for="sort-options-mobile" class="visually-hidden"
-                >فرز حسب</label
-              >
-              <select id="sort-options-mobile">
-                <option value="default">فرز افتراضي</option>
-                <option value="date_desc">الأحدث أولاً</option>
-                <option value="name_asc">الاسم (أ - ي)</option>
-                <option value="quantity_asc">الكمية (الأقل أولاً)</option>
-                <option value="quantity_desc">الكمية (الأكثر أولاً)</option>
-              </select>
+            <!-- Search & Filter Container -->
+            <div id="search-and-filter-container" class="search-and-filter-container">
+                <div id="search-container" class="search-container">
+                    <input
+                      type="text"
+                      id="search-bar"
+                      placeholder="ابحث في المنتجات..."
+                    />
+                    <button
+                      id="category-filter-btn"
+                      class="icon-btn category-filter-toggle-btn"
+                      title="تصفية حسب الفئة"
+                      aria-label="تصفية حسب الفئة"
+                    >
+                      <iconify-icon
+                        icon="material-symbols:filter-list-rounded"
+                      ></iconify-icon>
+                    </button>
+                    <div
+                      id="category-filter-dropdown"
+                      class="category-dropdown"
+                    ></div>
+                </div>
+                <!-- Mobile Sort Button Only Container -->
+                <div class="sort-container-mobile">
+                  <label for="sort-options-mobile" class="visually-hidden"
+                    >فرز حسب</label
+                  >
+                  <select id="sort-options-mobile">
+                    <option value="default">فرز افتراضي</option>
+                    <option value="date_desc">الأحدث أولاً</option>
+                    <option value="name_asc">الاسم (أ - ي)</option>
+                    <option value="quantity_asc">الكمية (الأقل أولاً)</option>
+                    <option value="quantity_desc">الكمية (الأكثر أولاً)</option>
+                  </select>
+                </div>
             </div>
           </div>
           <div id="inventory-grid" class="inventory-grid"></div>
