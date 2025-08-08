@@ -68,7 +68,7 @@
   left: var(--spacing-md);
   right: var(--spacing-md);
   width: auto;
-  border-radius: 16px;
+  border-radius: 12px;
   box-shadow: var(--shadow-strong);
 
   /* Glassmorphism Effect */
