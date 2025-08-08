@@ -61,7 +61,7 @@
 
   /* Sticky positioning for floating effect */
   position: sticky;
-  top: 75px; /* 65px for main header + 10px top margin */
+  top: 60px;
   z-index: 50;
 
   /* Inset/Floating layout */
