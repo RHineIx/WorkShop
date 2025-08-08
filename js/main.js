@@ -20,7 +20,7 @@ let longPressTriggered = false;
 // Variables to detect scroll vs. long press
 let startX = 0;
 let startY = 0;
-const moveThreshold = 30; // The distance in pixels to count as a scroll
+const moveThreshold = 6; // The distance in pixels to count as a scroll
 
 // --- LOCAL STORAGE & CONFIG ---
 
