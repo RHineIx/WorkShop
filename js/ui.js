@@ -15,7 +15,8 @@ const elements = {
   categoryFilterBtn: document.getElementById("category-filter-btn"),
   categoryFilterDropdown: document.getElementById("category-filter-dropdown"),
   sortOptions: document.getElementById("sort-options"),
-  tOptionsMobile: document.getElementById("sort-options-mobile"),
+  // NEW: Add the mobile sort select element
+  sortOptionsMobile: document.getElementById("sort-options-mobile"),
 
   // Header
   themeToggleBtn: document.getElementById("theme-toggle-btn"),
