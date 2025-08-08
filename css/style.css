@@ -19,3 +19,4 @@
 @import "components/_utilities.css";
 @import "components/_cropper.css";
 @import "components/_dashboard.css";
+@import "components/_bulk-actions.css"; /* New file import */

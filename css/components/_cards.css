@@ -35,15 +35,55 @@
   background-color: var(--surface-color);
   border-radius: var(--border-radius-md);
   box-shadow: var(--shadow-light);
-  border: 1px solid var(--border-color);
+  border: 2px solid transparent; /* Changed for selection indicator */
   overflow: hidden;
   display: flex;
   flex-direction: column;
   transition: all 0.2s ease;
+  position: relative; /* For checkbox positioning */
+  user-select: none; /* Prevent text selection */
 }
 .product-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-strong);
+}
+
+/* --- Card Selection Styles --- */
+.product-card.selected {
+  border-color: var(--accent-color);
+  background-color: var(--accent-soft-bg);
+}
+.card-checkbox {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--border-color);
+  background-color: var(--bg-color);
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  transform: scale(0);
+  opacity: 0;
+  z-index: 6; /* Above quantity badge */
+}
+.selection-mode .product-card .card-checkbox {
+  transform: scale(1);
+  opacity: 1;
+}
+.product-card.selected .card-checkbox {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+}
+.product-card.selected .card-checkbox::after {
+  content: '✔';
+  color: white;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+  font-weight: bold;
 }
 
 .product-card.low-stock {
@@ -54,6 +94,11 @@
   background-color: var(--danger-soft-bg);
   border-color: var(--danger-color);
 }
+.product-card.selected.low-stock,
+.product-card.selected.out-of-stock {
+    border-color: var(--accent-color);
+}
+
 
 .card-image-container {
   width: 100%;
@@ -163,15 +208,14 @@
   font-weight: 800;
   color: var(--accent-color);
 }
-/* MODIFIED QUANTITY BADGE STYLE */
 /* MODIFIED QUANTITY BADGE STYLE - SMALLER SIZE */
 .quantity-badge {
   position: absolute;
-  top: 10px; /* Adjusted position */
-  right: 10px; /* Adjusted position */
+  top: 10px;
+  right: 10px;
   padding: 4px 10px;
   border-radius: 20px;
-  font-size: 12px; /* Reduced font size */
+  font-size: 12px;
   font-weight: 700;
   color: white;
   background-color: var(--accent-color);
@@ -220,7 +264,8 @@
 .product-card {
   /* Add animation properties */
   animation: fadeInUp 0.5s ease-out forwards;
-  opacity: 0; /* Start as transparent */
+  opacity: 0;
+  /* Start as transparent */
 }
 
 /* Stagger the animation for each card */

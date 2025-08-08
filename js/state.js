@@ -72,4 +72,10 @@ export const appState = {
 
   /** @type {Array<HTMLDialogElement>} A stack to keep track of open modals. */
   modalStack: [],
+
+  /** @type {boolean} A flag to indicate if the app is in multi-select mode. */
+  isSelectionModeActive: false,
+
+  /** @type {Set<string>} A set to store the IDs of the selected items. */
+  selectedItemIds: new Set(),
 };

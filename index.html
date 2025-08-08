@@ -686,9 +686,7 @@
                 accept=".csv"
               />
               <label for="csv-import-input" class="cleanup-btn archive-btn">
-                <iconify-icon
-                  icon="hugeicons:csv-02"
-                ></iconify-icon>
+                <iconify-icon icon="hugeicons:csv-02"></iconify-icon>
                 استيراد من ملف CSV
               </label>
             </div>
@@ -860,6 +858,63 @@
         </button>
         <button type="button" id="cancel-crop-btn">إلغاء</button>
       </div>
+    </dialog>
+
+    <div id="bulk-actions-bar" class="bulk-actions-bar">
+      <div id="selection-count" class="selection-count"></div>
+      <div class="actions">
+        <button id="bulk-change-category-btn" class="action-btn primary">
+          <iconify-icon
+            icon="material-symbols:folder-open-outline"
+          ></iconify-icon>
+          <span>تغيير الفئة</span>
+        </button>
+        <button id="bulk-change-supplier-btn" class="action-btn primary">
+          <iconify-icon
+            icon="material-symbols:business-center-outline-rounded"
+          ></iconify-icon>
+          <span>تغيير المورّد</span>
+        </button>
+        <button id="cancel-selection-btn" class="action-btn">
+          <iconify-icon icon="material-symbols:close"></iconify-icon>
+          <span>إلغاء</span>
+        </button>
+      </div>
+    </div>
+
+    <dialog id="bulk-category-modal">
+      <form id="bulk-category-form">
+        <h3>تغيير فئة العناصر المحددة</h3>
+        <div class="form-group">
+          <label for="bulk-item-category">الفئة الجديدة</label>
+          <input
+            type="text"
+            id="bulk-item-category"
+            list="category-list"
+            required
+          />
+        </div>
+        <div class="modal-actions">
+          <button type="submit">حفظ التغييرات</button>
+          <button type="button" data-close>إلغاء</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="bulk-supplier-modal">
+      <form id="bulk-supplier-form">
+        <h3>تغيير مورّد العناصر المحددة</h3>
+        <div class="form-group">
+          <label for="bulk-item-supplier">المورّد الجديد</label>
+          <select id="bulk-item-supplier" required>
+            <option value="" disabled selected>-- اختر مورّد --</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button type="submit">حفظ التغييرات</button>
+          <button type="button" data-close>إلغاء</button>
+        </div>
+      </form>
     </dialog>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>

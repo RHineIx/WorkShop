@@ -127,8 +127,16 @@ const elements = {
 
   // App Version
   appVersionDisplay: document.getElementById("app-version-display"),
-};
 
+  // Bulk Actions UI
+  bulkActionsBar: document.getElementById("bulk-actions-bar"),
+  selectionCount: document.getElementById("selection-count"),
+  bulkCategoryModal: document.getElementById("bulk-category-modal"),
+  bulkCategoryForm: document.getElementById("bulk-category-form"),
+  bulkSupplierModal: document.getElementById("bulk-supplier-modal"),
+  bulkSupplierForm: document.getElementById("bulk-supplier-form"),
+  bulkSupplierSelect: document.getElementById("bulk-item-supplier"),
+};
 export const displayVersionInfo = versionData => {
   if (versionData && elements.appVersionDisplay) {
     const { hash, branch } = versionData;
@@ -170,13 +178,11 @@ const imageObserver = new IntersectionObserver(
     rootMargin: "0px 0px 200px 0px",
   }
 );
-
 export function getDOMElements() {
   return elements;
 }
 
 let countdownInterval = null;
-
 export function updateRateLimitDisplay() {
   const { limit, remaining, reset } = appState.rateLimit;
   const indicator = document.querySelector(".rate-limit-indicator");
@@ -210,7 +216,6 @@ export function updateRateLimitDisplay() {
       elements.rateLimitDisplay.textContent = `${remaining}/${limit} طلبات متبقية | إعادة التعيين بعد ${minutes}د ${seconds}ث`;
     }
   };
-
   clearInterval(countdownInterval);
   updateDisplay();
   countdownInterval = setInterval(updateDisplay, 1000);
@@ -265,7 +270,6 @@ const ICONS = {
   info: "material-symbols:info",
   warning: "material-symbols:warning-rounded",
 };
-
 export const hideSyncStatus = () => {
   const syncToasts =
     elements.toastContainer.querySelectorAll(".toast--syncing");
@@ -291,7 +295,6 @@ export const showStatus = (message, type, options = {}) => {
   const messageSpan = document.createElement("span");
   messageSpan.textContent = message;
   toast.appendChild(messageSpan);
-
   if (showRefreshButton) {
     const refreshButton = document.createElement("button");
     refreshButton.textContent = "تحديث";
@@ -302,11 +305,9 @@ export const showStatus = (message, type, options = {}) => {
   }
 
   elements.toastContainer.appendChild(toast);
-
   setTimeout(() => {
     toast.classList.add("show");
   }, 10);
-
   if (duration > 0 && type !== "syncing" && !showRefreshButton) {
     const transitionDuration = 500;
     setTimeout(() => {
@@ -341,7 +342,6 @@ export const toggleView = viewToShow => {
     renderDashboard();
   }
 };
-
 function renderSalesLog(filteredSales) {
   if (filteredSales.length === 0) {
     elements.salesLogContent.innerHTML =
@@ -351,7 +351,6 @@ function renderSalesLog(filteredSales) {
 
   const isIQD = appState.activeCurrency === "IQD";
   const symbol = isIQD ? "د.ع" : "$";
-
   const salesByDay = filteredSales.reduce((acc, sale) => {
     const date = sale.saleDate;
     if (!acc[date]) {
@@ -360,7 +359,6 @@ function renderSalesLog(filteredSales) {
     acc[date].push(sale);
     return acc;
   }, {});
-
   const logHTML = Object.entries(salesByDay)
     .map(([date, sales]) => {
       const dateObj = new Date(date);
@@ -411,7 +409,8 @@ function renderSalesLog(filteredSales) {
                             <div class="meta-value meta-price">${totalSellPrice.toLocaleString()}</div>
                         </div>
                         <div class="sale-datetime">
-                            التاريخ: ${sale.saleDate} | الوقت: ${saleTime}
+                            التاريخ: ${sale.saleDate} |
+                            الوقت: ${saleTime}
                         </div>
                     </div>
                     <div class="item-details">
@@ -524,7 +523,6 @@ export const renderDashboard = () => {
 
   renderSalesLog(filteredSales);
 };
-
 export function updateSaleTotal() {
   const quantity = parseInt(elements.saleQuantityInput.value, 10) || 0;
   const unitPrice =
@@ -586,6 +584,13 @@ export function filterAndRenderItems() {
 
 export function renderInventory(itemsToRender) {
   elements.inventoryGrid.innerHTML = "";
+
+  if (appState.isSelectionModeActive) {
+    elements.inventoryGrid.classList.add("selection-mode");
+  } else {
+    elements.inventoryGrid.classList.remove("selection-mode");
+  }
+
   if (itemsToRender.length === 0) {
     elements.inventoryGrid.innerHTML =
       '<p class="empty-state">لا توجد منتجات تطابق بحثك...</p>';
@@ -596,6 +601,10 @@ export function renderInventory(itemsToRender) {
     const card = document.createElement("div");
     card.className = "product-card";
     card.dataset.id = item.id;
+
+    if (appState.selectedItemIds.has(item.id)) {
+      card.classList.add("selected");
+    }
 
     const isLowStock = item.quantity > 0 && item.quantity <= item.alertLevel;
     const isOutOfStock = item.quantity === 0;
@@ -633,6 +642,7 @@ export function renderInventory(itemsToRender) {
     }
 
     card.innerHTML = `
+      <div class="card-checkbox"></div>
       <div class="card-image-container">
         <div class="quantity-badge ${badgeClass}">${badgeText}</div>
         ${imageHtml}
@@ -677,7 +687,6 @@ export const updateStats = () => {
     item => item.quantity <= item.alertLevel
   ).length;
 };
-
 export const setTheme = themeName => {
   document.body.className = `theme-${themeName}`;
   const icon = elements.themeToggleBtn.querySelector("iconify-icon");
@@ -704,7 +713,6 @@ export const updateCurrencyDisplay = () => {
     renderDashboard();
   }
 };
-
 export function renderSupplierList() {
   elements.supplierListContainer.innerHTML = "";
   if (appState.suppliers.length === 0) {
@@ -752,6 +760,17 @@ export function populateSupplierDropdown(selectedSupplierId = null) {
   });
 }
 
+export function populateBulkSupplierDropdown() {
+  elements.bulkSupplierSelect.innerHTML =
+    '<option value="" disabled selected>-- اختر مورّد --</option>';
+  appState.suppliers.forEach(supplier => {
+    const option = document.createElement("option");
+    option.value = supplier.id;
+    option.textContent = sanitizeHTML(supplier.name);
+    elements.bulkSupplierSelect.appendChild(option);
+  });
+}
+
 export const openDetailsModal = itemId => {
   const item = appState.inventory.items.find(i => i.id === itemId);
   if (!item) return;
@@ -773,7 +792,6 @@ export const openDetailsModal = itemId => {
     item.sellPriceUsd || 0
   ).toLocaleString()}`;
   elements.detailsNotesContent.textContent = item.notes || "لا توجد ملاحظات.";
-
   const pnContainer = elements.detailsPnGridContainer;
   pnContainer.innerHTML = "";
   pnContainer.classList.add("view-hidden");
@@ -796,11 +814,9 @@ export const openDetailsModal = itemId => {
         showStatus("فشل النسخ إلى الحافظة", "error");
       });
   };
-
   if (item.oemPartNumber || item.compatiblePartNumber) {
     const pnGrid = document.createElement("div");
     pnGrid.className = "details-pn-grid";
-
     if (item.oemPartNumber) {
       const label = document.createElement("div");
       label.className = "pn-grid-label";
@@ -942,7 +958,6 @@ export const openItemModal = (itemId = null) => {
   elements.itemModal.appendChild(elements.toastContainer);
   elements.itemModal.showModal();
 };
-
 export const openSaleModal = itemId => {
   const item = appState.inventory.items.find(i => i.id === itemId);
   if (!item) return;
@@ -970,7 +985,6 @@ export const openSaleModal = itemId => {
   elements.saleModal.showModal();
   updateSaleTotal();
 };
-
 export const populateSyncModal = () => {
   if (appState.syncConfig) {
     elements.githubUsernameInput.value = appState.syncConfig.username;
@@ -986,3 +1000,13 @@ export const populateSyncModal = () => {
   elements.syncModal.appendChild(elements.toastContainer);
   elements.syncModal.showModal();
 };
+
+export function updateBulkActionsBar() {
+  const count = appState.selectedItemIds.size;
+  if (count > 0) {
+    elements.selectionCount.textContent = `تم تحديد ${count} عناصر`;
+    elements.bulkActionsBar.classList.add("visible");
+  } else {
+    elements.bulkActionsBar.classList.remove("visible");
+  }
+}
