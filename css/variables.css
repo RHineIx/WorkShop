@@ -54,6 +54,13 @@ body.theme-dark {
   --danger-soft-bg: #3b2323;
   --warning-color: #f6ad55;
   --warning-soft-bg: #4a361d;
-  --secondary-currency-color: #68d391; /* Lighter green for dark mode */
+  --secondary-currency-color: #68d391;
+  /* Lighter green for dark mode */
   --success-color: #38a169;
+}
+
+/* New CSS class to temporarily disable transitions */
+.no-transitions,
+.no-transitions * {
+  transition: none !important;
 }
