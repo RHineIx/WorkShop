@@ -122,7 +122,6 @@
           <div class="inventory-header">
             <div class="inventory-header-main">
               <h2>قائمة المنتجات</h2>
-              <!-- Desktop Sort Container -->
               <div class="sort-container">
                 <label for="sort-options" class="visually-hidden"
                   >فرز حسب</label
@@ -136,15 +135,14 @@
                 </select>
               </div>
             </div>
-            <!-- Search & Filter Container -->
             <div id="search-and-filter-container" class="search-and-filter-container">
                 <div id="search-container" class="search-container">
-                    <input
+                  <input
                       type="text"
                       id="search-bar"
                       placeholder="ابحث في المنتجات..."
                     />
-                    <button
+                  <button
                       id="category-filter-btn"
                       class="icon-btn category-filter-toggle-btn"
                       title="تصفية حسب الفئة"
@@ -159,7 +157,6 @@
                       class="category-dropdown"
                     ></div>
                 </div>
-                <!-- Mobile Sort Button Only Container -->
                 <div class="sort-container-mobile">
                   <label for="sort-options-mobile" class="visually-hidden"
                     >فرز حسب</label
@@ -948,6 +945,10 @@
       </form>
     </dialog>
 
+    <button id="scroll-to-top-btn" class="scroll-to-top-btn" title="العودة للأعلى">
+      <iconify-icon icon="material-symbols:keyboard-arrow-up"></iconify-icon>
+    </button>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
@@ -955,4 +956,4 @@
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
     <script type="module" src="js/main.js"></script>
   </body>
-              </html>
+          </html>
