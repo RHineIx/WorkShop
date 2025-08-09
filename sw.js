@@ -1,5 +1,5 @@
 // js/sw.js
-const CACHE_NAME = "workshop-v5.8"; // IMPORTANT: Remember to bump this version number with every new deployment
+const CACHE_NAME = "workshop-v5.9"; // IMPORTANT: Remember to bump this version number with every new deployment
 const URLS_TO_CACHE = [
   "/",
   "/index.html",

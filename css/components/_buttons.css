@@ -178,27 +178,51 @@ label[for="restore-backup-input"].cleanup-btn:hover {
   border-color: var(--danger-color);
 }
 
-/* MODIFIED FILE UPLOAD BUTTON */
-.custom-file-upload-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+/* --- REVISED FILE UPLOAD BUTTON --- */
+/* This rule targets the parent row to make children equal width */
+#item-form .image-upload-container .form-row {
+  width: 100%;
+  display: flex;
   gap: var(--spacing-sm);
-  padding: 8px 12px;
+}
+
+/* This rule styles both the label and the button to be perfectly identical */
+#item-form label[for="item-image-upload"],
+#item-form button#paste-image-btn {
+  flex: 1; /* Force both to take equal width */
+  display: inline-flex;
+  align-items: center; /* Vertically center content */
+  justify-content: center; /* Horizontally center content */
+  gap: var(--spacing-sm);
+  padding: 10px 12px;
+  cursor: pointer;
+  
+  /* --- Normalization & Explicit Styling Fixes --- */
   background-color: var(--surface-color);
+  color: var(--text-primary);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-sm);
-  color: var(--text-primary);
-  cursor: pointer;
+  
   font-family: var(--font-family);
-  /* Explicitly set font */
   font-size: 14px;
   font-weight: 600;
+  line-height: 1.4;
+  margin: 0; /* Reset any default margin */
+  box-sizing: border-box;
+  
   transition: all var(--transition-speed) ease;
 }
-.custom-file-upload-btn:hover {
+
+#item-form label[for="item-image-upload"]:hover,
+#item-form button#paste-image-btn:hover {
   border-color: var(--accent-color);
   background-color: var(--accent-soft-bg);
+  color: var(--accent-color);
+}
+
+#item-form label[for="item-image-upload"] iconify-icon,
+#item-form button#paste-image-btn iconify-icon {
+  font-size: 20px;
 }
 .custom-file-upload-btn iconify-icon {
   font-size: 20px;
