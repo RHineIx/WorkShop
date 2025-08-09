@@ -20,11 +20,42 @@ dialog::backdrop {
   background-color: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
 }
-#item-form,
+
+/* Keep original scroll behavior for other forms */
 #sync-form,
 #sale-form {
   overflow-y: auto;
   padding: var(--spacing-lg);
+}
+
+/* --- Sticky Footer Layout for Item Modal --- */
+#item-form {
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Fill the dialog's height */
+  overflow: hidden; /* Prevent the form itself from scrolling */
+  padding: 0; /* Remove the global padding */
+}
+
+#item-form #modal-title {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0; /* Prevent header from shrinking */
+}
+
+#item-form .form-content-scrollable {
+  flex-grow: 1; /* Allow this section to take up all available space */
+  overflow-y: auto; /* Enable scrolling only for this container */
+  padding: var(--spacing-lg); /* Add padding to the scrollable content */
+}
+
+#item-form .modal-actions {
+  flex-shrink: 0; /* Prevent footer from shrinking */
+  margin-top: 0;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-top: 1px solid var(--border-color);
+  background-color: var(--surface-color);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
 }
 
 /* FIX: Ensure modal headers have consistent padding */
@@ -271,11 +302,7 @@ dialog::backdrop {
   line-height: 1.6;
   white-space: pre-wrap;
 }
-#sale-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
+
 .sale-item-name-display {
   display: block;
   font-size: 18px;
@@ -508,9 +535,11 @@ dialog::backdrop {
 }
 
 /* Hide scrollbar on specific modal forms while allowing scrolling */
-#item-form,
 #sync-form,
-#category-filter-dropdown{
+#category-filter-dropdown,
+.details-layout,
+#item-notes,
+.form-content-scrollable {
   /* For Firefox */
   scrollbar-width: none;
   /* For Internet Explorer and Edge */
@@ -518,8 +547,10 @@ dialog::backdrop {
 }
 
 /* For Chrome, Safari, and Opera */
-#item-form::-webkit-scrollbar,
 #sync-form::-webkit-scrollbar,
-#category-filter-dropdown::-webkit-scrollbar {
+#category-filter-dropdown::-webkit-scrollbar,
+.details-layout::-webkit-scrollbar,
+#item-notes::-webkit-scrollbar,
+.form-content-scrollable::-webkit-scrollbar {
   display: none;
 }

@@ -352,193 +352,194 @@
       <form id="item-form">
         <h3 id="modal-title">إضافة منتج جديد</h3>
         <input type="hidden" id="item-id" />
-
-        <fieldset>
-          <legend>صورة المنتج</legend>
-          <div class="fieldset-content">
-            <div class="image-upload-container">
-              <div class="image-preview-wrapper">
-                <img
-                  id="image-preview"
-                  src="#"
-                  alt="معاينة الصورة"
-                  class="image-preview-hidden"
-                />
-                <div id="image-placeholder">
-                  <iconify-icon icon="material-symbols:key"></iconify-icon>
+        <div class="form-content-scrollable">
+          <fieldset>
+            <legend>صورة المنتج</legend>
+            <div class="fieldset-content">
+              <div class="image-upload-container">
+                <div class="image-preview-wrapper">
+                  <img
+                    id="image-preview"
+                    src="#"
+                    alt="معاينة الصورة"
+                    class="image-preview-hidden"
+                  />
+                  <div id="image-placeholder">
+                    <iconify-icon icon="material-symbols:key"></iconify-icon>
+                  </div>
                 </div>
-              </div>
-              <input
-                type="file"
-                id="item-image-upload"
-                accept="image/*"
-                class="visually-hidden"
-              />
-              <div class="form-row">
-                <label for="item-image-upload" class="custom-file-upload-btn">
-                  <iconify-icon
-                    icon="material-symbols:upload-file"
-                  ></iconify-icon>
-                  <span>اختر صورة</span>
-                </label>
-                <button
-                  type="button"
-                  id="paste-image-btn"
-                  class="custom-file-upload-btn"
-                >
-                  <iconify-icon
-                    icon="fluent:clipboard-paste-16-regular"
-                  ></iconify-icon>
-                  <span>لصق صورة</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </fieldset>
-
-        <fieldset>
-          <legend>المعلومات الأساسية</legend>
-          <div class="fieldset-content">
-            <div class="form-group">
-              <label for="item-name">اسم المنتج</label>
-              <input type="text" id="item-name" required />
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="item-sku">SKU (رقم المنتج)</label>
-                <div class="sku-container">
-                  <input type="text" id="item-sku" required />
+                <input
+                  type="file"
+                  id="item-image-upload"
+                  accept="image/*"
+                  class="visually-hidden"
+                />
+                <div class="form-row">
+                  <label for="item-image-upload" class="custom-file-upload-btn">
+                    <iconify-icon
+                      icon="material-symbols:upload-file"
+                    ></iconify-icon>
+                    <span>اختر صورة</span>
+                  </label>
                   <button
                     type="button"
-                    id="regenerate-sku-btn"
-                    class="icon-btn"
-                    title="توليد SKU جديد"
-                    aria-label="توليد SKU جديد"
+                    id="paste-image-btn"
+                    class="custom-file-upload-btn"
                   >
                     <iconify-icon
-                      icon="material-symbols:refresh"
+                      icon="fluent:clipboard-paste-16-regular"
+                    ></iconify-icon>
+                    <span>لصق صورة</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>المعلومات الأساسية</legend>
+            <div class="fieldset-content">
+              <div class="form-group">
+                <label for="item-name">اسم المنتج</label>
+                <input type="text" id="item-name" required />
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="item-sku">SKU (رقم المنتج)</label>
+                  <div class="sku-container">
+                    <input type="text" id="item-sku" required />
+                    <button
+                      type="button"
+                      id="regenerate-sku-btn"
+                      class="icon-btn"
+                      title="توليد SKU جديد"
+                      aria-label="توليد SKU جديد"
+                    >
+                      <iconify-icon
+                        icon="material-symbols:refresh"
+                      ></iconify-icon>
+                    </button>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="item-category">الفئة</label>
+                  <input type="text" id="item-category" list="category-list" />
+                  <datalist id="category-list"> </datalist>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="item-oem-pn">رقم القطعة الأصلي (OEM)</label>
+                  <input
+                    type="text"
+                    id="item-oem-pn"
+                    placeholder="e.g., 95440-S1000"
+                    dir="ltr"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="item-compatible-pn"
+                    >أرقام القطع المتوافقة (بينها ,)</label
+                  >
+                  <input
+                    type="text"
+                    id="item-compatible-pn"
+                    placeholder="e.g., 95440-S2000, 95440-F2000"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>المخزون والمورّد</legend>
+            <div class="fieldset-content">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="item-quantity">الكمية</label>
+                  <input type="number" id="item-quantity" value="0" min="0" />
+                </div>
+                <div class="form-group">
+                  <label for="item-alert-level">حد التنبيه</label>
+                  <input
+                    type="number"
+                    id="item-alert-level"
+                    value="5"
+                    min="0"
+                  />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="item-supplier">المورّد (اختياري)</label>
+                <div class="supplier-selection-container">
+                  <select id="item-supplier">
+                    <option value="">-- اختر مورّد --</option>
+                  </select>
+                  <button
+                    type="button"
+                    id="manage-suppliers-btn"
+                    class="icon-btn"
+                    title="إدارة المورّدين"
+                  >
+                    <iconify-icon
+                      icon="material-symbols:group-add-outline-rounded"
                     ></iconify-icon>
                   </button>
                 </div>
               </div>
-              <div class="form-group">
-                <label for="item-category">الفئة</label>
-                <input type="text" id="item-category" list="category-list" />
-                <datalist id="category-list"> </datalist>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>التسعير</legend>
+            <div class="fieldset-content">
+              <div class="pricing-grid">
+                <div class="form-group">
+                  <label for="item-cost-price-iqd">تكلفة (دينار)</label>
+                  <input
+                    type="number"
+                    id="item-cost-price-iqd"
+                    step="250"
+                    value="0"
+                    min="0"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="item-sell-price-iqd">بيع (دينار)</label>
+                  <input
+                    type="number"
+                    id="item-sell-price-iqd"
+                    step="250"
+                    value="0"
+                    min="0"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="item-cost-price-usd">تكلفة (دولار)</label>
+                  <input
+                    type="number"
+                    id="item-cost-price-usd"
+                    step="0.01"
+                    value="0"
+                    min="0"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="item-sell-price-usd">بيع (دولار)</label>
+                  <input
+                    type="number"
+                    id="item-sell-price-usd"
+                    step="0.01"
+                    value="0"
+                    min="0"
+                  />
+                </div>
               </div>
             </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="item-oem-pn">رقم القطعة الأصلي (OEM)</label>
-                <input
-                  type="text"
-                  id="item-oem-pn"
-                  placeholder="e.g., 95440-S1000"
-                  dir="ltr"
-                />
-              </div>
-              <div class="form-group">
-                <label for="item-compatible-pn"
-                  >أرقام القطع المتوافقة (بينها ,)</label
-                >
-                <input
-                  type="text"
-                  id="item-compatible-pn"
-                  placeholder="e.g., 95440-S2000, 95440-F2000"
-                  dir="ltr"
-                />
-              </div>
-            </div>
+          </fieldset>
+          <div class="form-group">
+            <label for="item-notes">ملاحظات</label>
+            <textarea id="item-notes" rows="3"></textarea>
           </div>
-        </fieldset>
-
-        <fieldset>
-          <legend>المخزون والمورّد</legend>
-          <div class="fieldset-content">
-            <div class="form-row">
-              <div class="form-group">
-                <label for="item-quantity">الكمية</label>
-                <input type="number" id="item-quantity" value="0" min="0" />
-              </div>
-              <div class="form-group">
-                <label for="item-alert-level">حد التنبيه</label>
-                <input type="number" id="item-alert-level" value="5" min="0" />
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="item-supplier">المورّد (اختياري)</label>
-              <div class="supplier-selection-container">
-                <select id="item-supplier">
-                  <option value="">-- اختر مورّد --</option>
-                </select>
-                <button
-                  type="button"
-                  id="manage-suppliers-btn"
-                  class="icon-btn"
-                  title="إدارة المورّدين"
-                >
-                  <iconify-icon
-                    icon="material-symbols:group-add-outline-rounded"
-                  ></iconify-icon>
-                </button>
-              </div>
-            </div>
-          </div>
-        </fieldset>
-
-        <fieldset>
-          <legend>التسعير</legend>
-          <div class="fieldset-content">
-            <div class="pricing-grid">
-              <div class="form-group">
-                <label for="item-cost-price-iqd">تكلفة (دينار)</label>
-                <input
-                  type="number"
-                  id="item-cost-price-iqd"
-                  step="250"
-                  value="0"
-                  min="0"
-                />
-              </div>
-              <div class="form-group">
-                <label for="item-sell-price-iqd">بيع (دينار)</label>
-                <input
-                  type="number"
-                  id="item-sell-price-iqd"
-                  step="250"
-                  value="0"
-                  min="0"
-                />
-              </div>
-              <div class="form-group">
-                <label for="item-cost-price-usd">تكلفة (دولار)</label>
-                <input
-                  type="number"
-                  id="item-cost-price-usd"
-                  step="0.01"
-                  value="0"
-                  min="0"
-                />
-              </div>
-              <div class="form-group">
-                <label for="item-sell-price-usd">بيع (دولار)</label>
-                <input
-                  type="number"
-                  id="item-sell-price-usd"
-                  step="0.01"
-                  value="0"
-                  min="0"
-                />
-              </div>
-            </div>
-          </div>
-        </fieldset>
-
-        <div class="form-group">
-          <label for="item-notes">ملاحظات</label>
-          <textarea id="item-notes" rows="3"></textarea>
         </div>
-
         <div class="modal-actions">
           <button type="submit" id="save-item-btn">حفظ</button>
           <button type="button" id="cancel-item-btn">إلغاء</button>
@@ -933,7 +934,9 @@
       aria-label="العودة للأعلى"
       title="العودة للأعلى"
     >
-      <iconify-icon icon="material-symbols:arrow-upward-alt"></iconify-icon>
+      <iconify-icon
+        icon="material-symbols:arrow-upward-alt-rounded"
+      ></iconify-icon>
     </button>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>

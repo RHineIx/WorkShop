@@ -846,9 +846,12 @@ async function handleBulkCategoryChange(e) {
   try {
     const { sha: latestSha } = await api.fetchFromGitHub();
     if (latestSha !== appState.fileSha) {
+      ui.hideSyncStatus();
       ui.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
         showRefreshButton: true,
       });
+      ui.getDOMElements().bulkCategoryModal.close();
+      exitSelectionMode();
       return;
     }
 
@@ -859,15 +862,19 @@ async function handleBulkCategoryChange(e) {
 
     await api.saveToGitHub();
     saveLocalData();
+    ui.hideSyncStatus();
     ui.showStatus(
       `تم تحديث فئة ${appState.selectedItemIds.size} عناصر بنجاح.`,
       "success"
     );
   } catch (error) {
+    ui.hideSyncStatus();
     ui.showStatus(`فشل تحديث الفئة: ${error.message}`, "error");
   } finally {
     ui.getDOMElements().bulkCategoryModal.close();
     exitSelectionMode();
+    appState.visibleItemCount = ITEMS_PER_PAGE;
+    ui.filterAndRenderItems();
     ui.populateCategoryDatalist();
     ui.renderCategoryFilter();
   }
@@ -882,9 +889,12 @@ async function handleBulkSupplierChange(e) {
   try {
     const { sha: latestSha } = await api.fetchFromGitHub();
     if (latestSha !== appState.fileSha) {
+      ui.hideSyncStatus();
       ui.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
         showRefreshButton: true,
       });
+      ui.getDOMElements().bulkSupplierModal.close();
+      exitSelectionMode();
       return;
     }
 
@@ -895,15 +905,19 @@ async function handleBulkSupplierChange(e) {
 
     await api.saveToGitHub();
     saveLocalData();
+    ui.hideSyncStatus();
     ui.showStatus(
       `تم تحديث مورّد ${appState.selectedItemIds.size} عناصر بنجاح.`,
       "success"
     );
   } catch (error) {
+    ui.hideSyncStatus();
     ui.showStatus(`فشل تحديث المورّد: ${error.message}`, "error");
   } finally {
     ui.getDOMElements().bulkSupplierModal.close();
     exitSelectionMode();
+    appState.visibleItemCount = ITEMS_PER_PAGE;
+    ui.filterAndRenderItems();
   }
 }
 
