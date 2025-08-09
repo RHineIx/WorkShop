@@ -16,25 +16,21 @@ body {
     font-family: var(--font-family);
     background-color: var(--bg-color);
     color: var(--text-primary);
-    transition: background-color var(--transition-speed) ease;
+    /* Apply transition to all relevant properties for a smooth theme change */
+    transition: 
+        background-color var(--transition-speed) ease,
+        color var(--transition-speed) ease;
 }
 
-/* Add a smooth transition to all elements that might change color */
-body,
-.page-controls,
-.main-container,
-.stat-card,
-.inventory-header,
-.product-card,
-.product-card .card-image-container,
-.search-container,
-.search-container #search-bar,
-.modal-actions button,
-.modal-actions button[type="button"],
-.icon-btn,
-.custom-file-upload-btn,
-.time-filter-btn,
-.collapsible-section,
+/*
+ * This universal rule ensures that every element on the page transitions smoothly
+ * when its color-related CSS variables change.
+ */
+* {
+    transition-property: background-color, color, border-color, box-shadow, transform, opacity;
+    transition-duration: var(--transition-speed);
+    transition-timing-function: ease;
+}.collapsible-section,
 .collapsible-content > div,
 .collapsible-content > div:last-child,
 .sale-item,
