@@ -19,4 +19,5 @@
 @import "components/_utilities.css";
 @import "components/_cropper.css";
 @import "components/_dashboard.css";
-@import "components/_bulk-actions.css"; /* New file import */
+@import "components/_bulk-actions.css";
+@import "components/_scroll-to-top.css"; /* New file import */
