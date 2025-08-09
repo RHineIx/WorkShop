@@ -12,7 +12,6 @@
   border-radius: var(--border-radius-sm);
   transition: border-color var(--transition-speed),
     box-shadow var(--transition-speed);
-  /* overflow: hidden; -- REMOVED: This was clipping the absolute-positioned dropdown */
 }
 
 /* 2. Style the container when it or its children are focused */

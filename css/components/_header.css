@@ -54,7 +54,7 @@
   box-shadow: 0 0 8px #dc3545;
 }
 
-/* --- Floating & Glassy Inventory Header --- */
+/* --- NEW: Floating & Glassy Inventory Header --- */
 .inventory-header {
   display: flex;
   flex-wrap: wrap; /* Allow wrapping on small screens */
@@ -85,16 +85,9 @@
   flex-grow: 1;
 }
 
-/* Hide the mobile search and sort container by default */
-#search-and-filter-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--spacing-md);
-  width: 100%;
-}
-.sort-container-mobile {
-  display: none;
+#search-container {
+  flex-grow: 1; /* Allow search to grow */
+  min-width: 200px; /* Prevent search from getting too small */
 }
 
 .inventory-header h2 {
@@ -105,15 +98,14 @@ body.theme-dark .inventory-header h2 {
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* --- Sort Container Styles (Desktop) --- */
+/* --- Sort Container Styles --- */
 .sort-container {
   position: relative;
+}
+.sort-container {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-}
-.sort-container label {
-    display: block;
+  gap: 0.5rem; /* Adjust as needed */
 }
 #sort-options {
   -webkit-appearance: none;
@@ -128,7 +120,7 @@ body.theme-dark .inventory-header h2 {
   font-weight: 500;
   color: var(--text-primary);
   cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='%23718096' viewBox='0 0 32 32'%3E%3Cpath d='m21.4 15.6 2.6 2.6 2.6-2.6L28 17l-4 4-4-4zm0-2.2 2.6-2.6 2.6 2.6L28 12l-4-4-4 4zM26 4H4c-1.1 0-2 .9-2 2v3.2c0 .5.2 1 .6 1.4L10 18v8c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2v-4h-2v4h-4v-8.8l-.6-.6L4 9.2V6h22z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 20 20'%3E%3Cpath fill='none' stroke='%23718096' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m8 10 4 4 4-4'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
   transition: all var(--transition-speed) ease;
@@ -182,79 +174,22 @@ body.theme-dark .inventory-header h2 {
   font-weight: 700;
 }
 
-
 /* Responsive adjustments for mobile */
 @media (max-width: 639px) {
-  .inventory-header {
-    flex-direction: column; /* Stack children vertically */
-    align-items: stretch; /* Stretch children to full width */
-    gap: var(--spacing-md);
-    padding: var(--spacing-sm) var(--spacing-md);
-  }
-  
-  /* The main header row (title + desktop sort) takes the full width, with space between */
   .inventory-header-main {
-    flex-basis: 100%;
+    flex-basis: 100%; /* Make title and sort take full width */
     justify-content: space-between;
   }
-  
-  .inventory-header-main h2 {
+  #search-container {
+    flex-basis: 100%; /* Make search take full width on the next line */
+  }
+  .inventory-header h2 {
     font-size: 1.125rem; /* 18px */
   }
-  
-  /* Hide the desktop sort container on mobile */
-  .inventory-header-main .sort-container {
-    display: none;
-  }
 
-  /* Show the mobile search and sort container row on mobile */
-  #search-and-filter-container {
-    display: flex;
-    justify-content: flex-start; /* Align search and sort to the left */
-    gap: var(--spacing-sm);
-    width: 100%;
-    order: 1; /* Make it appear below the title */
-  }
-  
-  /* Let search container take up the available space on mobile */
-  #search-container {
-    flex-grow: 1;
-    min-width: 0;
-  }
-  
-  /* Show the mobile sort container on mobile */
-  .sort-container-mobile {
-    display: block;
-  }
-  
-  /* Style the sort button to be an icon on mobile */
-  .sort-container-mobile #sort-options-mobile {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    background-color: var(--surface-color);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-sm);
-    padding: 10px 14px;
-    width: 48px;
-    height: 48px;
-    font-family: var(--font-family);
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text-primary);
-    cursor: pointer;
-    text-indent: -9999px; /* Hide text */
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='%23718096' viewBox='0 0 24 24'%3E%3Cpath d='M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: center;
-    transition: all var(--transition-speed) ease;
-  }
-  .sort-container-mobile #sort-options-mobile:hover {
-    border-color: var(--accent-color);
-  }
-  .sort-container-mobile #sort-options-mobile:focus {
-    outline: none;
-    border-color: var(--accent-color);
-    box-shadow: 0 0 0 3px var(--accent-soft-bg);
+  .inventory-header {
+    left: var(--spacing-sm);
+    right: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
   }
 }
