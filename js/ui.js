@@ -5,6 +5,7 @@ import { sanitizeHTML } from "./utils.js";
 
 const elements = {
   // Main Layout
+  themeTransitionOverlay: document.getElementById("theme-transition-overlay"),
   inventoryGrid: document.getElementById("inventory-grid"),
   searchBar: document.getElementById("search-bar"),
   statsContainer: document.getElementById("stats-cards"),
@@ -138,6 +139,7 @@ const elements = {
   bulkSupplierForm: document.getElementById("bulk-supplier-form"),
   bulkSupplierSelect: document.getElementById("bulk-item-supplier"),
 };
+
 export const displayVersionInfo = versionData => {
   if (versionData && elements.appVersionDisplay) {
     const { hash, branch } = versionData;
@@ -348,6 +350,7 @@ export const toggleView = viewToShow => {
     renderDashboard();
   }
 };
+
 function renderSalesLog(filteredSales) {
   if (filteredSales.length === 0) {
     elements.salesLogContent.innerHTML =
@@ -561,7 +564,6 @@ export function renderInventorySkeleton(count = 8) {
 
 function getFilteredItems() {
   let items = [...appState.inventory.items];
-
   // Apply filters
   if (appState.activeFilter === "low_stock") {
     items = items.filter(item => item.quantity <= item.alertLevel);
@@ -659,7 +661,6 @@ export function renderInventory(itemsToRender) {
     const price = isIQD ? item.sellPriceIqd || 0 : item.sellPriceUsd || 0;
     const symbol = isIQD ? "د.ع" : "$";
     const placeholder = `<div class="card-image-placeholder"><iconify-icon icon="material-symbols:key"></iconify-icon></div>`;
-
     let imageHtml = placeholder;
     if (item.imagePath) {
       if (item.imagePath.startsWith("http")) {
@@ -719,18 +720,54 @@ export const updateStats = () => {
     item => item.quantity <= item.alertLevel
   ).length;
 };
+
 export const setTheme = themeName => {
-  document.body.className = `theme-${themeName}`;
-  const icon = elements.themeToggleBtn.querySelector("iconify-icon");
-  if (icon) {
-    icon.setAttribute(
-      "icon",
-      themeName === "dark"
-        ? "material-symbols:dark-mode-outline-rounded"
-        : "material-symbols:light-mode-outline-rounded"
-    );
+  const overlay = elements.themeTransitionOverlay;
+
+  if (!overlay || document.body.classList.contains(`theme-${themeName}`)) {
+    return; // الخروج إذا لم يكن هناك تغيير مطلوب
   }
-  localStorage.setItem("inventoryAppTheme", themeName);
+
+  // منع النقرات المتعددة من تشغيل الانتقال مرة أخرى
+  if (overlay.dataset.transitioning === "true") {
+    return;
+  }
+  overlay.dataset.transitioning = "true";
+
+  // 1. احصل على لون الخلفية الحالي للجسم
+  const oldBgColor = getComputedStyle(document.body).backgroundColor;
+
+  // 2. قم بتعيين خلفية الغطاء على هذا اللون واجعله مرئيًا
+  overlay.style.backgroundColor = oldBgColor;
+  overlay.classList.add("visible");
+
+  // 3. انتظر حتى يكتمل انتقال التلاشي للداخل (300 مللي ثانية من CSS)
+  setTimeout(() => {
+    // 4. التغيير المخفي: قم بتحديث فئة الثيم على الجسم.
+    // يحدث التقطيع هنا، مخفيًا تمامًا بواسطة الغطاء المعتم.
+    document.body.className = `theme-${themeName}`;
+
+    // تحديث أيقونة الزر وحفظ التفضيل
+    const icon = elements.themeToggleBtn.querySelector("iconify-icon");
+    if (icon) {
+      icon.setAttribute(
+        "icon",
+        themeName === "dark"
+          ? "material-symbols:dark-mode-outline-rounded"
+          : "material-symbols:light-mode-outline-rounded"
+      );
+    }
+    localStorage.setItem("inventoryAppTheme", themeName);
+
+    // 5. ابدأ في تلاشي الغطاء للخارج. نظرًا لأن لون الخلفية لا يزال
+    // هو اللون "القديم"، فسوف يتلاشى بسلاسة، كاشفًا عن الثيم الجديد.
+    overlay.classList.remove("visible");
+  }, 300); // يجب أن تتطابق هذه المدة مع مدة انتقال CSS
+
+  // 6. قم بإزالة علامة الانتقال بعد انتهاء كل شيء
+  setTimeout(() => {
+    overlay.dataset.transitioning = "false";
+  }, 600); // ضعف مدة الانتقال لضمان الأمان
 };
 
 export const updateCurrencyDisplay = () => {
@@ -1032,7 +1069,6 @@ export const populateSyncModal = () => {
   elements.syncModal.appendChild(elements.toastContainer);
   elements.syncModal.showModal();
 };
-
 export function updateBulkActionsBar() {
   const count = appState.selectedItemIds.size;
   if (count > 0) {
