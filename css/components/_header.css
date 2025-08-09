@@ -87,26 +87,25 @@
 
 #search-container {
   flex-grow: 1; /* Allow search to grow */
-  min-width: 200px; /* Prevent search from getting too small */
+  min-width: 200px;
 }
 
 .inventory-header h2 {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
 }
 
 body.theme-dark .inventory-header h2 {
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* --- Sort Container Styles --- */
+/* --- Sort Container Styles (REVISED) --- */
 .sort-container {
   position: relative;
-}
-.sort-container {
   display: flex;
   align-items: center;
-  gap: 0.5rem; /* Adjust as needed */
 }
+
 #sort-options {
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -114,16 +113,14 @@ body.theme-dark .inventory-header h2 {
   background-color: var(--surface-color);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-sm);
-  padding: 10px 36px 10px 12px;
+  padding: 10px 12px 10px 36px; /* Adjusted padding for icon */
   font-family: var(--font-family);
   font-size: 14px;
   font-weight: 500;
   color: var(--text-primary);
   cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 20 20'%3E%3Cpath fill='none' stroke='%23718096' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m8 10 4 4 4-4'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
   transition: all var(--transition-speed) ease;
+  background-image: none; /* Remove old arrow */
 }
 #sort-options:hover {
   border-color: var(--accent-color);
@@ -132,6 +129,16 @@ body.theme-dark .inventory-header h2 {
   outline: none;
   border-color: var(--accent-color);
   box-shadow: 0 0 0 3px var(--accent-soft-bg);
+}
+
+.sort-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  pointer-events: none; /* Make icon unclickable */
+  font-size: 22px;
 }
 
 /* --- Category Filter Dropdown --- */
@@ -174,22 +181,42 @@ body.theme-dark .inventory-header h2 {
   font-weight: 700;
 }
 
-/* Responsive adjustments for mobile */
+/* Responsive adjustments for mobile (REVISED) */
 @media (max-width: 639px) {
+  .inventory-header {
+    flex-wrap: nowrap; /* Prevent wrapping */
+    gap: var(--spacing-sm);
+  }
   .inventory-header-main {
-    flex-basis: 100%; /* Make title and sort take full width */
-    justify-content: space-between;
+    flex-grow: 0; /* Don't grow title and sort */
+    gap: var(--spacing-sm);
   }
   #search-container {
-    flex-basis: 100%; /* Make search take full width on the next line */
+    flex-grow: 1; /* Allow search to fill remaining space */
   }
   .inventory-header h2 {
-    font-size: 1.125rem; /* 18px */
+    font-size: 1rem; /* Adjust title size */
   }
 
-  .inventory-header {
-    left: var(--spacing-sm);
-    right: var(--spacing-sm);
-    padding: var(--spacing-sm) var(--spacing-md);
+  /* Make the sort options just an icon */
+  #sort-options {
+    width: 44px; /* Icon button size */
+    height: 44px;
+    padding: 0;
+    color: transparent; /* Hide the text */
+    background-color: var(--bg-color);
+    border-color: var(--border-color);
   }
+  .sort-icon {
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 24px;
+    color: var(--text-primary);
+  }
+}
+
+/* Attempt to fix option text color in dark mode */
+body.theme-dark #sort-options option {
+  background-color: #1e1e1e; /* Match dark theme surface color */
+  color: #e0e0e0; /* Match dark theme primary text color */
 }

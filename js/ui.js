@@ -138,6 +138,9 @@ const elements = {
   bulkSupplierModal: document.getElementById("bulk-supplier-modal"),
   bulkSupplierForm: document.getElementById("bulk-supplier-form"),
   bulkSupplierSelect: document.getElementById("bulk-item-supplier"),
+
+  // Floating Action Buttons
+  scrollToTopBtn: document.getElementById("scroll-to-top-btn"),
 };
 
 export const displayVersionInfo = versionData => {
@@ -725,29 +728,21 @@ export const setTheme = themeName => {
   const overlay = elements.themeTransitionOverlay;
 
   if (!overlay || document.body.classList.contains(`theme-${themeName}`)) {
-    return; // الخروج إذا لم يكن هناك تغيير مطلوب
+    return;
   }
 
-  // منع النقرات المتعددة من تشغيل الانتقال مرة أخرى
   if (overlay.dataset.transitioning === "true") {
     return;
   }
   overlay.dataset.transitioning = "true";
 
-  // 1. احصل على لون الخلفية الحالي للجسم
   const oldBgColor = getComputedStyle(document.body).backgroundColor;
-
-  // 2. قم بتعيين خلفية الغطاء على هذا اللون واجعله مرئيًا
   overlay.style.backgroundColor = oldBgColor;
   overlay.classList.add("visible");
 
-  // 3. انتظر حتى يكتمل انتقال التلاشي للداخل (300 مللي ثانية من CSS)
   setTimeout(() => {
-    // 4. التغيير المخفي: قم بتحديث فئة الثيم على الجسم.
-    // يحدث التقطيع هنا، مخفيًا تمامًا بواسطة الغطاء المعتم.
     document.body.className = `theme-${themeName}`;
 
-    // تحديث أيقونة الزر وحفظ التفضيل
     const icon = elements.themeToggleBtn.querySelector("iconify-icon");
     if (icon) {
       icon.setAttribute(
@@ -759,15 +754,12 @@ export const setTheme = themeName => {
     }
     localStorage.setItem("inventoryAppTheme", themeName);
 
-    // 5. ابدأ في تلاشي الغطاء للخارج. نظرًا لأن لون الخلفية لا يزال
-    // هو اللون "القديم"، فسوف يتلاشى بسلاسة، كاشفًا عن الثيم الجديد.
     overlay.classList.remove("visible");
-  }, 300); // يجب أن تتطابق هذه المدة مع مدة انتقال CSS
+  }, 300);
 
-  // 6. قم بإزالة علامة الانتقال بعد انتهاء كل شيء
   setTimeout(() => {
     overlay.dataset.transitioning = "false";
-  }, 600); // ضعف مدة الانتقال لضمان الأمان
+  }, 600);
 };
 
 export const updateCurrencyDisplay = () => {
