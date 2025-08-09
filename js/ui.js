@@ -146,7 +146,7 @@ const elements = {
 export const displayVersionInfo = versionData => {
   if (versionData && elements.appVersionDisplay) {
     const { hash, branch } = versionData;
-    elements.appVersionDisplay.textContent = `Version: ${hash} (Branch: ${branch})`;
+    elements.appVersionDisplay.textContent = `الإصدار: ${hash} - الفرع (${branch})`;
   }
 };
 

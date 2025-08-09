@@ -478,7 +478,6 @@ dialog::backdrop {
   margin-top: var(--spacing-md);
   padding-top: var(--spacing-sm);
   border-top: 1px solid var(--border-color);
-  direction: ltr; /* To ensure hash and branch name display correctly */
 }
 .magic-link-container {
   display: flex;

@@ -123,103 +123,6 @@ function saveLocalData() {
   localStorage.setItem("suppliersAppData", JSON.stringify(appState.suppliers));
 }
 
-// --- CSV Import Handler ---
-async function handleCsvImport(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  ui.showStatus("جاري معالجة ملف CSV...", "syncing");
-
-  Papa.parse(file, {
-    header: true,
-    skipEmptyLines: true,
-    complete: async results => {
-      const newProducts = [];
-      let modifiedSkuCount = 0;
-      const existingSkus = new Set(
-        appState.inventory.items.map(item => item.sku)
-      );
-
-      for (const row of results.data) {
-        let sku = row.Slug ? String(row.Slug).trim() : null;
-        if (!sku || !row.Name) {
-          continue; // Skip rows without essential data
-        }
-
-        if (existingSkus.has(sku)) {
-          modifiedSkuCount++;
-          let counter = 2;
-          let newSku = `${sku}-${counter}`;
-          while (existingSkus.has(newSku)) {
-            counter++;
-            newSku = `${sku}-${counter}`;
-          }
-          sku = newSku; // Use the new unique SKU
-        }
-
-        const newProduct = {
-          id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          name: String(row.Name).trim(),
-          sku: sku,
-          category: String(row.Collection || "").trim(),
-          quantity: parseInt(row.Quantity, 10) || 0,
-          alertLevel: 5, // Default value
-          sellPriceIqd: parseFloat(row.Price) || 0,
-          costPriceIqd: 0,
-          sellPriceUsd: 0,
-          costPriceUsd: 0,
-          notes: String(row.Description || "").trim(),
-          imagePath: String(row.Image || "").trim(),
-          supplierId: null,
-          oemPartNumber: "",
-          compatiblePartNumber: "",
-        };
-        newProducts.push(newProduct);
-        existingSkus.add(sku); // Add to set to prevent future duplicates within the same file
-      }
-
-      if (newProducts.length === 0) {
-        ui.hideSyncStatus();
-        ui.showStatus(`لم يتم العثور على منتجات جديدة للاستيراد.`, "info");
-        return;
-      }
-
-      appState.inventory.items.push(...newProducts);
-
-      try {
-        ui.showStatus(`جاري حفظ ${newProducts.length} منتج جديد...`, "syncing");
-        await api.saveToGitHub();
-        saveLocalData();
-        ui.filterAndRenderItems();
-        ui.populateCategoryDatalist();
-        ui.hideSyncStatus();
-        ui.showStatus(
-          `تم استيراد ${newProducts.length} منتج. تم تعديل ${modifiedSkuCount} SKU مكرر.`,
-          "success"
-        );
-      } catch (error) {
-        ui.hideSyncStatus();
-        ui.showStatus(
-          `فشل حفظ البيانات بعد الاستيراد: ${error.message}`,
-          "error"
-        );
-        // Revert changes if save fails
-        appState.inventory.items.splice(
-          appState.inventory.items.length - newProducts.length,
-          newProducts.length
-        );
-      } finally {
-        event.target.value = ""; // Reset file input
-      }
-    },
-    error: error => {
-      ui.hideSyncStatus();
-      ui.showStatus(`فشل في قراءة ملف CSV: ${error.message}`, "error");
-      event.target.value = ""; // Reset file input
-    },
-  });
-}
-
 // --- PRICE CONVERSION LOGIC ---
 function handlePriceConversion(iqdInput, usdInput) {
   const iqdValue = parseFloat(iqdInput.value);
@@ -1704,11 +1607,6 @@ function setupEventListeners() {
 
   if (elements.generateMagicLinkBtn) {
     elements.generateMagicLinkBtn.addEventListener("click", generateMagicLink);
-  }
-
-  const csvImportInput = document.getElementById("csv-import-input");
-  if (csvImportInput) {
-    csvImportInput.addEventListener("change", handleCsvImport);
   }
 }
 
