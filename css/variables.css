@@ -1,0 +1,59 @@
+/* css/_variables.css */
+
+:root {
+  /* Typography */
+  --font-family: "Cairo", sans-serif;
+  /* Sizing & Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --border-radius-sm: 8px;
+  --border-radius-md: 16px;
+  /* Effects */
+  --transition-speed: 0.25s;
+  --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --shadow-strong: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* --- Light Theme --- */
+body.theme-light {
+  --bg-color: #f4f7f9;
+  --surface-color: #ffffff;
+  --border-color: #e2e8f0;
+  --fieldset-bg: #f8fafc;
+  --text-primary: #1a202c;
+  --text-secondary: #718096;
+  --accent-color: #2a69c7;
+  --accent-color-hover: #2558a5;
+  --accent-soft-bg: #ebf8ff;
+  --accent-soft-text: #2c5282;
+  --danger-color: #e53e3e;
+  --danger-color-hover: #c53030;
+  --danger-soft-bg: #fff5f5;
+  --warning-color: #ed8936;
+  --warning-soft-bg: #fffaf0;
+  --secondary-currency-color: #2f855a; /* Green for USD */
+  --success-color: #38a169;
+}
+
+/* --- Dark Theme --- */
+body.theme-dark {
+  --bg-color: #121212;
+  --surface-color: #1e1e1e;
+  --border-color: #333333;
+  --fieldset-bg: #232323;
+  --text-primary: #e0e0e0;
+  --text-secondary: #888888;
+  --accent-color: #3d83eb;
+  --accent-color-hover: #4da2f7;
+  --accent-soft-bg: #1c2a41;
+  --accent-soft-text: #63b3ed;
+  --danger-color: #fd7777;
+  --danger-color-hover: #f05151;
+  --danger-soft-bg: #3b2323;
+  --warning-color: #f6ad55;
+  --warning-soft-bg: #4a361d;
+  --secondary-currency-color: #68d391; /* Lighter green for dark mode */
+  --success-color: #38a169;
+}

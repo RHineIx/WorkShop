@@ -1,0 +1,102 @@
+/* css/components/_cropper.css */
+
+#cropper-modal {
+  /* Inherits display:flex and flex-direction:column from the main dialog styles */
+  padding: 0;
+}
+
+.cropper-modal-header {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0; /* Prevents header from shrinking */
+  text-align: center;
+}
+
+.cropper-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.cropper-modal-body {
+  flex-grow: 1; /* Allows body to take up available space */
+  overflow-y: auto; /* Enables scrolling ONLY for the body */
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.cropper-image-container {
+  width: 100%;
+  min-height: 40vh; /* Give it a minimum height */
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+}
+
+#cropper-image {
+  display: block;
+  max-width: 100%;
+}
+
+.cropper-controls {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-md) 0;
+  flex-shrink: 0; /* Prevents controls from shrinking */
+}
+
+.control-set {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.control-set label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.padding-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+#padding-display {
+  font-weight: 700;
+  font-size: 16px;
+  min-width: 50px;
+  text-align: center;
+  color: var(--text-primary);
+}
+
+#bg-color-input {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 44px;
+  height: 44px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+}
+#bg-color-input::-webkit-color-swatch {
+  border-radius: var(--border-radius-sm);
+  border: 2px solid var(--border-color);
+}
+#bg-color-input::-moz-color-swatch {
+  border-radius: var(--border-radius-sm);
+  border: 2px solid var(--border-color);
+}
+
+/* Ensure modal actions are a direct child of the dialog for this to work */
+#cropper-modal .modal-actions {
+  margin-top: 0;
+  padding: var(--spacing-md);
+  border-top: 1px solid var(--border-color);
+  flex-shrink: 0; /* Prevents footer from shrinking */
+}

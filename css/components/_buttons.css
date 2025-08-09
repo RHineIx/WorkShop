@@ -1,0 +1,365 @@
+/* --- All Button Styles --- */
+.control-button {
+  font-size: 14px;
+  font-weight: 500;
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  border: 1px solid transparent;
+  background-color: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  transition: all var(--transition-speed) ease;
+}
+.control-button iconify-icon {
+  font-size: 22px;
+}
+#currency-toggle-btn {
+  font-weight: bold;
+  min-width: 48px;
+  font-size: 16px;
+}
+.control-button .btn-text {
+  display: none;
+}
+.control-button:hover {
+  background-color: var(--bg-color);
+}
+.control-button.primary-action {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+  color: white;
+}
+.control-button.primary-action:hover {
+  background-color: var(--accent-color-hover);
+}
+.modal-actions button {
+  padding: 12px var(--spacing-lg);
+  border-radius: var(--border-radius-sm);
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  font-family: var(--font-family);
+  font-size: 16px;
+  transition: all var(--transition-speed) ease;
+}
+.modal-actions button[type="button"] {
+  background-color: var(--surface-color);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+.modal-actions button[type="button"]:hover {
+  background-color: var(--bg-color);
+}
+.modal-actions button[type="submit"] {
+  background-color: var(--accent-color);
+  color: white;
+}
+.modal-actions button[type="submit"]:hover {
+  background-color: var(--accent-color-hover);
+}
+
+/* MODIFIED ICON BUTTON STYLE */
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: var(--border-radius-sm);
+  /* Changed from 50% */
+  background-color: var(--bg-color);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-speed) ease;
+}
+.icon-btn iconify-icon {
+  font-size: 22px;
+}
+.icon-btn:hover {
+  background-color: var(--accent-color);
+  color: white;
+  border-color: var(--accent-color);
+}
+
+.icon-btn.danger-btn:hover {
+  background-color: var(--danger-color);
+  color: white;
+}
+.sell-btn {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+  color: white;
+}
+.sell-btn:hover {
+  background-color: var(--accent-color-hover);
+}
+.details-btn {
+  background-color: var(--surface-color);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+.details-btn:hover {
+  border-color: var(--accent-color);
+  background-color: var(--accent-color);
+  color: white;
+}
+.cleanup-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--danger-color);
+  background-color: transparent;
+  color: var(--danger-color);
+  font-weight: bold;
+  font-family: var(--font-family);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  transition: all var(--transition-speed) ease;
+}
+.cleanup-btn iconify-icon {
+  font-size: 22px;
+}
+.cleanup-btn:hover {
+  background-color: var(--danger-color);
+  color: white;
+}
+.archive-btn {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+.archive-btn:hover {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+  color: white;
+}
+label[for="restore-backup-input"].cleanup-btn,
+label[for="csv-import-input"].cleanup-btn {
+  color: var(--accent-color) !important;
+  text-align: center;
+}
+label[for="csv-import-input"].cleanup-btn:hover,
+label[for="restore-backup-input"].cleanup-btn:hover {
+  color: white !important;
+}
+.action-btn-details {
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  background-color: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  transition: background-color 0.2s, color 0.2s;
+}
+.action-btn-details iconify-icon {
+  font-size: 20px;
+}
+.action-btn-details:hover {
+  background-color: var(--bg-color);
+}
+.action-btn-details.danger {
+  color: var(--danger-color);
+}
+.action-btn-details.danger:hover {
+  background-color: var(--danger-color);
+  color: white;
+  border-color: var(--danger-color);
+}
+
+/* MODIFIED FILE UPLOAD BUTTON */
+.custom-file-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: 8px 12px;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-family: var(--font-family);
+  /* Explicitly set font */
+  font-size: 14px;
+  font-weight: 600;
+  transition: all var(--transition-speed) ease;
+}
+.custom-file-upload-btn:hover {
+  border-color: var(--accent-color);
+  background-color: var(--accent-soft-bg);
+}
+.custom-file-upload-btn iconify-icon {
+  font-size: 20px;
+}
+
+.status-refresh-btn {
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background-color: rgba(0, 0, 0, 0.2);
+  color: white;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  font-weight: bold;
+  font-family: var(--font-family);
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+.status-refresh-btn:hover {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+.category-filter-toggle-btn {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  background-color: transparent;
+  border-radius: var(--border-radius-sm);
+}
+.category-filter-toggle-btn:hover {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: none;
+}
+.time-filter-controls {
+  display: flex;
+  gap: var(--spacing-sm);
+  background-color: var(--bg-color);
+  padding: 4px;
+  border-radius: var(--border-radius-sm);
+}
+.time-filter-btn {
+  padding: 6px 12px;
+  border: none;
+  background-color: transparent;
+  color: var(--text-secondary);
+  font-weight: 500;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+}
+.time-filter-btn.active {
+  background-color: var(--surface-color);
+  color: var(--text-primary);
+  font-weight: 700;
+  box-shadow: var(--shadow-light);
+}
+.archive-delete-btn {
+  background-color: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+.archive-delete-btn:hover {
+  background-color: var(--danger-color);
+  color: white;
+}
+.whatsapp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 8px 12px;
+  background-color: #25d366;
+  color: white;
+  font-weight: bold;
+  text-decoration: none;
+  border-radius: var(--border-radius-sm);
+  transition: background-color 0.2s;
+}
+.whatsapp-btn iconify-icon {
+  font-size: 20px;
+}
+.whatsapp-btn:hover {
+  background-color: #1dae54;
+}
+.quantity-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--border-color);
+  background-color: var(--surface-color);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 22px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.close-modal-btn {
+  position: absolute;
+  top: var(--spacing-md);
+  left: var(--spacing-md);
+  z-index: 10;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.close-modal-btn iconify-icon {
+  font-size: 24px;
+}
+.backup-actions-group {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+.backup-actions-group .cleanup-btn {
+  flex-grow: 1;
+  width: auto;
+}
+.icon-btn.telegram-btn {
+  border-color: #0088cc;
+  color: #0088cc;
+  width: 48px;
+  height: 48px;
+}
+.icon-btn.telegram-btn:hover {
+  background-color: #0088cc;
+  color: white;
+}
+
+/* --- Enhanced Button Interaction --- */
+.control-button,
+.icon-btn,
+.modal-actions button,
+.custom-file-upload-btn,
+.cleanup-btn {
+  /* Add transition for the transform property */
+  transition: all var(--transition-speed) ease, transform 0.1s ease;
+}
+
+.control-button:active,
+.icon-btn:active,
+.modal-actions button:active,
+.custom-file-upload-btn:active,
+.cleanup-btn:active {
+  /* Add a subtle scale down on click */
+  transform: scale(0.96);
+}

@@ -1,0 +1,22 @@
+/* Main style.css */
+
+@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap");
+
+/* 1. Global Setup */
+@import "variables.css";
+@import "base.css";
+
+/* 2. Main Layout */
+@import "layout.css";
+
+/* 3. Components (Importing all the new partial files) */
+@import "components/_header.css";
+@import "components/_buttons.css";
+@import "components/_forms.css";
+@import "components/_search.css";
+@import "components/_cards.css";
+@import "components/_modals.css";
+@import "components/_utilities.css";
+@import "components/_cropper.css";
+@import "components/_dashboard.css";
+@import "components/_bulk-actions.css";
