@@ -16,18 +16,46 @@ body {
     font-family: var(--font-family);
     background-color: var(--bg-color);
     color: var(--text-primary);
-    /* Apply transition to all relevant properties for a smooth theme change */
     transition: 
         background-color var(--transition-speed) ease,
         color var(--transition-speed) ease;
 }
 
 /*
- * This universal rule ensures that every element on the page transitions smoothly
- * when its color-related CSS variables change.
+ * Apply a smooth transition to a curated list of major components
+ * to reduce performance overhead and avoid stuttering on mobile.
  */
-* {
+.page-controls,
+.main-container,
+.inventory-header,
+.stats-container,
+.stat-card,
+.inventory-grid,
+.product-card,
+.card-image-container,
+.search-container,
+#search-bar,
+.category-dropdown,
+.toast,
+dialog,
+.modal-actions button,
+.control-button,
+.icon-btn,
+.custom-file-upload-btn,
+.cleanup-btn,
+.time-filter-btn,
+.collapsible-section,
+.bestseller-item,
+.sale-item,
+.details-price-grid,
+.details-notes,
+.details-supplier-info,
+.details-pn-grid,
+.pn-copy-tag,
+.supplier-item,
+.bulk-actions-bar,
+.scroll-to-top-btn {
     transition-property: background-color, color, border-color, box-shadow, transform, opacity;
     transition-duration: var(--transition-speed);
     transition-timing-function: ease;
-    }
+}
