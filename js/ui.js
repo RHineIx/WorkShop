@@ -142,6 +142,9 @@ const elements = {
 
   // Scroll-to-top button
   scrollToTopBtn: document.getElementById("scroll-to-top-btn"),
+
+  // NEW: Theme transition overlay
+  themeTransitionOverlay: document.getElementById("theme-transition-overlay"),
 };
 
 export const displayVersionInfo = versionData => {
@@ -383,7 +386,7 @@ function renderSalesLog(filteredSales) {
           const item =
             appState.inventory.items.find(i => i.id === sale.itemId) || {};
           const sellPrice = isIQD ? sale.sellPriceIqd : sale.sellPriceUsd;
-          const costPrice = isIQD ? sale.costPriceIqd : sale.costPriceUsd;
+          const costPrice = isIQD ? sale.costPriceIqd : item.costPriceUsd;
           const totalSellPrice = sellPrice * sale.quantitySold;
           const profit = (sellPrice - costPrice) * sale.quantitySold;
           const profitClass =
@@ -727,22 +730,30 @@ export const updateStats = () => {
 // NEW: Updated setTheme function for smoother transitions
 export const setTheme = themeName => {
   const body = document.body;
+  const overlay = elements.themeTransitionOverlay;
   const icon = elements.themeToggleBtn.querySelector("iconify-icon");
 
-  // Temporarily disable transitions
-  body.classList.add("no-transitions");
+  // Get the current background color to set the overlay
+  const currentColor = getComputedStyle(body).backgroundColor;
+  overlay.style.backgroundColor = currentColor;
+  overlay.style.opacity = 1;
 
-  // Force a reflow to apply the `no-transitions` class immediately
-  body.offsetHeight; 
-
-  // Set the new theme
+  // Change the theme class instantly
   body.className = `theme-${themeName}`;
 
-  // Re-enable transitions after a slight delay
+  // Animate the overlay opacity to 0
   setTimeout(() => {
-    body.classList.remove("no-transitions");
-  }, 50);
+    overlay.style.opacity = 0;
+  }, 10);
 
+  // Remove the overlay after the transition is complete
+  overlay.addEventListener("transitionend", () => {
+    if (overlay.style.opacity == 0) {
+      overlay.style.backgroundColor = "";
+      overlay.style.opacity = "";
+    }
+  }, { once: true });
+  
   if (icon) {
     icon.setAttribute(
       "icon",
@@ -1086,4 +1097,4 @@ export function initScrollToTopButton() {
 
   window.addEventListener('scroll', toggleButtonVisibility);
   elements.scrollToTopBtn.addEventListener('click', scrollToTop);
-        }
+    }
