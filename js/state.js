@@ -81,4 +81,7 @@ export const appState = {
 
   /** @type {Set<string>} A set to store the IDs of the selected items. */
   selectedItemIds: new Set(),
+
+  /** @type {number} The number of items currently rendered in the inventory grid. */
+  visibleItemCount: 20,
 };

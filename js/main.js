@@ -11,6 +11,7 @@ import { ConflictError } from "./api.js";
 import * as ui from "./ui.js";
 
 // --- GLOBAL VARIABLES ---
+const ITEMS_PER_PAGE = 20; // For resetting the view
 let cropper = null;
 let cropperPadding = 0.1;
 let cropperBgColor = "#FFFFFF";
@@ -184,6 +185,7 @@ async function handleSaleFormSubmit(e) {
       timestamp: new Date().toISOString(),
     };
     appState.sales.push(saleRecord);
+    appState.visibleItemCount = ITEMS_PER_PAGE;
     ui.filterAndRenderItems();
 
     try {
@@ -285,6 +287,7 @@ async function handleItemFormSubmit(e) {
       appState.inventory.items.push(itemData);
     }
 
+    appState.visibleItemCount = ITEMS_PER_PAGE;
     ui.filterAndRenderItems();
     ui.renderCategoryFilter();
     ui.populateCategoryDatalist();
@@ -962,12 +965,14 @@ function setupInventoryListeners(elements) {
     "input",
     debounce(e => {
       appState.searchTerm = e.target.value;
+      appState.visibleItemCount = ITEMS_PER_PAGE; // Reset count for new search
       ui.filterAndRenderItems();
     }, 500)
   );
 
   elements.sortOptions.addEventListener("change", e => {
     appState.currentSortOption = e.target.value;
+    appState.visibleItemCount = ITEMS_PER_PAGE; // Reset count for new sort
     ui.filterAndRenderItems();
   });
 
@@ -985,6 +990,7 @@ function setupInventoryListeners(elements) {
       appState.selectedCategory = "all";
       ui.renderCategoryFilter();
     }
+    appState.visibleItemCount = ITEMS_PER_PAGE; // Reset count for new filter
     ui.filterAndRenderItems();
   });
 
@@ -996,6 +1002,7 @@ function setupInventoryListeners(elements) {
     const categoryItem = e.target.closest(".category-item");
     if (categoryItem) {
       appState.selectedCategory = categoryItem.dataset.category;
+      appState.visibleItemCount = ITEMS_PER_PAGE; // Reset count for new category
       ui.filterAndRenderItems();
       ui.renderCategoryFilter();
       elements.categoryFilterDropdown.classList.remove("show");
@@ -1196,6 +1203,7 @@ function setupModalListeners(elements) {
     if (item) {
       item.quantity++;
       elements.detailsQuantityValue.textContent = item.quantity;
+      appState.visibleItemCount = ITEMS_PER_PAGE;
       ui.filterAndRenderItems();
     }
   });
@@ -1206,6 +1214,7 @@ function setupModalListeners(elements) {
     if (item && item.quantity > 0) {
       item.quantity--;
       elements.detailsQuantityValue.textContent = item.quantity;
+      appState.visibleItemCount = ITEMS_PER_PAGE;
       ui.filterAndRenderItems();
     }
   });
@@ -1229,6 +1238,7 @@ function setupModalListeners(elements) {
         if (originalItemIndex !== -1) {
           appState.inventory.items[originalItemIndex] = itemBeforeEdit;
         }
+        appState.visibleItemCount = ITEMS_PER_PAGE;
         ui.filterAndRenderItems();
       }
     }
@@ -1257,6 +1267,7 @@ function setupModalListeners(elements) {
       );
 
       elements.detailsModal.close();
+      appState.visibleItemCount = ITEMS_PER_PAGE;
       ui.filterAndRenderItems();
       ui.updateStats();
       try {

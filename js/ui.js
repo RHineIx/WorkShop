@@ -3,6 +3,8 @@ import { appState } from "./state.js";
 import { fetchImageWithAuth } from "./api.js";
 import { sanitizeHTML } from "./utils.js";
 
+const ITEMS_PER_PAGE = 20;
+
 const elements = {
   // Main Layout
   themeTransitionOverlay: document.getElementById("theme-transition-overlay"),
@@ -16,6 +18,7 @@ const elements = {
   categoryFilterBtn: document.getElementById("category-filter-btn"),
   categoryFilterDropdown: document.getElementById("category-filter-dropdown"),
   sortOptions: document.getElementById("sort-options"),
+  loadMoreTrigger: document.getElementById("load-more-trigger"),
 
   // Header
   themeToggleBtn: document.getElementById("theme-toggle-btn"),
@@ -193,16 +196,27 @@ const animationObserver = new IntersectionObserver(
   (entries, observer) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        // Add class when element enters the viewport
         entry.target.classList.add("is-visible");
       } else {
-        // Remove class when element leaves the viewport to reset it
         entry.target.classList.remove("is-visible");
       }
     });
   },
   {
-    threshold: 0.1, // Animate when 10% of the card is visible
+    threshold: 0.1,
+  }
+);
+
+const loadMoreObserver = new IntersectionObserver(
+  (entries, observer) => {
+    const entry = entries[0];
+    if (entry.isIntersecting) {
+      appState.visibleItemCount += ITEMS_PER_PAGE;
+      filterAndRenderItems();
+    }
+  },
+  {
+    rootMargin: "0px 0px 400px 0px",
   }
 );
 
@@ -637,6 +651,8 @@ export function filterAndRenderItems() {
 }
 
 export function renderInventory(itemsToRender) {
+  // Disconnect the observer before manipulating the DOM to prevent false triggers
+  loadMoreObserver.disconnect();
   elements.inventoryGrid.innerHTML = "";
 
   if (appState.isSelectionModeActive) {
@@ -645,13 +661,15 @@ export function renderInventory(itemsToRender) {
     elements.inventoryGrid.classList.remove("selection-mode");
   }
 
-  if (itemsToRender.length === 0) {
+  const itemsToDisplay = itemsToRender.slice(0, appState.visibleItemCount);
+
+  if (itemsToDisplay.length === 0) {
     elements.inventoryGrid.innerHTML =
       '<p class="empty-state">لا توجد منتجات تطابق بحثك...</p>';
     return;
   }
   const fragment = document.createDocumentFragment();
-  itemsToRender.forEach(item => {
+  itemsToDisplay.forEach(item => {
     const card = document.createElement("div");
     card.className = "product-card";
     card.dataset.id = item.id;
@@ -728,7 +746,6 @@ export function renderInventory(itemsToRender) {
   });
   elements.inventoryGrid.appendChild(fragment);
 
-  // Observe elements for lazy loading and animations
   const lazyImages =
     elements.inventoryGrid.querySelectorAll(".card-image.lazy");
   lazyImages.forEach(img => imageObserver.observe(img));
@@ -736,6 +753,13 @@ export function renderInventory(itemsToRender) {
   const cardsToAnimate =
     elements.inventoryGrid.querySelectorAll(".product-card");
   cardsToAnimate.forEach(card => animationObserver.observe(card));
+
+  if (appState.visibleItemCount < itemsToRender.length) {
+    elements.loadMoreTrigger.style.display = "block";
+    loadMoreObserver.observe(elements.loadMoreTrigger);
+  } else {
+    elements.loadMoreTrigger.style.display = "none";
+  }
 
   updateStats();
 }
