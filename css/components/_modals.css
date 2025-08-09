@@ -496,7 +496,7 @@ dialog::backdrop {
 #magic-link-output {
   width: 100%;
   padding: 8px;
-  font-family: 'Roboto Mono', monospace;
+  font-family: "Roboto Mono", monospace;
   font-size: 12px;
   direction: ltr;
   text-align: left;
@@ -505,4 +505,21 @@ dialog::backdrop {
   border-radius: var(--border-radius-sm);
   color: var(--text-secondary);
   cursor: copy;
+}
+
+/* Hide scrollbar on specific modal forms while allowing scrolling */
+#item-form,
+#sync-form,
+#category-filter-dropdown{
+  /* For Firefox */
+  scrollbar-width: none;
+  /* For Internet Explorer and Edge */
+  -ms-overflow-style: none;
+}
+
+/* For Chrome, Safari, and Opera */
+#item-form::-webkit-scrollbar,
+#sync-form::-webkit-scrollbar,
+#category-filter-dropdown::-webkit-scrollbar {
+  display: none;
 }

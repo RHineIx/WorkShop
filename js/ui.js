@@ -167,7 +167,6 @@ const imageObserver = new IntersectionObserver(
                 img.parentElement.classList.remove("loading");
               };
               img.onerror = () => {
-                // If blob URL fails, remove image and show placeholder
                 img.parentElement.classList.remove("loading");
                 img.remove();
               };
@@ -189,6 +188,24 @@ const imageObserver = new IntersectionObserver(
     rootMargin: "0px 0px 200px 0px",
   }
 );
+
+const animationObserver = new IntersectionObserver(
+  (entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        // Add class when element enters the viewport
+        entry.target.classList.add("is-visible");
+      } else {
+        // Remove class when element leaves the viewport to reset it
+        entry.target.classList.remove("is-visible");
+      }
+    });
+  },
+  {
+    threshold: 0.1, // Animate when 10% of the card is visible
+  }
+);
+
 export function getDOMElements() {
   return elements;
 }
@@ -710,9 +727,15 @@ export function renderInventory(itemsToRender) {
     fragment.appendChild(card);
   });
   elements.inventoryGrid.appendChild(fragment);
+
+  // Observe elements for lazy loading and animations
   const lazyImages =
     elements.inventoryGrid.querySelectorAll(".card-image.lazy");
   lazyImages.forEach(img => imageObserver.observe(img));
+
+  const cardsToAnimate =
+    elements.inventoryGrid.querySelectorAll(".product-card");
+  cardsToAnimate.forEach(card => animationObserver.observe(card));
 
   updateStats();
 }

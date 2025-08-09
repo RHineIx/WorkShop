@@ -35,16 +35,29 @@
   background-color: var(--surface-color);
   border-radius: var(--border-radius-md);
   box-shadow: var(--shadow-light);
-  border: 2px solid transparent; /* Changed for selection indicator */
+  border: 2px solid transparent;
+  /* Changed for selection indicator */
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: all 0.2s ease;
-  position: relative; /* For checkbox positioning */
+  position: relative;
+  /* For checkbox positioning */
   user-select: none; /* Prevent text selection */
+
+  /* Animation initial state */
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
 }
+
+/* Animation trigger class */
+.product-card.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .product-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-4px) scale(1.02);
   box-shadow: var(--shadow-strong);
 }
 
@@ -76,7 +89,7 @@
   border-color: var(--accent-color);
 }
 .product-card.selected .card-checkbox::after {
-  content: '✔';
+  content: "✔";
   color: white;
   position: absolute;
   top: 50%;
@@ -96,9 +109,8 @@
 }
 .product-card.selected.low-stock,
 .product-card.selected.out-of-stock {
-    border-color: var(--accent-color);
+  border-color: var(--accent-color);
 }
-
 
 .card-image-container {
   width: 100%;
@@ -249,32 +261,3 @@
 .skeleton-card .skeleton-info {
   padding: var(--spacing-sm);
 }
-/* --- Card Animation --- */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.product-card {
-  /* Add animation properties */
-  animation: fadeInUp 0.5s ease-out forwards;
-  opacity: 0;
-  /* Start as transparent */
-}
-
-/* Stagger the animation for each card */
-.product-card:nth-child(1) { animation-delay: 0.05s; }
-.product-card:nth-child(2) { animation-delay: 0.1s; }
-.product-card:nth-child(3) { animation-delay: 0.15s; }
-.product-card:nth-child(4) { animation-delay: 0.2s; }
-.product-card:nth-child(5) { animation-delay: 0.25s; }
-.product-card:nth-child(6) { animation-delay: 0.3s; }
-.product-card:nth-child(7) { animation-delay: 0.35s; }
-.product-card:nth-child(8) { animation-delay: 0.4s; }
-/* Add more if you typically display more cards at once */
