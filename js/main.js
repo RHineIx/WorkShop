@@ -1707,6 +1707,9 @@ function setupEventListeners() {
   if (csvImportInput) {
     csvImportInput.addEventListener("change", handleCsvImport);
   }
+  
+  // NEW: Initialize the scroll-to-top button functionality
+  ui.initScrollToTopButton();
 }
 
 // --- INITIALIZATION ---
@@ -1825,4 +1828,4 @@ if ("serviceWorker" in navigator) {
         console.log("ServiceWorker registration failed: ", err);
       });
   });
-}
+    }
