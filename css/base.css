@@ -18,3 +18,46 @@ body {
     color: var(--text-primary);
     transition: background-color var(--transition-speed) ease;
 }
+
+/* Add a smooth transition to all elements that might change color */
+body,
+.page-controls,
+.main-container,
+.stat-card,
+.inventory-header,
+.product-card,
+.product-card .card-image-container,
+.search-container,
+.search-container #search-bar,
+.modal-actions button,
+.modal-actions button[type="button"],
+.icon-btn,
+.custom-file-upload-btn,
+.time-filter-btn,
+.collapsible-section,
+.collapsible-content > div,
+.collapsible-content > div:last-child,
+.sale-item,
+.item-details,
+.day-group,
+.day-header,
+.archive-item,
+.toast,
+.bulk-actions-bar,
+.details-price-grid,
+.details-notes,
+.details-supplier-info,
+.details-pn-grid,
+.pn-copy-tag {
+    transition: 
+        background-color var(--transition-speed) ease,
+        color var(--transition-speed) ease,
+        border-color var(--transition-speed) ease,
+        box-shadow var(--transition-speed) ease;
+}
+
+/*
+ * Note: The existing body rule for transition: background-color is kept,
+ * and the new, more comprehensive transition is applied to a broader
+ * list of selectors to ensure a smooth change for all major UI components.
+ */
