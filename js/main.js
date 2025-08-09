@@ -1828,4 +1828,4 @@ if ("serviceWorker" in navigator) {
         console.log("ServiceWorker registration failed: ", err);
       });
   });
-    }
+                  }
