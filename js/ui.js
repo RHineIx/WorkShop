@@ -139,10 +139,11 @@ const elements = {
   bulkSupplierModal: document.getElementById("bulk-supplier-modal"),
   bulkSupplierForm: document.getElementById("bulk-supplier-form"),
   bulkSupplierSelect: document.getElementById("bulk-item-supplier"),
-  
-  // NEW: Scroll-to-top button
+
+  // Scroll-to-top button
   scrollToTopBtn: document.getElementById("scroll-to-top-btn"),
 };
+
 export const displayVersionInfo = versionData => {
   if (versionData && elements.appVersionDisplay) {
     const { hash, branch } = versionData;
@@ -722,9 +723,26 @@ export const updateStats = () => {
     item => item.quantity <= item.alertLevel
   ).length;
 };
+
+// NEW: Updated setTheme function for smoother transitions
 export const setTheme = themeName => {
-  document.body.className = `theme-${themeName}`;
+  const body = document.body;
   const icon = elements.themeToggleBtn.querySelector("iconify-icon");
+
+  // Temporarily disable transitions
+  body.classList.add("no-transitions");
+
+  // Force a reflow to apply the `no-transitions` class immediately
+  body.offsetHeight; 
+
+  // Set the new theme
+  body.className = `theme-${themeName}`;
+
+  // Re-enable transitions after a slight delay
+  setTimeout(() => {
+    body.classList.remove("no-transitions");
+  }, 50);
+
   if (icon) {
     icon.setAttribute(
       "icon",
@@ -1049,23 +1067,23 @@ export function updateBulkActionsBar() {
  * Initializes the scroll-to-top button functionality.
  */
 export function initScrollToTopButton() {
-    const showButtonAt = 500; // Show the button after scrolling 500 pixels.
+  const showButtonAt = 500; // Show the button after scrolling 500 pixels.
 
-    const toggleButtonVisibility = () => {
-        if (appState.currentView === 'inventory' && window.scrollY > showButtonAt) {
-            elements.scrollToTopBtn.classList.add('visible');
-        } else {
-            elements.scrollToTopBtn.classList.remove('visible');
+  const toggleButtonVisibility = () => {
+    if (appState.currentView === 'inventory' && window.scrollY > showButtonAt) {
+      elements.scrollToTopBtn.classList.add('visible');
+    } else {
+      elements.scrollToTopBtn.classList.remove('visible');
+    }
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
+  window.addEventListener('scroll', toggleButtonVisibility);
+  elements.scrollToTopBtn.addEventListener('click', scrollToTop);
         }
-    };
-
-    const scrollToTop = () => {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    };
-
-    window.addEventListener('scroll', toggleButtonVisibility);
-    elements.scrollToTopBtn.addEventListener('click', scrollToTop);
-  }
