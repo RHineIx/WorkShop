@@ -27,15 +27,15 @@
 
 .stats-container {
   display: grid;
-  /* Make stats cards fluid and responsive by default */
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  /* MODIFIED: Changed to a fixed 2-column layout for consistency */
+  grid-template-columns: 1fr 1fr;
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-lg);
 }
 
 .inventory-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(11.25rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); /* 152px */
   gap: var(--spacing-md);
   /* Define this element as a layout container */
   container-type: inline-size;
@@ -43,6 +43,26 @@
 }
 
 /* --- Major Layout Shift Breakpoints (Macro Layout) --- */
+
+/* For smaller screens, improve layout and spacing */
+@media (max-width: 40rem) {
+  /* 640px */
+  .main-container {
+    padding: var(--spacing-sm);
+  }
+  .inventory-grid {
+    gap: var(--spacing-sm);
+  }
+  .page-controls {
+    /* Center the items on narrow screens when they wrap */
+    justify-content: center;
+  }
+  .stats-container {
+    /* Reduce gap on small screens for better fit */
+    gap: var(--spacing-sm);
+  }
+}
+
 @media (min-width: 40rem) {
   /* 640px */
   #search-bar {
@@ -50,6 +70,7 @@
   }
 
   .inventory-grid {
+    /* Restore larger gap for wider screens */
     gap: var(--spacing-lg);
   }
 
