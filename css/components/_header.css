@@ -215,6 +215,25 @@ body.theme-dark .inventory-header h2 {
   }
 }
 
+/* --- NEW BREAKPOINT for very narrow screens --- */
+@media (max-width: 26.5rem) {
+  /* 424px */
+  .inventory-header {
+    flex-wrap: wrap; /* Allow the header items to wrap */
+    row-gap: var(--spacing-sm);
+  }
+
+  .inventory-header-main,
+  #search-container {
+    width: 100%; /* Make both sections take full width to stack */
+    flex-grow: 0;
+  }
+
+  .inventory-header-main {
+    justify-content: space-between; /* Keep title and sort button apart */
+  }
+}
+
 /* Attempt to fix option text color in dark mode */
 body.theme-dark #sort-options option {
   background-color: #1e1e1e;

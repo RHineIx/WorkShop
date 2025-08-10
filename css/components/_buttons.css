@@ -377,3 +377,17 @@ label[for="restore-backup-input"].cleanup-btn:hover {
   /* Add a subtle scale down on click */
   transform: scale(0.96);
 }
+
+/* --- Responsive Adjustments for narrow screens --- */
+@media (max-width: 26.5rem) {
+  /* 424px */
+  .control-button.primary-action .btn-text {
+    display: none; /* Hide text on "Add Item" button */
+  }
+
+  .control-button.primary-action {
+    padding: var(
+      --spacing-sm
+    ); /* Ensure padding is uniform when text is hidden */
+  }
+}

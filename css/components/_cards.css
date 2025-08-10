@@ -43,10 +43,6 @@
   flex-direction: column;
   position: relative;
   user-select: none; /* Prevent text selection */
-
-  /* Animation initial state */
-  opacity: 0;
-  transform: translateY(1.25rem); /* 20px */
   transition: opacity 0.5s ease-out, transform 0.5s ease-out;
 }
 
@@ -260,4 +256,19 @@
 }
 .skeleton-card .skeleton-info {
   padding: var(--spacing-sm);
+}
+
+/* --- Container Query for the Card Footer --- */
+@container (width < 12rem) { /* ~192px */
+  .card-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .card-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
 }

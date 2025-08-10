@@ -1,4 +1,4 @@
-/* css/_layout.css */
+/* css/layout.css */
 
 /* --- Header Layout --- */
 .page-controls {
@@ -36,10 +36,13 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: var(--spacing-md);
+  /* Define this element as a layout container */
+  container-type: inline-size;
 }
 
 /* --- Responsive Adjustments --- */
-@media (min-width: 40rem) { /* 640px */
+@media (min-width: 40rem) {
+  /* 640px */
   /* The .inventory-header responsive rule is now in _header.css */
   #search-bar {
     width: 21.875rem; /* 350px */
@@ -80,8 +83,17 @@
   display: none;
 }
 
-@media (min-width: 64rem) { /* 1024px */
+@media (min-width: 64rem) {
+  /* 1024px */
   .inventory-grid {
     grid-template-columns: repeat(auto-fill, minmax(13.75rem, 1fr)); /* 220px */
+  }
+}
+
+/* --- NEW BREAKPOINT for very narrow screens --- */
+@media (max-width: 26.5rem) {
+  /* 424px */
+  .inventory-grid {
+    grid-template-columns: 1fr; /* Switch to a single column */
   }
 }
