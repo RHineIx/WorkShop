@@ -54,7 +54,10 @@
   flex-direction: column;
   gap: var(--spacing-md);
 }
-@media (min-width: 36rem) { /* 576px */
+
+/* Make form rows switch to horizontal layout on slightly larger screens */
+@media (min-width: 30rem) {
+  /* 480px - Adjusted for better responsiveness */
   .form-row {
     flex-direction: row;
   }

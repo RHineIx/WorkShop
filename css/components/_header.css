@@ -49,7 +49,7 @@
   box-shadow: 0 0 0.5rem #dc3545;
 }
 
-/* --- Floating & Glassy Inventory Header --- */
+/* --- Floating & Glassy Inventory Header (Intrinsically Flexible) --- */
 .inventory-header {
   display: flex;
   flex-wrap: wrap;
@@ -82,7 +82,7 @@
 
 #search-container {
   flex-grow: 1;
-  min-width: 12.5rem;
+  min-width: 15rem; /* Ensures the search bar doesn't get too small before wrapping */
 }
 
 .inventory-header h2 {
@@ -174,57 +174,11 @@ body.theme-dark .inventory-header h2 {
   font-weight: 700;
 }
 
-/* Responsive adjustments for mobile */
-@media (max-width: 39.9375rem) {
-  /* 639px */
-  .inventory-header {
-    flex-wrap: nowrap;
-    gap: var(--spacing-sm);
-  }
-  .inventory-header-main {
-    flex-grow: 0;
-    gap: var(--spacing-sm);
-  }
-  #search-container {
-    flex-grow: 1;
-  }
-  .inventory-header h2 {
-    font-size: 1rem;
-  }
-  #sort-options {
-    width: 2.75rem;
-    height: 2.75rem;
-    padding: 0;
-    color: transparent;
-    background-color: var(--bg-color);
-    border-color: var(--border-color);
-  }
-  .sort-icon {
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 1.5rem;
-    color: var(--text-primary);
-  }
-}
-
-/* BREAKPOINT for very narrow screens */
-@media (max-width: 26.5rem) {
-  /* 424px */
-  .inventory-header {
-    flex-wrap: wrap;
-    row-gap: var(--spacing-sm);
-  }
-
-  .inventory-header-main,
-  #search-container {
-    width: 100%;
-    flex-grow: 0;
-  }
-
-  .inventory-header-main {
-    justify-content: space-between;
-  }
-}
+/* All previous media queries for responsive adjustments have been removed.
+  The use of `flex-wrap: wrap`, `flex-grow: 1`, and `min-width` on the
+  flex children creates a naturally fluid and robust header that no longer
+  requires specific breakpoints to reflow its content.
+*/
 
 /* Attempt to fix option text color in dark mode */
 body.theme-dark #sort-options option {

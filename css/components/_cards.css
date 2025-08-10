@@ -44,7 +44,7 @@
   position: relative;
   user-select: none; /* Prevent text selection */
 
-  /* Animation initial state - THESE LINES WERE MISSING */
+  /* Animation initial state */
   opacity: 0;
   transform: translateY(1.25rem);
 
@@ -263,7 +263,20 @@
   padding: var(--spacing-sm);
 }
 
-/* --- Container Query for the Card Footer --- */
+/* --- Container Queries for a truly fluid card --- */
+
+/* For very narrow cards, adjust typography */
+@container (width < 10rem) { /* ~160px */
+    .card-name {
+        font-size: 0.95rem; /* ~15px */
+    }
+    .card-price {
+        font-size: 1rem; /* 16px */
+    }
+}
+
+
+/* For cards smaller than 12rem, stack the footer */
 @container (width < 12rem) {
   /* ~192px */
   .card-footer {

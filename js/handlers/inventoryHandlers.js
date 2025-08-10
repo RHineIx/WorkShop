@@ -5,10 +5,10 @@ import { debounce } from "../utils.js";
 import {
   enterSelectionMode,
   exitSelectionMode,
-  toggleSelection
+  toggleSelection,
 } from "./bulkActionHandlers.js";
 
-// --- NEW GESTURE DETECTION LOGIC ---
+// --- GESTURE DETECTION LOGIC ---
 
 // Module-scoped variables for gesture detection
 let pointerDownTime = 0;
@@ -21,15 +21,15 @@ const longPressDuration = 600; // Milliseconds to hold for a long press
 
 function handlePointerDown(e) {
   // We only care about the primary button (left-click or single touch)
-  if (e.pointerType === 'mouse' && e.button !== 0) return;
+  if (e.pointerType === "mouse" && e.button !== 0) return;
 
   const card = e.target.closest(".product-card");
-  if (!card || e.target.closest(".icon-btn")) {
-    // If clicking a button inside the card, don't start gesture detection
-    isDragging = true; // Prevent any action on pointerup
+  // The problematic line has been removed from here.
+  // We only check if the click is outside a card.
+  if (!card) {
     return;
   }
-  
+
   isDragging = false;
   pointerDownTime = Date.now();
   pointerDownX = e.clientX;
@@ -61,7 +61,7 @@ function handlePointerUp(e) {
   pointerDownTime = 0; // Reset state
 
   // It's a long press
-  if (pressDuration >= longPressDuration) {
+  if (pressDuration >= longPressDuration && !e.target.closest(".icon-btn")) {
     if (navigator.vibrate) {
       navigator.vibrate(50); // Haptic feedback
     }
@@ -71,17 +71,19 @@ function handlePointerUp(e) {
     } else {
       toggleSelection(card); // Allow toggling on long press too
     }
-    
+
     // Prevent the click event that might follow
     e.preventDefault();
     e.stopPropagation();
-
   } else {
     // It's a normal tap/click
     if (appState.isSelectionModeActive) {
-      toggleSelection(card);
+      // On selection mode, only toggle if the click is not on a button
+      if (!e.target.closest(".icon-btn")) {
+        toggleSelection(card);
+      }
     } else {
-      // This is a normal click action, but we check if a button was the target
+      // This is a normal click action, we check if a button was the target
       const itemId = card.dataset.id;
       if (e.target.closest(".sell-btn")) {
         const item = appState.inventory.items.find(i => i.id === itemId);
@@ -94,7 +96,6 @@ function handlePointerUp(e) {
         ui.openDetailsModal(itemId);
       }
       // If the click was on the card itself but not a button, do nothing (or open details)
-      // For now, we only act if a button is clicked.
     }
   }
 }
@@ -104,8 +105,9 @@ export function setupInventoryListeners(elements) {
   elements.inventoryGrid.addEventListener("pointerdown", handlePointerDown);
   elements.inventoryGrid.addEventListener("pointermove", handlePointerMove);
   elements.inventoryGrid.addEventListener("pointerup", handlePointerUp);
-  // We no longer need a separate 'click' listener for the grid, as pointerup handles it.
-  elements.inventoryGrid.addEventListener("contextmenu", e => e.preventDefault());
+  elements.inventoryGrid.addEventListener("contextmenu", e =>
+    e.preventDefault()
+  );
 
   // --- Search, Sort, Filter ---
   elements.searchBar.addEventListener(

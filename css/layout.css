@@ -8,7 +8,9 @@
     var(--spacing-sm);
   display: flex;
   align-items: center;
+  flex-wrap: wrap; /* Allow items to wrap to the next line */
   justify-content: space-between;
+  gap: var(--spacing-md); /* Add gap for consistent spacing */
   border-bottom: 1px solid var(--border-color);
   position: sticky;
   top: 0;
@@ -25,20 +27,22 @@
 
 .stats-container {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* Make stats cards fluid and responsive by default */
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-lg);
 }
 
 .inventory-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(11.25rem, 1fr));
   gap: var(--spacing-md);
   /* Define this element as a layout container */
   container-type: inline-size;
+  container-name: inventory-grid;
 }
 
-/* --- Responsive Adjustments --- */
+/* --- Major Layout Shift Breakpoints (Macro Layout) --- */
 @media (min-width: 40rem) {
   /* 640px */
   #search-bar {
@@ -46,7 +50,6 @@
   }
 
   .inventory-grid {
-    grid-template-columns: repeat(auto-fill, minmax(11.25rem, 1fr)); /* 180px */
     gap: var(--spacing-lg);
   }
 
@@ -83,18 +86,7 @@
 @media (min-width: 64rem) {
   /* 1024px */
   .inventory-grid {
-    grid-template-columns: repeat(auto-fill, minmax(13.75rem, 1fr)); /* 220px */
-  }
-}
-
-/* --- BREAKPOINT for very narrow screens --- */
-@media (max-width: 23.4375rem) {
-  /* 375px */
-  .inventory-grid {
-    grid-template-columns: 1fr; /* Switch to a single column */
-  }
-
-  .stats-container {
-    grid-template-columns: 1fr; /* Stack stat cards vertically */
+    /* Increase the minimum card size on very large screens */
+    grid-template-columns: repeat(auto-fit, minmax(13.75rem, 1fr)); /* 220px */
   }
 }

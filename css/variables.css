@@ -4,15 +4,14 @@
   /* Typography */
   --font-family: "Cairo", sans-serif;
 
-  /* Sizing & Spacing (Converted to Fluid REM for scalability) */
-  /* Fluid Spacing: Varies smoothly between a min and max value based on viewport width */
-  --spacing-xs: clamp(0.25rem, 0.15rem + 0.5vw, 0.375rem);   /* ~4px to 6px */
-  --spacing-sm: clamp(0.5rem, 0.3rem + 1vw, 0.75rem);      /* ~8px to 12px */
-  --spacing-md: clamp(1rem, 0.6rem + 2vw, 1.25rem);       /* ~16px to 20px */
-  --spacing-lg: clamp(1.5rem, 1rem + 2.5vw, 2rem);      /* ~24px to 32px */
-  
+  /* Sizing & Spacing (Stable REM values, fluidity from root font-size) */
+  --spacing-xs: 0.25rem; /* 4px at base font-size */
+  --spacing-sm: 0.5rem; /* 8px at base font-size */
+  --spacing-md: 1rem; /* 16px at base font-size */
+  --spacing-lg: 1.5rem; /* 24px at base font-size */
+
   --border-radius-sm: 0.5rem; /* 8px */
-  --border-radius-md: 1rem;     /* 16px */
+  --border-radius-md: 1rem; /* 16px */
 
   /* Effects */
   --transition-speed: 0.25s;
