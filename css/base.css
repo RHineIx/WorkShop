@@ -2,19 +2,52 @@
 
 /* --- Global Reset & Box Sizing --- */
 * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 html {
-    -webkit-text-size-adjust: 100%;
+  /* Set base font size for REM calculations (16px default = 100%) */
+  font-size: 100%;
+  -webkit-text-size-adjust: 100%;
+  /* Enable smooth scrolling behavior */
+  scroll-behavior: smooth;
 }
 
 /* --- Body Defaults --- */
 body {
-    font-family: var(--font-family);
-    background-color: var(--bg-color);
-    color: var(--text-primary);
-    transition: background-color var(--transition-speed) ease;
+  font-family: var(--font-family);
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  /* Set a sensible default line height for readability */
+  line-height: 1.5;
+  /* Improve font rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color var(--transition-speed) ease;
+}
+
+/* --- Typographic Scale --- */
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+h1 {
+  /* Fluid font size: min 24px, preferred based on viewport, max 32px */
+  font-size: clamp(1.5rem, 1.25rem + 1.25vw, 2rem);
+}
+
+h2 {
+  /* Fluid font size: min 20px, preferred based on viewport, max 26px */
+  font-size: clamp(1.25rem, 1rem + 1vw, 1.625rem);
+}
+
+h3 {
+  /* Fluid font size: min 18px, preferred based on viewport, max 22px */
+  font-size: clamp(1.125rem, 0.95rem + 0.5vw, 1.375rem);
 }

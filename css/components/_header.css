@@ -1,6 +1,8 @@
+/* css/components/_header.css */
+
 /* --- Header, Search, and Dashboard Controls --- */
 .app-title {
-  font-size: 20px;
+  /* Font size is now controlled by the h1 rule in base.css */
   color: var(--text-primary);
 }
 .app-title.active-view-btn,
@@ -20,15 +22,14 @@
 
 .rate-limit-indicator {
   position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 10px;
-  height: 10px;
+  top: 0.25rem; /* 4px */
+  right: 0.25rem; /* 4px */
+  width: 0.625rem; /* 10px */
+  height: 0.625rem; /* 10px */
   border-radius: 50%;
   background-color: var(--text-secondary); /* Default color */
   border: 1px solid var(--surface-color);
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-  /* Subtle glow */
+  box-shadow: 0 0 0.3125rem rgba(0, 0, 0, 0.3); /* 5px */
   transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
   opacity: 0;
 }
@@ -39,19 +40,17 @@
 
 .rate-limit-indicator.high {
   background-color: #28a745; /* Green */
-  box-shadow: 0 0 8px #28a745;
+  box-shadow: 0 0 0.5rem #28a745; /* 8px */
 }
 
 .rate-limit-indicator.medium {
-  background-color: #ffc107;
-  /* Yellow */
-  box-shadow: 0 0 8px #ffc107;
+  background-color: #ffc107; /* Yellow */
+  box-shadow: 0 0 0.5rem #ffc107; /* 8px */
 }
 
 .rate-limit-indicator.low {
-  background-color: #dc3545;
-  /* Red */
-  box-shadow: 0 0 8px #dc3545;
+  background-color: #dc3545; /* Red */
+  box-shadow: 0 0 0.5rem #dc3545; /* 8px */
 }
 
 /* --- NEW: Floating & Glassy Inventory Header --- */
@@ -64,16 +63,16 @@
   padding: var(--spacing-sm) var(--spacing-md);
   margin-bottom: var(--spacing-md);
   position: sticky;
-  top: 60px;
+  top: 3.75rem; /* 60px */
   z-index: 50;
   left: var(--spacing-md);
   right: var(--spacing-md);
   width: auto;
-  border-radius: 12px;
+  border-radius: 0.75rem; /* 12px */
   box-shadow: var(--shadow-strong);
   background-color: rgba(var(--surface-color-rgb), 0.8);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(0.625rem); /* 10px */
+  -webkit-backdrop-filter: blur(0.625rem); /* 10px */
   border: 1px solid var(--border-color);
   transition: top 0.3s ease;
 }
@@ -87,16 +86,16 @@
 
 #search-container {
   flex-grow: 1; /* Allow search to grow */
-  min-width: 200px;
+  min-width: 12.5rem; /* 200px */
 }
 
 .inventory-header h2 {
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  text-shadow: 0 0.0625rem 0.125rem rgba(0, 0, 0, 0.1); /* 1px 2px */
   white-space: nowrap;
 }
 
 body.theme-dark .inventory-header h2 {
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 0.0625rem 0.25rem rgba(0, 0, 0, 0.3); /* 1px 4px */
 }
 
 /* --- Sort Container Styles (REVISED) --- */
@@ -113,9 +112,9 @@ body.theme-dark .inventory-header h2 {
   background-color: var(--surface-color);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-sm);
-  padding: 10px 12px 10px 36px; /* Adjusted padding for icon */
+  padding: 0.625rem 0.75rem 0.625rem 2.25rem; /* 10px 12px 10px 36px */
   font-family: var(--font-family);
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
   font-weight: 500;
   color: var(--text-primary);
   cursor: pointer;
@@ -128,30 +127,30 @@ body.theme-dark .inventory-header h2 {
 #sort-options:focus {
   outline: none;
   border-color: var(--accent-color);
-  box-shadow: 0 0 0 3px var(--accent-soft-bg);
+  box-shadow: 0 0 0 0.1875rem var(--accent-soft-bg); /* 3px */
 }
 
 .sort-icon {
   position: absolute;
-  left: 10px;
+  left: 0.625rem; /* 10px */
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-secondary);
   pointer-events: none; /* Make icon unclickable */
-  font-size: 22px;
+  font-size: 1.375rem; /* 22px */
 }
 
 /* --- Category Filter Dropdown --- */
 .category-dropdown {
   display: none;
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 0.5rem); /* 8px */
   background-color: var(--surface-color);
   border-radius: var(--border-radius-md);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-strong);
   z-index: 200;
-  max-height: 250px;
+  max-height: 15.625rem; /* 250px */
   overflow-y: auto;
   padding: var(--spacing-sm);
 }
@@ -161,7 +160,7 @@ body.theme-dark .inventory-header h2 {
 }
 
 .category-item {
-  padding: 10px 12px;
+  padding: 0.625rem 0.75rem; /* 10px 12px */
   cursor: pointer;
   border-radius: var(--border-radius-sm);
   font-weight: 500;
@@ -182,7 +181,8 @@ body.theme-dark .inventory-header h2 {
 }
 
 /* Responsive adjustments for mobile (REVISED) */
-@media (max-width: 639px) {
+@media (max-width: 39.9375rem) {
+  /* 639px */
   .inventory-header {
     flex-wrap: nowrap; /* Prevent wrapping */
     gap: var(--spacing-sm);
@@ -200,8 +200,8 @@ body.theme-dark .inventory-header h2 {
 
   /* Make the sort options just an icon */
   #sort-options {
-    width: 44px; /* Icon button size */
-    height: 44px;
+    width: 2.75rem; /* 44px */
+    height: 2.75rem; /* 44px */
     padding: 0;
     color: transparent; /* Hide the text */
     background-color: var(--bg-color);
@@ -210,13 +210,13 @@ body.theme-dark .inventory-header h2 {
   .sort-icon {
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 24px;
+    font-size: 1.5rem; /* 24px */
     color: var(--text-primary);
   }
 }
 
 /* Attempt to fix option text color in dark mode */
 body.theme-dark #sort-options option {
-  background-color: #1e1e1e; /* Match dark theme surface color */
-  color: #e0e0e0; /* Match dark theme primary text color */
+  background-color: #1e1e1e;
+  color: #e0e0e0;
 }

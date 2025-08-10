@@ -1,3 +1,5 @@
+/* css/components/_forms.css */
+
 /* --- All Form & Input Styles --- */
 
 #item-form label,
@@ -5,7 +7,7 @@
 #sale-form label,
 #supplier-form label {
   display: block;
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
   font-weight: 600;
   margin-bottom: var(--spacing-sm);
   color: var(--text-secondary);
@@ -19,13 +21,13 @@
 #sale-form textarea,
 #supplier-form input {
   width: 100%;
-  padding: 12px var(--spacing-md);
+  padding: 0.75rem var(--spacing-md); /* 12px */
   font-family: var(--font-family);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-sm);
   background-color: var(--surface-color);
   color: var(--text-primary);
-  font-size: 16px;
+  font-size: 1rem; /* 16px */
   transition: all var(--transition-speed);
 }
 #item-form input:focus,
@@ -37,12 +39,12 @@
 #supplier-form input:focus {
   outline: none;
   border-color: var(--accent-color);
-  box-shadow: 0 0 0 3px var(--accent-soft-bg);
+  box-shadow: 0 0 0 0.1875rem var(--accent-soft-bg); /* 3px */
 }
 
 #item-form textarea,
 #sale-form textarea {
-  min-height: 80px;
+  min-height: 5rem; /* 80px */
   width: 100%;
   resize: vertical;
 }
@@ -52,7 +54,7 @@
   flex-direction: column;
   gap: var(--spacing-md);
 }
-@media (min-width: 576px) {
+@media (min-width: 36rem) { /* 576px */
   .form-row {
     flex-direction: row;
   }
@@ -99,7 +101,7 @@ fieldset {
 legend {
   padding: 0 var(--spacing-sm);
   font-weight: 700;
-  font-size: 16px;
+  font-size: 1rem; /* 16px */
   color: var(--accent-color);
 }
 .fieldset-content {
@@ -121,8 +123,8 @@ legend {
 }
 
 .image-preview-wrapper {
-  width: 120px;
-  height: 120px;
+  width: 7.5rem; /* 120px */
+  height: 7.5rem; /* 120px */
   border-radius: 50%;
   position: relative;
   overflow: hidden;
@@ -145,15 +147,15 @@ legend {
   color: var(--text-secondary);
 }
 #image-placeholder iconify-icon {
-  font-size: 50px;
+  font-size: 3.125rem; /* 50px */
 }
 
 .quantity-controls input[type="number"] {
-  width: 60px;
-  height: 36px;
+  width: 3.75rem; /* 60px */
+  height: 2.25rem; /* 36px */
   text-align: center;
   font-weight: bold;
-  font-size: 18px;
+  font-size: 1.125rem; /* 18px */
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-sm);
   background-color: var(--surface-color);
@@ -178,8 +180,8 @@ select {
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23718096' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: left 12px center;
-  padding-left: 36px !important;
+  background-position: left 0.75rem center; /* 12px */
+  padding-left: 2.25rem !important; /* 36px */
 }
 
 .pricing-grid {
@@ -194,7 +196,7 @@ select {
 
 .currency-symbol {
   position: absolute;
-  left: 12px;
+  left: 0.75rem; /* 12px */
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-secondary);
@@ -202,7 +204,7 @@ select {
 }
 
 .input-with-currency input {
-  padding-left: 45px !important;
+  padding-left: 2.8125rem !important; /* 45px */
 }
 
 #sale-date::-webkit-calendar-picker-indicator {
@@ -212,5 +214,5 @@ select {
 
 #sale-date {
   text-align: center;
-  padding-left: 12px;
+  padding-left: 0.75rem; /* 12px */
 }

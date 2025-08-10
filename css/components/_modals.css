@@ -1,8 +1,10 @@
+/* css/components/_modals.css */
+
 /* --- All Modal Styles --- */
 dialog {
   margin: auto;
   width: 90%;
-  max-width: 500px;
+  max-width: 31.25rem; /* 500px */
   max-height: 90vh;
   border: none;
   border-radius: var(--border-radius-md);
@@ -18,7 +20,7 @@ dialog[open] {
 }
 dialog::backdrop {
   background-color: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(0.25rem); /* 4px */
 }
 
 /* Keep original scroll behavior for other forms */
@@ -55,7 +57,7 @@ dialog::backdrop {
   padding: var(--spacing-md) var(--spacing-lg);
   border-top: 1px solid var(--border-color);
   background-color: var(--surface-color);
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 -0.125rem 0.625rem rgba(0, 0, 0, 0.05); /* -2px 10px */
 }
 
 /* FIX: Ensure modal headers have consistent padding */
@@ -72,9 +74,8 @@ dialog::backdrop {
 #sync-form h3,
 #sale-form h3,
 .modal-header h3 /* Generalize for all modal headers */ {
-  margin-bottom: 0;
-  /* Let the header padding handle spacing */
-  font-size: 18px;
+  margin-bottom: 0; /* Let the header padding handle spacing */
+  /* Font size is handled by the base h3 rule */
   flex-shrink: 0;
 }
 .modal-actions {
@@ -93,7 +94,7 @@ dialog::backdrop {
   border-radius: var(--border-radius-sm);
   background-color: var(--bg-color);
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
 }
 
 /* --- Advanced Settings Toggle Styles --- */
@@ -108,12 +109,12 @@ dialog::backdrop {
   align-items: center;
   cursor: pointer;
   font-family: var(--font-family);
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
   font-weight: 700;
   color: var(--text-secondary);
 }
 .advanced-settings-toggle iconify-icon {
-  font-size: 24px;
+  font-size: 1.5rem; /* 24px */
   transition: transform 0.3s ease;
 }
 .advanced-settings-toggle.open iconify-icon {
@@ -149,7 +150,7 @@ dialog::backdrop {
   margin-bottom: 0;
 }
 #live-exchange-rate-display {
-  font-size: 13px;
+  font-size: 0.8125rem; /* 13px */
   font-weight: 500;
   color: var(--text-secondary);
   cursor: pointer;
@@ -179,7 +180,7 @@ dialog::backdrop {
   gap: var(--spacing-sm);
 }
 #details-modal {
-  max-width: 800px;
+  max-width: 50rem; /* 800px */
 }
 .details-modal-content {
   display: flex;
@@ -197,7 +198,7 @@ dialog::backdrop {
   padding: var(--spacing-md);
   border-top: 1px solid var(--border-color);
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(6.25rem, 1fr)); /* 100px */
   gap: var(--spacing-sm);
   background-color: var(--surface-color);
   flex-shrink: 0;
@@ -223,19 +224,19 @@ dialog::backdrop {
   justify-content: center;
 }
 .item-image-details iconify-icon {
-  font-size: 96px;
+  font-size: 6rem; /* 96px */
   color: var(--text-secondary);
 }
 .details-info-container {
   padding: var(--spacing-lg);
 }
 #details-name {
-  font-size: 22px;
+  /* font-size handled by h2 base rule */
   margin-bottom: var(--spacing-sm);
   line-height: 1.3;
 }
 .details-sku {
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
   color: var(--text-secondary);
   margin-bottom: var(--spacing-md);
 }
@@ -252,14 +253,14 @@ dialog::backdrop {
 .price-item {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0.25rem; /* 4px */
 }
 .price-label {
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   color: var(--text-secondary);
 }
 .price-value {
-  font-size: 20px;
+  font-size: 1.25rem; /* 20px */
   font-weight: bold;
 }
 .price-value.iqd {
@@ -281,8 +282,8 @@ dialog::backdrop {
 }
 .quantity-value {
   font-weight: bold;
-  font-size: 18px;
-  min-width: 40px;
+  font-size: 1.125rem; /* 18px */
+  min-width: 2.5rem; /* 40px */
   text-align: center;
 }
 .details-notes {
@@ -295,7 +296,7 @@ dialog::backdrop {
   align-items: center;
   gap: var(--spacing-sm);
   margin-bottom: var(--spacing-sm);
-  font-size: 16px;
+  font-size: 1rem; /* 16px */
 }
 #details-notes-content {
   color: var(--text-secondary);
@@ -305,7 +306,7 @@ dialog::backdrop {
 
 .sale-item-name-display {
   display: block;
-  font-size: 18px;
+  font-size: 1.125rem; /* 18px */
   font-weight: bold;
   color: var(--accent-color);
   background-color: var(--bg-color);
@@ -322,7 +323,7 @@ dialog::backdrop {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 18px;
+  font-size: 1.125rem; /* 18px */
 }
 .total-label {
   font-weight: 500;
@@ -331,10 +332,10 @@ dialog::backdrop {
 .total-value {
   font-weight: bold;
   color: var(--accent-color);
-  font-size: 20px;
+  font-size: 1.25rem; /* 20px */
 }
 #archive-browser-modal {
-  max-width: 700px;
+  max-width: 43.75rem; /* 700px */
   height: 80vh;
 }
 .archive-browser-content {
@@ -352,17 +353,17 @@ dialog::backdrop {
   flex-shrink: 0;
 }
 .archive-header h3 {
-  font-size: 18px;
+  font-size: 1.125rem; /* 18px */
 }
 .archive-list-container {
   padding: var(--spacing-sm);
   overflow-y: auto;
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
-  max-height: 150px;
+  max-height: 9.375rem; /* 150px */
 }
 .archive-item {
-  padding: 10px 12px;
+  padding: 0.625rem 0.75rem; /* 10px 12px */
   border-radius: var(--border-radius-sm);
   cursor: pointer;
   font-weight: 500;
@@ -386,11 +387,11 @@ dialog::backdrop {
 .archive-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
 }
 .archive-table th,
 .archive-table td {
-  padding: 8px 10px;
+  padding: 0.5rem 0.625rem; /* 8px 10px */
   text-align: right;
   border-bottom: 1px solid var(--border-color);
 }
@@ -402,19 +403,19 @@ dialog::backdrop {
 }
 .archive-notes-row td {
   padding: var(--spacing-sm) var(--spacing-lg);
-  font-size: 13px;
+  font-size: 0.8125rem; /* 13px */
   color: var(--text-secondary);
   background-color: var(--bg-color);
   white-space: pre-wrap;
 }
 .archive-notes-row iconify-icon {
   vertical-align: text-top;
-  margin-left: 4px;
-  font-size: 16px;
+  margin-left: 0.25rem; /* 4px */
+  font-size: 1rem; /* 16px */
   color: var(--text-primary);
 }
 #supplier-manager-modal {
-  max-width: 600px;
+  max-width: 37.5rem; /* 600px */
 }
 .supplier-manager-content {
   display: flex;
@@ -425,7 +426,7 @@ dialog::backdrop {
 
 #supplier-form h4 {
   margin-bottom: var(--spacing-md);
-  font-size: 16px;
+  font-size: 1rem; /* 16px */
 }
 .details-supplier-info {
   border-top: 1px solid var(--border-color);
@@ -442,7 +443,7 @@ dialog::backdrop {
 }
 
 #image-placeholder iconify-icon {
-  font-size: 50px;
+  font-size: 3.125rem; /* 50px */
 }
 
 /* --- Part Number Styles --- */
@@ -458,9 +459,9 @@ dialog::backdrop {
 }
 .pn-grid-label {
   font-weight: 700;
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
   color: var(--text-secondary);
-  padding-top: 5px;
+  padding-top: 0.3125rem; /* 5px */
 }
 .pn-grid-value {
   display: flex;
@@ -470,10 +471,10 @@ dialog::backdrop {
 .pn-copy-tag {
   background-color: var(--bg-color);
   border: 1px solid var(--border-color);
-  padding: 5px 12px;
+  padding: 0.3125rem 0.75rem; /* 5px 12px */
   border-radius: var(--border-radius-sm);
   font-family: "Roboto Mono", monospace;
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
   font-weight: 500;
   color: var(--text-primary);
   direction: ltr;
@@ -485,7 +486,7 @@ dialog::backdrop {
   border-color: var(--accent-color);
   background-color: var(--accent-soft-bg);
   color: var(--accent-soft-text);
-  transform: translateY(-2px);
+  transform: translateY(-0.125rem); /* -2px */
 }
 .pn-copy-tag.copied {
   color: var(--success-color);
@@ -500,7 +501,7 @@ dialog::backdrop {
 }
 .app-version {
   text-align: center;
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   color: var(--text-secondary);
   margin-top: var(--spacing-md);
   padding-top: var(--spacing-sm);
@@ -514,7 +515,7 @@ dialog::backdrop {
 }
 
 .magic-link-warning {
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   font-weight: bold;
   color: var(--warning-color);
   text-align: center;
@@ -522,9 +523,9 @@ dialog::backdrop {
 
 #magic-link-output {
   width: 100%;
-  padding: 8px;
+  padding: 0.5rem; /* 8px */
   font-family: "Roboto Mono", monospace;
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   direction: ltr;
   text-align: left;
   border: 1px solid var(--border-color);
