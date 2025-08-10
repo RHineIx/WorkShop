@@ -3,9 +3,9 @@ import { appState } from "./state.js";
 import * as api from "./api.js";
 import * as ui from "./ui.js";
 import { setupEventListeners } from "./eventSetup.js";
+import { setupLayoutAdjustments } from "./layout.js"; // Import the new function
 
 // --- LOCAL STORAGE & CONFIG ---
-
 export function loadConfig() {
   const savedConfig = localStorage.getItem("inventoryAppSyncConfig");
   if (savedConfig) {
@@ -39,7 +39,6 @@ function handleMagicLink() {
       appState.syncConfig = config;
       saveConfig();
       ui.showStatus("تم الإعداد بنجاح!", "success");
-      // Clean the hash from the URL
       history.replaceState(
         null,
         "",
@@ -63,7 +62,6 @@ function loadLocalData() {
   const savedInventory = localStorage.getItem("inventoryAppData");
   if (savedInventory) {
     let parsedData = JSON.parse(savedInventory);
-    // Handle legacy data format where inventory was just an array
     if (Array.isArray(parsedData)) {
       appState.inventory = { items: parsedData, lastArchiveTimestamp: null };
     } else {
@@ -90,7 +88,6 @@ function handleUrlShortcuts() {
   const hash = window.location.hash;
   if (!hash || hash.startsWith("#setup=")) return;
 
-  // Use a short delay to ensure the UI is ready
   setTimeout(() => {
     switch (hash) {
       case "#add-item":
@@ -100,8 +97,11 @@ function handleUrlShortcuts() {
         ui.toggleView("dashboard");
         break;
     }
-    // Clean the hash
-    history.replaceState(null, "", window.location.pathname + window.location.search);
+    history.replaceState(
+      null,
+      "",
+      window.location.pathname + window.location.search
+    );
   }, 100);
 }
 
@@ -124,15 +124,15 @@ function registerServiceWorker() {
 }
 
 // --- INITIALIZATION ---
-
 export async function initializeApp() {
   console.log("Initializing Inventory Management App...");
 
   const magicLinkProcessed = handleMagicLink();
 
   setupEventListeners();
-  loadConfig();
+  setupLayoutAdjustments(); // Call the new layout function
 
+  loadConfig();
   const savedTheme = localStorage.getItem("inventoryAppTheme") || "light";
   const savedCurrency = localStorage.getItem("inventoryAppCurrency") || "IQD";
   appState.activeCurrency = savedCurrency;
@@ -153,12 +153,9 @@ export async function initializeApp() {
   if (appState.syncConfig) {
     ui.showStatus("جاري مزامنة البيانات...", "syncing");
     try {
-      const [inventoryResult, salesResult, suppliersResult] = await Promise.all([
-        api.fetchFromGitHub(),
-        api.fetchSales(),
-        api.fetchSuppliers(),
-      ]);
-
+      const [inventoryResult, salesResult, suppliersResult] = await Promise.all(
+        [api.fetchFromGitHub(), api.fetchSales(), api.fetchSuppliers()]
+      );
       if (inventoryResult) {
         appState.inventory = inventoryResult.data;
         appState.fileSha = inventoryResult.sha;
@@ -182,14 +179,15 @@ export async function initializeApp() {
       ui.showStatus(`خطأ في المزامنة: ${error.message}`, "error", {
         duration: 5000,
       });
-      loadLocalData(); // Fallback to local data on sync failure
+      loadLocalData();
     }
   } else {
     loadLocalData();
   }
-  
-  // Initial UI render
-  const { updateLastArchiveDateDisplay } = await import('./handlers/syncHandlers.js');
+
+  const { updateLastArchiveDateDisplay } = await import(
+    "./handlers/syncHandlers.js"
+  );
   updateLastArchiveDateDisplay();
   ui.filterAndRenderItems();
   ui.renderCategoryFilter();

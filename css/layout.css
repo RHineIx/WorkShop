@@ -30,8 +30,6 @@
   margin-bottom: var(--spacing-lg);
 }
 
-/* The inventory-header rule is now moved to _header.css for better organization */
-
 .inventory-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -43,7 +41,6 @@
 /* --- Responsive Adjustments --- */
 @media (min-width: 40rem) {
   /* 640px */
-  /* The .inventory-header responsive rule is now in _header.css */
   #search-bar {
     width: 21.875rem; /* 350px */
   }
@@ -90,10 +87,14 @@
   }
 }
 
-/* --- NEW BREAKPOINT for very narrow screens --- */
-@media (max-width: 26.5rem) {
-  /* 424px */
+/* --- BREAKPOINT for very narrow screens --- */
+@media (max-width: 23.4375rem) {
+  /* 375px */
   .inventory-grid {
     grid-template-columns: 1fr; /* Switch to a single column */
+  }
+
+  .stats-container {
+    grid-template-columns: 1fr; /* Stack stat cards vertically */
   }
 }

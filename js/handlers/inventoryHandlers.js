@@ -16,7 +16,8 @@ let pressTimer = null;
 // Variables to detect scroll vs. long press
 let startX = 0;
 let startY = 0;
-const moveThreshold = 10; // The distance in pixels to count as a scroll
+const moveThreshold = 16; // IMPROVED: Increased from 10 to 16 for less sensitivity
+const longPressDuration = 600; // IMPROVED: Increased from 500ms to make it more intentional
 
 function startPressTimer(card, event) {
   startX = event.clientX;
@@ -28,7 +29,7 @@ function startPressTimer(card, event) {
     if (!appState.isSelectionModeActive) {
       enterSelectionMode(card);
     }
-  }, 500);
+  }, longPressDuration);
 }
 
 function clearPressTimerOnMove(event) {
@@ -82,11 +83,15 @@ function handleGridClick(e) {
 
 export function setupInventoryListeners(elements) {
   // --- Grid Interaction (Click and Long Press) ---
-  elements.inventoryGrid.addEventListener("pointerdown", e => startPressTimer(e.target.closest(".product-card"), e));
+  elements.inventoryGrid.addEventListener("pointerdown", e =>
+    startPressTimer(e.target.closest(".product-card"), e)
+  );
   elements.inventoryGrid.addEventListener("pointermove", clearPressTimerOnMove);
   elements.inventoryGrid.addEventListener("pointerup", clearPressTimerOnUp);
   elements.inventoryGrid.addEventListener("click", handleGridClick);
-  elements.inventoryGrid.addEventListener("contextmenu", e => e.preventDefault());
+  elements.inventoryGrid.addEventListener("contextmenu", e =>
+    e.preventDefault()
+  );
 
   // --- Search, Sort, Filter ---
   elements.searchBar.addEventListener(
@@ -99,7 +104,7 @@ export function setupInventoryListeners(elements) {
 
   elements.sortOptions.addEventListener("change", e => {
     appState.currentSortOption = e.target.value;
-    ui.filterAndRenderItems(true);
+    ui.filterAndRenderItems(true); // Reset pagination
   });
 
   elements.statsContainer.addEventListener("click", e => {
@@ -134,7 +139,7 @@ export function setupInventoryListeners(elements) {
       elements.categoryFilterDropdown.classList.remove("show");
     }
   });
-
+  // Close category dropdown when clicking outside
   document.addEventListener("click", e => {
     if (!elements.searchContainer.contains(e.target)) {
       elements.categoryFilterDropdown.classList.remove("show");

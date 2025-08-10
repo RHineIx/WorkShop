@@ -2,7 +2,6 @@
 
 /* --- Header, Search, and Dashboard Controls --- */
 .app-title {
-  /* Font size is now controlled by the h1 rule in base.css */
   color: var(--text-primary);
 }
 .app-title.active-view-btn,
@@ -22,14 +21,14 @@
 
 .rate-limit-indicator {
   position: absolute;
-  top: 0.25rem; /* 4px */
-  right: 0.25rem; /* 4px */
-  width: 0.625rem; /* 10px */
-  height: 0.625rem; /* 10px */
+  top: 0.25rem;
+  right: 0.25rem;
+  width: 0.625rem;
+  height: 0.625rem;
   border-radius: 50%;
-  background-color: var(--text-secondary); /* Default color */
+  background-color: var(--text-secondary);
   border: 1px solid var(--surface-color);
-  box-shadow: 0 0 0.3125rem rgba(0, 0, 0, 0.3); /* 5px */
+  box-shadow: 0 0 0.3125rem rgba(0, 0, 0, 0.3);
   transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
   opacity: 0;
 }
@@ -37,42 +36,39 @@
 .rate-limit-indicator.visible {
   opacity: 1;
 }
-
 .rate-limit-indicator.high {
-  background-color: #28a745; /* Green */
-  box-shadow: 0 0 0.5rem #28a745; /* 8px */
+  background-color: #28a745;
+  box-shadow: 0 0 0.5rem #28a745;
 }
-
 .rate-limit-indicator.medium {
-  background-color: #ffc107; /* Yellow */
-  box-shadow: 0 0 0.5rem #ffc107; /* 8px */
+  background-color: #ffc107;
+  box-shadow: 0 0 0.5rem #ffc107;
 }
-
 .rate-limit-indicator.low {
-  background-color: #dc3545; /* Red */
-  box-shadow: 0 0 0.5rem #dc3545; /* 8px */
+  background-color: #dc3545;
+  box-shadow: 0 0 0.5rem #dc3545;
 }
 
-/* --- NEW: Floating & Glassy Inventory Header --- */
+/* --- Floating & Glassy Inventory Header --- */
 .inventory-header {
   display: flex;
-  flex-wrap: wrap; /* Allow wrapping on small screens */
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: var(--spacing-md);
   padding: var(--spacing-sm) var(--spacing-md);
   margin-bottom: var(--spacing-md);
   position: sticky;
-  top: 3.75rem; /* 60px */
+  /* top property is now set dynamically by js/layout.js */
   z-index: 50;
   left: var(--spacing-md);
   right: var(--spacing-md);
   width: auto;
-  border-radius: 0.75rem; /* 12px */
+  border-radius: 0.75rem;
   box-shadow: var(--shadow-strong);
   background-color: rgba(var(--surface-color-rgb), 0.8);
-  backdrop-filter: blur(0.625rem); /* 10px */
-  -webkit-backdrop-filter: blur(0.625rem); /* 10px */
+  backdrop-filter: blur(0.625rem);
+  -webkit-backdrop-filter: blur(0.625rem);
   border: 1px solid var(--border-color);
   transition: top 0.3s ease;
 }
@@ -85,20 +81,19 @@
 }
 
 #search-container {
-  flex-grow: 1; /* Allow search to grow */
-  min-width: 12.5rem; /* 200px */
+  flex-grow: 1;
+  min-width: 12.5rem;
 }
 
 .inventory-header h2 {
-  text-shadow: 0 0.0625rem 0.125rem rgba(0, 0, 0, 0.1); /* 1px 2px */
+  text-shadow: 0 0.0625rem 0.125rem rgba(0, 0, 0, 0.1);
   white-space: nowrap;
 }
 
 body.theme-dark .inventory-header h2 {
-  text-shadow: 0 0.0625rem 0.25rem rgba(0, 0, 0, 0.3); /* 1px 4px */
+  text-shadow: 0 0.0625rem 0.25rem rgba(0, 0, 0, 0.3);
 }
 
-/* --- Sort Container Styles (REVISED) --- */
 .sort-container {
   position: relative;
   display: flex;
@@ -112,14 +107,14 @@ body.theme-dark .inventory-header h2 {
   background-color: var(--surface-color);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-sm);
-  padding: 0.625rem 0.75rem 0.625rem 2.25rem; /* 10px 12px 10px 36px */
+  padding: 0.625rem 0.75rem 0.625rem 2.25rem;
   font-family: var(--font-family);
-  font-size: 0.875rem; /* 14px */
+  font-size: 0.875rem;
   font-weight: 500;
   color: var(--text-primary);
   cursor: pointer;
   transition: all var(--transition-speed) ease;
-  background-image: none; /* Remove old arrow */
+  background-image: none;
 }
 #sort-options:hover {
   border-color: var(--accent-color);
@@ -127,30 +122,29 @@ body.theme-dark .inventory-header h2 {
 #sort-options:focus {
   outline: none;
   border-color: var(--accent-color);
-  box-shadow: 0 0 0 0.1875rem var(--accent-soft-bg); /* 3px */
+  box-shadow: 0 0 0 0.1875rem var(--accent-soft-bg);
 }
 
 .sort-icon {
   position: absolute;
-  left: 0.625rem; /* 10px */
+  left: 0.625rem;
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-secondary);
-  pointer-events: none; /* Make icon unclickable */
-  font-size: 1.375rem; /* 22px */
+  pointer-events: none;
+  font-size: 1.375rem;
 }
 
-/* --- Category Filter Dropdown --- */
 .category-dropdown {
   display: none;
   position: absolute;
-  top: calc(100% + 0.5rem); /* 8px */
+  top: calc(100% + 0.5rem);
   background-color: var(--surface-color);
   border-radius: var(--border-radius-md);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-strong);
   z-index: 200;
-  max-height: 15.625rem; /* 250px */
+  max-height: 15.625rem;
   overflow-y: auto;
   padding: var(--spacing-sm);
 }
@@ -160,7 +154,7 @@ body.theme-dark .inventory-header h2 {
 }
 
 .category-item {
-  padding: 0.625rem 0.75rem; /* 10px 12px */
+  padding: 0.625rem 0.75rem;
   cursor: pointer;
   border-radius: var(--border-radius-sm);
   font-weight: 500;
@@ -180,57 +174,55 @@ body.theme-dark .inventory-header h2 {
   font-weight: 700;
 }
 
-/* Responsive adjustments for mobile (REVISED) */
+/* Responsive adjustments for mobile */
 @media (max-width: 39.9375rem) {
   /* 639px */
   .inventory-header {
-    flex-wrap: nowrap; /* Prevent wrapping */
+    flex-wrap: nowrap;
     gap: var(--spacing-sm);
   }
   .inventory-header-main {
-    flex-grow: 0; /* Don't grow title and sort */
+    flex-grow: 0;
     gap: var(--spacing-sm);
   }
   #search-container {
-    flex-grow: 1; /* Allow search to fill remaining space */
+    flex-grow: 1;
   }
   .inventory-header h2 {
-    font-size: 1rem; /* Adjust title size */
+    font-size: 1rem;
   }
-
-  /* Make the sort options just an icon */
   #sort-options {
-    width: 2.75rem; /* 44px */
-    height: 2.75rem; /* 44px */
+    width: 2.75rem;
+    height: 2.75rem;
     padding: 0;
-    color: transparent; /* Hide the text */
+    color: transparent;
     background-color: var(--bg-color);
     border-color: var(--border-color);
   }
   .sort-icon {
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 1.5rem; /* 24px */
+    font-size: 1.5rem;
     color: var(--text-primary);
   }
 }
 
-/* --- NEW BREAKPOINT for very narrow screens --- */
+/* BREAKPOINT for very narrow screens */
 @media (max-width: 26.5rem) {
   /* 424px */
   .inventory-header {
-    flex-wrap: wrap; /* Allow the header items to wrap */
+    flex-wrap: wrap;
     row-gap: var(--spacing-sm);
   }
 
   .inventory-header-main,
   #search-container {
-    width: 100%; /* Make both sections take full width to stack */
+    width: 100%;
     flex-grow: 0;
   }
 
   .inventory-header-main {
-    justify-content: space-between; /* Keep title and sort button apart */
+    justify-content: space-between;
   }
 }
 
