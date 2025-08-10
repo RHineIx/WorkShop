@@ -174,11 +174,30 @@ body.theme-dark .inventory-header h2 {
   font-weight: 700;
 }
 
-/* All previous media queries for responsive adjustments have been removed.
-  The use of `flex-wrap: wrap`, `flex-grow: 1`, and `min-width` on the
-  flex children creates a naturally fluid and robust header that no longer
-  requires specific breakpoints to reflow its content.
-*/
+/* Responsive adjustments for mobile to turn sort into an icon button */
+@media (max-width: 39.9375rem) {
+  /* 639px */
+
+  #sort-options {
+    /* Make it a square icon button */
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    /* Hide the text content */
+    color: transparent;
+    background-color: var(--bg-color);
+    border-color: var(--border-color);
+  }
+
+  .sort-icon {
+    /* Center the icon inside the new square shape */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.5rem;
+    color: var(--text-primary);
+  }
+}
+
 
 /* Attempt to fix option text color in dark mode */
 body.theme-dark #sort-options option {
