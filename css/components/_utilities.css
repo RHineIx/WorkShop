@@ -1,3 +1,5 @@
+/* css/components/_utilities.css */
+
 /* --- Utilities and Global Styles --- */
 
 /* --- Toast Notifications (Improved) --- */
@@ -198,9 +200,19 @@
   font-size: 48px;
   margin-bottom: var(--spacing-md);
   color: var(--border-color);
-  /* For a real implementation, you'd use a proper icon, but this demonstrates the structure. */
+  /* For a real implementation, you'd use a proper icon, but this demonstrates the structure.
+ */
   /* Let's use a text-based icon for simplicity with CSS only */
   content: '¯\\_(ツ)_/¯';
   font-family: monospace;
   font-size: 3rem;
+}
+
+/* --- Body Scroll Lock for Modals --- */
+body.body-scroll-locked {
+  position: fixed;
+  /* The 'top' property will be set via JS to -window.scrollY */
+  left: 0;
+  right: 0;
+  overflow: hidden;
 }

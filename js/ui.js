@@ -4,7 +4,6 @@ import { fetchImageWithAuth } from "./api.js";
 import { sanitizeHTML } from "./utils.js";
 
 const ITEMS_PER_PAGE = 20;
-
 const elements = {
   // Main Layout
   themeTransitionOverlay: document.getElementById("theme-transition-overlay"),
@@ -146,6 +145,49 @@ const elements = {
   scrollToTopBtn: document.getElementById("scroll-to-top-btn"),
 };
 
+// --- Centralized Modal Control ---
+
+/**
+ * The single handler for the 'close' event on any dialog.
+ * It manages the modal stack and unlocks the body scroll when the last modal is closed.
+ * @param {Event} event - The 'close' event from the dialog element.
+ */
+function handleModalClose(event) {
+  const closedDialog = event.target;
+  appState.modalStack = appState.modalStack.filter(d => d !== closedDialog);
+
+  if (appState.modalStack.length === 0) {
+    document.body.classList.remove("body-scroll-locked");
+    document.body.style.top = "";
+    window.scrollTo(0, appState.scrollPosition);
+    document.body.appendChild(elements.toastContainer);
+  } else {
+    const topModal = appState.modalStack[appState.modalStack.length - 1];
+    topModal.appendChild(elements.toastContainer);
+  }
+}
+
+/**
+ * Opens a modal dialog and handles all the necessary setup for scroll locking.
+ * This is the new, centralized way to open any modal.
+ * @param {HTMLDialogElement} dialogElement The dialog element to open.
+ */
+export function openModal(dialogElement) {
+  if (!dialogElement) return;
+
+  if (appState.modalStack.length === 0) {
+    appState.scrollPosition = window.scrollY;
+    document.body.style.top = `-${appState.scrollPosition}px`;
+    document.body.classList.add("body-scroll-locked");
+  }
+
+  dialogElement.addEventListener("close", handleModalClose, { once: true });
+
+  appState.modalStack.push(dialogElement);
+  dialogElement.appendChild(elements.toastContainer);
+  dialogElement.showModal();
+}
+
 export const displayVersionInfo = versionData => {
   if (versionData && elements.appVersionDisplay) {
     const { hash, branch } = versionData;
@@ -191,7 +233,6 @@ const imageObserver = new IntersectionObserver(
     rootMargin: "0px 0px 200px 0px",
   }
 );
-
 const animationObserver = new IntersectionObserver(
   (entries, observer) => {
     entries.forEach(entry => {
@@ -206,7 +247,6 @@ const animationObserver = new IntersectionObserver(
     threshold: 0.1,
   }
 );
-
 const loadMoreObserver = new IntersectionObserver(
   (entries, observer) => {
     const entry = entries[0];
@@ -219,7 +259,6 @@ const loadMoreObserver = new IntersectionObserver(
     rootMargin: "0px 0px 400px 0px",
   }
 );
-
 export function getDOMElements() {
   return elements;
 }
@@ -384,7 +423,6 @@ export const toggleView = viewToShow => {
     renderDashboard();
   }
 };
-
 function renderSalesLog(filteredSales) {
   if (filteredSales.length === 0) {
     elements.salesLogContent.innerHTML =
@@ -452,8 +490,7 @@ function renderSalesLog(filteredSales) {
                             <div class="meta-value meta-price">${totalSellPrice.toLocaleString()}</div>
                         </div>
                         <div class="sale-datetime">
-                            التاريخ: ${sale.saleDate} |
-                            الوقت: ${saleTime}
+                            التاريخ: ${sale.saleDate} | الوقت: ${saleTime}
                         </div>
                     </div>
                     <div class="item-details">
@@ -745,7 +782,6 @@ export function renderInventory(itemsToRender) {
     fragment.appendChild(card);
   });
   elements.inventoryGrid.appendChild(fragment);
-
   const lazyImages =
     elements.inventoryGrid.querySelectorAll(".card-image.lazy");
   lazyImages.forEach(img => imageObserver.observe(img));
@@ -753,7 +789,6 @@ export function renderInventory(itemsToRender) {
   const cardsToAnimate =
     elements.inventoryGrid.querySelectorAll(".product-card");
   cardsToAnimate.forEach(card => animationObserver.observe(card));
-
   if (appState.visibleItemCount < itemsToRender.length) {
     elements.loadMoreTrigger.style.display = "block";
     loadMoreObserver.observe(elements.loadMoreTrigger);
@@ -770,10 +805,8 @@ export const updateStats = () => {
     item => item.quantity <= item.alertLevel
   ).length;
 };
-
 export const setTheme = themeName => {
   const overlay = elements.themeTransitionOverlay;
-
   if (!overlay || document.body.classList.contains(`theme-${themeName}`)) {
     return;
   }
@@ -786,7 +819,6 @@ export const setTheme = themeName => {
   const oldBgColor = getComputedStyle(document.body).backgroundColor;
   overlay.style.backgroundColor = oldBgColor;
   overlay.classList.add("visible");
-
   setTimeout(() => {
     document.body.className = `theme-${themeName}`;
 
@@ -803,12 +835,10 @@ export const setTheme = themeName => {
 
     overlay.classList.remove("visible");
   }, 300);
-
   setTimeout(() => {
     overlay.dataset.transitioning = "false";
   }, 600);
 };
-
 export const updateCurrencyDisplay = () => {
   const isIQD = appState.activeCurrency === "IQD";
   elements.currencyToggleBtn.textContent = isIQD ? "د.ع" : "$";
@@ -1010,9 +1040,7 @@ export const openDetailsModal = itemId => {
     elements.detailsImagePlaceholder.style.display = "flex";
   }
 
-  appState.modalStack.push(elements.detailsModal);
-  elements.detailsModal.appendChild(elements.toastContainer);
-  elements.detailsModal.showModal();
+  openModal(elements.detailsModal);
 };
 
 export const openItemModal = (itemId = null) => {
@@ -1062,9 +1090,7 @@ export const openItemModal = (itemId = null) => {
     elements.regenerateSkuBtn.style.display = "flex";
     populateSupplierDropdown();
   }
-  appState.modalStack.push(elements.itemModal);
-  elements.itemModal.appendChild(elements.toastContainer);
-  elements.itemModal.showModal();
+  openModal(elements.itemModal);
 };
 export const openSaleModal = itemId => {
   const item = appState.inventory.items.find(i => i.id === itemId);
@@ -1088,9 +1114,7 @@ export const openSaleModal = itemId => {
   const day = String(today.getDate()).padStart(2, "0");
   document.getElementById("sale-date").value = `${year}-${month}-${day}`;
 
-  appState.modalStack.push(elements.saleModal);
-  elements.saleModal.appendChild(elements.toastContainer);
-  elements.saleModal.showModal();
+  openModal(elements.saleModal);
   updateSaleTotal();
 };
 export const populateSyncModal = () => {
@@ -1104,9 +1128,7 @@ export const populateSyncModal = () => {
   } else {
     elements.exchangeRateInput.value = "";
   }
-  appState.modalStack.push(elements.syncModal);
-  elements.syncModal.appendChild(elements.toastContainer);
-  elements.syncModal.showModal();
+  openModal(elements.syncModal);
 };
 export function updateBulkActionsBar() {
   const count = appState.selectedItemIds.size;
