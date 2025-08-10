@@ -43,6 +43,11 @@
   flex-direction: column;
   position: relative;
   user-select: none; /* Prevent text selection */
+
+  /* Animation initial state - THESE LINES WERE MISSING */
+  opacity: 0;
+  transform: translateY(1.25rem);
+
   transition: opacity 0.5s ease-out, transform 0.5s ease-out;
 }
 
@@ -259,7 +264,8 @@
 }
 
 /* --- Container Query for the Card Footer --- */
-@container (width < 12rem) { /* ~192px */
+@container (width < 12rem) {
+  /* ~192px */
   .card-footer {
     flex-direction: column;
     align-items: flex-start;
