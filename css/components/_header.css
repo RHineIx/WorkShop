@@ -78,14 +78,11 @@
   align-items: center;
   gap: var(--spacing-md);
   flex-grow: 1;
-  flex-basis: 0; /* Allow it to shrink properly */
-  min-width: 150px; /* Prevent it from becoming too small */
 }
 
 #search-container {
   flex-grow: 1;
-  flex-basis: 0; /* Allow it to shrink properly */
-  min-width: 200px; /* Allow search to take more space */
+  min-width: 15rem; /* Ensures the search bar doesn't get too small before wrapping */
 }
 
 .inventory-header h2 {
@@ -199,17 +196,8 @@ body.theme-dark .inventory-header h2 {
     font-size: 1.5rem;
     color: var(--text-primary);
   }
-
-  /* Stack search/filter below title on very narrow screens */
-  .inventory-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  #search-container {
-    width: 100%;
-  }
 }
+
 
 /* Attempt to fix option text color in dark mode */
 body.theme-dark #sort-options option {

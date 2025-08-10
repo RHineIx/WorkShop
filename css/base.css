@@ -26,8 +26,6 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color var(--transition-speed) ease;
-  /* Prevent horizontal scrolling issues on mobile */
-  overflow-x: hidden;
 }
 
 /* --- Typographic Scale --- */
