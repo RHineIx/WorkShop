@@ -4,6 +4,7 @@ import { fetchImageWithAuth } from "./api.js";
 import { sanitizeHTML } from "./utils.js";
 
 const ITEMS_PER_PAGE = 20;
+
 const elements = {
   // Main Layout
   themeTransitionOverlay: document.getElementById("theme-transition-overlay"),
@@ -145,72 +146,19 @@ const elements = {
   scrollToTopBtn: document.getElementById("scroll-to-top-btn"),
 };
 
-// --- Centralized Modal Control ---
-
-/**
- * The single handler for the 'close' event on any dialog.
- * It manages the modal stack and unlocks the body scroll when the last modal is closed.
- * @param {Event} event - The 'close' event from the dialog element.
- */
-function handleModalClose(event) {
-  const closedDialog = event.target;
-  appState.modalStack = appState.modalStack.filter(d => d !== closedDialog);
-
-  if (appState.modalStack.length === 0) {
-    document.body.classList.remove("body-scroll-locked");
-    document.body.style.top = "";
-    window.scrollTo(0, appState.scrollPosition);
-    document.body.appendChild(elements.toastContainer);
-  } else {
-    const topModal = appState.modalStack[appState.modalStack.length - 1];
-    topModal.appendChild(elements.toastContainer);
-  }
-}
-
-/**
- * Opens a modal dialog and handles all the necessary setup for scroll locking.
- * This is the new, centralized way to open any modal.
- * @param {HTMLDialogElement} dialogElement The dialog element to open.
- */
-export function openModal(dialogElement) {
-  if (!dialogElement) return;
-
-  if (appState.modalStack.length === 0) {
-    appState.scrollPosition = window.scrollY;
-    document.body.style.top = `-${appState.scrollPosition}px`;
-    document.body.classList.add("body-scroll-locked");
-  }
-
-  dialogElement.addEventListener("close", handleModalClose, { once: true });
-
-  appState.modalStack.push(dialogElement);
-  dialogElement.appendChild(elements.toastContainer);
-  dialogElement.showModal();
-}
-
-export const displayVersionInfo = versionData => {
-  if (versionData && elements.appVersionDisplay) {
-    const { hash, branch } = versionData;
-    elements.appVersionDisplay.textContent = `الإصدار: ${hash} - الفرع (${branch})`;
-  }
-};
-
+// --- INTERSECTION OBSERVERS ---
 const imageObserver = new IntersectionObserver(
   (entries, observer) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         const img = entry.target;
         const imagePath = img.dataset.src;
-
         img.parentElement.classList.add("loading");
-
         fetchImageWithAuth(imagePath)
           .then(blobUrl => {
             if (blobUrl) {
               img.src = blobUrl;
-              img.onload = () => {
-                img.parentElement.classList.remove("loading");
-              };
+              img.onload = () => img.parentElement.classList.remove("loading");
               img.onerror = () => {
                 img.parentElement.classList.remove("loading");
                 img.remove();
@@ -219,49 +167,79 @@ const imageObserver = new IntersectionObserver(
               img.parentElement.classList.remove("loading");
             }
           })
-          .catch(error => {
-            console.error(`Failed to lazy-load image ${imagePath}:`, error);
-            img.parentElement.classList.remove("loading");
-          });
-
-        img.classList.remove("lazy");
+          .catch(() => img.parentElement.classList.remove("loading"));
         observer.unobserve(img);
       }
     });
   },
-  {
-    rootMargin: "0px 0px 200px 0px",
-  }
+  { rootMargin: "0px 0px 200px 0px" }
 );
 const animationObserver = new IntersectionObserver(
   (entries, observer) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         entry.target.classList.add("is-visible");
-      } else {
-        entry.target.classList.remove("is-visible");
+        observer.unobserve(entry.target);
       }
     });
   },
-  {
-    threshold: 0.1,
-  }
+  { threshold: 0.1 }
 );
 const loadMoreObserver = new IntersectionObserver(
-  (entries, observer) => {
+  entries => {
     const entry = entries[0];
     if (entry.isIntersecting) {
       appState.visibleItemCount += ITEMS_PER_PAGE;
       filterAndRenderItems();
     }
   },
-  {
-    rootMargin: "0px 0px 400px 0px",
-  }
+  { rootMargin: "0px 0px 400px 0px" }
 );
+
+// --- Centralized Modal Control ---
+function handleModalClose(event) {
+  const closedDialog = event.target;
+  appState.modalStack = appState.modalStack.filter(d => d !== closedDialog);
+
+  if (appState.modalStack.length === 0) {
+    const scrollY = appState.scrollPosition;
+    document.body.classList.remove("body-scroll-locked");
+    document.body.style.top = "";
+
+    // Temporarily disable smooth scrolling to prevent visible jump
+    document.documentElement.style.scrollBehavior = "auto";
+    window.scrollTo(0, scrollY);
+    document.documentElement.style.scrollBehavior = ""; // Revert to CSS defined behavior
+
+    document.body.appendChild(elements.toastContainer);
+  } else {
+    const topModal = appState.modalStack[appState.modalStack.length - 1];
+    topModal.appendChild(elements.toastContainer);
+  }
+}
+export function openModal(dialogElement) {
+  if (!dialogElement) return;
+  if (appState.modalStack.length === 0) {
+    appState.scrollPosition = window.scrollY;
+    document.body.style.top = `-${appState.scrollPosition}px`;
+    document.body.classList.add("body-scroll-locked");
+  }
+  dialogElement.addEventListener("close", handleModalClose, { once: true });
+  appState.modalStack.push(dialogElement);
+  dialogElement.appendChild(elements.toastContainer);
+  dialogElement.showModal();
+}
+
 export function getDOMElements() {
   return elements;
 }
+
+export const displayVersionInfo = versionData => {
+  if (versionData && elements.appVersionDisplay) {
+    const { hash, branch } = versionData;
+    elements.appVersionDisplay.textContent = `الإصدار: ${hash} - الفرع (${branch})`;
+  }
+};
 
 let countdownInterval = null;
 export function updateRateLimitDisplay() {
@@ -423,6 +401,7 @@ export const toggleView = viewToShow => {
     renderDashboard();
   }
 };
+
 function renderSalesLog(filteredSales) {
   if (filteredSales.length === 0) {
     elements.salesLogContent.innerHTML =
@@ -603,6 +582,7 @@ export const renderDashboard = () => {
 
   renderSalesLog(filteredSales);
 };
+
 export function updateSaleTotal() {
   const quantity = parseInt(elements.saleQuantityInput.value, 10) || 0;
   const unitPrice =
@@ -624,7 +604,6 @@ export function renderInventorySkeleton(count = 8) {
                 <div class="skeleton skeleton-text"></div>
                 <div class="skeleton skeleton-text w-75"></div>
                  <div class="skeleton skeleton-text w-50" style="margin-top: 12px;"></div>
-            
         </div>
         `;
     fragment.appendChild(skeletonCard);
@@ -675,20 +654,21 @@ function getFilteredItems() {
       });
       break;
     default:
-      // Default sort (usually insertion order) remains unchanged
       break;
   }
 
   return items;
 }
 
-export function filterAndRenderItems() {
+export function filterAndRenderItems(resetPagination = false) {
+  if (resetPagination) {
+    appState.visibleItemCount = ITEMS_PER_PAGE;
+  }
   const itemsToRender = getFilteredItems();
   renderInventory(itemsToRender);
 }
 
 export function renderInventory(itemsToRender) {
-  // Disconnect the observer before manipulating the DOM to prevent false triggers
   loadMoreObserver.disconnect();
   elements.inventoryGrid.innerHTML = "";
 
@@ -705,6 +685,7 @@ export function renderInventory(itemsToRender) {
       '<p class="empty-state">لا توجد منتجات تطابق بحثك...</p>';
     return;
   }
+
   const fragment = document.createDocumentFragment();
   itemsToDisplay.forEach(item => {
     const card = document.createElement("div");
@@ -738,15 +719,9 @@ export function renderInventory(itemsToRender) {
     const placeholder = `<div class="card-image-placeholder"><iconify-icon icon="material-symbols:key"></iconify-icon></div>`;
     let imageHtml = placeholder;
     if (item.imagePath) {
-      if (item.imagePath.startsWith("http")) {
-        imageHtml = `<img class="card-image" src="${
-          item.imagePath
-        }" alt="${sanitizeHTML(item.name)}">`;
-      } else {
-        imageHtml = `<img class="card-image lazy" data-src="${
-          item.imagePath
-        }" alt="${sanitizeHTML(item.name)}">`;
-      }
+      imageHtml = `<img class="card-image" data-src="${
+        item.imagePath
+      }" alt="${sanitizeHTML(item.name)}">`;
     }
 
     card.innerHTML = `
@@ -781,14 +756,17 @@ export function renderInventory(itemsToRender) {
       </div>`;
     fragment.appendChild(card);
   });
-  elements.inventoryGrid.appendChild(fragment);
-  const lazyImages =
-    elements.inventoryGrid.querySelectorAll(".card-image.lazy");
-  lazyImages.forEach(img => imageObserver.observe(img));
 
-  const cardsToAnimate =
-    elements.inventoryGrid.querySelectorAll(".product-card");
-  cardsToAnimate.forEach(card => animationObserver.observe(card));
+  elements.inventoryGrid.appendChild(fragment);
+
+  // --- ACTIVATE OBSERVERS ---
+  elements.inventoryGrid
+    .querySelectorAll(".card-image[data-src]")
+    .forEach(img => imageObserver.observe(img));
+  elements.inventoryGrid
+    .querySelectorAll(".product-card")
+    .forEach(card => animationObserver.observe(card));
+
   if (appState.visibleItemCount < itemsToRender.length) {
     elements.loadMoreTrigger.style.display = "block";
     loadMoreObserver.observe(elements.loadMoreTrigger);
@@ -805,23 +783,21 @@ export const updateStats = () => {
     item => item.quantity <= item.alertLevel
   ).length;
 };
+
 export const setTheme = themeName => {
   const overlay = elements.themeTransitionOverlay;
   if (!overlay || document.body.classList.contains(`theme-${themeName}`)) {
     return;
   }
-
   if (overlay.dataset.transitioning === "true") {
     return;
   }
   overlay.dataset.transitioning = "true";
-
   const oldBgColor = getComputedStyle(document.body).backgroundColor;
   overlay.style.backgroundColor = oldBgColor;
   overlay.classList.add("visible");
   setTimeout(() => {
     document.body.className = `theme-${themeName}`;
-
     const icon = elements.themeToggleBtn.querySelector("iconify-icon");
     if (icon) {
       icon.setAttribute(
@@ -832,13 +808,13 @@ export const setTheme = themeName => {
       );
     }
     localStorage.setItem("inventoryAppTheme", themeName);
-
     overlay.classList.remove("visible");
   }, 300);
   setTimeout(() => {
     overlay.dataset.transitioning = "false";
   }, 600);
 };
+
 export const updateCurrencyDisplay = () => {
   const isIQD = appState.activeCurrency === "IQD";
   elements.currencyToggleBtn.textContent = isIQD ? "د.ع" : "$";
@@ -851,6 +827,7 @@ export const updateCurrencyDisplay = () => {
     renderDashboard();
   }
 };
+
 export function renderSupplierList() {
   elements.supplierListContainer.innerHTML = "";
   if (appState.suppliers.length === 0) {
@@ -930,6 +907,7 @@ export const openDetailsModal = itemId => {
     item.sellPriceUsd || 0
   ).toLocaleString()}`;
   elements.detailsNotesContent.textContent = item.notes || "لا توجد ملاحظات.";
+
   const pnContainer = elements.detailsPnGridContainer;
   pnContainer.innerHTML = "";
   pnContainer.classList.add("view-hidden");
@@ -1019,22 +997,17 @@ export const openDetailsModal = itemId => {
   if (item.imagePath) {
     elements.detailsImage.style.display = "block";
     elements.detailsImagePlaceholder.style.display = "none";
-    elements.detailsImage.src = "";
-    if (item.imagePath.startsWith("http")) {
-      elements.detailsImage.src = item.imagePath;
-    } else {
-      elements.detailsImage.classList.add("skeleton");
-      fetchImageWithAuth(item.imagePath).then(blobUrl => {
-        if (blobUrl) {
-          elements.detailsImage.src = blobUrl;
-          elements.detailsImage.onload = () => {
-            elements.detailsImage.classList.remove("skeleton");
-          };
-        } else {
+    elements.detailsImage.src = ""; // Clear previous image
+    elements.detailsImage.classList.add("skeleton");
+    fetchImageWithAuth(item.imagePath).then(blobUrl => {
+      if (blobUrl) {
+        elements.detailsImage.src = blobUrl;
+        elements.detailsImage.onload = () =>
           elements.detailsImage.classList.remove("skeleton");
-        }
-      });
-    }
+      } else {
+        elements.detailsImage.classList.remove("skeleton");
+      }
+    });
   } else {
     elements.detailsImage.style.display = "none";
     elements.detailsImagePlaceholder.style.display = "flex";
@@ -1050,6 +1023,7 @@ export const openItemModal = (itemId = null) => {
   elements.imagePreview.classList.add("image-preview-hidden");
   elements.imagePlaceholder.style.display = "flex";
   elements.regenerateSkuBtn.style.display = "none";
+
   if (itemId) {
     const item = appState.inventory.items.find(i => i.id === itemId);
     if (item) {
@@ -1078,7 +1052,6 @@ export const openItemModal = (itemId = null) => {
           if (blobUrl) {
             elements.imagePreview.src = blobUrl;
             elements.imagePreview.classList.remove("image-preview-hidden");
-
             elements.imagePlaceholder.style.display = "none";
           }
         });
@@ -1092,6 +1065,7 @@ export const openItemModal = (itemId = null) => {
   }
   openModal(elements.itemModal);
 };
+
 export const openSaleModal = itemId => {
   const item = appState.inventory.items.find(i => i.id === itemId);
   if (!item) return;
@@ -1117,6 +1091,7 @@ export const openSaleModal = itemId => {
   openModal(elements.saleModal);
   updateSaleTotal();
 };
+
 export const populateSyncModal = () => {
   if (appState.syncConfig) {
     elements.githubUsernameInput.value = appState.syncConfig.username;
@@ -1130,6 +1105,7 @@ export const populateSyncModal = () => {
   }
   openModal(elements.syncModal);
 };
+
 export function updateBulkActionsBar() {
   const count = appState.selectedItemIds.size;
   if (count > 0) {
