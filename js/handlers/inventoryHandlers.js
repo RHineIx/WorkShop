@@ -5,93 +5,107 @@ import { debounce } from "../utils.js";
 import {
   enterSelectionMode,
   exitSelectionMode,
-  toggleSelection,
-  isLongPressTriggered,
-  setLongPressTriggered,
+  toggleSelection
 } from "./bulkActionHandlers.js";
 
-// Module-scoped variables for long-press detection
-let pressTimer = null;
+// --- NEW GESTURE DETECTION LOGIC ---
 
-// Variables to detect scroll vs. long press
-let startX = 0;
-let startY = 0;
-const moveThreshold = 16; // IMPROVED: Increased from 10 to 16 for less sensitivity
-const longPressDuration = 600; // IMPROVED: Increased from 500ms to make it more intentional
+// Module-scoped variables for gesture detection
+let pointerDownTime = 0;
+let pointerDownX = 0;
+let pointerDownY = 0;
+let isDragging = false; // Flag to determine if a scroll/drag has occurred
 
-function startPressTimer(card, event) {
-  startX = event.clientX;
-  startY = event.clientY;
-  setLongPressTriggered(false);
+const moveThreshold = 16; // Pixels user can move before it's considered a drag
+const longPressDuration = 600; // Milliseconds to hold for a long press
 
-  pressTimer = setTimeout(() => {
-    setLongPressTriggered(true);
-    if (!appState.isSelectionModeActive) {
-      enterSelectionMode(card);
-    }
-  }, longPressDuration);
+function handlePointerDown(e) {
+  // We only care about the primary button (left-click or single touch)
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+  const card = e.target.closest(".product-card");
+  if (!card || e.target.closest(".icon-btn")) {
+    // If clicking a button inside the card, don't start gesture detection
+    isDragging = true; // Prevent any action on pointerup
+    return;
+  }
+  
+  isDragging = false;
+  pointerDownTime = Date.now();
+  pointerDownX = e.clientX;
+  pointerDownY = e.clientY;
 }
 
-function clearPressTimerOnMove(event) {
-  if (!pressTimer) return;
+function handlePointerMove(e) {
+  if (isDragging || pointerDownTime === 0) return;
 
-  const deltaX = Math.abs(event.clientX - startX);
-  const deltaY = Math.abs(event.clientY - startY);
+  const deltaX = Math.abs(e.clientX - pointerDownX);
+  const deltaY = Math.abs(e.clientY - pointerDownY);
 
   if (deltaX > moveThreshold || deltaY > moveThreshold) {
-    clearTimeout(pressTimer);
-    pressTimer = null;
+    isDragging = true; // It's a scroll gesture
   }
 }
 
-function clearPressTimerOnUp() {
-  clearTimeout(pressTimer);
-  pressTimer = null;
-}
-
-function handleGridClick(e) {
+function handlePointerUp(e) {
   const card = e.target.closest(".product-card");
   if (!card) return;
 
-  // If a long press was just triggered, consume the click and do nothing
-  if (isLongPressTriggered()) {
-    setLongPressTriggered(false);
+  // If the pointer was dragged, it's a scroll, so do nothing.
+  if (isDragging) {
+    pointerDownTime = 0; // Reset state
     return;
   }
 
-  clearTimeout(pressTimer);
+  const pressDuration = Date.now() - pointerDownTime;
+  pointerDownTime = 0; // Reset state
 
-  // If we are in selection mode, the click should toggle selection
-  if (appState.isSelectionModeActive) {
-    toggleSelection(card);
-    return;
-  }
-
-  // Handle normal clicks for sell/details buttons
-  const itemId = card.dataset.id;
-  if (e.target.closest(".sell-btn")) {
-    const item = appState.inventory.items.find(i => i.id === itemId);
-    if (item && item.quantity > 0) {
-      ui.openSaleModal(itemId);
-    } else {
-      ui.showStatus("هذا المنتج نافد من المخزون.", "error");
+  // It's a long press
+  if (pressDuration >= longPressDuration) {
+    if (navigator.vibrate) {
+      navigator.vibrate(50); // Haptic feedback
     }
-  } else if (e.target.closest(".details-btn")) {
-    ui.openDetailsModal(itemId);
+
+    if (!appState.isSelectionModeActive) {
+      enterSelectionMode(card);
+    } else {
+      toggleSelection(card); // Allow toggling on long press too
+    }
+    
+    // Prevent the click event that might follow
+    e.preventDefault();
+    e.stopPropagation();
+
+  } else {
+    // It's a normal tap/click
+    if (appState.isSelectionModeActive) {
+      toggleSelection(card);
+    } else {
+      // This is a normal click action, but we check if a button was the target
+      const itemId = card.dataset.id;
+      if (e.target.closest(".sell-btn")) {
+        const item = appState.inventory.items.find(i => i.id === itemId);
+        if (item && item.quantity > 0) {
+          ui.openSaleModal(itemId);
+        } else {
+          ui.showStatus("هذا المنتج نافد من المخزون.", "error");
+        }
+      } else if (e.target.closest(".details-btn")) {
+        ui.openDetailsModal(itemId);
+      }
+      // If the click was on the card itself but not a button, do nothing (or open details)
+      // For now, we only act if a button is clicked.
+    }
   }
 }
 
 export function setupInventoryListeners(elements) {
   // --- Grid Interaction (Click and Long Press) ---
-  elements.inventoryGrid.addEventListener("pointerdown", e =>
-    startPressTimer(e.target.closest(".product-card"), e)
-  );
-  elements.inventoryGrid.addEventListener("pointermove", clearPressTimerOnMove);
-  elements.inventoryGrid.addEventListener("pointerup", clearPressTimerOnUp);
-  elements.inventoryGrid.addEventListener("click", handleGridClick);
-  elements.inventoryGrid.addEventListener("contextmenu", e =>
-    e.preventDefault()
-  );
+  elements.inventoryGrid.addEventListener("pointerdown", handlePointerDown);
+  elements.inventoryGrid.addEventListener("pointermove", handlePointerMove);
+  elements.inventoryGrid.addEventListener("pointerup", handlePointerUp);
+  // We no longer need a separate 'click' listener for the grid, as pointerup handles it.
+  elements.inventoryGrid.addEventListener("contextmenu", e => e.preventDefault());
 
   // --- Search, Sort, Filter ---
   elements.searchBar.addEventListener(
@@ -139,7 +153,7 @@ export function setupInventoryListeners(elements) {
       elements.categoryFilterDropdown.classList.remove("show");
     }
   });
-  // Close category dropdown when clicking outside
+
   document.addEventListener("click", e => {
     if (!elements.searchContainer.contains(e.target)) {
       elements.categoryFilterDropdown.classList.remove("show");
