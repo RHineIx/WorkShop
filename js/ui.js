@@ -654,6 +654,7 @@ function getFilteredItems() {
       });
       break;
     default:
+      // Default sort (usually insertion order) remains unchanged
       break;
   }
 
@@ -717,11 +718,20 @@ export function renderInventory(itemsToRender) {
     const price = isIQD ? item.sellPriceIqd || 0 : item.sellPriceUsd || 0;
     const symbol = isIQD ? "د.ع" : "$";
     const placeholder = `<div class="card-image-placeholder"><iconify-icon icon="material-symbols:key"></iconify-icon></div>`;
+
     let imageHtml = placeholder;
     if (item.imagePath) {
-      imageHtml = `<img class="card-image" data-src="${
-        item.imagePath
-      }" alt="${sanitizeHTML(item.name)}">`;
+      if (item.imagePath.startsWith("http")) {
+        // External URL: Use src directly, no lazy loading
+        imageHtml = `<img class="card-image" src="${
+          item.imagePath
+        }" alt="${sanitizeHTML(item.name)}">`;
+      } else {
+        // Internal Path: Use data-src for lazy loading with auth
+        imageHtml = `<img class="card-image" data-src="${
+          item.imagePath
+        }" alt="${sanitizeHTML(item.name)}">`;
+      }
     }
 
     card.innerHTML = `
