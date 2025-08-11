@@ -7,7 +7,6 @@ import {
   exitSelectionMode,
   toggleSelection,
 } from "./bulkActionHandlers.js";
-
 // --- GESTURE DETECTION LOGIC ---
 
 // Module-scoped variables for gesture detection
@@ -16,13 +15,14 @@ let pointerDownX = 0;
 let pointerDownY = 0;
 let isDragging = false; // Flag to determine if a scroll/drag has occurred
 
-const moveThreshold = 16; // Pixels user can move before it's considered a drag
-const longPressDuration = 600; // Milliseconds to hold for a long press
+const moveThreshold = 16;
+// Pixels user can move before it's considered a drag
+const longPressDuration = 600;
+// Milliseconds to hold for a long press
 
 function handlePointerDown(e) {
   // We only care about the primary button (left-click or single touch)
   if (e.pointerType === "mouse" && e.button !== 0) return;
-
   const card = e.target.closest(".product-card");
   // The problematic line has been removed from here.
   // We only check if the click is outside a card.
@@ -43,14 +43,14 @@ function handlePointerMove(e) {
   const deltaY = Math.abs(e.clientY - pointerDownY);
 
   if (deltaX > moveThreshold || deltaY > moveThreshold) {
-    isDragging = true; // It's a scroll gesture
+    isDragging = true;
+    // It's a scroll gesture
   }
 }
 
 function handlePointerUp(e) {
   const card = e.target.closest(".product-card");
   if (!card) return;
-
   // If the pointer was dragged, it's a scroll, so do nothing.
   if (isDragging) {
     pointerDownTime = 0; // Reset state
@@ -58,12 +58,14 @@ function handlePointerUp(e) {
   }
 
   const pressDuration = Date.now() - pointerDownTime;
-  pointerDownTime = 0; // Reset state
+  pointerDownTime = 0;
+  // Reset state
 
   // It's a long press
   if (pressDuration >= longPressDuration && !e.target.closest(".icon-btn")) {
     if (navigator.vibrate) {
-      navigator.vibrate(50); // Haptic feedback
+      navigator.vibrate(50);
+      // Haptic feedback
     }
 
     if (!appState.isSelectionModeActive) {
@@ -108,7 +110,6 @@ export function setupInventoryListeners(elements) {
   elements.inventoryGrid.addEventListener("contextmenu", e =>
     e.preventDefault()
   );
-
   // --- Search, Sort, Filter ---
   elements.searchBar.addEventListener(
     "input",
@@ -117,12 +118,10 @@ export function setupInventoryListeners(elements) {
       ui.filterAndRenderItems(true); // Reset pagination
     }, 300)
   );
-
   elements.sortOptions.addEventListener("change", e => {
     appState.currentSortOption = e.target.value;
     ui.filterAndRenderItems(true); // Reset pagination
   });
-
   elements.statsContainer.addEventListener("click", e => {
     const card = e.target.closest(".stat-card");
     if (!card) return;
@@ -142,23 +141,23 @@ export function setupInventoryListeners(elements) {
     ui.filterAndRenderItems(true);
   });
 
-  elements.categoryFilterBtn.addEventListener("click", e => {
-    e.stopPropagation();
-    elements.categoryFilterDropdown.classList.toggle("show");
-  });
-  elements.categoryFilterDropdown.addEventListener("click", e => {
-    const categoryItem = e.target.closest(".category-item");
-    if (categoryItem) {
-      appState.selectedCategory = categoryItem.dataset.category;
-      ui.filterAndRenderItems(true);
-      ui.renderCategoryFilter();
-      elements.categoryFilterDropdown.classList.remove("show");
-    }
-  });
+  // --- NEW: Category Filter Bar Listener ---
+  elements.categoryFilterBar.addEventListener("click", e => {
+    const chip = e.target.closest(".category-chip");
+    if (!chip) return;
 
-  document.addEventListener("click", e => {
-    if (!elements.searchContainer.contains(e.target)) {
-      elements.categoryFilterDropdown.classList.remove("show");
+    const category = chip.dataset.category;
+    if (appState.selectedCategory === category) return; // Do nothing if already active
+
+    appState.selectedCategory = category;
+
+    // Visually update the active chip immediately
+    const currentActive = elements.categoryFilterBar.querySelector(".active");
+    if (currentActive) {
+      currentActive.classList.remove("active");
     }
+    chip.classList.add("active");
+
+    ui.filterAndRenderItems(true); // Filter and re-render
   });
 }

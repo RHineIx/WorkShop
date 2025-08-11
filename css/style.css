@@ -5,7 +5,6 @@
 /* 1. Global Setup */
 @import "variables.css";
 @import "base.css";
-
 /* 2. Main Layout */
 @import "layout.css";
 
@@ -22,3 +21,4 @@
 @import "components/_bulk-actions.css";
 @import "components/_theme-transition.css";
 @import "components/_scroll-to-top.css";
+@import "components/_category-filter.css";

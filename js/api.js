@@ -33,7 +33,6 @@ async function apiFetch(url, options = {}) {
     Accept: "application/vnd.github.v3+json",
     ...options.headers,
   };
-
   const response = await fetch(url, { ...options, headers });
 
   // Update rate limit status from headers
@@ -79,7 +78,6 @@ async function fetchJsonFromGitHub(filePath, defaultValue) {
   const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${filePath}`;
   try {
     const response = await apiFetch(apiUrl, { cache: "no-cache" });
-
     if (response.status === 404) {
       console.log(`${filePath} not found. A new one will be created on save.`);
       return { data: defaultValue, sha: null };
@@ -186,6 +184,11 @@ export async function fetchLiveExchangeRate() {
 
 export const fetchImageWithAuth = async path => {
   if (!path) return null;
+
+  if (path.startsWith("http")) {
+    return path;
+  }
+
   if (appState.imageCache.has(path)) {
     return appState.imageCache.get(path);
   }
@@ -207,7 +210,6 @@ export const fetchImageWithAuth = async path => {
   try {
     const response = await apiFetch(apiUrl);
     if (!response.ok) throw new Error("Failed to fetch image from GitHub");
-
     const data = await response.json();
     const blob = b64toBlob(data.content, "image/webp");
     await storeImage(path, blob);

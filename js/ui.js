@@ -4,7 +4,6 @@ import { fetchImageWithAuth } from "./api.js";
 import { sanitizeHTML } from "./utils.js";
 
 const ITEMS_PER_PAGE = 20;
-
 const elements = {
   // Main Layout
   themeTransitionOverlay: document.getElementById("theme-transition-overlay"),
@@ -15,8 +14,7 @@ const elements = {
   lowStockStat: document.getElementById("low-stock-stat"),
   toastContainer: document.getElementById("toast-container"),
   searchContainer: document.getElementById("search-container"),
-  categoryFilterBtn: document.getElementById("category-filter-btn"),
-  categoryFilterDropdown: document.getElementById("category-filter-dropdown"),
+  categoryFilterBar: document.getElementById("category-filter-bar"),
   sortOptions: document.getElementById("sort-options"),
   loadMoreTrigger: document.getElementById("load-more-trigger"),
 
@@ -145,7 +143,6 @@ const elements = {
   // Floating Action Buttons
   scrollToTopBtn: document.getElementById("scroll-to-top-btn"),
 };
-
 // --- INTERSECTION OBSERVERS ---
 const imageObserver = new IntersectionObserver(
   (entries, observer) => {
@@ -195,21 +192,19 @@ const loadMoreObserver = new IntersectionObserver(
   },
   { rootMargin: "0px 0px 400px 0px" }
 );
-
 // --- Centralized Modal Control ---
 function handleModalClose(event) {
   const closedDialog = event.target;
   appState.modalStack = appState.modalStack.filter(d => d !== closedDialog);
-
   if (appState.modalStack.length === 0) {
     const scrollY = appState.scrollPosition;
     document.body.classList.remove("body-scroll-locked");
     document.body.style.top = "";
-
     // Temporarily disable smooth scrolling to prevent visible jump
     document.documentElement.style.scrollBehavior = "auto";
     window.scrollTo(0, scrollY);
-    document.documentElement.style.scrollBehavior = ""; // Revert to CSS defined behavior
+    document.documentElement.style.scrollBehavior = "";
+    // Revert to CSS defined behavior
 
     document.body.appendChild(elements.toastContainer);
   } else {
@@ -281,30 +276,41 @@ export function updateRateLimitDisplay() {
 }
 
 export function renderCategoryFilter() {
+  const { categoryFilterBar } = getDOMElements();
+  if (!categoryFilterBar) return;
+
   const categories = [
     ...new Set(
       appState.inventory.items.map(item => item.category).filter(Boolean)
     ),
   ];
-  elements.categoryFilterDropdown.innerHTML = "";
-  const allItem = document.createElement("div");
-  allItem.className = "category-item";
-  allItem.textContent = "عرض الكل";
-  allItem.dataset.category = "all";
+
+  categoryFilterBar.innerHTML = ""; // Clear existing chips
+  const fragment = document.createDocumentFragment();
+
+  // Create "All" button
+  const allButton = document.createElement("button");
+  allButton.className = "category-chip";
+  allButton.textContent = "عرض الكل";
+  allButton.dataset.category = "all";
   if (appState.selectedCategory === "all") {
-    allItem.classList.add("active");
+    allButton.classList.add("active");
   }
-  elements.categoryFilterDropdown.appendChild(allItem);
+  fragment.appendChild(allButton);
+
+  // Create buttons for each category
   categories.forEach(category => {
-    const categoryItem = document.createElement("div");
-    categoryItem.className = "category-item";
-    categoryItem.textContent = sanitizeHTML(category);
-    categoryItem.dataset.category = category;
+    const chipButton = document.createElement("button");
+    chipButton.className = "category-chip";
+    chipButton.textContent = sanitizeHTML(category);
+    chipButton.dataset.category = category;
     if (appState.selectedCategory === category) {
-      categoryItem.classList.add("active");
+      chipButton.classList.add("active");
     }
-    elements.categoryFilterDropdown.appendChild(categoryItem);
+    fragment.appendChild(chipButton);
   });
+
+  categoryFilterBar.appendChild(fragment);
 }
 
 export function populateCategoryDatalist() {
@@ -401,7 +407,6 @@ export const toggleView = viewToShow => {
     renderDashboard();
   }
 };
-
 function renderSalesLog(filteredSales) {
   if (filteredSales.length === 0) {
     elements.salesLogContent.innerHTML =
@@ -469,7 +474,8 @@ function renderSalesLog(filteredSales) {
                             <div class="meta-value meta-price">${totalSellPrice.toLocaleString()}</div>
                         </div>
                         <div class="sale-datetime">
-                            التاريخ: ${sale.saleDate} | الوقت: ${saleTime}
+                            التاريخ: ${sale.saleDate} |
+                            الوقت: ${saleTime}
                         </div>
                     </div>
                     <div class="item-details">
@@ -582,7 +588,6 @@ export const renderDashboard = () => {
 
   renderSalesLog(filteredSales);
 };
-
 export function updateSaleTotal() {
   const quantity = parseInt(elements.saleQuantityInput.value, 10) || 0;
   const unitPrice =
@@ -672,7 +677,6 @@ export function filterAndRenderItems(resetPagination = false) {
 export function renderInventory(itemsToRender) {
   loadMoreObserver.disconnect();
   elements.inventoryGrid.innerHTML = "";
-
   if (appState.isSelectionModeActive) {
     elements.inventoryGrid.classList.add("selection-mode");
   } else {
@@ -718,7 +722,6 @@ export function renderInventory(itemsToRender) {
     const price = isIQD ? item.sellPriceIqd || 0 : item.sellPriceUsd || 0;
     const symbol = isIQD ? "د.ع" : "$";
     const placeholder = `<div class="card-image-placeholder"><iconify-icon icon="material-symbols:key"></iconify-icon></div>`;
-
     let imageHtml = placeholder;
     if (item.imagePath) {
       if (item.imagePath.startsWith("http")) {
@@ -768,7 +771,6 @@ export function renderInventory(itemsToRender) {
   });
 
   elements.inventoryGrid.appendChild(fragment);
-
   // --- ACTIVATE OBSERVERS ---
   elements.inventoryGrid
     .querySelectorAll(".card-image[data-src]")
@@ -776,7 +778,6 @@ export function renderInventory(itemsToRender) {
   elements.inventoryGrid
     .querySelectorAll(".product-card")
     .forEach(card => animationObserver.observe(card));
-
   if (appState.visibleItemCount < itemsToRender.length) {
     elements.loadMoreTrigger.style.display = "block";
     loadMoreObserver.observe(elements.loadMoreTrigger);
@@ -793,7 +794,6 @@ export const updateStats = () => {
     item => item.quantity <= item.alertLevel
   ).length;
 };
-
 export const setTheme = themeName => {
   const overlay = elements.themeTransitionOverlay;
   if (!overlay || document.body.classList.contains(`theme-${themeName}`)) {
@@ -824,7 +824,6 @@ export const setTheme = themeName => {
     overlay.dataset.transitioning = "false";
   }, 600);
 };
-
 export const updateCurrencyDisplay = () => {
   const isIQD = appState.activeCurrency === "IQD";
   elements.currencyToggleBtn.textContent = isIQD ? "د.ع" : "$";
@@ -837,7 +836,6 @@ export const updateCurrencyDisplay = () => {
     renderDashboard();
   }
 };
-
 export function renderSupplierList() {
   elements.supplierListContainer.innerHTML = "";
   if (appState.suppliers.length === 0) {
@@ -917,7 +915,6 @@ export const openDetailsModal = itemId => {
     item.sellPriceUsd || 0
   ).toLocaleString()}`;
   elements.detailsNotesContent.textContent = item.notes || "لا توجد ملاحظات.";
-
   const pnContainer = elements.detailsPnGridContainer;
   pnContainer.innerHTML = "";
   pnContainer.classList.add("view-hidden");
@@ -1008,16 +1005,22 @@ export const openDetailsModal = itemId => {
     elements.detailsImage.style.display = "block";
     elements.detailsImagePlaceholder.style.display = "none";
     elements.detailsImage.src = ""; // Clear previous image
-    elements.detailsImage.classList.add("skeleton");
-    fetchImageWithAuth(item.imagePath).then(blobUrl => {
-      if (blobUrl) {
-        elements.detailsImage.src = blobUrl;
-        elements.detailsImage.onload = () =>
+
+    // Handle both external URLs and internal paths
+    if (item.imagePath.startsWith("http")) {
+      elements.detailsImage.src = item.imagePath;
+    } else {
+      elements.detailsImage.classList.add("skeleton");
+      fetchImageWithAuth(item.imagePath).then(blobUrl => {
+        if (blobUrl) {
+          elements.detailsImage.src = blobUrl;
+          elements.detailsImage.onload = () =>
+            elements.detailsImage.classList.remove("skeleton");
+        } else {
           elements.detailsImage.classList.remove("skeleton");
-      } else {
-        elements.detailsImage.classList.remove("skeleton");
-      }
-    });
+        }
+      });
+    }
   } else {
     elements.detailsImage.style.display = "none";
     elements.detailsImagePlaceholder.style.display = "flex";
@@ -1025,7 +1028,6 @@ export const openDetailsModal = itemId => {
 
   openModal(elements.detailsModal);
 };
-
 export const openItemModal = (itemId = null) => {
   elements.itemForm.reset();
   appState.selectedImageFile = null;
@@ -1058,13 +1060,20 @@ export const openItemModal = (itemId = null) => {
       document.getElementById("item-notes").value = item.notes;
       populateSupplierDropdown(item.supplierId);
       if (item.imagePath) {
-        fetchImageWithAuth(item.imagePath).then(blobUrl => {
-          if (blobUrl) {
-            elements.imagePreview.src = blobUrl;
-            elements.imagePreview.classList.remove("image-preview-hidden");
-            elements.imagePlaceholder.style.display = "none";
-          }
-        });
+        // Handle both external URLs and internal paths
+        if (item.imagePath.startsWith("http")) {
+          elements.imagePreview.src = item.imagePath;
+          elements.imagePreview.classList.remove("image-preview-hidden");
+          elements.imagePlaceholder.style.display = "none";
+        } else {
+          fetchImageWithAuth(item.imagePath).then(blobUrl => {
+            if (blobUrl) {
+              elements.imagePreview.src = blobUrl;
+              elements.imagePreview.classList.remove("image-preview-hidden");
+              elements.imagePlaceholder.style.display = "none";
+            }
+          });
+        }
       }
     }
   } else {
@@ -1101,7 +1110,6 @@ export const openSaleModal = itemId => {
   openModal(elements.saleModal);
   updateSaleTotal();
 };
-
 export const populateSyncModal = () => {
   if (appState.syncConfig) {
     elements.githubUsernameInput.value = appState.syncConfig.username;
@@ -1115,7 +1123,6 @@ export const populateSyncModal = () => {
   }
   openModal(elements.syncModal);
 };
-
 export function updateBulkActionsBar() {
   const count = appState.selectedItemIds.size;
   if (count > 0) {

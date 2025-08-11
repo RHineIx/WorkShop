@@ -2,7 +2,7 @@
 
 /* --- Enhanced Search Component --- */
 
-/* 1. Main container for the search input and filter button */
+/* 1. Main container for the search input */
 .search-container {
   position: relative;
   display: flex;
@@ -24,60 +24,14 @@
 #search-bar {
   border: none;
   background-color: transparent;
-  padding: 12px;
-  padding-right: var(--spacing-md);
+  padding: 12px 16px;
   height: 100%;
   flex-grow: 1;
-  color: var(
-    --text-primary
-  ); /* ADDED: Ensures text color adapts to the current theme */
+  color: var(--text-primary);
 }
 
 /* Remove default focus outline for the input, as the parent container handles it */
 #search-bar:focus {
   outline: none;
   box-shadow: none;
-}
-
-/* 4. Reset the filter button to act as the leading part of the component */
-#category-filter-btn {
-  position: static;
-  transform: none;
-  border: none;
-  border-left: 1px solid var(--border-color);
-  border-radius: 0;
-  background-color: transparent;
-  align-self: stretch;
-  width: 48px;
-  transition: background-color var(--transition-speed),
-    color var(--transition-speed);
-  order: -1;
-}
-
-/* 5. Handle the outline and focus state for the filter button for accessibility */
-#category-filter-btn:focus {
-  outline: none;
-  background-color: var(--accent-soft-bg);
-  color: var(--accent-color);
-}
-
-/* 6. Adjust hover state to be consistent with the new design */
-#category-filter-btn:hover {
-  background-color: var(--bg-color);
-  transform: none;
-  box-shadow: none;
-}
-
-/* Add a style for when the filter is active */
-#category-filter-btn.active,
-#category-filter-btn:hover.active {
-  background-color: var(--accent-color);
-  color: white;
-  border-left-color: var(--accent-color);
-}
-
-/* 7. Reposition the dropdown to align with the new container */
-.category-dropdown {
-  left: 0;
-  width: 100%;
 }

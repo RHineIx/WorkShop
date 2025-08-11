@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>إدارة مخزون ورشة المفاتيح</title>
 
     <link rel="manifest" href="manifest.json" />
@@ -147,22 +147,11 @@
                 id="search-bar"
                 placeholder="ابحث في المنتجات..."
               />
-              <button
-                id="category-filter-btn"
-                class="icon-btn category-filter-toggle-btn"
-                title="تصفية حسب الفئة"
-                aria-label="تصفية حسب الفئة"
-              >
-                <iconify-icon
-                  icon="material-symbols:filter-list-rounded"
-                ></iconify-icon>
-              </button>
-              <div
-                id="category-filter-dropdown"
-                class="category-dropdown"
-              ></div>
             </div>
           </div>
+
+          <div id="category-filter-bar" class="category-filter-bar"></div>
+
           <div id="inventory-grid" class="inventory-grid"></div>
           <div id="load-more-trigger"></div>
         </section>

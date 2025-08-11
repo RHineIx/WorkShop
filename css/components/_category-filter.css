@@ -1,0 +1,48 @@
+/* css/components/_category-filter.css */
+
+.category-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  overflow-x: auto;
+  padding: var(--spacing-sm) 0;
+  margin-bottom: var(--spacing-md);
+  /* Hide scrollbar for a cleaner look */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+.category-filter-bar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, and Opera */
+}
+
+.category-chip {
+  font-family: var(--font-family);
+  padding: 0.5rem 1rem; /* 8px 16px */
+  border-radius: 2rem; /* a large value for a pill shape */
+  border: 1px solid var(--border-color);
+  background-color: var(--surface-color);
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap; /* Prevents text from wrapping */
+  transition: all var(--transition-speed) ease;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.category-chip:hover {
+  border-color: var(--accent-color-hover);
+  color: var(--text-primary);
+  transform: translateY(-2px);
+}
+
+.category-chip.active {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+  color: white;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(61, 131, 235, 0.3);
+}
+
+body.theme-light .category-chip.active {
+    box-shadow: 0 2px 8px rgba(42, 105, 199, 0.4);
+}

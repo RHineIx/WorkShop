@@ -21,7 +21,8 @@
 /* --- Main Content Layout --- */
 .main-container {
   padding: var(--spacing-md);
-  max-width: 75rem; /* 1200px */
+  max-width: 75rem;
+  /* 1200px */
   margin: 0 auto;
 }
 
@@ -35,9 +36,17 @@
 
 .inventory-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(11.25rem, 1fr));
+  /* FIX: The original 'minmax(11.25rem, 1fr)' caused cards to stretch.
+    By setting a fixed size (11.25rem), we prevent them from growing.
+    'auto-fit' still creates as many columns as can fit on the screen.
+  */
+  grid-template-columns: repeat(auto-fit, 11.25rem); /* approx 180px */
   gap: var(--spacing-md);
-  /* Define this element as a layout container */
+  /* FIX: This new property centers the grid items horizontally.
+    If there's only one or two cards, they will appear in the middle
+    instead of being stretched to the edges.
+  */
+  justify-content: center;
   container-type: inline-size;
   container-name: inventory-grid;
 }
@@ -46,7 +55,8 @@
 @media (min-width: 40rem) {
   /* 640px */
   #search-bar {
-    width: 21.875rem; /* 350px */
+    width: 21.875rem;
+    /* 350px */
   }
 
   .inventory-grid {
@@ -86,7 +96,9 @@
 @media (min-width: 64rem) {
   /* 1024px */
   .inventory-grid {
-    /* Increase the minimum card size on very large screens */
-    grid-template-columns: repeat(auto-fit, minmax(13.75rem, 1fr)); /* 220px */
+    /* FIX: Apply the same fix for larger screens, using a slightly larger
+      fixed card size for better space utilization.
+    */
+    grid-template-columns: repeat(auto-fit, 13.75rem); /* 220px */
   }
 }
