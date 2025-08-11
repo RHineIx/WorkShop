@@ -33,16 +33,14 @@
   margin-bottom: var(--spacing-lg);
 }
 
-/* REFACTORED: Unified, flexible, and robust grid layout */
+/* REFACTORED: Final robust grid layout */
 .inventory-grid {
   display: grid;
-  /* This single line creates a fully responsive grid.
-     - auto-fit: Creates as many columns as will fit.
-     - minmax(11.25rem, 1fr): Each column will be at least 180px wide,
-       and will grow equally to fill any remaining space.
-  */
-  grid-template-columns: repeat(auto-fit, minmax(11.25rem, 1fr)); /* 180px */
-  gap: var(--spacing-md);
+  /* Use a fixed width for columns to prevent stretching of a single item */
+  grid-template-columns: repeat(auto-fit, 14.375rem); /* 230px */
+  gap: var(--spacing-lg);
+  /* Center the entire grid of items horizontally */
+  justify-content: center;
   container-type: inline-size;
   container-name: inventory-grid;
 }
@@ -52,11 +50,6 @@
   /* 640px */
   #search-bar {
     width: 21.875rem; /* 350px */
-  }
-
-  /* Increase gap on larger screens */
-  .inventory-grid {
-    gap: var(--spacing-lg);
   }
 
   .details-layout {
@@ -89,11 +82,22 @@
   display: none;
 }
 
-/* This media query is no longer needed for the grid but kept for stats cards */
-@media (max-width: 25rem) {
-  /* 400px */
-  .stats-container {
-    /* Force stats cards into two columns */
-    grid-template-columns: 1fr 1fr;
+/* On large desktops, make cards slightly larger */
+@media (min-width: 64rem) {
+  /* 1024px */
+  .inventory-grid {
+    grid-template-columns: repeat(auto-fit, 16rem); /* 256px */
   }
 }
+
+/* On very narrow screens, force a 2-column layout */
+@media (max-width: 30rem) { /* 480px */
+    .inventory-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-md);
+    }
+
+    .stats-container {
+        grid-template-columns: 1fr 1fr;
+    }
+                                                 }
