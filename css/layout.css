@@ -45,7 +45,6 @@
   If there's only one or two cards, they will appear in the middle
     instead of being stretched to the edges.
   */
-  justify-content: center;
   container-type: inline-size;
   container-name: inventory-grid;
 }
