@@ -476,6 +476,11 @@ function renderSalesLog(filteredSales) {
                             <div class="meta-label">الإجمالي</div>
                             <div class="meta-value meta-price">${totalSellPrice.toLocaleString()}</div>
                         </div>
+                        <div>
+                            <button class="icon-btn danger-btn delete-sale-btn" title="حذف السجل">
+                                <iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon>
+                            </button>
+                        </div>
                         <div class="sale-datetime">
                             التاريخ: ${sale.saleDate} |
                             الوقت: ${saleTime}
@@ -1144,4 +1149,4 @@ export function updateSalesBulkActionsBar() {
   } else {
     elements.salesBulkActionsBar.classList.remove("visible");
   }
-  }
+}
