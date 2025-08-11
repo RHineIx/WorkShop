@@ -142,6 +142,12 @@ const elements = {
 
   // Floating Action Buttons
   scrollToTopBtn: document.getElementById("scroll-to-top-btn"),
+
+  // Sales Bulk Actions UI
+  salesBulkActionsBar: document.getElementById("sales-bulk-actions-bar"),
+  salesSelectionCount: document.getElementById("sales-selection-count"),
+  bulkDeleteSalesBtn: document.getElementById("bulk-delete-sales-btn"),
+  cancelSalesSelectionBtn: document.getElementById("cancel-sales-selection-btn"),
 };
 // --- INTERSECTION OBSERVERS ---
 const imageObserver = new IntersectionObserver(
@@ -203,8 +209,7 @@ function handleModalClose(event) {
     // Temporarily disable smooth scrolling to prevent visible jump
     document.documentElement.style.scrollBehavior = "auto";
     window.scrollTo(0, scrollY);
-    document.documentElement.style.scrollBehavior = "";
-    // Revert to CSS defined behavior
+    document.documentElement.style.scrollBehavior = ""; // Revert to CSS defined behavior
 
     document.body.appendChild(elements.toastContainer);
   } else {
@@ -278,16 +283,13 @@ export function updateRateLimitDisplay() {
 export function renderCategoryFilter() {
   const { categoryFilterBar } = getDOMElements();
   if (!categoryFilterBar) return;
-
   const categories = [
     ...new Set(
       appState.inventory.items.map(item => item.category).filter(Boolean)
     ),
   ];
-
   categoryFilterBar.innerHTML = ""; // Clear existing chips
   const fragment = document.createDocumentFragment();
-
   // Create "All" button
   const allButton = document.createElement("button");
   allButton.className = "category-chip";
@@ -297,7 +299,6 @@ export function renderCategoryFilter() {
     allButton.classList.add("active");
   }
   fragment.appendChild(allButton);
-
   // Create buttons for each category
   categories.forEach(category => {
     const chipButton = document.createElement("button");
@@ -309,7 +310,6 @@ export function renderCategoryFilter() {
     }
     fragment.appendChild(chipButton);
   });
-
   categoryFilterBar.appendChild(fragment);
 }
 
@@ -435,6 +435,8 @@ function renderSalesLog(filteredSales) {
         .map(sale => {
           const item =
             appState.inventory.items.find(i => i.id === sale.itemId) || {};
+          
+          const isSelected = appState.selectedSaleIds.has(sale.saleId);
           const sellPrice = isIQD ? sale.sellPriceIqd : sale.sellPriceUsd;
           const costPrice = isIQD ? sale.costPriceIqd : sale.costPriceUsd;
           const totalSellPrice = sellPrice * sale.quantitySold;
@@ -455,7 +457,8 @@ function renderSalesLog(filteredSales) {
             }
           );
           return `
-                <div class="sale-item">
+                <div class="sale-item ${isSelected ? 'selected' : ''}" data-sale-id="${sale.saleId}">
+                    <div class="sale-checkbox"></div>
                     <div class="item-header">
                         <div class="item-info">
                             <div class="item-product-name">${sanitizeHTML(
@@ -510,7 +513,7 @@ function renderSalesLog(filteredSales) {
       return `
             <div class="day-group">
                 <h3 class="day-header">${dayHeader}</h3>
-                <div class="sales-list">
+                <div class="sales-list ${appState.isSalesSelectionModeActive ? 'selection-mode' : ''}">
                     ${salesCardsHTML}
                 </div>
             </div>
@@ -591,7 +594,8 @@ export const renderDashboard = () => {
 export function updateSaleTotal() {
   const quantity = parseInt(elements.saleQuantityInput.value, 10) || 0;
   const unitPrice =
-    parseFloat(document.getElementById("sale-price").value) || 0;
+    parseFloat(document.getElementById("sale-price").value) ||
+    0;
   const totalPrice = quantity * unitPrice;
   const symbol = appState.activeCurrency === "IQD" ? "د.ع" : "$";
   elements.saleTotalPrice.textContent = `${totalPrice.toLocaleString()} ${symbol}`;
@@ -609,7 +613,7 @@ export function renderInventorySkeleton(count = 8) {
                 <div class="skeleton skeleton-text"></div>
                 <div class="skeleton skeleton-text w-75"></div>
                  <div class="skeleton skeleton-text w-50" style="margin-top: 12px;"></div>
-        </div>
+            </div>
         `;
     fragment.appendChild(skeletonCard);
   }
@@ -1084,7 +1088,6 @@ export const openItemModal = (itemId = null) => {
   }
   openModal(elements.itemModal);
 };
-
 export const openSaleModal = itemId => {
   const item = appState.inventory.items.find(i => i.id === itemId);
   if (!item) return;
@@ -1132,3 +1135,13 @@ export function updateBulkActionsBar() {
     elements.bulkActionsBar.classList.remove("visible");
   }
 }
+
+export function updateSalesBulkActionsBar() {
+  const count = appState.selectedSaleIds.size;
+  if (count > 0) {
+    elements.salesSelectionCount.textContent = `تم تحديد ${count} عناصر`;
+    elements.salesBulkActionsBar.classList.add("visible");
+  } else {
+    elements.salesBulkActionsBar.classList.remove("visible");
+  }
+  }
