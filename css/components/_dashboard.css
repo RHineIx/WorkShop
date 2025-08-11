@@ -116,7 +116,7 @@
   font-size: 12px;
 }
 
-/* --- NEW Sales Log Card Design --- */
+/* --- Sales Log Card Design --- */
 .day-group {
   margin-bottom: var(--spacing-lg);
 }
@@ -144,7 +144,8 @@
 }
 .item-header {
   display: grid;
-  grid-template-columns: 1fr auto auto; /* Main info, Quantity, Price */
+  /* MODIFIED: Added a column for the delete button */
+  grid-template-columns: 1fr auto auto auto;
   align-items: center;
   padding: var(--spacing-md);
   gap: var(--spacing-md);
@@ -245,7 +246,7 @@
   color: var(--danger-color);
 }
 
-/* --- NEW: Sales Log Selection Styles --- */
+/* --- Sales Log Selection Styles --- */
 .sales-list.selection-mode .item-header {
   cursor: pointer;
 }
