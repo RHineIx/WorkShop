@@ -291,11 +291,10 @@
   }
 }
 
-/* MODIFIED: Scale cards down ONLY on very narrow screens */
+/* MODIFIED & REFACTORED: Comprehensive scaling for very narrow screens */
 @media (max-width: 25rem) {
   /* 400px */
   .stat-card {
-    /* Change to vertical layout */
     flex-direction: column;
     align-items: center;
     text-align: center;
@@ -303,59 +302,55 @@
     padding: var(--spacing-sm);
   }
   .stat-card .card-icon iconify-icon {
-    /* Reduce icon size */
     font-size: 2rem;
   }
   .stat-card .card-details .card-value {
-    /* Reduce value font size */
     font-size: 1.25rem;
   }
 
+  /* Reduce padding inside the card */
   .card-info {
-    /* تقليل الحشوة الداخلية للبطاقة */
     padding: var(--spacing-sm);
   }
 
+  /* Shrink the category tag */
   .card-category-tag {
-    /* تصغير خط وحشوة الفئة */
     font-size: 0.65rem; /* ~10.4px */
     padding: 0.15rem 0.4rem;
     margin-bottom: var(--spacing-xs);
   }
 
+  /* Shrink the product name font */
   .card-name {
-    /* تصغير خط اسم المنتج */
     font-size: 0.875rem; /* 14px */
-    -webkit-line-clamp: 3; /* السماح بثلاثة أسطر إذا لزم الأمر */
+    -webkit-line-clamp: 3; /* Allow 3 lines if needed */
     line-clamp: 3;
     margin-bottom: var(--spacing-xs);
   }
 
+  /* Shrink the SKU font */
   .card-sku {
-    /* تصغير خط الـ SKU */
     font-size: 0.65rem; /* ~10.4px */
     margin-bottom: var(--spacing-sm);
   }
 
+  /* Shrink the price font */
   .card-price {
-    /* تصغير خط السعر */
     font-size: 1rem; /* 16px */
   }
 
+  /* Ensure footer stays horizontal but with less space */
   .card-footer {
-    /* ضمان عدم التفاف الأزرار عموديًا وإلغاء تأثير استعلام الحاوية */
-    flex-direction: row;
-    align-items: center;
     gap: var(--spacing-sm);
   }
-
+  
+  /* Shrink the gap between buttons */
   .card-actions {
-    /* تصغير الفجوة بين الأزرار */
     gap: var(--spacing-xs);
   }
 
+  /* Significantly shrink the buttons and their icons */
   .card-actions .icon-btn {
-    /* تصغير الأزرار والأيقونات بشكل كبير */
     width: 2rem; /* 32px */
     height: 2rem; /* 32px */
   }
@@ -364,11 +359,11 @@
     font-size: 1.1rem; /* ~17.6px */
   }
 
+  /* Shrink the quantity badge */
   .quantity-badge {
-    /* تصغير شارة الكمية */
     font-size: 0.65rem; /* ~10.4px */
     padding: 0.15rem 0.5rem;
     top: 0.5rem;
     right: 0.5rem;
   }
-}
+  }
