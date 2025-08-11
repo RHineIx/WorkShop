@@ -87,10 +87,4 @@ export const appState = {
 
   /** @type {number} The scroll position of the page before a modal is opened. */
   scrollPosition: 0,
-
-  /** @type {boolean} A flag to indicate if sales selection mode is active. */
-  isSalesSelectionModeActive: false,
-
-  /** @type {Set<string>} A set to store the IDs of the selected sales records. */
-  selectedSaleIds: new Set(),
 };
