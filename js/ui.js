@@ -142,12 +142,6 @@ const elements = {
 
   // Floating Action Buttons
   scrollToTopBtn: document.getElementById("scroll-to-top-btn"),
-
-  // Sales Bulk Actions UI
-  salesBulkActionsBar: document.getElementById("sales-bulk-actions-bar"),
-  salesSelectionCount: document.getElementById("sales-selection-count"),
-  bulkDeleteSalesBtn: document.getElementById("bulk-delete-sales-btn"),
-  cancelSalesSelectionBtn: document.getElementById("cancel-sales-selection-btn"),
 };
 // --- INTERSECTION OBSERVERS ---
 const imageObserver = new IntersectionObserver(
@@ -435,8 +429,6 @@ function renderSalesLog(filteredSales) {
         .map(sale => {
           const item =
             appState.inventory.items.find(i => i.id === sale.itemId) || {};
-          
-          const isSelected = appState.selectedSaleIds.has(sale.saleId);
           const sellPrice = isIQD ? sale.sellPriceIqd : sale.sellPriceUsd;
           const costPrice = isIQD ? sale.costPriceIqd : sale.costPriceUsd;
           const totalSellPrice = sellPrice * sale.quantitySold;
@@ -457,8 +449,7 @@ function renderSalesLog(filteredSales) {
             }
           );
           return `
-                <div class="sale-item ${isSelected ? 'selected' : ''}" data-sale-id="${sale.saleId}">
-                    <div class="sale-checkbox"></div>
+                <div class="sale-item" data-sale-id="${sale.saleId}">
                     <div class="item-header">
                         <div class="item-info">
                             <div class="item-product-name">${sanitizeHTML(
@@ -518,7 +509,7 @@ function renderSalesLog(filteredSales) {
       return `
             <div class="day-group">
                 <h3 class="day-header">${dayHeader}</h3>
-                <div class="sales-list ${appState.isSalesSelectionModeActive ? 'selection-mode' : ''}">
+                <div class="sales-list">
                     ${salesCardsHTML}
                 </div>
             </div>
@@ -1139,14 +1130,4 @@ export function updateBulkActionsBar() {
   } else {
     elements.bulkActionsBar.classList.remove("visible");
   }
-}
-
-export function updateSalesBulkActionsBar() {
-  const count = appState.selectedSaleIds.size;
-  if (count > 0) {
-    elements.salesSelectionCount.textContent = `تم تحديد ${count} عناصر`;
-    elements.salesBulkActionsBar.classList.add("visible");
-  } else {
-    elements.salesBulkActionsBar.classList.remove("visible");
-  }
-}
+    }
