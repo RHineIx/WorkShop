@@ -144,7 +144,6 @@
 }
 .item-header {
   display: grid;
-  /* MODIFIED: Added a column for the delete button */
   grid-template-columns: 1fr auto auto auto;
   align-items: center;
   padding: var(--spacing-md);
@@ -245,58 +244,3 @@
 .details-list .profit-negative .value {
   color: var(--danger-color);
 }
-
-/* --- Sales Log Selection Styles --- */
-.sales-list.selection-mode .item-header {
-  cursor: pointer;
-}
-
-.sale-item {
-  position: relative;
-  /* Add a transition for a smoother selection feedback */
-  transition: background-color 0.2s ease, border-color 0.2s ease;
-}
-
-.sale-checkbox {
-  position: absolute;
-  top: 50%;
-  left: 1rem; /* 16px */
-  transform: translateY(-50%);
-  width: 1.5rem; /* 24px */
-  height: 1.5rem; /* 24px */
-  border: 2px solid var(--border-color);
-  background-color: var(--surface-color);
-  border-radius: 50%;
-  transition: all 0.2s ease-in-out;
-  transform: translateY(-50%) scale(0);
-  opacity: 0;
-  z-index: 6;
-  cursor: pointer;
-}
-
-.sales-list.selection-mode .sale-checkbox {
-  transform: translateY(-50%) scale(1);
-  opacity: 1;
-}
-
-.sale-item.selected .sale-checkbox {
-  background-color: var(--danger-color);
-  border-color: var(--danger-color);
-  transform: translateY(-50%) scale(1.1);
-}
-
-.sale-item.selected .sale-checkbox::after {
-  content: "✔";
-  color: white;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 0.8rem;
-  font-weight: bold;
-}
-
-.sale-item.selected {
-  background-color: var(--danger-soft-bg);
-  border-color: var(--danger-color);
-  }
