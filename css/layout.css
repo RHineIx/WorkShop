@@ -101,12 +101,13 @@
   }
 }
 
-/* --- NEW: Force 2-Column Layout on Small Mobile --- */
-@media (max-width: 29.9375rem) { /* Applies only up to 479px */
+/* MODIFIED: Apply 2-column layout ONLY on very narrow screens */
+@media (max-width: 25rem) {
+  /* 400px */
   .inventory-grid {
     /* Override the columns to be exactly two, filling the available space */
     grid-template-columns: repeat(2, 1fr);
-    
+
     /* Reduce the gap slightly to help them fit better */
     gap: var(--spacing-sm);
   }
