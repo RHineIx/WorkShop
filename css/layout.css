@@ -21,8 +21,7 @@
 /* --- Main Content Layout --- */
 .main-container {
   padding: var(--spacing-md);
-  max-width: 75rem;
-  /* 1200px */
+  max-width: 75rem; /* 1200px */
   margin: 0 auto;
 }
 
@@ -37,13 +36,13 @@
 .inventory-grid {
   display: grid;
   /* FIX: The original 'minmax(11.25rem, 1fr)' caused cards to stretch.
-    By setting a fixed size (11.25rem), we prevent them from growing.
-    'auto-fit' still creates as many columns as can fit on the screen.
+  By setting a fixed size (11.25rem), we prevent them from growing.
+  'auto-fit' still creates as many columns as can fit on the screen.
   */
   grid-template-columns: repeat(auto-fit, 11.25rem); /* approx 180px */
   gap: var(--spacing-md);
   /* FIX: This new property centers the grid items horizontally.
-    If there's only one or two cards, they will appear in the middle
+  If there's only one or two cards, they will appear in the middle
     instead of being stretched to the edges.
   */
   justify-content: center;
@@ -55,8 +54,7 @@
 @media (min-width: 40rem) {
   /* 640px */
   #search-bar {
-    width: 21.875rem;
-    /* 350px */
+    width: 21.875rem; /* 350px */
   }
 
   .inventory-grid {
@@ -100,5 +98,21 @@
       fixed card size for better space utilization.
     */
     grid-template-columns: repeat(auto-fit, 13.75rem); /* 220px */
+  }
+}
+
+/* --- NEW: Force 2-Column Layout on Small Mobile --- */
+@media (max-width: 29.9375rem) { /* Applies only up to 479px */
+  .inventory-grid {
+    /* Override the columns to be exactly two, filling the available space */
+    grid-template-columns: repeat(2, 1fr);
+    
+    /* Reduce the gap slightly to help them fit better */
+    gap: var(--spacing-sm);
+  }
+
+  .stats-container {
+    /* Force stats cards into two columns */
+    grid-template-columns: 1fr 1fr;
   }
 }

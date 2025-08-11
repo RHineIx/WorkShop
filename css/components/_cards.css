@@ -47,7 +47,6 @@
   /* Animation initial state */
   opacity: 0;
   transform: translateY(1.25rem);
-
   transition: opacity 0.5s ease-out, transform 0.5s ease-out;
 }
 
@@ -289,5 +288,89 @@
     width: 100%;
     display: grid;
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* --- Responsive Scaling for Cards on Small Mobile --- */
+@media (max-width: 30rem) { /* 480px */
+  .stat-card {
+    /* Change to vertical layout */
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: center;
+    gap: 0.5rem;
+    align-items: center;
+    /* Adjust spacing for vertical layout */
+    gap: 0.25rem;
+    padding: var(--spacing-sm);
+  }
+  .stat-card .card-icon iconify-icon {
+    /* Reduce icon size */
+    font-size: 2rem;
+  }
+  .stat-card .card-details .card-value {
+    /* Reduce value font size */
+    font-size: 1.25rem;
+  }
+
+  .card-info {
+    /* تقليل الحشوة الداخلية للبطاقة */
+    padding: var(--spacing-sm);
+  }
+
+  .card-category-tag {
+    /* تصغير خط وحشوة الفئة */
+    font-size: 0.65rem; /* ~10.4px */
+    padding: 0.15rem 0.4rem;
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .card-name {
+    /* تصغير خط اسم المنتج */
+    font-size: 0.875rem; /* 14px */
+    -webkit-line-clamp: 3; /* السماح بثلاثة أسطر إذا لزم الأمر */
+    line-clamp: 3;
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .card-sku {
+    /* تصغير خط الـ SKU */
+    font-size: 0.65rem; /* ~10.4px */
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .card-price {
+    /* تصغير خط السعر */
+    font-size: 1rem; /* 16px */
+  }
+
+  .card-footer {
+    /* ضمان عدم التفاف الأزرار عموديًا وإلغاء تأثير استعلام الحاوية */
+    flex-direction: row; 
+    align-items: center;
+    gap: var(--spacing-sm);
+  }
+
+  .card-actions {
+    /* تصغير الفجوة بين الأزرار */
+    gap: var(--spacing-xs);
+  }
+
+  .card-actions .icon-btn {
+    /* تصغير الأزرار والأيقونات بشكل كبير */
+    width: 2rem;   /* 32px */
+    height: 2rem;  /* 32px */
+  }
+
+  .card-actions .icon-btn iconify-icon {
+    font-size: 1.1rem; /* ~17.6px */
+  }
+
+  .quantity-badge {
+    /* تصغير شارة الكمية */
+    font-size: 0.65rem; /* ~10.4px */
+    padding: 0.15rem 0.5rem;
+    top: 0.5rem;
+    right: 0.5rem;
   }
 }

@@ -122,12 +122,11 @@
 
         <section class="inventory-container">
           <div class="inventory-header">
-            <div class="inventory-header-main">
-              <h2>قائمة المنتجات</h2>
+            <h2>قائمة المنتجات</h2>
+
+            <div class="inventory-actions">
               <div class="sort-container">
-                <label for="sort-options" class="visually-hidden"
-                  >فرز حسب</label
-                >
+                <label for="sort-options" class="visually-hidden">فرز حسب</label>
                 <select id="sort-options">
                   <option value="default">فرز افتراضي</option>
                   <option value="date_desc">الأحدث أولاً</option>
@@ -140,15 +139,16 @@
                   icon="material-symbols:swap-vert"
                 ></iconify-icon>
               </div>
+
+              <div id="search-container" class="search-container">
+                <input
+                  type="text"
+                  id="search-bar"
+                  placeholder="ابحث في المنتجات..."
+                />
+              </div>
             </div>
-            <div id="search-container" class="search-container">
-              <input
-                type="text"
-                id="search-bar"
-                placeholder="ابحث في المنتجات..."
-              />
             </div>
-          </div>
 
           <div id="category-filter-bar" class="category-filter-bar"></div>
 
@@ -704,7 +704,7 @@
         <p>تأكيد تفاصيل البيع للمنتج التالي:</p>
         <strong id="sale-item-name" class="sale-item-name-display"></strong>
 
-        <div class="form-row">
+        <div class="sale-details-grid">
           <div class="form-group">
             <label for="sale-quantity">الكمية المباعة</label>
             <div class="quantity-controls">
@@ -739,7 +739,6 @@
             <span id="sale-total-price" class="total-value"></span>
           </div>
         </div>
-
         <label for="sale-date">تاريخ البيع</label>
         <input type="date" id="sale-date" required />
 
