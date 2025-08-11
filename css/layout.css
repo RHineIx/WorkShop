@@ -95,6 +95,15 @@
   }
 }
 
+/* NEW: Rule for large phones and small tablets */
+@media (min-width: 25.0625rem) and (max-width: 39.9375rem) { /* 401px to 639px */
+    .inventory-grid {
+        /* Override to a 3-column layout that fills the space */
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+
 /* MODIFIED: Apply 2-column layout ONLY on very narrow screens */
 @media (max-width: 25rem) {
   /* 400px */
