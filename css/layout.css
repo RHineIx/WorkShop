@@ -93,11 +93,11 @@
 /* On very narrow screens, force a 2-column layout */
 @media (max-width: 30rem) { /* 480px */
     .inventory-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, 2fr);
         gap: var(--spacing-md);
     }
 
     .stats-container {
-        grid-template-columns: 2fr 1fr;
+        grid-template-columns: 2fr 2fr;
     }
                                                  }
