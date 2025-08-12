@@ -220,7 +220,7 @@ dialog::backdrop {
   width: auto; /* Adjust width based on container */
   max-width: 100%; /* Prevent image from exceeding container width */
   height: auto; /* Maintain aspect ratio */
-  max-height: 30vh; /* Limit maximum height to take reasonable screen space */
+  max-height: 40vh; /* Limit maximum height to take reasonable screen space */
   display: block;
   object-fit: contain; /* Ensure the entire image is visible within the container */
 }
