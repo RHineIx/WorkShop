@@ -643,7 +643,6 @@ function getFilteredItems() {
 
     if (searchTerms.length > 0) {
       items = items.filter(item => {
-        // Combine all searchable fields into a single string for easier searching.
         const searchableContent = [
           item.name,
           item.sku,
@@ -653,8 +652,6 @@ function getFilteredItems() {
         ]
           .join(" ")
           .toLowerCase();
-
-        // Every search term must be present in the searchable content.
         return searchTerms.every(term => searchableContent.includes(term));
       });
     }
@@ -1151,3 +1148,42 @@ export function updateBulkActionsBar() {
     elements.bulkActionsBar.classList.remove("visible");
   }
 }
+
+export function updateProductCard(itemId) {
+  const card = document.querySelector(`.product-card[data-id="${itemId}"]`);
+  const item = appState.inventory.items.find(i => i.id === itemId);
+
+  if (!card || !item) {
+    return;
+  }
+
+  // Update stock status classes
+  const isLowStock = item.quantity > 0 && item.quantity <= item.alertLevel;
+  const isOutOfStock = item.quantity === 0;
+
+  card.classList.toggle("low-stock", isLowStock);
+  card.classList.toggle("out-of-stock", isOutOfStock);
+
+  // Update quantity badge
+  const badge = card.querySelector(".quantity-badge");
+  if (badge) {
+    let badgeText = `متوفر: ${item.quantity}`;
+    let badgeClass = "";
+    if (isLowStock) {
+      badgeText = `منخفض: ${item.quantity}`;
+      badgeClass = "low-stock";
+    }
+    if (isOutOfStock) {
+      badgeText = `نفد المخزون`;
+      badgeClass = "out-of-stock";
+    }
+    badge.textContent = badgeText;
+    badge.className = `quantity-badge ${badgeClass}`;
+  }
+
+  // Update sell button
+  const sellBtn = card.querySelector(".sell-btn");
+  if (sellBtn) {
+    sellBtn.disabled = isOutOfStock;
+  }
+  }
