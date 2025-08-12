@@ -1,4 +1,3 @@
-
 /* css/layout.css */
 
 /* --- Header Layout --- */
@@ -32,12 +31,11 @@
   margin-bottom: var(--spacing-lg);
 }
 
-/* FINAL REFACTORED GRID: The most flexible and robust solution */
+/* REFACTORED: Final robust grid layout */
 .inventory-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr)); /* Min 216px */
   gap: var(--spacing-md);
-  /* NEW: This will center the item within its grid cell */
   justify-items: center;
 }
 
@@ -82,10 +80,14 @@
   display: none;
 }
 
-/* This media query is no longer needed for the grid but kept for stats cards */
-@media (max-width: 25rem) {
-  /* 400px */
-  .stats-container {
-    grid-template-columns: 1fr 1fr;
+/* On very narrow screens, force a 2-column layout */
+/* UNIFIED BREAKPOINT */
+@media (max-width: 30rem) { /* 480px */
+    .inventory-grid {
+        gap: var(--spacing-md);
+    }
+
+    .stats-container {
+        grid-template-columns: 1fr 1fr;
+    }
   }
-}
