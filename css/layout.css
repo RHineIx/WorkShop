@@ -3,14 +3,13 @@
 /* --- Header Layout --- */
 .page-controls {
   background-color: var(--surface-color);
-  /* The top padding now adds the safe area height to our standard spacing */
   padding: calc(var(--spacing-sm) + env(safe-area-inset-top)) var(--spacing-md)
     var(--spacing-sm);
   display: flex;
   align-items: center;
-  flex-wrap: wrap; /* Allow items to wrap to the next line */
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: var(--spacing-md); /* Add gap for consistent spacing */
+  gap: var(--spacing-md);
   border-bottom: 1px solid var(--border-color);
   position: sticky;
   top: 0;
@@ -21,35 +20,40 @@
 /* --- Main Content Layout --- */
 .main-container {
   padding: var(--spacing-md);
-  max-width: 75rem; /* 1200px */
+  max-width: 75rem;
   margin: 0 auto;
 }
 
 .stats-container {
   display: grid;
-  /* Make stats cards fluid and responsive by default */
   grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-lg);
 }
 
-/* REFACTORED: Final robust grid layout */
+/* FINAL REFACTORED GRID: The most flexible and robust solution */
 .inventory-grid {
   display: grid;
-  /* Use a fixed width for columns to prevent stretching of a single item */
-  grid-template-columns: repeat(auto-fit, 14.375rem); /* 230px */
-  gap: var(--spacing-lg);
-  /* Center the entire grid of items horizontally */
-  justify-content: center;
-  container-type: inline-size;
-  container-name: inventory-grid;
+  /* This is the definitive solution:
+    - auto-fit: Creates as many columns as possible.
+    - minmax(13.5rem, 1fr): Each column must be AT LEAST 216px wide. 
+      If there's extra space, they will ALL grow equally to fill it.
+      This prevents a single card from stretching alone and allows multiple
+      cards to shrink slightly to fit more columns.
+  */
+  grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr)); /* Min 216px */
+  gap: var(--spacing-md);
 }
 
 /* --- Major Layout Shift Breakpoints (Macro Layout) --- */
 @media (min-width: 40rem) {
   /* 640px */
   #search-bar {
-    width: 21.875rem; /* 350px */
+    width: 21.875rem;
+  }
+
+  .inventory-grid {
+    gap: var(--spacing-lg);
   }
 
   .details-layout {
@@ -82,22 +86,10 @@
   display: none;
 }
 
-/* On large desktops, make cards slightly larger */
-@media (min-width: 64rem) {
-  /* 1024px */
-  .inventory-grid {
-    grid-template-columns: repeat(auto-fit, 16rem); /* 256px */
+/* This media query is no longer needed for the grid but kept for stats cards */
+@media (max-width: 25rem) {
+  /* 400px */
+  .stats-container {
+    grid-template-columns: 1fr 1fr;
   }
 }
-
-/* On very narrow screens, force a 2-column layout */
-@media (max-width: 30rem) { /* 480px */
-    .inventory-grid {
-        grid-template-columns: repeat(2, 2fr);
-        gap: var(--spacing-md);
-    }
-
-    .stats-container {
-        grid-template-columns: 2fr 2fr;
-    }
-                                                 }
