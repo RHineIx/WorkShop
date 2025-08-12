@@ -36,31 +36,6 @@ async function handleSingleSaleDelete(saleId) {
     }
 }
 
-/**
- * Handles all click events within the sales log container.
- * Differentiates between clicking the delete button and clicking the card header.
- * @param {Event} e - The click event object.
- */
-function handleSalesLogClick(e) {
-    const deleteButton = e.target.closest('.delete-sale-btn');
-    if (deleteButton) {
-        // Stop the click from bubbling up to the item-header
-        e.stopPropagation(); 
-        const saleItem = e.target.closest('.sale-item');
-        const saleId = saleItem.dataset.saleId;
-        handleSingleSaleDelete(saleId);
-        return; // Action is complete
-    }
-
-    const itemHeader = e.target.closest('.item-header');
-    if (itemHeader) {
-        const details = itemHeader.nextElementSibling;
-        if (details && details.classList.contains("item-details")) {
-            details.classList.toggle("visible");
-        }
-    }
-}
-
 export function setupDashboardListeners(elements) {
   elements.timeFilterControls.addEventListener("click", e => {
     const button = e.target.closest(".time-filter-btn");
@@ -72,9 +47,37 @@ export function setupDashboardListeners(elements) {
     }
   });
 
-  const salesLogContainer = elements.dashboardViewContainer.querySelector("#sales-log-content");
-  if(salesLogContainer) {
-      // Use a simple click listener
-      salesLogContainer.addEventListener("click", handleSalesLogClick);
-  }
+  // Unified click handler for the entire dashboard container
+  elements.dashboardViewContainer.addEventListener("click", e => {
+    // Handler for collapsible sections (Bestsellers, Sales Log)
+    const collapsibleHeader = e.target.closest(".collapsible-header");
+    if (collapsibleHeader) {
+      const targetId = collapsibleHeader.dataset.target;
+      const content = document.getElementById(targetId);
+      if (content) {
+        collapsibleHeader.classList.toggle("collapsed");
+        content.classList.toggle("collapsed");
+      }
+      return;
+    }
+
+    // Handler for individual sale item delete button
+    const deleteButton = e.target.closest('.delete-sale-btn');
+    if (deleteButton) {
+        e.stopPropagation(); 
+        const saleItem = e.target.closest('.sale-item');
+        const saleId = saleItem.dataset.saleId;
+        handleSingleSaleDelete(saleId);
+        return;
+    }
+
+    // Handler for expanding/collapsing sale item details
+    const itemHeader = e.target.closest('.item-header');
+    if (itemHeader) {
+        const details = itemHeader.nextElementSibling;
+        if (details && details.classList.contains("item-details")) {
+            details.classList.toggle("visible");
+        }
+    }
+  });
 }
