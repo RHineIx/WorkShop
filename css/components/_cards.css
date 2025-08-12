@@ -44,7 +44,7 @@
   position: relative;
   user-select: none; /* Prevent text selection */
   
-  /* NEW: Set a max-width to prevent stretching */
+  /* Set a max-width to prevent stretching */
   width: 100%;
   max-width: 16rem; /* 256px */
 
@@ -256,6 +256,10 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  
+  /* FIX: Apply the same width constraints as the real card */
+  width: 100%;
+  max-width: 16rem; /* 256px */
 }
 .skeleton-card .skeleton-image {
   width: 100%;
@@ -370,4 +374,4 @@
     top: 0.5rem;
     right: 0.5rem;
   }
-  }
+    }
