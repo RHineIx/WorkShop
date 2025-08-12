@@ -153,7 +153,6 @@ const elements = {
     "#confirm-modal .confirm-modal-icon"
   ),
 };
-
 // --- INTERSECTION OBSERVERS ---
 const imageObserver = new IntersectionObserver(
   (entries, observer) => {
@@ -637,17 +636,28 @@ function getFilteredItems() {
     items = items.filter(item => item.category === appState.selectedCategory);
   }
   if (appState.searchTerm) {
-    const lowerCaseSearch = appState.searchTerm.toLowerCase();
-    items = items.filter(
-      item =>
-        item.name.toLowerCase().includes(lowerCaseSearch) ||
-        (item.sku && item.sku.toLowerCase().includes(lowerCaseSearch)) ||
-        (item.notes && item.notes.toLowerCase().includes(lowerCaseSearch)) ||
-        (item.oemPartNumber &&
-          item.oemPartNumber.toLowerCase().includes(lowerCaseSearch)) ||
-        (item.compatiblePartNumber &&
-          item.compatiblePartNumber.toLowerCase().includes(lowerCaseSearch))
-    );
+    const searchTerms = appState.searchTerm
+      .toLowerCase()
+      .split(" ")
+      .filter(term => term.trim() !== "");
+
+    if (searchTerms.length > 0) {
+      items = items.filter(item => {
+        // Combine all searchable fields into a single string for easier searching.
+        const searchableContent = [
+          item.name,
+          item.sku,
+          item.notes,
+          item.oemPartNumber,
+          item.compatiblePartNumber,
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        // Every search term must be present in the searchable content.
+        return searchTerms.every(term => searchableContent.includes(term));
+      });
+    }
   }
 
   // Apply sorting
