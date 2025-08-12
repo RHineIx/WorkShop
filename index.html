@@ -126,7 +126,9 @@
 
             <div class="inventory-actions">
               <div class="sort-container">
-                <label for="sort-options" class="visually-hidden">فرز حسب</label>
+                <label for="sort-options" class="visually-hidden"
+                  >فرز حسب</label
+                >
                 <select id="sort-options">
                   <option value="default">فرز افتراضي</option>
                   <option value="date_desc">الأحدث أولاً</option>
@@ -917,6 +919,26 @@
       </form>
     </dialog>
 
+    <dialog id="confirm-modal">
+      <div class="confirm-modal-content">
+        <div class="confirm-modal-icon">
+          <iconify-icon
+            icon="material-symbols:delete-outline-rounded"
+          ></iconify-icon>
+        </div>
+        <h3 id="confirm-title">هل أنت متأكد؟</h3>
+        <p id="confirm-message">
+          سيتم حذف هذا العنصر نهائياً. لا يمكن التراجع عن هذا الإجراء.
+        </p>
+        <div class="modal-actions">
+          <button id="confirm-cancel-btn" class="cancel-btn">إلغاء</button>
+          <button id="confirm-ok-btn" class="confirm-btn">
+            نعم، قم بالحذف
+          </button>
+        </div>
+      </div>
+    </dialog>
+
     <button
       id="scroll-to-top-btn"
       class="scroll-to-top-btn"
@@ -934,4 +956,4 @@
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
     <script type="module" src="js/main.js"></script>
   </body>
-  </html>
+</html>

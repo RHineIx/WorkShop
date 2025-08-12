@@ -142,7 +142,18 @@ const elements = {
 
   // Floating Action Buttons
   scrollToTopBtn: document.getElementById("scroll-to-top-btn"),
+
+  // Confirmation Modal
+  confirmModal: document.getElementById("confirm-modal"),
+  confirmTitle: document.getElementById("confirm-title"),
+  confirmMessage: document.getElementById("confirm-message"),
+  confirmOkBtn: document.getElementById("confirm-ok-btn"),
+  confirmCancelBtn: document.getElementById("confirm-cancel-btn"),
+  confirmModalIcon: document.querySelector(
+    "#confirm-modal .confirm-modal-icon"
+  ),
 };
+
 // --- INTERSECTION OBSERVERS ---
 const imageObserver = new IntersectionObserver(
   (entries, observer) => {
@@ -590,8 +601,7 @@ export const renderDashboard = () => {
 export function updateSaleTotal() {
   const quantity = parseInt(elements.saleQuantityInput.value, 10) || 0;
   const unitPrice =
-    parseFloat(document.getElementById("sale-price").value) ||
-    0;
+    parseFloat(document.getElementById("sale-price").value) || 0;
   const totalPrice = quantity * unitPrice;
   const symbol = appState.activeCurrency === "IQD" ? "د.ع" : "$";
   elements.saleTotalPrice.textContent = `${totalPrice.toLocaleString()} ${symbol}`;
@@ -1130,4 +1140,4 @@ export function updateBulkActionsBar() {
   } else {
     elements.bulkActionsBar.classList.remove("visible");
   }
-    }
+}

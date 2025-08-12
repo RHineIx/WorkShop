@@ -1,0 +1,105 @@
+/* css/components/_confirm-modal.css */
+
+#confirm-modal {
+    max-width: 25rem; /* 400px */
+}
+
+#confirm-modal[open] {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.confirm-modal-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-md);
+}
+
+.confirm-modal-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--danger-soft-bg);
+    margin-bottom: var(--spacing-md);
+}
+
+.confirm-modal-icon iconify-icon {
+    font-size: 36px;
+    color: var(--danger-color);
+}
+
+/* Specific icon for non-danger confirmation */
+.confirm-modal-icon.info {
+    background-color: var(--accent-soft-bg);
+}
+.confirm-modal-icon.info iconify-icon {
+    color: var(--accent-color);
+}
+
+
+.confirm-modal-content h3 {
+    font-size: 1.25rem;
+    margin: 0 0 var(--spacing-sm);
+    color: var(--text-primary);
+}
+
+.confirm-modal-content p {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+}
+
+#confirm-modal .modal-actions {
+    margin-top: var(--spacing-lg);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-sm);
+    width: 100%;
+}
+
+#confirm-modal .modal-actions button {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: var(--border-radius-sm);
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+    font-family: var(--font-family);
+    font-size: 1rem;
+    transition: all var(--transition-speed) ease;
+}
+
+#confirm-modal .modal-actions .cancel-btn {
+    background-color: var(--surface-color);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+#confirm-modal .modal-actions .cancel-btn:hover {
+    background-color: var(--bg-color);
+}
+
+#confirm-modal .modal-actions .confirm-btn {
+    background-color: var(--danger-color);
+    color: white;
+}
+#confirm-modal .modal-actions .confirm-btn:hover {
+    background-color: var(--danger-color-hover);
+}
+
+/* Specific style for non-danger confirm button */
+#confirm-modal .modal-actions .confirm-btn.primary {
+    background-color: var(--accent-color);
+}
+#confirm-modal .modal-actions .confirm-btn.primary:hover {
+    background-color: var(--accent-color-hover);
+}
