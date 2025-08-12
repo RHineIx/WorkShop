@@ -43,6 +43,10 @@
   flex-direction: column;
   position: relative;
   user-select: none; /* Prevent text selection */
+  
+  /* NEW: Set a max-width to prevent stretching */
+  width: 100%;
+  max-width: 16rem; /* 256px */
 
   /* Animation initial state */
   opacity: 0;
