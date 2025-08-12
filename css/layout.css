@@ -1,3 +1,4 @@
+
 /* css/layout.css */
 
 /* --- Header Layout --- */
@@ -34,15 +35,10 @@
 /* FINAL REFACTORED GRID: The most flexible and robust solution */
 .inventory-grid {
   display: grid;
-  /* This is the definitive solution:
-    - auto-fit: Creates as many columns as possible.
-    - minmax(13.5rem, 1fr): Each column must be AT LEAST 216px wide. 
-      If there's extra space, they will ALL grow equally to fill it.
-      This prevents a single card from stretching alone and allows multiple
-      cards to shrink slightly to fit more columns.
-  */
   grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr)); /* Min 216px */
   gap: var(--spacing-md);
+  /* NEW: This will center the item within its grid cell */
+  justify-items: center;
 }
 
 /* --- Major Layout Shift Breakpoints (Macro Layout) --- */
