@@ -142,7 +142,8 @@ body.theme-dark .inventory-header h2 {
   }
 }
 
-/* On small phones, convert sort dropdown to an icon button */
+/* On small phones, convert sort dropdown to an icon button AND adjust page controls */
+/* UNIFIED BREAKPOINT */
 @media (max-width: 30rem) { /* 480px */
   #sort-options {
     width: 2.75rem;
@@ -159,10 +160,7 @@ body.theme-dark .inventory-header h2 {
     font-size: 1.5rem;
     color: var(--text-primary);
   }
-}
-
-/* On very small phones, adjust the main page controls */
-@media (max-width: 425px) {
+  
   .page-controls {
     flex-wrap: nowrap;
     gap: var(--spacing-sm);
@@ -192,4 +190,4 @@ body.theme-dark .inventory-header h2 {
 body.theme-dark #sort-options option {
   background-color: #1e1e1e;
   color: #e0e0e0;
-}
+  }
