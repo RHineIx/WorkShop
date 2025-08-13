@@ -264,6 +264,7 @@ dialog::backdrop {
   font-size: 0.875rem; /* 14px */
   color: var(--text-secondary);
   margin-bottom: var(--spacing-md);
+  font-weight: 500;
 }
 .details-price-grid {
   display: grid;
@@ -281,8 +282,9 @@ dialog::backdrop {
   gap: 0.25rem; /* 4px */
 }
 .price-label {
-  font-size: 0.75rem; /* 12px */
+  font-size: 0.875rem; /* 14px */
   color: var(--text-secondary);
+  font-weight: 500;
 }
 .price-value {
   font-size: 1.25rem; /* 20px */
@@ -595,4 +597,4 @@ dialog::backdrop {
 .text-secondary {
   font-size: 0.875rem;
   color: var(--text-secondary);
-}
+               }
