@@ -246,7 +246,7 @@ async function handleDownloadBackup() {
       .toISOString()
       .slice(0, 19)
       .replace(/[:T]/g, "-");
-    link.download = `rhineix-workshop-backup-${timestamp}.zip`;
+    link.download = `workshop-backup-${timestamp}.zip`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

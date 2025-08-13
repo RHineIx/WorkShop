@@ -16,7 +16,7 @@
 @import "components/_search.css";
 @import "components/_cards.css";
 @import "components/_modals.css";
-@import "components/_confirm-modal.css"; /* NEW */
+@import "components/_confirm-modal.css";
 @import "components/_utilities.css";
 @import "components/_cropper.css";
 @import "components/_dashboard.css";
@@ -24,3 +24,4 @@
 @import "components/_theme-transition.css";
 @import "components/_scroll-to-top.css";
 @import "components/_category-filter.css";
+@import "components/_activity-log.css"; /* ADDED */

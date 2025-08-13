@@ -13,6 +13,7 @@ import {
   filterAndRenderItems,
   renderCategoryFilter,
   populateCategoryDatalist,
+  renderAuditLog,
 } from "./renderer.js";
 import { showStatus, hideSyncStatus } from "./notifications.js";
 import { setupEventListeners } from "./eventSetup.js";
@@ -27,6 +28,10 @@ export function loadConfig() {
   if (savedRate) {
     appState.exchangeRate = parseFloat(savedRate);
   }
+  const savedUser = localStorage.getItem("inventoryAppCurrentUser");
+  if(savedUser) {
+    appState.currentUser = savedUser;
+  }
 }
 
 export function saveConfig() {
@@ -35,6 +40,7 @@ export function saveConfig() {
     JSON.stringify(appState.syncConfig)
   );
   localStorage.setItem("inventoryAppExchangeRate", appState.exchangeRate);
+  localStorage.setItem("inventoryAppCurrentUser", appState.currentUser);
 }
 
 function handleMagicLink() {
@@ -87,12 +93,18 @@ function loadLocalData() {
   if (savedSuppliers) {
     appState.suppliers = JSON.parse(savedSuppliers);
   }
+  // ADDED
+  const savedAuditLog = localStorage.getItem("auditLogAppData");
+  if(savedAuditLog) {
+    appState.auditLog = JSON.parse(savedAuditLog);
+  }
 }
 
 export function saveLocalData() {
   localStorage.setItem("inventoryAppData", JSON.stringify(appState.inventory));
   localStorage.setItem("salesAppData", JSON.stringify(appState.sales));
   localStorage.setItem("suppliersAppData", JSON.stringify(appState.suppliers));
+  localStorage.setItem("auditLogAppData", JSON.stringify(appState.auditLog)); // ADDED
 }
 
 function handleUrlShortcuts() {
@@ -163,8 +175,8 @@ export async function initializeApp() {
   if (appState.syncConfig) {
     showStatus("جاري مزامنة البيانات...", "syncing");
     try {
-      const [inventoryResult, salesResult, suppliersResult] = await Promise.all(
-        [api.fetchFromGitHub(), api.fetchSales(), api.fetchSuppliers()]
+      const [inventoryResult, salesResult, suppliersResult, auditLogResult] = await Promise.all(
+        [api.fetchFromGitHub(), api.fetchSales(), api.fetchSuppliers(), api.fetchAuditLog()]
       );
 
       if (inventoryResult) {
@@ -178,6 +190,10 @@ export async function initializeApp() {
       if (suppliersResult) {
         appState.suppliers = suppliersResult.data;
         appState.suppliersFileSha = suppliersResult.sha;
+      }
+      if (auditLogResult) {
+        appState.auditLog = auditLogResult.data;
+        appState.auditLogFileSha = auditLogResult.sha;
       }
 
       saveLocalData();
@@ -203,6 +219,7 @@ export async function initializeApp() {
   filterAndRenderItems();
   renderCategoryFilter();
   populateCategoryDatalist();
+  renderAuditLog();
   updateCurrencyDisplay();
   handleUrlShortcuts();
   registerServiceWorker();

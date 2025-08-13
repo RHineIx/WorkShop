@@ -43,4 +43,10 @@ export function setupViewToggleListeners(elements) {
     if (appState.isSelectionModeActive) exitSelectionMode();
     toggleView("dashboard");
   });
-                                              }
+  
+  // ADDED
+  elements.activityLogToggleBtn.addEventListener("click", () => {
+    if (appState.isSelectionModeActive) exitSelectionMode();
+    toggleView("activity-log");
+  });
+}

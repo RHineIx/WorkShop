@@ -68,6 +68,14 @@
         </button>
 
         <button
+          id="activity-log-toggle-btn"
+          title="سجل النشاط"
+          class="control-button"
+        >
+          <iconify-icon icon="material-symbols:history-rounded"></iconify-icon>
+        </button>
+
+        <button
           id="sync-settings-btn"
           title="إعدادات المزامنة"
           class="control-button"
@@ -217,6 +225,13 @@
             </button>
             <div id="sales-log-content" class="collapsible-content"></div>
           </div>
+        </section>
+      </div>
+
+      <div id="activity-log-view-container" class="view-hidden">
+        <section class="activity-log-container">
+          <h2>سجل نشاطات المخزون</h2>
+          <div id="audit-log-list" class="log-list"></div>
         </section>
       </div>
     </main>
@@ -940,6 +955,20 @@
       </div>
     </dialog>
 
+    <dialog id="reason-modal">
+        <form id="reason-form" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+            <h3>سبب تغيير الكمية (اختياري)</h3>
+            <div class="form-group">
+                <label for="quantity-change-reason" class="visually-hidden">السبب</label>
+                <textarea id="quantity-change-reason" rows="3" placeholder="مثال: استلام بضاعة جديدة، تلف، جرد..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="submit" id="confirm-reason-btn">تأكيد السبب</button>
+                <button type="button" id="save-without-reason-btn">حفظ بدون سبب</button>
+            </div>
+        </form>
+    </dialog>
+
     <button
       id="scroll-to-top-btn"
       class="scroll-to-top-btn"
@@ -981,10 +1010,22 @@
       </div>
     </template>
 
+    <template id="log-entry-template">
+      <div class="log-entry">
+        <div class="log-icon">
+          <iconify-icon icon="material-symbols:info-outline"></iconify-icon>
+        </div>
+        <div class="log-content">
+          <div class="log-description"></div>
+          <div class="log-meta"></div>
+        </div>
+      </div>
+    </template>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
     <script type="module" src="js/main.js"></script>
   </body>
-      </html>
+</html>

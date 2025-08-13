@@ -21,10 +21,12 @@ export const elements = {
   currencyToggleBtn: document.getElementById("currency-toggle-btn"),
   inventoryToggleBtn: document.getElementById("inventory-toggle-btn"),
   dashboardToggleBtn: document.getElementById("dashboard-toggle-btn"),
+  activityLogToggleBtn: document.getElementById("activity-log-toggle-btn"), // ADDED
 
   // View Containers
   inventoryViewContainer: document.getElementById("inventory-view-container"),
   dashboardViewContainer: document.getElementById("dashboard-view-container"),
+  activityLogViewContainer: document.getElementById("activity-log-view-container"), // ADDED
 
   // Dashboard Elements
   timeFilterControls: document.getElementById("time-filter-controls"),
@@ -32,6 +34,9 @@ export const elements = {
   totalProfitStat: document.getElementById("total-profit-stat"),
   bestsellersList: document.getElementById("bestsellers-list"),
   salesLogContent: document.getElementById("sales-log-content"),
+  
+  // Activity Log Elements
+  auditLogList: document.getElementById("audit-log-list"), // ADDED
 
   // Details Modal
   detailsModal: document.getElementById("details-modal"),
@@ -149,6 +154,14 @@ export const elements = {
     "#confirm-modal .confirm-modal-icon"
   ),
 
+ // Reason Modal Elements (ADDED)
+  reasonModal: document.getElementById("reason-modal"),
+  reasonForm: document.getElementById("reason-form"),
+  quantityChangeReasonInput: document.getElementById("quantity-change-reason"),
+  confirmReasonBtn: document.getElementById("confirm-reason-btn"),
+  saveWithoutReasonBtn: document.getElementById("save-without-reason-btn"),
+
   // Templates
   productCardTemplate: document.getElementById("product-card-template"),
+  logEntryTemplate: document.getElementById("log-entry-template"),
 };

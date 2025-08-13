@@ -19,7 +19,8 @@
 #sync-form input,
 #sale-form input,
 #sale-form textarea,
-#supplier-form input {
+#supplier-form input,
+#quantity-change-reason /* ADDED */ {
   width: 100%;
   padding: 0.75rem var(--spacing-md); /* 12px */
   font-family: var(--font-family);
@@ -36,14 +37,16 @@
 #sync-form input:focus,
 #sale-form input:focus,
 #sale-form textarea:focus,
-#supplier-form input:focus {
+#supplier-form input:focus,
+#quantity-change-reason:focus /* ADDED */ {
   outline: none;
   border-color: var(--accent-color);
   box-shadow: 0 0 0 0.1875rem var(--accent-soft-bg); /* 3px */
 }
 
 #item-form textarea,
-#sale-form textarea {
+#sale-form textarea,
+#quantity-change-reason /* ADDED */ {
   min-height: 5rem; /* 80px */
   width: 100%;
   resize: vertical;

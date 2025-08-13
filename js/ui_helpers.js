@@ -1,16 +1,6 @@
 // js/ui_helpers.js
 import { getDOMElements, openModal } from "./ui.js";
 
-/**
- * Displays a custom confirmation modal and returns a promise that resolves with the user's choice.
- * @param {object} options - The options for the confirmation modal.
- * @param {string} options.title - The title of the modal.
- * @param {string} options.message - The confirmation message.
- * @param {string} [options.confirmText='نعم, تأكيد'] - The text for the confirm button.
- * @param {string} [options.cancelText='إلغاء'] - The text for the cancel button.
- * @param {boolean} [options.isDanger=true] - If true, the confirm button will be styled as a danger button.
- * @returns {Promise<boolean>} - A promise that resolves to true if confirmed, false otherwise.
- */
 export function showConfirmationModal({
   title,
   message,
@@ -29,19 +19,16 @@ export function showConfirmationModal({
       confirmModalIcon,
     } = elements;
 
-    // Update modal content
     confirmTitle.textContent = title;
     confirmMessage.textContent = message;
     confirmOkBtn.textContent = confirmText;
     confirmCancelBtn.textContent = cancelText;
 
-    // Update modal style (danger vs. primary)
     confirmOkBtn.classList.toggle("danger", isDanger);
     confirmOkBtn.classList.toggle("primary", !isDanger);
     confirmModalIcon.classList.toggle("danger", isDanger);
     confirmModalIcon.classList.toggle("info", !isDanger);
 
-    // Create listeners that will be removed after use
     const onConfirm = () => {
       cleanup();
       resolve(true);
@@ -53,7 +40,6 @@ export function showConfirmationModal({
     };
 
     const onModalClose = () => {
-      // If the modal is closed by pressing ESC
       cleanup();
       resolve(false);
     };
@@ -65,11 +51,56 @@ export function showConfirmationModal({
       if (confirmModal.open) confirmModal.close();
     };
 
-    // Attach temporary event listeners
     confirmOkBtn.addEventListener("click", onConfirm, { once: true });
     confirmCancelBtn.addEventListener("click", onCancel, { once: true });
     confirmModal.addEventListener("close", onModalClose, { once: true });
 
     openModal(confirmModal);
+  });
+}
+
+// ADDED: New helper function for the reason modal
+export function getQuantityChangeReason() {
+  return new Promise(resolve => {
+    const elements = getDOMElements();
+    const { reasonModal, reasonForm, quantityChangeReasonInput } = elements;
+
+    quantityChangeReasonInput.value = "";
+
+    const onSubmit = e => {
+      e.preventDefault();
+      cleanup();
+      resolve(quantityChangeReasonInput.value.trim());
+    };
+
+    const onSaveWithoutReason = () => {
+      cleanup();
+      resolve(""); // Resolve with an empty string
+    };
+
+    const onModalClose = () => {
+      cleanup();
+      resolve(null); // Resolve with null if the user cancels (e.g., presses ESC)
+    };
+
+    const cleanup = () => {
+      reasonForm.removeEventListener("submit", onSubmit);
+      elements.saveWithoutReasonBtn.removeEventListener(
+        "click",
+        onSaveWithoutReason
+      );
+      reasonModal.removeEventListener("close", onModalClose);
+      if (reasonModal.open) reasonModal.close();
+    };
+
+    reasonForm.addEventListener("submit", onSubmit, { once: true });
+    elements.saveWithoutReasonBtn.addEventListener(
+      "click",
+      onSaveWithoutReason,
+      { once: true }
+    );
+    reasonModal.addEventListener("close", onModalClose, { once: true });
+
+    openModal(reasonModal);
   });
 }

@@ -2,7 +2,7 @@
 import { appState } from "./state.js";
 import { fetchImageWithAuth } from "./api.js";
 import { elements } from "./dom.js";
-import { filterAndRenderItems, renderDashboard } from "./renderer.js";
+import { filterAndRenderItems, renderDashboard, renderAuditLog } from "./renderer.js"; // MODIFIED
 import { showStatus } from "./notifications.js";
 
 let countdownInterval = null;
@@ -88,25 +88,29 @@ export function openModal(dialogElement) {
   dialogElement.showModal();
 }
 
+// MODIFIED to handle the new view
 export function toggleView(viewToShow) {
   appState.currentView = viewToShow;
   const isInventory = viewToShow === "inventory";
   const isDashboard = viewToShow === "dashboard";
+  const isActivityLog = viewToShow === "activity-log";
 
   elements.inventoryViewContainer.classList.toggle("view-hidden", !isInventory);
   elements.dashboardViewContainer.classList.toggle("view-hidden", !isDashboard);
+  elements.activityLogViewContainer.classList.toggle("view-hidden", !isActivityLog);
 
   elements.inventoryToggleBtn.classList.remove("active-view-btn");
   elements.dashboardToggleBtn.classList.remove("active-view-btn");
+  elements.activityLogToggleBtn.classList.remove("active-view-btn");
 
   if (isInventory) {
     elements.inventoryToggleBtn.classList.add("active-view-btn");
   } else if (isDashboard) {
     elements.dashboardToggleBtn.classList.add("active-view-btn");
-  }
-
-  if (isDashboard) {
     renderDashboard();
+  } else if (isActivityLog) {
+    elements.activityLogToggleBtn.classList.add("active-view-btn");
+    renderAuditLog();
   }
 }
 
@@ -146,13 +150,20 @@ export function setTheme(themeName) {
 export function updateCurrencyDisplay() {
   const isIQD = appState.activeCurrency === "IQD";
   elements.currencyToggleBtn.textContent = isIQD ? "د.ع" : "$";
-  if (appState.currentView === "inventory") {
-    filterAndRenderItems();
-    if (elements.detailsModal.open && appState.currentItemId) {
-      openDetailsModal(appState.currentItemId);
-    }
-  } else if (appState.currentView === "dashboard") {
-    renderDashboard();
+  
+  switch (appState.currentView) {
+    case 'inventory':
+      filterAndRenderItems();
+      if (elements.detailsModal.open && appState.currentItemId) {
+        openDetailsModal(appState.currentItemId);
+      }
+      break;
+    case 'dashboard':
+      renderDashboard();
+      break;
+    case 'activity-log':
+      renderAuditLog();
+      break;
   }
 }
 
@@ -312,4 +323,4 @@ export function updateBulkActionsBar() {
   } else {
     elements.bulkActionsBar.classList.remove("visible");
   }
-    }
+}

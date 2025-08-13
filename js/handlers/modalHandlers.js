@@ -4,7 +4,10 @@ import * as api from "../api.js";
 import { ConflictError } from "../api.js";
 import { generateUniqueSKU, compressImage } from "../utils.js";
 import { saveLocalData } from "../app.js";
-import { showConfirmationModal } from "../ui_helpers.js";
+import {
+  showConfirmationModal,
+  getQuantityChangeReason,
+} from "../ui_helpers.js";
 import {
   getDOMElements,
   openModal,
@@ -18,6 +21,7 @@ import {
   populateSupplierDropdown,
 } from "../renderer.js";
 import { showStatus, hideSyncStatus } from "../notifications.js";
+import { logAction, ACTION_TYPES } from "../logger.js";
 
 let cropper = null;
 let cropperPadding = 0.1;
@@ -34,13 +38,14 @@ function handlePriceConversion(sourceInput, targetInput) {
   }
 }
 
-async function saveQuantityChanges(currentItem) {
+async function saveQuantityChanges(currentItem, reason) {
   showStatus("التحقق من البيانات...", "syncing");
   const itemBeforeEdit = appState.itemStateBeforeEdit;
   try {
     const { data: latestInventory, sha: latestSha } =
       await api.fetchFromGitHub();
     if (latestSha !== appState.fileSha) {
+      hideSyncStatus();
       showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
         showRefreshButton: true,
       });
@@ -67,8 +72,23 @@ async function saveQuantityChanges(currentItem) {
     await api.saveToGitHub();
     saveLocalData();
     filterAndRenderItems();
+
+    hideSyncStatus();
     showStatus("تم حفظ التغييرات بنجاح!", "success");
+
+    logAction({
+      action: ACTION_TYPES.QUANTITY_UPDATED,
+      targetId: currentItem.id,
+      targetName: currentItem.name,
+      // تم التعديل هنا: تمت إزالة النص الافتراضي
+      details: {
+        from: itemBeforeEdit.quantity,
+        to: currentItem.quantity,
+        reason: reason,
+      },
+    });
   } catch (error) {
+    hideSyncStatus();
     const originalItemIndex = appState.inventory.items.findIndex(
       i => i.id === itemBeforeEdit.id
     );
@@ -89,6 +109,7 @@ async function handleSaleFormSubmit(e) {
   try {
     const { sha: latestSha } = await api.fetchFromGitHub();
     if (latestSha !== appState.fileSha) {
+      hideSyncStatus();
       showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
         showRefreshButton: true,
       });
@@ -105,6 +126,7 @@ async function handleSaleFormSubmit(e) {
     const salePrice = parseFloat(document.getElementById("sale-price").value);
 
     if (!item || item.quantity < quantityToSell || quantityToSell <= 0) {
+      hideSyncStatus();
       showStatus("خطأ في البيانات أو الكمية غير متوفرة.", "error");
       saveButton.disabled = false;
       return;
@@ -140,6 +162,13 @@ async function handleSaleFormSubmit(e) {
       getDOMElements().saleModal.close();
       hideSyncStatus();
       showStatus("تم تسجيل البيع بنجاح!", "success");
+
+      logAction({
+        action: ACTION_TYPES.SALE_RECORDED,
+        targetId: item.id,
+        targetName: item.name,
+        details: { quantity: quantityToSell, saleId: saleRecord.saleId },
+      });
     } catch (saveError) {
       item.quantity = originalQuantity;
       appState.sales.pop();
@@ -160,7 +189,6 @@ async function handleSaleFormSubmit(e) {
   }
 }
 
-// تم التعديل هنا: إضافة export
 export function openItemModal(itemId = null) {
   const elements = getDOMElements();
   elements.itemForm.reset();
@@ -219,7 +247,6 @@ export function openItemModal(itemId = null) {
   openModal(elements.itemModal);
 }
 
-// تم التعديل هنا: إضافة export
 export function openSaleModal(itemId) {
   const elements = getDOMElements();
   const item = appState.inventory.items.find(i => i.id === itemId);
@@ -258,6 +285,7 @@ async function handleItemFormSubmit(e) {
     const { data: latestInventory, sha: latestSha } =
       await api.fetchFromGitHub();
     if (latestSha !== appState.fileSha) {
+      hideSyncStatus();
       showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
         showRefreshButton: true,
       });
@@ -269,11 +297,18 @@ async function handleItemFormSubmit(e) {
     appState.inventory = latestInventory;
     appState.fileSha = latestSha;
     const itemId = document.getElementById("item-id").value;
-    let imagePath = null;
-    const existingItem = appState.inventory.items.find(i => i.id === itemId);
-    if (existingItem) {
-      imagePath = existingItem.imagePath;
-    }
+
+    const existingItemIndex = appState.inventory.items.findIndex(
+      i => i.id === itemId
+    );
+    const originalItem =
+      existingItemIndex !== -1
+        ? JSON.parse(
+            JSON.stringify(appState.inventory.items[existingItemIndex])
+          )
+        : null;
+
+    let imagePath = originalItem ? originalItem.imagePath : null;
 
     if (appState.selectedImageFile) {
       showStatus("جاري ضغط ورفع الصورة...", "syncing");
@@ -317,16 +352,11 @@ async function handleItemFormSubmit(e) {
       supplierId: document.getElementById("item-supplier").value || null,
     };
 
-    const index = appState.inventory.items.findIndex(i => i.id === itemId);
-    if (index !== -1) {
-      appState.inventory.items[index] = itemData;
+    if (existingItemIndex !== -1) {
+      appState.inventory.items[existingItemIndex] = itemData;
     } else {
       appState.inventory.items.push(itemData);
     }
-
-    filterAndRenderItems(true);
-    renderCategoryFilter();
-    populateCategoryDatalist();
 
     await api.saveToGitHub();
     saveLocalData();
@@ -334,6 +364,60 @@ async function handleItemFormSubmit(e) {
     getDOMElements().itemModal.close();
     hideSyncStatus();
     showStatus("تم حفظ التغييرات بنجاح!", "success");
+
+    if (originalItem) {
+      const compareAndLog = (field, action) => {
+        if (originalItem[field] !== itemData[field]) {
+          logAction({
+            action,
+            targetId: itemData.id,
+            targetName: itemData.name,
+            details: { from: originalItem[field], to: itemData[field] },
+          });
+        }
+      };
+      compareAndLog("name", ACTION_TYPES.NAME_UPDATED);
+      compareAndLog("sku", ACTION_TYPES.SKU_UPDATED);
+      compareAndLog("category", ACTION_TYPES.CATEGORY_UPDATED);
+      compareAndLog("notes", ACTION_TYPES.NOTES_UPDATED);
+      compareAndLog("imagePath", ACTION_TYPES.IMAGE_UPDATED);
+      compareAndLog("supplierId", ACTION_TYPES.SUPPLIER_UPDATED);
+
+      if (originalItem.quantity !== itemData.quantity) {
+        logAction({
+          action: ACTION_TYPES.QUANTITY_UPDATED,
+          targetId: itemData.id,
+          targetName: itemData.name,
+          details: {
+            from: originalItem.quantity,
+            to: itemData.quantity,
+            reason: "تعديل المنتج",
+          },
+        });
+      }
+      if (originalItem.sellPriceIqd !== itemData.sellPriceIqd) {
+        logAction({
+          action: ACTION_TYPES.PRICE_UPDATED,
+          targetId: itemData.id,
+          targetName: itemData.name,
+          details: {
+            from: originalItem.sellPriceIqd,
+            to: itemData.sellPriceIqd,
+          },
+        });
+      }
+    } else {
+      logAction({
+        action: ACTION_TYPES.ITEM_CREATED,
+        targetId: itemData.id,
+        targetName: itemData.name,
+        details: { quantity: itemData.quantity, price: itemData.sellPriceIqd },
+      });
+    }
+
+    filterAndRenderItems(true);
+    renderCategoryFilter();
+    populateCategoryDatalist();
 
     if (appState.currentItemId === itemData.id) {
       openDetailsModal(itemData.id);
@@ -549,8 +633,20 @@ export function setupModalListeners(elements) {
         confirmText: "نعم, حفظ",
         isDanger: false,
       });
+
       if (confirmed) {
-        await saveQuantityChanges(currentItem);
+        const reason = await getQuantityChangeReason();
+        if (reason !== null) {
+          await saveQuantityChanges(currentItem, reason);
+        } else {
+          const originalItemIndex = appState.inventory.items.findIndex(
+            i => i.id === itemBeforeEdit.id
+          );
+          if (originalItemIndex !== -1) {
+            appState.inventory.items[originalItemIndex] = itemBeforeEdit;
+          }
+          filterAndRenderItems();
+        }
       } else {
         const originalItemIndex = appState.inventory.items.findIndex(
           i => i.id === itemBeforeEdit.id
@@ -613,6 +709,13 @@ export function setupModalListeners(elements) {
         }
         saveLocalData();
         showStatus("تم حذف المنتج بنجاح!", "success");
+
+        logAction({
+          action: ACTION_TYPES.ITEM_DELETED,
+          targetId: itemToDelete.id,
+          targetName: itemToDelete.name,
+          details: { lastKnownSku: itemToDelete.sku },
+        });
       } catch (error) {
         appState.inventory = originalInventory;
         filterAndRenderItems();

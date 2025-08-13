@@ -203,7 +203,9 @@ export function renderInventory(itemsToRender) {
     const isIQD = appState.activeCurrency === "IQD";
     const price = isIQD ? item.sellPriceIqd || 0 : item.sellPriceUsd || 0;
     const symbol = isIQD ? "د.ع" : "$";
-    cardClone.querySelector(".card-price").textContent = `${price.toLocaleString()} ${symbol}`;
+    cardClone.querySelector(
+      ".card-price"
+    ).textContent = `${price.toLocaleString()} ${symbol}`;
     cardClone.querySelector(".sell-btn").disabled = isOutOfStock;
 
     fragment.appendChild(cardClone);
@@ -581,4 +583,91 @@ export function populateBulkSupplierDropdown() {
     option.textContent = sanitizeHTML(supplier.name);
     elements.bulkSupplierSelect.appendChild(option);
   });
-                            }
+}
+
+const formatRelativeTime = date => {
+  const now = new Date();
+  const seconds = Math.round((now - date) / 1000);
+  const minutes = Math.round(seconds / 60);
+  const hours = Math.round(minutes / 60);
+  const days = Math.round(hours / 24);
+
+  if (seconds < 60) return `قبل لحظات`;
+  if (minutes < 60) return `قبل ${minutes} دقيقة`;
+  if (hours < 24) return `قبل ${hours} ساعة`;
+  if (days < 30) return `قبل ${days} يوم`;
+  return date.toLocaleString("ar-EG");
+};
+
+const getActionDetails = (log) => {
+    const name = `<strong>${sanitizeHTML(log.targetName)}</strong>`;
+    const details = log.details;
+    const from = sanitizeHTML(String(details.from ?? ''));
+    const to = sanitizeHTML(String(details.to ?? ''));
+
+    switch (log.action) {
+        case 'ITEM_CREATED':
+            return { icon: 'material-symbols:add-box-outline', class: 'create', description: `تم إنشاء منتج جديد: ${name}.` };
+        case 'PRICE_UPDATED':
+            return { icon: 'material-symbols:price-change-outline', class: 'update', description: `تم تغيير سعر ${name} من <span class="old-value">${Number(from).toLocaleString()}</span> إلى <span class="new-value">${Number(to).toLocaleString()}</span>.` };
+        case 'QUANTITY_UPDATED':
+            // MODIFIED: Handle optional reason
+            let qtyDescription = `تم تعديل كمية ${name} من ${from} إلى ${to}.`;
+            if (details.reason && details.reason.trim() !== '') {
+                qtyDescription += ` (السبب: ${sanitizeHTML(details.reason)})`;
+            }
+            return { icon: 'material-symbols:inventory-2-outline', class: 'update', description: qtyDescription };
+        case 'SALE_RECORDED':
+            return { icon: 'material-symbols:shopping-cart-outline', class: 'sale', description: `تم بيع ${details.quantity} قطعة من ${name}.` };
+        case 'ITEM_DELETED':
+            return { icon: 'material-symbols:delete-outline', class: 'delete', description: `تم حذف المنتج: ${name}.` };
+        case 'NAME_UPDATED':
+             return { icon: 'material-symbols:edit-outline', class: 'update', description: `تم تغيير اسم المنتج من "${from}" إلى "${to}".`};
+        case 'SKU_UPDATED':
+             return { icon: 'material-symbols:qr-code-2', class: 'update', description: `تم تغيير SKU للمنتج ${name} من "${from}" إلى "${to}".`};
+        case 'CATEGORY_UPDATED':
+             return { icon: 'material-symbols:folder-open-outline', class: 'update', description: `تم تغيير فئة ${name} من "${from || 'بلا فئة'}" إلى "${to}".`};
+        case 'NOTES_UPDATED':
+             return { icon: 'material-symbols:note-stack-add-outline', class: 'update', description: `تم تحديث الملاحظات للمنتج ${name}.`};
+        default:
+             return { icon: 'material-symbols:edit-document-outline', class: 'update', description: `تم تحديث بيانات ${name} (${log.action}).` };
+    }
+};
+
+
+export function renderAuditLog() {
+  if (!elements.auditLogList) return;
+  elements.auditLogList.innerHTML = "";
+
+  if (!appState.auditLog || appState.auditLog.length === 0) {
+    elements.auditLogList.innerHTML =
+      '<p style="padding: 1rem;">لا توجد نشاطات مسجلة بعد.</p>';
+    return;
+  }
+
+  const sortedLog = [...appState.auditLog].sort(
+    (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+  );
+  const fragment = document.createDocumentFragment();
+
+  sortedLog.forEach(logItem => {
+    const clone = elements.logEntryTemplate.content.cloneNode(true);
+    const iconElement = clone.querySelector(".log-icon");
+    const iconify = iconElement.querySelector("iconify-icon");
+    const descriptionElement = clone.querySelector(".log-description");
+    const metaElement = clone.querySelector(".log-meta");
+
+    const { icon, class: actionClass, description } = getActionDetails(logItem);
+
+    iconElement.className = `log-icon ${actionClass}`;
+    iconify.setAttribute("icon", icon);
+    descriptionElement.innerHTML = description;
+    metaElement.textContent = `بواسطة ${logItem.user} • ${formatRelativeTime(
+      new Date(logItem.timestamp)
+    )}`;
+
+    fragment.appendChild(clone);
+  });
+
+  elements.auditLogList.appendChild(fragment);
+}
