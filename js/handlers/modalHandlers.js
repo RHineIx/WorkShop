@@ -662,8 +662,10 @@ export function setupModalListeners(elements) {
     });
 
     if (confirmed) {
+      // Save the state of both inventory and audit log before trying to change them.
       const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
       const originalAuditLog = JSON.parse(JSON.stringify(appState.auditLog));
+      
       appState.inventory.items = appState.inventory.items.filter(
         item => item.id !== appState.currentItemId
       );
@@ -690,18 +692,24 @@ export function setupModalListeners(elements) {
               console.error("Could not fetch images to delete:", err)
             );
         }
-        saveLocalData();
-        showStatus("تم حذف المنتج بنجاح!", "success");
+
+        // The logAction now throws an error on failure, which will be caught here.
         await logAction({
           action: ACTION_TYPES.ITEM_DELETED,
           targetId: itemToDelete.id,
           targetName: itemToDelete.name,
           details: { lastKnownSku: itemToDelete.sku },
         });
+
+        saveLocalData();
+        showStatus("تم حذف المنتج بنجاح!", "success");
+
       } catch (error) {
+        // Full rollback if any step fails
         appState.inventory = originalInventory;
         appState.auditLog = originalAuditLog;
-        filterAndRenderItems();
+
+        filterAndRenderItems(true); // Re-render with the rolled-back state
         showStatus(`فشل الحذف: ${error.message}`, "error");
       }
     }
@@ -732,4 +740,4 @@ export function setupModalListeners(elements) {
   document
     .getElementById("sale-price")
     .addEventListener("input", updateSaleTotal);
-        }
+                 }
