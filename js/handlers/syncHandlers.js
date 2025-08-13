@@ -6,7 +6,6 @@ import { sanitizeHTML } from "../utils.js";
 import { showStatus, hideSyncStatus } from "../notifications.js";
 import { getDOMElements, openModal } from "../ui.js";
 import { showConfirmationModal } from "../ui_helpers.js";
-import { renderAuditLog } from "../renderer.js";
 
 function populateSyncModal() {
   const elements = getDOMElements();
@@ -96,41 +95,6 @@ async function handleImageCleanup() {
   } catch (error) {
     hideSyncStatus();
     showStatus(`حدث خطأ: ${error.message}`, "error", { duration: 5000 });
-  }
-}
-
-async function handleLogCleanup() {
-  if (!appState.auditLog || appState.auditLog.length === 0) {
-    showStatus("سجل النشاطات فارغ بالفعل.", "success");
-    return;
-  }
-
-  const confirmed = await showConfirmationModal({
-    title: "تأكيد تنظيف السجل",
-    message:
-      "هل أنت متأكد من رغبتك في حذف جميع إدخالات سجل النشاطات نهائياً؟ لا يمكن التراجع عن هذا الإجراء.",
-    confirmText: "نعم, حذف الكل",
-  });
-
-  if (!confirmed) return;
-
-  showStatus("جاري تنظيف السجل...", "syncing");
-  const originalLog = [...appState.auditLog];
-  try {
-    appState.auditLog = [];
-    await api.saveAuditLog();
-    saveLocalData();
-    if (appState.currentView === "activity-log") {
-      renderAuditLog();
-    }
-    hideSyncStatus();
-    showStatus("تم تنظيف سجل النشاطات بنجاح!", "success");
-  } catch (error) {
-    appState.auditLog = originalLog; // Rollback on failure
-    hideSyncStatus();
-    showStatus(`فشل تنظيف السجل: ${error.message}`, "error", {
-      duration: 5000,
-    });
   }
 }
 
@@ -457,7 +421,6 @@ export function setupSyncListeners(elements) {
   });
 
   elements.cleanupImagesBtn.addEventListener("click", handleImageCleanup);
-  elements.cleanupLogBtn.addEventListener("click", handleLogCleanup);
   elements.downloadBackupBtn.addEventListener("click", handleDownloadBackup);
   elements.restoreBackupInput.addEventListener("change", handleRestoreBackup);
   document

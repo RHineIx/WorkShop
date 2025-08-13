@@ -24,10 +24,27 @@ dialog::backdrop {
 }
 
 /* Keep original scroll behavior for other forms */
-#sync-form,
 #sale-form {
   overflow-y: auto;
   padding: var(--spacing-lg);
+}
+
+/* --- REFACTORED: Sync Modal Layout --- */
+#sync-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem; /* 14px */
+  overflow-y: auto;
+  padding: var(--spacing-lg);
+}
+
+#sync-form > h3,
+#sync-form > p {
+  margin: 0;
+}
+
+#sync-form .modal-actions {
+  margin-top: 0;
 }
 
 /* --- Sticky Footer Layout for Item Modal --- */
@@ -90,7 +107,6 @@ dialog::backdrop {
   display: block;
   text-align: center;
   padding: var(--spacing-sm);
-  margin-bottom: var(--spacing-md);
   border-radius: var(--border-radius-sm);
   background-color: var(--bg-color);
   color: var(--text-secondary);
@@ -535,17 +551,17 @@ dialog::backdrop {
   display: none;
 }
 
-
 /* --- Responsive Adjustments for Modals on Mobile --- */
-@media (max-width: 30rem) { /* 480px */
+@media (max-width: 30rem) {
+  /* 480px */
   dialog {
     /* Make the modal slightly less wide to not touch the edges */
     width: calc(100% - 2rem); /* Gives 1rem margin on each side */
-    
+
     /* Reduce max height slightly */
     max-height: 88vh;
   }
-  
+
   /* Scale down the content inside the item modal specifically */
   #item-modal {
     font-size: 15px; /* This will scale down all rem-based units inside */

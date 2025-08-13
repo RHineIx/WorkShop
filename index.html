@@ -229,7 +229,18 @@
 
       <div id="activity-log-view-container" class="view-hidden">
         <section class="activity-log-container">
-          <h2>سجل نشاطات المخزون</h2>
+          <div class="activity-log-header">
+            <h2>سجل نشاطات المخزون</h2>
+            <button
+              id="clear-log-btn"
+              class="icon-btn"
+              title="تنظيف سجل النشاطات"
+            >
+              <iconify-icon
+                icon="material-symbols:delete-outline-rounded"
+              ></iconify-icon>
+            </button>
+          </div>
           <div id="audit-log-list" class="log-list"></div>
         </section>
       </div>
@@ -557,6 +568,8 @@
       <form id="sync-form">
         <h3>إعدادات المزامنة والتطبيق</h3>
 
+        <span id="rate-limit-display" class="rate-limit-display"></span>
+
         <div class="form-group">
           <label for="current-user">اسم المستخدم (للسجلات)</label>
           <input
@@ -567,7 +580,7 @@
           />
         </div>
 
-        <span id="rate-limit-display" class="rate-limit-display"></span>
+        <hr class="maintenance-divider" />
 
         <p>
           سيتم حفظ بياناتك في ملفات JSON داخل مستودع GitHub خاص.
@@ -578,29 +591,36 @@
           >.
         </p>
 
-        <label for="github-username">اسم المستخدم في GitHub</label>
-        <input
-          type="text"
-          id="github-username"
-          required
-          placeholder="e.g., my-username"
-        />
-        <label for="github-repo">اسم المستودع (Repository)</label>
-        <input
-          type="text"
-          id="github-repo"
-          required
-          placeholder="e.g., key-inventory-data"
-        />
-        <label for="github-pat"
-          >مفتاح الوصول الشخصي (Personal Access Token)</label
-        >
-        <input
-          type="password"
-          id="github-pat"
-          required
-          placeholder="يبدأ بـ ghp_..."
-        />
+        <div class="form-group">
+          <label for="github-username">اسم المستخدم في GitHub</label>
+          <input
+            type="text"
+            id="github-username"
+            required
+            placeholder="e.g., my-username"
+          />
+        </div>
+        <div class="form-group">
+          <label for="github-repo">اسم المستودع (Repository)</label>
+          <input
+            type="text"
+            id="github-repo"
+            required
+            placeholder="e.g., key-inventory-data"
+          />
+        </div>
+        <div class="form-group">
+          <label for="github-pat"
+            >مفتاح الوصول الشخصي (Personal Access Token)</label
+          >
+          <input
+            type="password"
+            id="github-pat"
+            required
+            placeholder="يبدأ بـ ghp_..."
+          />
+        </div>
+
         <div class="modal-actions">
           <button type="submit">حفظ الإعدادات</button>
           <button type="button" id="cancel-sync-btn">إلغاء</button>
@@ -686,12 +706,6 @@
                   icon="streamline-plump:clean-broom-wipe"
                 ></iconify-icon>
                 تنظيف الصور غير المستخدمة
-              </button>
-              <button type="button" id="cleanup-log-btn" class="cleanup-btn">
-                <iconify-icon
-                  icon="material-symbols:cleaning-services-outline-rounded"
-                ></iconify-icon>
-                تنظيف سجل النشاطات
               </button>
 
               <hr class="maintenance-divider" />
