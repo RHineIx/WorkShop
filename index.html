@@ -566,7 +566,7 @@
 
     <dialog id="sync-modal">
       <form id="sync-form">
-        <h3>إعدادات المزامنة والتطبيق</h3>
+        <h3 id="sync-modal-title" tabindex="-1">إعدادات المزامنة والتطبيق</h3>
 
         <span id="rate-limit-display" class="rate-limit-display"></span>
 
@@ -987,12 +987,7 @@
     <dialog id="reason-modal">
       <form
         id="reason-form"
-        style="
-          padding: 1.5rem;
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        "
+        style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem"
       >
         <h3>سبب تغيير الكمية (اختياري)</h3>
         <div class="form-group">
@@ -1073,4 +1068,4 @@
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
     <script type="module" src="js/main.js"></script>
   </body>
-</html>
+  </html>
