@@ -95,6 +95,7 @@ export const elements = {
   exchangeRateInput: document.getElementById("exchange-rate"),
   rateLimitDisplay: document.getElementById("rate-limit-display"),
   cleanupImagesBtn: document.getElementById("cleanup-images-btn"),
+  cleanupLogBtn: document.getElementById("cleanup-log-btn"),
   downloadBackupBtn: document.getElementById("download-backup-btn"),
   restoreBackupInput: document.getElementById("restore-backup-input"),
   generateMagicLinkBtn: document.getElementById("generate-magic-link-btn"),

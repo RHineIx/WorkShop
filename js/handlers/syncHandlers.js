@@ -5,6 +5,8 @@ import { saveConfig, initializeApp, saveLocalData } from "../app.js";
 import { sanitizeHTML } from "../utils.js";
 import { showStatus, hideSyncStatus } from "../notifications.js";
 import { getDOMElements, openModal } from "../ui.js";
+import { showConfirmationModal } from "../ui_helpers.js";
+import { renderAuditLog } from "../renderer.js";
 
 function populateSyncModal() {
   const elements = getDOMElements();
@@ -51,13 +53,13 @@ async function handleImageCleanup() {
     showStatus("يرجى إعداد المزامنة أولاً.", "error", { duration: 5000 });
     return;
   }
-  if (
-    !confirm(
-      "هل أنت متأكد من رغبتك في حذف جميع الصور غير المستخدمة نهائياً من المستودع؟ لا يمكن التراجع عن هذا الإجراء."
-    )
-  ) {
-    return;
-  }
+  const confirmed = await showConfirmationModal({
+    title: "تأكيد الحذف",
+    message:
+      "هل أنت متأكد من رغبتك في حذف جميع الصور غير المستخدمة نهائياً من المستودع؟ لا يمكن التراجع عن هذا الإجراء.",
+    confirmText: "نعم, حذف",
+  });
+  if (!confirmed) return;
 
   showStatus("جاري البحث عن الصور غير المستخدمة...", "syncing");
   try {
@@ -94,6 +96,41 @@ async function handleImageCleanup() {
   } catch (error) {
     hideSyncStatus();
     showStatus(`حدث خطأ: ${error.message}`, "error", { duration: 5000 });
+  }
+}
+
+async function handleLogCleanup() {
+  if (!appState.auditLog || appState.auditLog.length === 0) {
+    showStatus("سجل النشاطات فارغ بالفعل.", "success");
+    return;
+  }
+
+  const confirmed = await showConfirmationModal({
+    title: "تأكيد تنظيف السجل",
+    message:
+      "هل أنت متأكد من رغبتك في حذف جميع إدخالات سجل النشاطات نهائياً؟ لا يمكن التراجع عن هذا الإجراء.",
+    confirmText: "نعم, حذف الكل",
+  });
+
+  if (!confirmed) return;
+
+  showStatus("جاري تنظيف السجل...", "syncing");
+  const originalLog = [...appState.auditLog];
+  try {
+    appState.auditLog = [];
+    await api.saveAuditLog();
+    saveLocalData();
+    if (appState.currentView === "activity-log") {
+      renderAuditLog();
+    }
+    hideSyncStatus();
+    showStatus("تم تنظيف سجل النشاطات بنجاح!", "success");
+  } catch (error) {
+    appState.auditLog = originalLog; // Rollback on failure
+    hideSyncStatus();
+    showStatus(`فشل تنظيف السجل: ${error.message}`, "error", {
+      duration: 5000,
+    });
   }
 }
 
@@ -235,6 +272,7 @@ async function handleDownloadBackup() {
     zip.file("inventory.json", JSON.stringify(appState.inventory, null, 2));
     zip.file("sales.json", JSON.stringify(appState.sales, null, 2));
     zip.file("suppliers.json", JSON.stringify(appState.suppliers, null, 2));
+    zip.file("audit-log.json", JSON.stringify(appState.auditLog, null, 2));
 
     const blob = await zip.generateAsync({ type: "blob" });
     const link = document.createElement("a");
@@ -265,11 +303,15 @@ async function handleBackupToTelegram() {
     showStatus("يرجى إعداد المزامنة أولاً.", "error");
     return;
   }
-  if (
-    !confirm("هل أنت متأكد من رغبتك في إنشاء وإرسال نسخة احتياطية إلى تليجرام؟")
-  ) {
-    return;
-  }
+  const confirmed = await showConfirmationModal({
+    title: "تأكيد الإرسال",
+    message: "هل أنت متأكد من رغبتك في إنشاء وإرسال نسخة احتياطية إلى تليجرام؟",
+    confirmText: "نعم, إرسال",
+    isDanger: false,
+  });
+
+  if (!confirmed) return;
+
   showStatus("جاري طلب النسخة الاحتياطية...", "syncing");
   try {
     const success = await api.triggerBackupWorkflow();
@@ -292,11 +334,15 @@ async function handleBackupToTelegram() {
 async function handleRestoreBackup(event) {
   const file = event.target.files[0];
   if (!file) return;
-  if (
-    !confirm(
-      "هل أنت متأكد من رغبتك في استعادة البيانات من هذا الملف؟ سيتم الكتابة فوق جميع بياناتك الحالية."
-    )
-  ) {
+
+  const confirmed = await showConfirmationModal({
+    title: "تأكيد الاستعادة",
+    message:
+      "هل أنت متأكد من رغبتك في استعادة البيانات من هذا الملف؟ سيتم الكتابة فوق جميع بياناتك الحالية.",
+    confirmText: "نعم, استعادة",
+  });
+
+  if (!confirmed) {
     event.target.value = "";
     return;
   }
@@ -307,7 +353,9 @@ async function handleRestoreBackup(event) {
     const inventoryFile = zip.file("inventory.json");
     const salesFile = zip.file("sales.json");
     const suppliersFile = zip.file("suppliers.json");
-    if (!inventoryFile || !salesFile || !suppliersFile) {
+    const auditLogFile = zip.file("audit-log.json");
+
+    if (!inventoryFile || !salesFile || !suppliersFile || !auditLogFile) {
       throw new Error(
         "ملف النسخة الاحتياطية غير صالح أو لا يحتوي على الملفات المطلوبة."
       );
@@ -316,10 +364,13 @@ async function handleRestoreBackup(event) {
     const inventoryData = JSON.parse(await inventoryFile.async("string"));
     const salesData = JSON.parse(await salesFile.async("string"));
     const suppliersData = JSON.parse(await suppliersFile.async("string"));
+    const auditLogData = JSON.parse(await auditLogFile.async("string"));
+
     if (
       !inventoryData.items ||
       !Array.isArray(salesData) ||
-      !Array.isArray(suppliersData)
+      !Array.isArray(suppliersData) ||
+      !Array.isArray(auditLogData)
     ) {
       throw new Error("محتوى ملف النسخة الاحتياطية غير صالح.");
     }
@@ -327,6 +378,7 @@ async function handleRestoreBackup(event) {
     appState.inventory = inventoryData;
     appState.sales = salesData;
     appState.suppliers = suppliersData;
+    appState.auditLog = auditLogData;
 
     saveLocalData();
     hideSyncStatus();
@@ -381,8 +433,7 @@ export function setupSyncListeners(elements) {
 
   elements.syncForm.addEventListener("submit", async e => {
     e.preventDefault();
-    appState.currentUser =
-      elements.currentUserInput.value.trim() || "المستخدم";
+    appState.currentUser = elements.currentUserInput.value.trim() || "المستخدم";
     appState.syncConfig = {
       username: elements.githubUsernameInput.value.trim(),
       repo: elements.githubRepoInput.value.trim(),
@@ -406,6 +457,7 @@ export function setupSyncListeners(elements) {
   });
 
   elements.cleanupImagesBtn.addEventListener("click", handleImageCleanup);
+  elements.cleanupLogBtn.addEventListener("click", handleLogCleanup);
   elements.downloadBackupBtn.addEventListener("click", handleDownloadBackup);
   elements.restoreBackupInput.addEventListener("change", handleRestoreBackup);
   document
@@ -431,7 +483,12 @@ export function setupSyncListeners(elements) {
         e.stopPropagation();
         const path = deleteButton.dataset.path;
         const sha = deleteButton.dataset.sha;
-        if (confirm(`هل أنت متأكد من حذف هذا الأرشيف (${path}) نهائياً؟`)) {
+        const confirmed = await showConfirmationModal({
+          title: "تأكيد الحذف",
+          message: `هل أنت متأكد من حذف هذا الأرشيف (${path}) نهائياً؟`,
+          confirmText: "نعم, حذف",
+        });
+        if (confirmed) {
           showStatus("جاري حذف الأرشيف...", "syncing");
           try {
             await api.deleteFileFromGitHub(
@@ -488,4 +545,4 @@ export function setupSyncListeners(elements) {
         detailsContainer.innerHTML = `<p style="color: var(--danger-color);">فشل تحميل الملف: ${error.message}</p>`;
       }
     });
-        }
+}
