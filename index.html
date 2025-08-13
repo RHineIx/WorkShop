@@ -538,6 +538,7 @@
         </div>
       </form>
     </dialog>
+
     <dialog id="sync-modal">
       <form id="sync-form">
         <h3>إعدادات المزامنة والتطبيق</h3>
@@ -950,10 +951,40 @@
       ></iconify-icon>
     </button>
 
+    <template id="product-card-template">
+      <div class="product-card">
+        <div class="card-checkbox"></div>
+        <div class="card-image-container">
+          <div class="quantity-badge"></div>
+          <div class="card-image-placeholder">
+            <iconify-icon icon="material-symbols:key"></iconify-icon>
+          </div>
+        </div>
+        <div class="card-info">
+          <div class="card-category-tag"></div>
+          <h3 class="card-name"></h3>
+          <p class="card-sku"></p>
+          <div class="card-footer">
+            <div class="card-price"></div>
+            <div class="card-actions">
+              <button class="icon-btn sell-btn" title="بيع">
+                <iconify-icon
+                  icon="material-symbols:shopping-cart-outline-rounded"
+                ></iconify-icon>
+              </button>
+              <button class="icon-btn details-btn" title="عرض التفاصيل">
+                <iconify-icon icon="material-symbols:more-vert"></iconify-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
     <script type="module" src="js/main.js"></script>
   </body>
-</html>
+      </html>
