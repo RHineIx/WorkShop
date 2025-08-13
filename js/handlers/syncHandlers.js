@@ -1,16 +1,17 @@
 // js/handlers/syncHandlers.js
 import { appState } from "../state.js";
-import * as ui from "../ui.js";
 import * as api from "../api.js";
 import { saveConfig, initializeApp, saveLocalData } from "../app.js";
 import { sanitizeHTML } from "../utils.js";
+import { showStatus, hideSyncStatus } from "../notifications.js";
+import { getDOMElements, openModal, populateSyncModal } from "../ui.js";
 
 function generateMagicLink() {
   if (!appState.syncConfig) {
-    ui.showStatus("يجب حفظ الإعدادات أولاً.", "error");
+    showStatus("يجب حفظ الإعدادات أولاً.", "error");
     return;
   }
-  const { magicLinkContainer, magicLinkOutput } = ui.getDOMElements();
+  const { magicLinkContainer, magicLinkOutput } = getDOMElements();
   const configJson = JSON.stringify(appState.syncConfig);
   const encodedData = btoa(configJson);
   const url = `${window.location.origin}${window.location.pathname}#setup=${encodedData}`;
@@ -20,7 +21,7 @@ function generateMagicLink() {
   magicLinkOutput.onclick = () => {
     magicLinkOutput.select();
     navigator.clipboard.writeText(url).then(() => {
-      ui.showStatus("تم نسخ الرابط إلى الحافظة!", "success", {
+      showStatus("تم نسخ الرابط إلى الحافظة!", "success", {
         duration: 2000,
       });
     });
@@ -29,14 +30,14 @@ function generateMagicLink() {
 
 async function handleImageCleanup() {
   if (!appState.syncConfig) {
-    ui.showStatus("يرجى إعداد المزامنة أولاً.", "error", { duration: 5000 });
+    showStatus("يرجى إعداد المزامنة أولاً.", "error", { duration: 5000 });
     return;
   }
   if (!confirm("هل أنت متأكد من رغبتك في حذف جميع الصور غير المستخدمة نهائياً من المستودع؟ لا يمكن التراجع عن هذا الإجراء.")) {
     return;
   }
 
-  ui.showStatus("جاري البحث عن الصور غير المستخدمة...", "syncing");
+  showStatus("جاري البحث عن الصور غير المستخدمة...", "syncing");
   try {
     const allRepoImages = await api.getGitHubDirectoryListing("images");
     const usedImages = new Set(
@@ -47,12 +48,12 @@ async function handleImageCleanup() {
     );
 
     if (orphanedImages.length === 0) {
-      ui.hideSyncStatus();
-      ui.showStatus("لا توجد صور غير مستخدمة ليتم حذفها.", "success");
+      hideSyncStatus();
+      showStatus("لا توجد صور غير مستخدمة ليتم حذفها.", "success");
       return;
     }
 
-    ui.showStatus(`تم العثور على ${orphanedImages.length} صورة... جاري الحذف.`, "syncing");
+    showStatus(`تم العثور على ${orphanedImages.length} صورة... جاري الحذف.`, "syncing");
     let deletedCount = 0;
     for (const image of orphanedImages) {
       await api.deleteFileFromGitHub(
@@ -62,19 +63,19 @@ async function handleImageCleanup() {
       );
       deletedCount++;
     }
-    ui.hideSyncStatus();
-    ui.showStatus(`تم حذف ${deletedCount} صورة غير مستخدمة بنجاح.`, "success", {
+    hideSyncStatus();
+    showStatus(`تم حذف ${deletedCount} صورة غير مستخدمة بنجاح.`, "success", {
       duration: 5000,
     });
   } catch (error) {
-    ui.hideSyncStatus();
-    ui.showStatus(`حدث خطأ: ${error.message}`, "error", { duration: 5000 });
+    hideSyncStatus();
+    showStatus(`حدث خطأ: ${error.message}`, "error", { duration: 5000 });
   }
 }
 
 async function handleManualArchive() {
   if (!appState.syncConfig || !appState.sales || appState.sales.length === 0) {
-    ui.showStatus("لا توجد بيانات للمزامنة أو الأرشفة.", "error", {
+    showStatus("لا توجد بيانات للمزامنة أو الأرشفة.", "error", {
       duration: 4000,
     });
     return;
@@ -82,7 +83,6 @@ async function handleManualArchive() {
 
   const now = new Date();
   const currentMonthKey = `${now.getFullYear()}_${String(now.getMonth() + 1).padStart(2, "0")}`;
-
   const salesByMonth = appState.sales.reduce((acc, sale) => {
     const saleDate = new Date(sale.saleDate);
     const monthKey = `${saleDate.getFullYear()}_${String(saleDate.getMonth() + 1).padStart(2, "0")}`;
@@ -96,7 +96,7 @@ async function handleManualArchive() {
   );
 
   if (archivesToCreate.length === 0) {
-    ui.showStatus("لا توجد مبيعات من الشهور السابقة لأرشفتها.", "success");
+    showStatus("لا توجد مبيعات من الشهور السابقة لأرشفتها.", "success");
     return;
   }
 
@@ -104,7 +104,7 @@ async function handleManualArchive() {
     return;
   }
 
-  ui.showStatus("جاري أرشفة البيانات...", "syncing");
+  showStatus("جاري أرشفة البيانات...", "syncing");
   try {
     for (const [monthKey, salesData] of archivesToCreate) {
       const path = `archives/sales_${monthKey}.json`;
@@ -124,12 +124,12 @@ async function handleManualArchive() {
     saveLocalData();
     updateLastArchiveDateDisplay();
 
-    ui.hideSyncStatus();
-    ui.showStatus(`تمت أرشفة ${archivesToCreate.length} شهر من السجلات بنجاح.`, "success", { duration: 5000 });
+    hideSyncStatus();
+    showStatus(`تمت أرشفة ${archivesToCreate.length} شهر من السجلات بنجاح.`, "success", { duration: 5000 });
   } catch (error) {
     console.error("Manual archive failed:", error);
-    ui.hideSyncStatus();
-    ui.showStatus(`فشلت عملية الأرشفة: ${error.message}`, "error", {
+    hideSyncStatus();
+    showStatus(`فشلت عملية الأرشفة: ${error.message}`, "error", {
       duration: 5000,
     });
   }
@@ -151,11 +151,10 @@ async function openArchiveBrowser() {
   const modal = document.getElementById("archive-browser-modal");
   const listContainer = document.getElementById("archive-list-container");
   const detailsContainer = document.getElementById("archive-details-container");
-
   listContainer.innerHTML = "<p>جاري تحميل قائمة الأرشيف...</p>";
   detailsContainer.innerHTML = "<p>اختر شهراً من القائمة أعلاه لعرض تفاصيله.</p>";
 
-  ui.openModal(modal);
+  openModal(modal);
 
   try {
     const files = await api.getGitHubDirectoryListing("archives");
@@ -192,7 +191,7 @@ async function openArchiveBrowser() {
 }
 
 async function handleDownloadBackup() {
-  ui.showStatus("جاري تجهيز النسخة الاحتياطية...", "syncing");
+  showStatus("جاري تجهيز النسخة الاحتياطية...", "syncing");
   try {
     const zip = new JSZip();
     zip.file("inventory.json", JSON.stringify(appState.inventory, null, 2));
@@ -209,12 +208,12 @@ async function handleDownloadBackup() {
     document.body.removeChild(link);
     URL.revokeObjectURL(link.href);
 
-    ui.hideSyncStatus();
-    ui.showStatus("تم تنزيل النسخة الاحتياطية بنجاح!", "success");
+    hideSyncStatus();
+    showStatus("تم تنزيل النسخة الاحتياطية بنجاح!", "success");
   } catch (error) {
     console.error("Backup failed:", error);
-    ui.hideSyncStatus();
-    ui.showStatus(`فشل إنشاء النسخة الاحتياطية: ${error.message}`, "error", {
+    hideSyncStatus();
+    showStatus(`فشل إنشاء النسخة الاحتياطية: ${error.message}`, "error", {
       duration: 5000,
     });
   }
@@ -222,22 +221,22 @@ async function handleDownloadBackup() {
 
 async function handleBackupToTelegram() {
     if (!appState.syncConfig) {
-        ui.showStatus("يرجى إعداد المزامنة أولاً.", "error");
+        showStatus("يرجى إعداد المزامنة أولاً.", "error");
         return;
     }
     if (!confirm("هل أنت متأكد من رغبتك في إنشاء وإرسال نسخة احتياطية إلى تليجرام؟")) {
         return;
     }
-    ui.showStatus("جاري طلب النسخة الاحتياطية...", "syncing");
+    showStatus("جاري طلب النسخة الاحتياطية...", "syncing");
     try {
         const success = await api.triggerBackupWorkflow();
         if (success) {
-            ui.hideSyncStatus();
-            ui.showStatus("تم إرسال الطلب بنجاح! ستصلك النسخة الاحتياطية على تليجرام قريبًا.", "success", { duration: 6000 });
+            hideSyncStatus();
+            showStatus("تم إرسال الطلب بنجاح! ستصلك النسخة الاحتياطية على تليجرام قريبًا.", "success", { duration: 6000 });
         }
     } catch (error) {
-        ui.hideSyncStatus();
-        ui.showStatus(`فشل إرسال الطلب: ${error.message}`, "error", { duration: 6000 });
+        hideSyncStatus();
+        showStatus(`فشل إرسال الطلب: ${error.message}`, "error", { duration: 6000 });
     }
 }
 
@@ -250,7 +249,7 @@ async function handleRestoreBackup(event) {
     return;
   }
 
-  ui.showStatus("جاري استعادة النسخة الاحتياطية...", "syncing");
+  showStatus("جاري استعادة النسخة الاحتياطية...", "syncing");
   try {
     const zip = await JSZip.loadAsync(file);
     const inventoryFile = zip.file("inventory.json");
@@ -274,16 +273,15 @@ async function handleRestoreBackup(event) {
     appState.suppliers = suppliersData;
 
     saveLocalData();
-    ui.hideSyncStatus();
-    ui.showStatus("تمت استعادة البيانات بنجاح! سيتم إعادة تحميل التطبيق.", "success", { duration: 4000 });
+    hideSyncStatus();
+    showStatus("تمت استعادة البيانات بنجاح! سيتم إعادة تحميل التطبيق.", "success", { duration: 4000 });
     setTimeout(() => {
       location.reload();
     }, 4000);
-
   } catch (error) {
     console.error("Restore failed:", error);
-    ui.hideSyncStatus();
-    ui.showStatus(`فشلت عملية الاستعادة: ${error.message}`, "error", { duration: 5000 });
+    hideSyncStatus();
+    showStatus(`فشلت عملية الاستعادة: ${error.message}`, "error", { duration: 5000 });
   } finally {
     event.target.value = "";
   }
@@ -291,11 +289,10 @@ async function handleRestoreBackup(event) {
 
 export function setupSyncListeners(elements) {
   elements.syncSettingsBtn.addEventListener("click", () => {
-    ui.populateSyncModal();
-    const { magicLinkContainer } = ui.getDOMElements();
+    populateSyncModal();
+    const { magicLinkContainer } = getDOMElements();
     magicLinkContainer.classList.add("view-hidden");
 
-    // Fetch live exchange rate
     const display = document.getElementById("live-exchange-rate-display");
     const input = document.getElementById("exchange-rate");
     display.textContent = "جاري تحميل السعر...";
@@ -316,7 +313,6 @@ export function setupSyncListeners(elements) {
       }
     });
   });
-
   elements.cancelSyncBtn.addEventListener("click", () => elements.syncModal.close());
 
   elements.syncForm.addEventListener("submit", async (e) => {
@@ -347,8 +343,8 @@ export function setupSyncListeners(elements) {
   document.getElementById("view-archives-btn").addEventListener("click", openArchiveBrowser);
   elements.generateMagicLinkBtn.addEventListener("click", generateMagicLink);
 
-  // --- Archive Browser Listeners ---
   document.getElementById("close-archive-browser-btn").addEventListener("click", () => document.getElementById("archive-browser-modal").close());
+
   document.getElementById("archive-list-container").addEventListener("click", async (e) => {
       const deleteButton = e.target.closest(".archive-delete-btn");
       if (deleteButton) {
@@ -356,13 +352,13 @@ export function setupSyncListeners(elements) {
         const path = deleteButton.dataset.path;
         const sha = deleteButton.dataset.sha;
         if (confirm(`هل أنت متأكد من حذف هذا الأرشيف (${path}) نهائياً؟`)) {
-            ui.showStatus("جاري حذف الأرشيف...", "syncing");
+            showStatus("جاري حذف الأرشيف...", "syncing");
             try {
                 await api.deleteFileFromGitHub(path, sha, `Delete archive file: ${path}`);
-                ui.showStatus("تم حذف الأرشيف بنجاح!", "success");
-                openArchiveBrowser(); // Refresh the list
+                showStatus("تم حذف الأرشيف بنجاح!", "success");
+                openArchiveBrowser();
             } catch (error) {
-                ui.showStatus(`فشل حذف الأرشيف: ${error.message}`, "error", { duration: 5000 });
+                showStatus(`فشل حذف الأرشيف: ${error.message}`, "error", { duration: 5000 });
             }
         }
         return;
@@ -372,14 +368,13 @@ export function setupSyncListeners(elements) {
       if (!item) return;
 
       const detailsContainer = document.getElementById("archive-details-container");
-      // Toggle active state
       const container = item.parentElement;
       if (container.querySelector(".active")) {
         container.querySelector(".active").classList.remove("active");
       }
       item.classList.add("active");
-
       detailsContainer.innerHTML = "<p>جاري تحميل البيانات...</p>";
+
       try {
         const data = await api.fetchGitHubFile(item.dataset.path);
         const symbol = appState.activeCurrency === "IQD" ? "د.ع" : "$";
