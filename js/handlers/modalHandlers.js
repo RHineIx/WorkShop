@@ -26,7 +26,6 @@ import { logAction, ACTION_TYPES } from "../logger.js";
 let cropper = null;
 let cropperPadding = 0.1;
 let cropperBgColor = "#FFFFFF";
-
 function handlePriceConversion(sourceInput, targetInput) {
   const sourceValue = parseFloat(sourceInput.value);
   const rate = appState.exchangeRate;
@@ -76,11 +75,10 @@ async function saveQuantityChanges(currentItem, reason) {
     hideSyncStatus();
     showStatus("تم حفظ التغييرات بنجاح!", "success");
 
-    logAction({
+    await logAction({
       action: ACTION_TYPES.QUANTITY_UPDATED,
       targetId: currentItem.id,
       targetName: currentItem.name,
-      // تم التعديل هنا: تمت إزالة النص الافتراضي
       details: {
         from: itemBeforeEdit.quantity,
         to: currentItem.quantity,
@@ -151,7 +149,6 @@ async function handleSaleFormSubmit(e) {
       notes: document.getElementById("sale-notes").value,
       timestamp: new Date().toISOString(),
     };
-
     appState.sales.push(saleRecord);
     filterAndRenderItems(true);
 
@@ -163,7 +160,7 @@ async function handleSaleFormSubmit(e) {
       hideSyncStatus();
       showStatus("تم تسجيل البيع بنجاح!", "success");
 
-      logAction({
+      await logAction({
         action: ACTION_TYPES.SALE_RECORDED,
         targetId: item.id,
         targetName: item.name,
@@ -197,7 +194,6 @@ export function openItemModal(itemId = null) {
   elements.imagePreview.classList.add("image-preview-hidden");
   elements.imagePlaceholder.style.display = "flex";
   elements.regenerateSkuBtn.style.display = "none";
-
   if (itemId) {
     const item = appState.inventory.items.find(i => i.id === itemId);
     if (item) {
@@ -221,7 +217,6 @@ export function openItemModal(itemId = null) {
         item.sellPriceUsd || 0;
       document.getElementById("item-notes").value = item.notes;
       populateSupplierDropdown(item.supplierId);
-
       if (item.imagePath) {
         if (item.imagePath.startsWith("http")) {
           elements.imagePreview.src = item.imagePath;
@@ -307,7 +302,6 @@ async function handleItemFormSubmit(e) {
             JSON.stringify(appState.inventory.items[existingItemIndex])
           )
         : null;
-
     let imagePath = originalItem ? originalItem.imagePath : null;
 
     if (appState.selectedImageFile) {
@@ -366,9 +360,9 @@ async function handleItemFormSubmit(e) {
     showStatus("تم حفظ التغييرات بنجاح!", "success");
 
     if (originalItem) {
-      const compareAndLog = (field, action) => {
+      const compareAndLog = async (field, action) => {
         if (originalItem[field] !== itemData[field]) {
-          logAction({
+          await logAction({
             action,
             targetId: itemData.id,
             targetName: itemData.name,
@@ -376,15 +370,15 @@ async function handleItemFormSubmit(e) {
           });
         }
       };
-      compareAndLog("name", ACTION_TYPES.NAME_UPDATED);
-      compareAndLog("sku", ACTION_TYPES.SKU_UPDATED);
-      compareAndLog("category", ACTION_TYPES.CATEGORY_UPDATED);
-      compareAndLog("notes", ACTION_TYPES.NOTES_UPDATED);
-      compareAndLog("imagePath", ACTION_TYPES.IMAGE_UPDATED);
-      compareAndLog("supplierId", ACTION_TYPES.SUPPLIER_UPDATED);
+      await compareAndLog("name", ACTION_TYPES.NAME_UPDATED);
+      await compareAndLog("sku", ACTION_TYPES.SKU_UPDATED);
+      await compareAndLog("category", ACTION_TYPES.CATEGORY_UPDATED);
+      await compareAndLog("notes", ACTION_TYPES.NOTES_UPDATED);
+      await compareAndLog("imagePath", ACTION_TYPES.IMAGE_UPDATED);
+      await compareAndLog("supplierId", ACTION_TYPES.SUPPLIER_UPDATED);
 
       if (originalItem.quantity !== itemData.quantity) {
-        logAction({
+        await logAction({
           action: ACTION_TYPES.QUANTITY_UPDATED,
           targetId: itemData.id,
           targetName: itemData.name,
@@ -396,7 +390,7 @@ async function handleItemFormSubmit(e) {
         });
       }
       if (originalItem.sellPriceIqd !== itemData.sellPriceIqd) {
-        logAction({
+        await logAction({
           action: ACTION_TYPES.PRICE_UPDATED,
           targetId: itemData.id,
           targetName: itemData.name,
@@ -407,7 +401,7 @@ async function handleItemFormSubmit(e) {
         });
       }
     } else {
-      logAction({
+      await logAction({
         action: ACTION_TYPES.ITEM_CREATED,
         targetId: itemData.id,
         targetName: itemData.name,
@@ -441,7 +435,6 @@ function handleImageSelection(file) {
   reader.onload = event => {
     const { cropperModal, cropperImage, paddingDisplay, bgColorInput } =
       getDOMElements();
-
     cropperPadding = 0.1;
     cropperBgColor = "#FFFFFF";
     paddingDisplay.textContent = `${Math.round(cropperPadding * 100)}%`;
@@ -449,7 +442,6 @@ function handleImageSelection(file) {
 
     cropperImage.src = event.target.result;
     openModal(cropperModal);
-
     if (cropper) {
       cropper.destroy();
     }
@@ -472,24 +464,20 @@ export function setupModalListeners(elements) {
     );
     document.getElementById("item-sku").value = generateUniqueSKU(existingSkus);
   });
-
   elements.itemForm.addEventListener("submit", handleItemFormSubmit);
   elements.cancelItemBtn.addEventListener("click", () =>
     elements.itemModal.close()
   );
-
   elements.regenerateSkuBtn.addEventListener("click", () => {
     const existingSkus = new Set(
       appState.inventory.items.map(item => item.sku)
     );
     document.getElementById("item-sku").value = generateUniqueSKU(existingSkus);
   });
-
   elements.imageUploadInput.addEventListener("change", e => {
     handleImageSelection(e.target.files[0]);
     e.target.value = "";
   });
-
   elements.pasteImageBtn.addEventListener("click", async () => {
     try {
       if (!navigator.clipboard?.read) {
@@ -519,7 +507,6 @@ export function setupModalListeners(elements) {
       showStatus(`فشل لصق الصورة: ${error.message}`, "error");
     }
   });
-
   document.getElementById("cancel-crop-btn").addEventListener("click", () => {
     getDOMElements().cropperModal.close();
     if (cropper) {
@@ -527,7 +514,6 @@ export function setupModalListeners(elements) {
       cropper = null;
     }
   });
-
   document.getElementById("crop-image-btn").addEventListener("click", () => {
     if (!cropper) return;
     const croppedCanvas = cropper.getCroppedCanvas();
@@ -590,14 +576,12 @@ export function setupModalListeners(elements) {
   const costUsdInput = document.getElementById("item-cost-price-usd");
   const sellIqdInput = document.getElementById("item-sell-price-iqd");
   const sellUsdInput = document.getElementById("item-sell-price-usd");
-
   costIqdInput.addEventListener("input", () =>
     handlePriceConversion(costIqdInput, costUsdInput)
   );
   sellIqdInput.addEventListener("input", () =>
     handlePriceConversion(sellIqdInput, sellUsdInput)
   );
-
   elements.detailsIncreaseBtn.addEventListener("click", () => {
     const item = appState.inventory.items.find(
       i => i.id === appState.currentItemId
@@ -616,7 +600,6 @@ export function setupModalListeners(elements) {
       elements.detailsQuantityValue.textContent = item.quantity;
     }
   });
-
   elements.closeDetailsModalBtn.addEventListener("click", async () => {
     const itemBeforeEdit = appState.itemStateBeforeEdit;
     const currentItem = appState.inventory.items.find(
@@ -666,7 +649,6 @@ export function setupModalListeners(elements) {
     elements.detailsModal.close();
     openItemModal(appState.currentItemId);
   });
-
   elements.detailsDeleteBtn.addEventListener("click", async () => {
     const itemToDelete = appState.inventory.items.find(
       item => item.id === appState.currentItemId
@@ -681,6 +663,7 @@ export function setupModalListeners(elements) {
 
     if (confirmed) {
       const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
+      const originalAuditLog = JSON.parse(JSON.stringify(appState.auditLog));
       appState.inventory.items = appState.inventory.items.filter(
         item => item.id !== appState.currentItemId
       );
@@ -709,8 +692,7 @@ export function setupModalListeners(elements) {
         }
         saveLocalData();
         showStatus("تم حذف المنتج بنجاح!", "success");
-
-        logAction({
+        await logAction({
           action: ACTION_TYPES.ITEM_DELETED,
           targetId: itemToDelete.id,
           targetName: itemToDelete.name,
@@ -718,6 +700,7 @@ export function setupModalListeners(elements) {
         });
       } catch (error) {
         appState.inventory = originalInventory;
+        appState.auditLog = originalAuditLog;
         filterAndRenderItems();
         showStatus(`فشل الحذف: ${error.message}`, "error");
       }
@@ -728,7 +711,6 @@ export function setupModalListeners(elements) {
   elements.cancelSaleBtn.addEventListener("click", () =>
     elements.saleModal.close()
   );
-
   elements.saleIncreaseBtn.addEventListener("click", () => {
     const quantityInput = elements.saleQuantityInput;
     const max = parseInt(quantityInput.max, 10);
@@ -750,4 +732,4 @@ export function setupModalListeners(elements) {
   document
     .getElementById("sale-price")
     .addEventListener("input", updateSaleTotal);
-}
+        }
