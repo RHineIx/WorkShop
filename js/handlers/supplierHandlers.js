@@ -1,17 +1,19 @@
 // js/handlers/supplierHandlers.js
 import { appState } from "../state.js";
-import * as ui from "../ui.js";
 import * as api from "../api.js";
 import { saveLocalData } from "../app.js";
+import { showStatus, hideSyncStatus } from "../notifications.js";
+import { renderSupplierList, populateSupplierDropdown } from "../renderer.js";
+import { getDOMElements, openModal } from "../ui.js";
 
 async function handleSupplierFormSubmit(e) {
   e.preventDefault();
-  const elements = ui.getDOMElements();
+  const elements = getDOMElements();
   const id = elements.supplierIdInput.value;
   const name = document.getElementById("supplier-name").value.trim();
   const phone = document.getElementById("supplier-phone").value.trim();
   if (!name) {
-    ui.showStatus("يرجى إدخال اسم المورّد.", "error");
+    showStatus("يرجى إدخال اسم المورّد.", "error");
     return;
   }
 
@@ -23,7 +25,7 @@ async function handleSupplierFormSubmit(e) {
     }
   } else {
     if (appState.suppliers.some(s => s.name.toLowerCase() === name.toLowerCase())) {
-      ui.showStatus("هذا المورّد موجود بالفعل.", "error");
+      showStatus("هذا المورّد موجود بالفعل.", "error");
       return;
     }
     const newSupplier = { id: `sup_${Date.now()}`, name, phone };
@@ -31,20 +33,20 @@ async function handleSupplierFormSubmit(e) {
   }
 
   const actionText = id ? "تعديل" : "إضافة";
-  ui.showStatus(`جاري ${actionText} المورّد...`, "syncing");
+  showStatus(`جاري ${actionText} المورّد...`, "syncing");
   try {
     await api.saveSuppliers();
-    ui.renderSupplierList();
-    ui.populateSupplierDropdown(elements.itemSupplierSelect.value);
-    ui.hideSyncStatus();
-    ui.showStatus(`تم ${actionText} المورّد بنجاح!`, "success");
+    renderSupplierList();
+    populateSupplierDropdown(elements.itemSupplierSelect.value);
+    hideSyncStatus();
+    showStatus(`تم ${actionText} المورّد بنجاح!`, "success");
     elements.supplierForm.reset();
     elements.supplierIdInput.value = "";
     elements.supplierFormTitle.textContent = "إضافة مورّد جديد";
     elements.cancelEditSupplierBtn.classList.add("view-hidden");
   } catch (error) {
-    ui.hideSyncStatus();
-    ui.showStatus(`فشل حفظ المورّد: ${error.message}`, "error");
+    hideSyncStatus();
+    showStatus(`فشل حفظ المورّد: ${error.message}`, "error");
   }
 }
 
@@ -58,7 +60,7 @@ async function handleDeleteSupplier(supplierId) {
   }
 
   if (confirm(confirmMessage)) {
-    ui.showStatus("جاري حذف المورّد...", "syncing");
+    showStatus("جاري حذف المورّد...", "syncing");
     try {
       if (linkedProductsCount > 0) {
         appState.inventory.items.forEach(item => {
@@ -66,30 +68,29 @@ async function handleDeleteSupplier(supplierId) {
             item.supplierId = null;
           }
         });
-        await api.saveToGitHub(); // Save inventory changes
+        await api.saveToGitHub();
       }
 
       appState.suppliers = appState.suppliers.filter(s => s.id !== supplierId);
       await api.saveSuppliers();
 
       saveLocalData();
-      ui.renderSupplierList();
-      ui.populateSupplierDropdown(ui.getDOMElements().itemSupplierSelect.value);
-      ui.hideSyncStatus();
-      ui.showStatus("تم حذف المورّد بنجاح!", "success");
+      renderSupplierList();
+      populateSupplierDropdown(getDOMElements().itemSupplierSelect.value);
+      hideSyncStatus();
+      showStatus("تم حذف المورّد بنجاح!", "success");
     } catch (error) {
-      ui.hideSyncStatus();
-      ui.showStatus(`فشل حذف المورّد: ${error.message}`, "error");
+      hideSyncStatus();
+      showStatus(`فشل حذف المورّد: ${error.message}`, "error");
     }
   }
 }
 
 export function setupSupplierListeners(elements) {
   elements.manageSuppliersBtn.addEventListener("click", () => {
-    ui.renderSupplierList();
-    ui.openModal(elements.supplierManagerModal);
+    renderSupplierList();
+    openModal(elements.supplierManagerModal);
   });
-
   elements.closeSupplierManagerBtn.addEventListener("click", () => {
     elements.supplierManagerModal.close();
   });
@@ -122,4 +123,4 @@ export function setupSupplierListeners(elements) {
     elements.supplierFormTitle.textContent = "إضافة مورّد جديد";
     elements.cancelEditSupplierBtn.classList.add("view-hidden");
   });
-}
+                                       }
