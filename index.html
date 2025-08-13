@@ -556,32 +556,75 @@
 
     <dialog id="sync-modal">
       <form id="sync-form">
-        <div class="modal-tabs">
-          <button type="button" class="tab-btn active" data-tab="general">
-            الإعدادات العامة
-          </button>
-          <button type="button" class="tab-btn" data-tab="sync">
-            المزامنة
-          </button>
-          <button type="button" class="tab-btn" data-tab="data">
-            إدارة البيانات
-          </button>
-          <button type="button" class="tab-btn" data-tab="about">
-            حول التطبيق
-          </button>
+        <h3>إعدادات المزامنة والتطبيق</h3>
+
+        <div class="form-group">
+          <label for="current-user">اسم المستخدم (للسجلات)</label>
+          <input
+            type="text"
+            id="current-user"
+            placeholder="e.g., أحمد"
+            autocomplete="off"
+          />
         </div>
 
-        <div class="modal-tab-content">
-          <div id="tab-pane-general" class="tab-pane active">
-            <div class="form-group">
-              <label for="current-user">اسم المستخدم (للسجلات)</label>
-              <input
-                type="text"
-                id="current-user"
-                placeholder="e.g., أحمد"
-                autocomplete="off"
-              />
-            </div>
+        <span id="rate-limit-display" class="rate-limit-display"></span>
+
+        <p>
+          سيتم حفظ بياناتك في ملفات JSON داخل مستودع GitHub خاص.
+          <a
+            href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens"
+            target="_blank"
+            >كيفية إنشاء مفتاح وصول شخصي (PAT)</a
+          >.
+        </p>
+
+        <label for="github-username">اسم المستخدم في GitHub</label>
+        <input
+          type="text"
+          id="github-username"
+          required
+          placeholder="e.g., my-username"
+        />
+        <label for="github-repo">اسم المستودع (Repository)</label>
+        <input
+          type="text"
+          id="github-repo"
+          required
+          placeholder="e.g., key-inventory-data"
+        />
+        <label for="github-pat"
+          >مفتاح الوصول الشخصي (Personal Access Token)</label
+        >
+        <input
+          type="password"
+          id="github-pat"
+          required
+          placeholder="يبدأ بـ ghp_..."
+        />
+        <div class="modal-actions">
+          <button type="submit">حفظ الإعدادات</button>
+          <button type="button" id="cancel-sync-btn">إلغاء</button>
+        </div>
+
+        <div id="app-version-display" class="app-version"></div>
+
+        <hr class="maintenance-divider" />
+
+        <button
+          type="button"
+          id="advanced-settings-toggle"
+          class="advanced-settings-toggle"
+        >
+          <span>الإعدادات المتقدمة</span>
+          <iconify-icon icon="material-symbols:expand-more"></iconify-icon>
+        </button>
+
+        <div
+          id="advanced-settings-container"
+          class="advanced-settings-container"
+        >
+          <div class="advanced-settings-wrapper">
             <div class="form-group-inline">
               <label for="exchange-rate">سعر صرف الدولار (مقابل 1 دولار)</label>
               <small
@@ -590,70 +633,31 @@
                 >جاري التحميل...</small
               >
             </div>
-            <input
-              type="number"
-              id="exchange-rate"
-              placeholder="e.g., 1460"
-            />
-          </div>
+            <input type="number" id="exchange-rate" placeholder="e.g., 1460" />
 
-          <div id="tab-pane-sync" class="tab-pane">
-            <p>
-              سيتم حفظ بياناتك في ملفات JSON داخل مستودع GitHub خاص.
-              <a
-                href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens"
-                target="_blank"
-                >كيفية إنشاء مفتاح وصول شخصي (PAT)</a
-              >.
-            </p>
-            <span id="rate-limit-display" class="rate-limit-display"></span>
-            <label for="github-username">اسم المستخدم في GitHub</label>
-            <input
-              type="text"
-              id="github-username"
-              required
-              placeholder="e.g., my-username"
-            />
-            <label for="github-repo">اسم المستودع (Repository)</label>
-            <input
-              type="text"
-              id="github-repo"
-              required
-              placeholder="e.g., key-inventory-data"
-            />
-            <label for="github-pat"
-              >مفتاح الوصول الشخصي (Personal Access Token)</label
-            >
-            <input
-              type="password"
-              id="github-pat"
-              required
-              placeholder="يبدأ بـ ghp_..."
-            />
-            <hr class="maintenance-divider" />
-            <button
-              type="button"
-              id="generate-magic-link-btn"
-              class="cleanup-btn archive-btn"
-            >
-              <iconify-icon
-                icon="material-symbols:magic-button"
-              ></iconify-icon>
-              إنشاء رابط الإعداد السحري
-            </button>
-            <p
-              id="magic-link-container"
-              class="magic-link-container view-hidden"
-            >
-              <span class="magic-link-warning"
-                >هذا الرابط سري للغاية، تعامل معه ككلمة مرور.</span
-              >
-              <input type="text" id="magic-link-output" readonly />
-            </p>
-          </div>
-
-          <div id="tab-pane-data" class="tab-pane">
             <div class="maintenance-actions">
+              <hr class="maintenance-divider" />
+              <button
+                type="button"
+                id="generate-magic-link-btn"
+                class="cleanup-btn archive-btn"
+              >
+                <iconify-icon
+                  icon="material-symbols:magic-button"
+                ></iconify-icon>
+                إنشاء رابط الإعداد السحري
+              </button>
+              <p
+                id="magic-link-container"
+                class="magic-link-container view-hidden"
+              >
+                <span class="magic-link-warning"
+                  >هذا الرابط سري للغاية، تعامل معه ككلمة مرور.</span
+                >
+                <input type="text" id="magic-link-output" readonly />
+              </p>
+              <hr class="maintenance-divider" />
+
               <button
                 type="button"
                 id="manual-archive-btn"
@@ -664,9 +668,11 @@
                 ></iconify-icon>
                 أرشفة المبيعات القديمة
               </button>
+
               <p id="last-archive-date-display" class="last-archive-text">
                 آخر أرشفة: لم تتم بعد
               </p>
+
               <hr class="maintenance-divider" />
               <button
                 type="button"
@@ -682,6 +688,7 @@
                 ></iconify-icon>
                 تنظيف الصور غير المستخدمة
               </button>
+
               <hr class="maintenance-divider" />
               <div class="backup-actions-group">
                 <button
@@ -701,30 +708,18 @@
                   <iconify-icon icon="mingcute:telegram-fill"></iconify-icon>
                 </button>
               </div>
-              <label
-                for="restore-backup-input"
-                class="cleanup-btn archive-btn"
-              >
-                <iconify-icon icon="hugeicons:zip-02"></iconify-icon>
-                استعادة من نسخة احتياطية
-              </label>
               <input
                 type="file"
                 id="restore-backup-input"
                 class="visually-hidden"
                 accept=".zip"
               />
+              <label for="restore-backup-input" class="cleanup-btn archive-btn">
+                <iconify-icon icon="hugeicons:zip-02"></iconify-icon>
+                استعادة من نسخة احتياطية
+              </label>
             </div>
           </div>
-
-          <div id="tab-pane-about" class="tab-pane">
-            <div id="app-version-display" class="app-version"></div>
-          </div>
-        </div>
-
-        <div class="modal-actions">
-          <button type="submit" id="save-settings-btn">حفظ الإعدادات</button>
-          <button type="button" id="cancel-sync-btn">إلغاء</button>
         </div>
       </form>
     </dialog>
@@ -1054,4 +1049,4 @@
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
     <script type="module" src="js/main.js"></script>
   </body>
-      </html>
+                </html>
