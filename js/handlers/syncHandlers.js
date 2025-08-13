@@ -394,15 +394,26 @@ export function setupSyncListeners(elements) {
     elements.syncModal.close();
     await initializeApp();
   });
-  const advancedSettingsToggle = document.getElementById(
-    "advanced-settings-toggle"
-  );
-  const advancedSettingsContainer = document.getElementById(
-    "advanced-settings-container"
-  );
-  advancedSettingsToggle.addEventListener("click", () => {
-    advancedSettingsToggle.classList.toggle("open");
-    advancedSettingsContainer.classList.toggle("open");
+
+  // Tab switching logic
+  const tabsContainer = elements.syncModal.querySelector(".modal-tabs");
+  tabsContainer.addEventListener("click", e => {
+    const tabButton = e.target.closest(".tab-btn");
+    if (!tabButton) return;
+
+    const tabName = tabButton.dataset.tab;
+
+    // Remove active class from all tabs and panes
+    tabsContainer
+      .querySelector(".tab-btn.active")
+      .classList.remove("active");
+    elements.syncModal
+      .querySelector(".tab-pane.active")
+      .classList.remove("active");
+
+    // Add active class to the clicked tab and corresponding pane
+    tabButton.classList.add("active");
+    document.getElementById(`tab-pane-${tabName}`).classList.add("active");
   });
 
   elements.cleanupImagesBtn.addEventListener("click", handleImageCleanup);
@@ -488,4 +499,4 @@ export function setupSyncListeners(elements) {
         detailsContainer.innerHTML = `<p style="color: var(--danger-color);">فشل تحميل الملف: ${error.message}</p>`;
       }
     });
-}
+      }
