@@ -34,7 +34,8 @@
 /* REFACTORED: Final robust grid layout */
 .inventory-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr)); /* Min 216px */
+  grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr));
+  /* Min 216px */
   gap: var(--spacing-md);
   justify-items: center;
 }
@@ -82,12 +83,14 @@
 
 /* On very narrow screens, force a 2-column layout */
 /* UNIFIED BREAKPOINT */
-@media (max-width: 30rem) { /* 480px */
-    .inventory-grid {
-        gap: var(--spacing-md);
-    }
-
-    .stats-container {
-        grid-template-columns: 1fr 1fr;
-    }
+@media (max-width: 30rem) {
+  /* 480px */
+  .inventory-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-sm);
   }
+
+  .stats-container {
+    grid-template-columns: 1fr 1fr;
+  }
+}
