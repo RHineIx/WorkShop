@@ -5,7 +5,6 @@
 /* 1. Global Setup */
 @import "variables.css";
 @import "base.css";
-
 /* 2. Main Layout */
 @import "layout.css";
 
@@ -16,7 +15,6 @@
 @import "components/_search.css";
 @import "components/_cards.css";
 @import "components/_modals.css";
-@import "components/_settings-modal.css"; /* ADDED */
 @import "components/_confirm-modal.css";
 @import "components/_utilities.css";
 @import "components/_cropper.css";
