@@ -88,6 +88,7 @@ export const elements = {
   syncModal: document.getElementById("sync-modal"),
   syncForm: document.getElementById("sync-form"),
   cancelSyncBtn: document.getElementById("cancel-sync-btn"),
+  currentUserInput: document.getElementById("current-user"),
   githubUsernameInput: document.getElementById("github-username"),
   githubRepoInput: document.getElementById("github-repo"),
   githubPatInput: document.getElementById("github-pat"),
