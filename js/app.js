@@ -29,7 +29,7 @@ export function loadConfig() {
     appState.exchangeRate = parseFloat(savedRate);
   }
   const savedUser = localStorage.getItem("inventoryAppCurrentUser");
-  if(savedUser) {
+  if (savedUser) {
     appState.currentUser = savedUser;
   }
 }
@@ -95,7 +95,7 @@ function loadLocalData() {
   }
   // ADDED
   const savedAuditLog = localStorage.getItem("auditLogAppData");
-  if(savedAuditLog) {
+  if (savedAuditLog) {
     appState.auditLog = JSON.parse(savedAuditLog);
   }
 }
@@ -110,7 +110,6 @@ export function saveLocalData() {
 function handleUrlShortcuts() {
   const hash = window.location.hash;
   if (!hash || hash.startsWith("#setup=")) return;
-
   setTimeout(() => {
     switch (hash) {
       case "#add-item":
@@ -159,7 +158,6 @@ export async function initializeApp() {
   const savedCurrency = localStorage.getItem("inventoryAppCurrency") || "IQD";
   appState.activeCurrency = savedCurrency;
   setTheme(savedTheme);
-
   try {
     const response = await fetch("version.json?t=" + Date.now());
     if (response.ok) {
@@ -171,14 +169,16 @@ export async function initializeApp() {
   }
 
   renderInventorySkeleton();
-
   if (appState.syncConfig) {
     showStatus("جاري مزامنة البيانات...", "syncing");
     try {
-      const [inventoryResult, salesResult, suppliersResult, auditLogResult] = await Promise.all(
-        [api.fetchFromGitHub(), api.fetchSales(), api.fetchSuppliers(), api.fetchAuditLog()]
-      );
-
+      const [inventoryResult, salesResult, suppliersResult, auditLogResult] =
+        await Promise.all([
+          api.fetchFromGitHub(),
+          api.fetchSales(),
+          api.fetchSuppliers(),
+          api.fetchAuditLog(),
+        ]);
       if (inventoryResult) {
         appState.inventory = inventoryResult.data;
         appState.fileSha = inventoryResult.sha;
@@ -225,4 +225,4 @@ export async function initializeApp() {
   registerServiceWorker();
 
   console.log("App Initialized Successfully.");
-}
+        }
