@@ -1,9 +1,10 @@
 // js/handlers/dashboardHandlers.js
 import { appState } from "../state.js";
-import * as ui from "../ui.js";
 import * as api from "../api.js";
 import { saveLocalData } from "../app.js";
 import { showConfirmationModal } from "../ui_helpers.js";
+import { showStatus, hideSyncStatus } from "../notifications.js";
+import { renderDashboard } from "../renderer.js";
 
 /**
  * Handles the deletion of a single sale record after user confirmation.
@@ -20,24 +21,23 @@ async function handleSingleSaleDelete(saleId) {
   });
 
   if (confirmed) {
-    ui.showStatus("جاري حذف السجل...", "syncing");
+    showStatus("جاري حذف السجل...", "syncing");
     const originalSales = JSON.parse(JSON.stringify(appState.sales));
-
     try {
       appState.sales = appState.sales.filter(sale => sale.saleId !== saleId);
 
       await api.saveSales();
       saveLocalData();
 
-      ui.hideSyncStatus();
-      ui.showStatus(`تم حذف السجل بنجاح.`, "success");
+      hideSyncStatus();
+      showStatus(`تم حذف السجل بنجاح.`, "success");
     } catch (error) {
       console.error("Failed to delete sale record:", error);
       appState.sales = originalSales; // Rollback on failure
-      ui.hideSyncStatus();
-      ui.showStatus(`فشل حذف السجل: ${error.message}`, "error");
+      hideSyncStatus();
+      showStatus(`فشل حذف السجل: ${error.message}`, "error");
     } finally {
-      ui.renderDashboard();
+      renderDashboard();
     }
   }
 }
@@ -51,13 +51,11 @@ export function setupDashboardListeners(elements) {
         .querySelector(".active")
         .classList.remove("active");
       button.classList.add("active");
-      ui.renderDashboard();
+      renderDashboard();
     }
   });
 
-  // Unified click handler for the entire dashboard container
   elements.dashboardViewContainer.addEventListener("click", e => {
-    // Handler for collapsible sections (Bestsellers, Sales Log)
     const collapsibleHeader = e.target.closest(".collapsible-header");
     if (collapsibleHeader) {
       const targetId = collapsibleHeader.dataset.target;
@@ -69,7 +67,6 @@ export function setupDashboardListeners(elements) {
       return;
     }
 
-    // Handler for individual sale item delete button
     const deleteButton = e.target.closest(".delete-sale-btn");
     if (deleteButton) {
       e.stopPropagation();
@@ -79,7 +76,6 @@ export function setupDashboardListeners(elements) {
       return;
     }
 
-    // Handler for expanding/collapsing sale item details
     const itemHeader = e.target.closest(".item-header");
     if (itemHeader) {
       const details = itemHeader.nextElementSibling;
