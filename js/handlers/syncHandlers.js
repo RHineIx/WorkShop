@@ -368,6 +368,8 @@ async function handleRestoreBackup(event) {
 export function setupSyncListeners(elements) {
   elements.syncSettingsBtn.addEventListener("click", () => {
     populateSyncModal();
+    document.getElementById("sync-modal-title").focus();
+
     const { magicLinkContainer } = getDOMElements();
     magicLinkContainer.classList.add("view-hidden");
 
@@ -397,7 +399,8 @@ export function setupSyncListeners(elements) {
 
   elements.syncForm.addEventListener("submit", async e => {
     e.preventDefault();
-    appState.currentUser = elements.currentUserInput.value.trim() || "المستخدم";
+    appState.currentUser =
+      elements.currentUserInput.value.trim() || "المستخدم";
     appState.syncConfig = {
       username: elements.githubUsernameInput.value.trim(),
       repo: elements.githubRepoInput.value.trim(),
@@ -508,4 +511,4 @@ export function setupSyncListeners(elements) {
         detailsContainer.innerHTML = `<p style="color: var(--danger-color);">فشل تحميل الملف: ${error.message}</p>`;
       }
     });
-}
+    }
