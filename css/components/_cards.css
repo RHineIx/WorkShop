@@ -23,8 +23,9 @@
   color: #38a169;
 }
 .card-details .card-title {
-  font-size: 0.75rem; /* 12px */
+  font-size: 0.875rem; /* 14px */
   color: var(--text-secondary);
+  font-weight: 600;
 }
 .card-details .card-value {
   font-size: 1.375rem; /* 22px */
@@ -43,7 +44,7 @@
   flex-direction: column;
   position: relative;
   user-select: none; /* Prevent text selection */
-  
+
   /* Set a max-width to prevent stretching */
   width: 100%;
   max-width: 16rem; /* 256px */
@@ -201,7 +202,7 @@
   overflow: hidden;
 }
 .card-sku {
-  font-size: 0.75rem; /* 12px */
+  font-size: 0.8125rem; /* 13px */
   font-weight: 500;
   color: var(--text-secondary);
   margin-bottom: var(--spacing-sm);
@@ -256,7 +257,6 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  
   /* FIX: Apply the same width constraints as the real card */
   width: 100%;
   max-width: 16rem; /* 256px */
@@ -301,7 +301,8 @@
 
 /* Comprehensive scaling for very narrow screens */
 /* UNIFIED BREAKPOINT */
-@media (max-width: 30rem) { /* 480px */
+@media (max-width: 30rem) {
+  /* 480px */
   .stat-card {
     flex-direction: column;
     align-items: center;
@@ -323,14 +324,14 @@
 
   /* Shrink the category tag */
   .card-category-tag {
-    font-size: 0.65rem; /* ~10.4px */
+    font-size: 0.7rem;
     padding: 0.15rem 0.4rem;
     margin-bottom: var(--spacing-xs);
   }
 
   /* Shrink the product name font */
   .card-name {
-    font-size: 0.875rem; /* 14px */
+    font-size: 0.9rem;
     -webkit-line-clamp: 3; /* Allow 3 lines if needed */
     line-clamp: 3;
     margin-bottom: var(--spacing-xs);
@@ -338,7 +339,7 @@
 
   /* Shrink the SKU font */
   .card-sku {
-    font-size: 0.65rem; /* ~10.4px */
+    font-size: 0.7rem;
     margin-bottom: var(--spacing-sm);
   }
 
@@ -351,7 +352,7 @@
   .card-footer {
     gap: var(--spacing-sm);
   }
-  
+
   /* Shrink the gap between buttons */
   .card-actions {
     gap: var(--spacing-xs);
@@ -374,4 +375,4 @@
     top: 0.5rem;
     right: 0.5rem;
   }
-    }
+  }
