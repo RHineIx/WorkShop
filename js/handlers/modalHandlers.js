@@ -1,18 +1,22 @@
 // js/handlers/modalHandlers.js
 import { appState } from "../state.js";
-import * as ui from "../ui.js";
 import * as api from "../api.js";
 import { ConflictError } from "../api.js";
 import { generateUniqueSKU, compressImage } from "../utils.js";
 import { saveLocalData } from "../app.js";
 import { showConfirmationModal } from "../ui_helpers.js";
+import { getDOMElements, openModal, updateSaleTotal } from "../ui.js";
+import {
+  filterAndRenderItems,
+  renderCategoryFilter,
+  populateCategoryDatalist,
+  populateSupplierDropdown,
+} from "../renderer.js";
+import { showStatus, hideSyncStatus } from "../notifications.js";
 
-// Module-scoped variables for the cropper instance
 let cropper = null;
 let cropperPadding = 0.1;
 let cropperBgColor = "#FFFFFF";
-
-// --- HELPER FUNCTIONS ---
 
 function handlePriceConversion(sourceInput, targetInput) {
   const sourceValue = parseFloat(sourceInput.value);
@@ -26,13 +30,13 @@ function handlePriceConversion(sourceInput, targetInput) {
 }
 
 async function saveQuantityChanges(currentItem) {
-  ui.showStatus("التحقق من البيانات...", "syncing");
+  showStatus("التحقق من البيانات...", "syncing");
   const itemBeforeEdit = appState.itemStateBeforeEdit;
   try {
     const { data: latestInventory, sha: latestSha } =
       await api.fetchFromGitHub();
     if (latestSha !== appState.fileSha) {
-      ui.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
+      showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
         showRefreshButton: true,
       });
       const originalItemIndex = appState.inventory.items.findIndex(
@@ -41,11 +45,11 @@ async function saveQuantityChanges(currentItem) {
       if (originalItemIndex !== -1) {
         appState.inventory.items[originalItemIndex] = itemBeforeEdit;
       }
-      ui.filterAndRenderItems();
+      filterAndRenderItems();
       return;
     }
 
-    ui.showStatus("جاري حفظ تغيير الكمية...", "syncing");
+    showStatus("جاري حفظ تغيير الكمية...", "syncing");
     appState.inventory = latestInventory;
     appState.fileSha = latestSha;
 
@@ -57,8 +61,8 @@ async function saveQuantityChanges(currentItem) {
     }
     await api.saveToGitHub();
     saveLocalData();
-    ui.filterAndRenderItems(); // ADDED: Refresh UI after successful save
-    ui.showStatus("تم حفظ التغييرات بنجاح!", "success");
+    filterAndRenderItems();
+    showStatus("تم حفظ التغييرات بنجاح!", "success");
   } catch (error) {
     const originalItemIndex = appState.inventory.items.findIndex(
       i => i.id === itemBeforeEdit.id
@@ -66,23 +70,21 @@ async function saveQuantityChanges(currentItem) {
     if (originalItemIndex !== -1) {
       appState.inventory.items[originalItemIndex] = itemBeforeEdit;
     }
-    ui.filterAndRenderItems();
-    ui.showStatus("فشل حفظ التغييرات.", "error", { duration: 4000 });
+    filterAndRenderItems();
+    showStatus("فشل حفظ التغييرات.", "error", { duration: 4000 });
   }
 }
-
-// --- FORM SUBMISSION HANDLERS ---
 
 async function handleSaleFormSubmit(e) {
   e.preventDefault();
   const saveButton = document.getElementById("confirm-sale-btn");
   saveButton.disabled = true;
-  ui.showStatus("التحقق من البيانات...", "syncing");
+  showStatus("التحقق من البيانات...", "syncing");
 
   try {
     const { sha: latestSha } = await api.fetchFromGitHub();
     if (latestSha !== appState.fileSha) {
-      ui.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
+      showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
         showRefreshButton: true,
       });
       saveButton.disabled = false;
@@ -98,12 +100,12 @@ async function handleSaleFormSubmit(e) {
     const salePrice = parseFloat(document.getElementById("sale-price").value);
 
     if (!item || item.quantity < quantityToSell || quantityToSell <= 0) {
-      ui.showStatus("خطأ في البيانات أو الكمية غير متوفرة.", "error");
+      showStatus("خطأ في البيانات أو الكمية غير متوفرة.", "error");
       saveButton.disabled = false;
       return;
     }
 
-    ui.showStatus("جاري تسجيل البيع...", "syncing");
+    showStatus("جاري تسجيل البيع...", "syncing");
     const originalQuantity = item.quantity;
     item.quantity -= quantityToSell;
 
@@ -122,56 +124,143 @@ async function handleSaleFormSubmit(e) {
       notes: document.getElementById("sale-notes").value,
       timestamp: new Date().toISOString(),
     };
+
     appState.sales.push(saleRecord);
-    ui.filterAndRenderItems(true);
+    filterAndRenderItems(true);
 
     try {
       await api.saveToGitHub();
       await api.saveSales();
       saveLocalData();
-      ui.getDOMElements().saleModal.close();
-      ui.hideSyncStatus();
-      ui.showStatus("تم تسجيل البيع بنجاح!", "success");
+      getDOMElements().saleModal.close();
+      hideSyncStatus();
+      showStatus("تم تسجيل البيع بنجاح!", "success");
     } catch (saveError) {
       item.quantity = originalQuantity;
       appState.sales.pop();
-      ui.filterAndRenderItems();
+      filterAndRenderItems();
       throw saveError;
     }
   } catch (error) {
-    ui.hideSyncStatus();
+    hideSyncStatus();
     if (!(error instanceof ConflictError)) {
-      ui.showStatus(`فشل تسجيل البيع: ${error.message}`, "error");
+      showStatus(`فشل تسجيل البيع: ${error.message}`, "error");
     }
   } finally {
     if (appState.currentView === "dashboard") {
-      ui.renderDashboard();
+      const { renderDashboard } = await import("../renderer.js");
+      renderDashboard();
     }
     saveButton.disabled = false;
   }
+}
+
+function openItemModal(itemId = null) {
+  const elements = getDOMElements();
+  elements.itemForm.reset();
+  appState.selectedImageFile = null;
+  elements.imagePreview.src = "#";
+  elements.imagePreview.classList.add("image-preview-hidden");
+  elements.imagePlaceholder.style.display = "flex";
+  elements.regenerateSkuBtn.style.display = "none";
+
+  if (itemId) {
+    const item = appState.inventory.items.find(i => i.id === itemId);
+    if (item) {
+      elements.modalTitle.textContent = "تعديل منتج";
+      elements.itemIdInput.value = item.id;
+      document.getElementById("item-sku").value = item.sku;
+      document.getElementById("item-name").value = item.name;
+      document.getElementById("item-category").value = item.category;
+      document.getElementById("item-oem-pn").value = item.oemPartNumber || "";
+      document.getElementById("item-compatible-pn").value =
+        item.compatiblePartNumber || "";
+      document.getElementById("item-quantity").value = item.quantity;
+      document.getElementById("item-alert-level").value = item.alertLevel;
+      document.getElementById("item-cost-price-iqd").value =
+        item.costPriceIqd || 0;
+      document.getElementById("item-sell-price-iqd").value =
+        item.sellPriceIqd || 0;
+      document.getElementById("item-cost-price-usd").value =
+        item.costPriceUsd || 0;
+      document.getElementById("item-sell-price-usd").value =
+        item.sellPriceUsd || 0;
+      document.getElementById("item-notes").value = item.notes;
+      populateSupplierDropdown(item.supplierId);
+
+      if (item.imagePath) {
+        if (item.imagePath.startsWith("http")) {
+          elements.imagePreview.src = item.imagePath;
+          elements.imagePreview.classList.remove("image-preview-hidden");
+          elements.imagePlaceholder.style.display = "none";
+        } else {
+          api.fetchImageWithAuth(item.imagePath).then(blobUrl => {
+            if (blobUrl) {
+              elements.imagePreview.src = blobUrl;
+              elements.imagePreview.classList.remove("image-preview-hidden");
+              elements.imagePlaceholder.style.display = "none";
+            }
+          });
+        }
+      }
+    }
+  } else {
+    elements.modalTitle.textContent = "إضافة منتج جديد";
+    elements.itemIdInput.value = "";
+    elements.regenerateSkuBtn.style.display = "flex";
+    populateSupplierDropdown();
+  }
+  openModal(elements.itemModal);
+}
+
+function openSaleModal(itemId) {
+  const elements = getDOMElements();
+  const item = appState.inventory.items.find(i => i.id === itemId);
+  if (!item) return;
+
+  elements.saleForm.reset();
+  elements.saleItemIdInput.value = item.id;
+  elements.saleItemName.textContent = item.name;
+  const saleQuantityInput = document.getElementById("sale-quantity");
+  const salePriceInput = document.getElementById("sale-price");
+  const isIQD = appState.activeCurrency === "IQD";
+  const price = isIQD ? item.sellPriceIqd || 0 : item.sellPriceUsd || 0;
+  const symbol = isIQD ? "د.ع" : "$";
+  elements.salePriceCurrency.textContent = symbol;
+  salePriceInput.value = price;
+  salePriceInput.step = isIQD ? "250" : "0.01";
+  saleQuantityInput.value = 1;
+  saleQuantityInput.max = item.quantity;
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  document.getElementById("sale-date").value = `${year}-${month}-${day}`;
+
+  openModal(elements.saleModal);
+  updateSaleTotal();
 }
 
 async function handleItemFormSubmit(e) {
   e.preventDefault();
   const saveButton = document.getElementById("save-item-btn");
   saveButton.disabled = true;
-  ui.showStatus("التحقق من البيانات...", "syncing");
+  showStatus("التحقق من البيانات...", "syncing");
 
   try {
     const { data: latestInventory, sha: latestSha } =
       await api.fetchFromGitHub();
     if (latestSha !== appState.fileSha) {
-      ui.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
+      showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
         showRefreshButton: true,
       });
       saveButton.disabled = false;
       return;
     }
 
-    ui.showStatus("جاري الحفظ...", "syncing");
+    showStatus("جاري الحفظ...", "syncing");
     appState.inventory = latestInventory;
     appState.fileSha = latestSha;
-
     const itemId = document.getElementById("item-id").value;
     let imagePath = null;
     const existingItem = appState.inventory.items.find(i => i.id === itemId);
@@ -180,7 +269,7 @@ async function handleItemFormSubmit(e) {
     }
 
     if (appState.selectedImageFile) {
-      ui.showStatus("جاري ضغط ورفع الصورة...", "syncing");
+      showStatus("جاري ضغط ورفع الصورة...", "syncing");
       const compressedImageBlob = await compressImage(
         appState.selectedImageFile,
         {
@@ -228,48 +317,47 @@ async function handleItemFormSubmit(e) {
       appState.inventory.items.push(itemData);
     }
 
-    ui.filterAndRenderItems(true);
-    ui.renderCategoryFilter();
-    ui.populateCategoryDatalist();
+    filterAndRenderItems(true);
+    renderCategoryFilter();
+    populateCategoryDatalist();
 
     await api.saveToGitHub();
     saveLocalData();
 
-    ui.getDOMElements().itemModal.close();
-    ui.hideSyncStatus();
-    ui.showStatus("تم حفظ التغييرات بنجاح!", "success");
-
+    getDOMElements().itemModal.close();
+    hideSyncStatus();
+    showStatus("تم حفظ التغييرات بنجاح!", "success");
+    const { openDetailsModal } = await import("../ui.js");
     if (appState.currentItemId === itemData.id) {
-      ui.openDetailsModal(itemData.id);
+      openDetailsModal(itemData.id);
     }
   } catch (error) {
-    ui.hideSyncStatus();
-    ui.showStatus(`فشل الحفظ: ${error.message}`, "error");
+    hideSyncStatus();
+    showStatus(`فشل الحفظ: ${error.message}`, "error");
   } finally {
     saveButton.disabled = false;
     appState.selectedImageFile = null;
   }
 }
 
-// --- IMAGE & CROPPER HANDLERS ---
-
 function handleImageSelection(file) {
   if (!file || !file.type.startsWith("image/")) {
-    ui.showStatus("الملف المحدد ليس صورة.", "error");
+    showStatus("الملف المحدد ليس صورة.", "error");
     return;
   }
 
   const reader = new FileReader();
   reader.onload = event => {
     const { cropperModal, cropperImage, paddingDisplay, bgColorInput } =
-      ui.getDOMElements();
+      getDOMElements();
+
     cropperPadding = 0.1;
     cropperBgColor = "#FFFFFF";
     paddingDisplay.textContent = `${Math.round(cropperPadding * 100)}%`;
     bgColorInput.value = cropperBgColor;
 
     cropperImage.src = event.target.result;
-    ui.openModal(cropperModal);
+    openModal(cropperModal);
 
     if (cropper) {
       cropper.destroy();
@@ -285,20 +373,20 @@ function handleImageSelection(file) {
   reader.readAsDataURL(file);
 }
 
-// --- SETUP FUNCTION ---
-
 export function setupModalListeners(elements) {
   elements.addItemBtn.addEventListener("click", () => {
-    ui.openItemModal();
+    openItemModal();
     const existingSkus = new Set(
       appState.inventory.items.map(item => item.sku)
     );
     document.getElementById("item-sku").value = generateUniqueSKU(existingSkus);
   });
+
   elements.itemForm.addEventListener("submit", handleItemFormSubmit);
   elements.cancelItemBtn.addEventListener("click", () =>
     elements.itemModal.close()
   );
+
   elements.regenerateSkuBtn.addEventListener("click", () => {
     const existingSkus = new Set(
       appState.inventory.items.map(item => item.sku)
@@ -310,10 +398,11 @@ export function setupModalListeners(elements) {
     handleImageSelection(e.target.files[0]);
     e.target.value = "";
   });
+
   elements.pasteImageBtn.addEventListener("click", async () => {
     try {
       if (!navigator.clipboard?.read) {
-        ui.showStatus("متصفحك لا يدعم لصق الصور.", "error");
+        showStatus("متصفحك لا يدعم لصق الصور.", "error");
         return;
       }
       const clipboardItems = await navigator.clipboard.read();
@@ -332,20 +421,22 @@ export function setupModalListeners(elements) {
         );
         handleImageSelection(file);
       } else {
-        ui.showStatus("لا توجد صورة في الحافظة.", "warning");
+        showStatus("لا توجد صورة في الحافظة.", "warning");
       }
     } catch (error) {
       console.error("Failed to paste image:", error);
-      ui.showStatus(`فشل لصق الصورة: ${error.message}`, "error");
+      showStatus(`فشل لصق الصورة: ${error.message}`, "error");
     }
   });
+
   document.getElementById("cancel-crop-btn").addEventListener("click", () => {
-    ui.getDOMElements().cropperModal.close();
+    getDOMElements().cropperModal.close();
     if (cropper) {
       cropper.destroy();
       cropper = null;
     }
   });
+
   document.getElementById("crop-image-btn").addEventListener("click", () => {
     if (!cropper) return;
     const croppedCanvas = cropper.getCroppedCanvas();
@@ -366,7 +457,7 @@ export function setupModalListeners(elements) {
     );
     finalCanvas.toBlob(
       blob => {
-        const { imagePreview, imagePlaceholder } = ui.getDOMElements();
+        const { imagePreview, imagePlaceholder } = getDOMElements();
         const file = new File([blob], "cropped_image.webp", {
           type: "image/webp",
         });
@@ -374,7 +465,7 @@ export function setupModalListeners(elements) {
         imagePreview.src = URL.createObjectURL(file);
         imagePreview.classList.remove("image-preview-hidden");
         imagePlaceholder.style.display = "none";
-        ui.getDOMElements().cropperModal.close();
+        getDOMElements().cropperModal.close();
         cropper.destroy();
         cropper = null;
       },
@@ -382,6 +473,7 @@ export function setupModalListeners(elements) {
       0.8
     );
   });
+
   elements.decreasePaddingBtn.addEventListener("click", () => {
     if (cropperPadding > 0) {
       cropperPadding = Math.max(0, cropperPadding - 0.05);
@@ -407,6 +499,7 @@ export function setupModalListeners(elements) {
   const costUsdInput = document.getElementById("item-cost-price-usd");
   const sellIqdInput = document.getElementById("item-sell-price-iqd");
   const sellUsdInput = document.getElementById("item-sell-price-usd");
+
   costIqdInput.addEventListener("input", () =>
     handlePriceConversion(costIqdInput, costUsdInput)
   );
@@ -421,7 +514,6 @@ export function setupModalListeners(elements) {
     if (item) {
       item.quantity++;
       elements.detailsQuantityValue.textContent = item.quantity;
-      // ui.filterAndRenderItems(); // REMOVED: This causes the jump
     }
   });
   elements.detailsDecreaseBtn.addEventListener("click", () => {
@@ -431,9 +523,9 @@ export function setupModalListeners(elements) {
     if (item && item.quantity > 0) {
       item.quantity--;
       elements.detailsQuantityValue.textContent = item.quantity;
-      // ui.filterAndRenderItems(); // REMOVED: This causes the jump
     }
   });
+
   elements.closeDetailsModalBtn.addEventListener("click", async () => {
     const itemBeforeEdit = appState.itemStateBeforeEdit;
     const currentItem = appState.inventory.items.find(
@@ -459,17 +551,19 @@ export function setupModalListeners(elements) {
         if (originalItemIndex !== -1) {
           appState.inventory.items[originalItemIndex] = itemBeforeEdit;
         }
-        ui.filterAndRenderItems();
+        filterAndRenderItems();
       }
     }
     appState.itemStateBeforeEdit = null;
     appState.currentItemId = null;
     elements.detailsModal.close();
   });
+
   elements.detailsEditBtn.addEventListener("click", () => {
     elements.detailsModal.close();
-    ui.openItemModal(appState.currentItemId);
+    openItemModal(appState.currentItemId);
   });
+
   elements.detailsDeleteBtn.addEventListener("click", async () => {
     const itemToDelete = appState.inventory.items.find(
       item => item.id === appState.currentItemId
@@ -488,7 +582,7 @@ export function setupModalListeners(elements) {
         item => item.id !== appState.currentItemId
       );
       elements.detailsModal.close();
-      ui.filterAndRenderItems(true);
+      filterAndRenderItems(true);
 
       try {
         await api.saveToGitHub();
@@ -511,11 +605,11 @@ export function setupModalListeners(elements) {
             );
         }
         saveLocalData();
-        ui.showStatus("تم حذف المنتج بنجاح!", "success");
+        showStatus("تم حذف المنتج بنجاح!", "success");
       } catch (error) {
         appState.inventory = originalInventory;
-        ui.filterAndRenderItems();
-        ui.showStatus(`فشل الحذف: ${error.message}`, "error");
+        filterAndRenderItems();
+        showStatus(`فشل الحذف: ${error.message}`, "error");
       }
     }
   });
@@ -524,13 +618,14 @@ export function setupModalListeners(elements) {
   elements.cancelSaleBtn.addEventListener("click", () =>
     elements.saleModal.close()
   );
+
   elements.saleIncreaseBtn.addEventListener("click", () => {
     const quantityInput = elements.saleQuantityInput;
     const max = parseInt(quantityInput.max, 10);
     let currentValue = parseInt(quantityInput.value, 10);
     if (currentValue < max) {
       quantityInput.value = currentValue + 1;
-      ui.updateSaleTotal();
+      updateSaleTotal();
     }
   });
   elements.saleDecreaseBtn.addEventListener("click", () => {
@@ -538,11 +633,11 @@ export function setupModalListeners(elements) {
     let currentValue = parseInt(quantityInput.value, 10);
     if (currentValue > 1) {
       quantityInput.value = currentValue - 1;
-      ui.updateSaleTotal();
+      updateSaleTotal();
     }
   });
-  elements.saleQuantityInput.addEventListener("input", ui.updateSaleTotal);
+  elements.saleQuantityInput.addEventListener("input", updateSaleTotal);
   document
     .getElementById("sale-price")
-    .addEventListener("input", ui.updateSaleTotal);
-}
+    .addEventListener("input", updateSaleTotal);
+  }
