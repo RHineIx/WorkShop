@@ -17,16 +17,18 @@ export const elements = {
   // Header
   themeToggleBtn: document.getElementById("theme-toggle-btn"),
   addItemBtn: document.getElementById("add-item-btn"),
-  syncSettingsBtn: document.getElementById("sync-settings-btn"),
+  settingsBtn: document.getElementById("settings-btn"),
   currencyToggleBtn: document.getElementById("currency-toggle-btn"),
   inventoryToggleBtn: document.getElementById("inventory-toggle-btn"),
   dashboardToggleBtn: document.getElementById("dashboard-toggle-btn"),
-  activityLogToggleBtn: document.getElementById("activity-log-toggle-btn"), // ADDED
+  activityLogToggleBtn: document.getElementById("activity-log-toggle-btn"),
 
   // View Containers
   inventoryViewContainer: document.getElementById("inventory-view-container"),
   dashboardViewContainer: document.getElementById("dashboard-view-container"),
-  activityLogViewContainer: document.getElementById("activity-log-view-container"), // ADDED
+  activityLogViewContainer: document.getElementById(
+    "activity-log-view-container"
+  ),
 
   // Dashboard Elements
   timeFilterControls: document.getElementById("time-filter-controls"),
@@ -34,9 +36,9 @@ export const elements = {
   totalProfitStat: document.getElementById("total-profit-stat"),
   bestsellersList: document.getElementById("bestsellers-list"),
   salesLogContent: document.getElementById("sales-log-content"),
-  
+
   // Activity Log Elements
-  auditLogList: document.getElementById("audit-log-list"), // ADDED
+  auditLogList: document.getElementById("audit-log-list"),
 
   // Details Modal
   detailsModal: document.getElementById("details-modal"),
@@ -82,10 +84,14 @@ export const elements = {
   salePriceCurrency: document.getElementById("sale-price-currency"),
   saleTotalPrice: document.getElementById("sale-total-price"),
 
-  // Sync Modal
-  syncModal: document.getElementById("sync-modal"),
-  syncForm: document.getElementById("sync-form"),
-  cancelSyncBtn: document.getElementById("cancel-sync-btn"),
+  // Settings Modal
+  settingsModal: document.getElementById("settings-modal"),
+  settingsForm: document.getElementById("settings-form"),
+  closeSettingsBtn: document.getElementById("close-settings-btn"),
+  cancelSettingsBtn: document.getElementById("cancel-settings-btn"),
+  settingsNavList: document.getElementById("settings-nav-list"),
+  settingsPanes: document.querySelectorAll(".settings-pane"),
+  currentUserNameInput: document.getElementById("current-user-name"),
   githubUsernameInput: document.getElementById("github-username"),
   githubRepoInput: document.getElementById("github-repo"),
   githubPatInput: document.getElementById("github-pat"),
@@ -97,6 +103,10 @@ export const elements = {
   generateMagicLinkBtn: document.getElementById("generate-magic-link-btn"),
   magicLinkContainer: document.getElementById("magic-link-container"),
   magicLinkOutput: document.getElementById("magic-link-output"),
+  appVersionDisplay: document.getElementById("app-version-display"),
+  manualArchiveBtn: document.getElementById("manual-archive-btn"),
+  viewArchivesBtn: document.getElementById("view-archives-btn"),
+  backupToTelegramBtn: document.getElementById("backup-to-telegram-btn"),
 
   // Supplier UI Elements
   supplierManagerModal: document.getElementById("supplier-manager-modal"),
@@ -129,9 +139,6 @@ export const elements = {
   decreasePaddingBtn: document.getElementById("decrease-padding-btn"),
   bgColorInput: document.getElementById("bg-color-input"),
 
-  // App Version
-  appVersionDisplay: document.getElementById("app-version-display"),
-
   // Bulk Actions UI
   bulkActionsBar: document.getElementById("bulk-actions-bar"),
   selectionCount: document.getElementById("selection-count"),
@@ -154,7 +161,7 @@ export const elements = {
     "#confirm-modal .confirm-modal-icon"
   ),
 
- // Reason Modal Elements (ADDED)
+  // Reason Modal Elements
   reasonModal: document.getElementById("reason-modal"),
   reasonForm: document.getElementById("reason-form"),
   quantityChangeReasonInput: document.getElementById("quantity-change-reason"),
