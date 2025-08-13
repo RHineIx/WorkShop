@@ -1,3 +1,4 @@
+
 /* css/components/_dashboard.css */
 
 .dashboard-header {
@@ -166,8 +167,9 @@
   text-align: center;
 }
 .meta-label {
-  font-size: 11px;
+  font-size: 0.75rem; /* 12px */
   color: var(--text-secondary);
+  font-weight: 500;
 }
 .meta-value {
   font-size: 16px;
@@ -243,4 +245,4 @@
 }
 .details-list .profit-negative .value {
   color: var(--danger-color);
-}
+  }
