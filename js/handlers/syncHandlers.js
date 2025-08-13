@@ -1,4 +1,3 @@
-
 // js/handlers/syncHandlers.js
 import { appState } from "../state.js";
 import * as api from "../api.js";
@@ -9,6 +8,9 @@ import { getDOMElements, openModal } from "../ui.js";
 
 function populateSyncModal() {
   const elements = getDOMElements();
+  if (appState.currentUser) {
+    elements.currentUserInput.value = appState.currentUser;
+  }
   if (appState.syncConfig) {
     elements.githubUsernameInput.value = appState.syncConfig.username;
     elements.githubRepoInput.value = appState.syncConfig.repo;
@@ -379,6 +381,8 @@ export function setupSyncListeners(elements) {
 
   elements.syncForm.addEventListener("submit", async e => {
     e.preventDefault();
+    appState.currentUser =
+      elements.currentUserInput.value.trim() || "المستخدم";
     appState.syncConfig = {
       username: elements.githubUsernameInput.value.trim(),
       repo: elements.githubRepoInput.value.trim(),
@@ -484,4 +488,4 @@ export function setupSyncListeners(elements) {
         detailsContainer.innerHTML = `<p style="color: var(--danger-color);">فشل تحميل الملف: ${error.message}</p>`;
       }
     });
-               }
+}
