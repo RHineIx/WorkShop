@@ -5,7 +5,6 @@ import { sanitizeHTML } from "./utils.js";
 import { elements } from "./dom.js";
 
 const ITEMS_PER_PAGE = 20;
-
 const imageObserver = new IntersectionObserver(
   (entries, observer) => {
     entries.forEach(entry => {
@@ -33,7 +32,6 @@ const imageObserver = new IntersectionObserver(
   },
   { rootMargin: "0px 0px 200px 0px" }
 );
-
 const animationObserver = new IntersectionObserver(
   (entries, observer) => {
     entries.forEach(entry => {
@@ -45,7 +43,6 @@ const animationObserver = new IntersectionObserver(
   },
   { threshold: 0.1 }
 );
-
 const loadMoreObserver = new IntersectionObserver(
   entries => {
     const entry = entries[0];
@@ -56,7 +53,6 @@ const loadMoreObserver = new IntersectionObserver(
   },
   { rootMargin: "0px 0px 400px 0px" }
 );
-
 function getFilteredItems() {
   let items = [...appState.inventory.items];
   if (appState.activeFilter === "low_stock") {
@@ -121,7 +117,6 @@ export function filterAndRenderItems(resetPagination = false) {
 export function renderInventory(itemsToRender) {
   loadMoreObserver.disconnect();
   elements.inventoryGrid.innerHTML = "";
-
   if (appState.isSelectionModeActive) {
     elements.inventoryGrid.classList.add("selection-mode");
   } else {
@@ -139,7 +134,6 @@ export function renderInventory(itemsToRender) {
 
   const fragment = document.createDocumentFragment();
   const cardTemplate = elements.productCardTemplate;
-
   itemsToDisplay.forEach(item => {
     const cardClone = cardTemplate.content.cloneNode(true);
     const cardElement = cardClone.querySelector(".product-card");
@@ -170,7 +164,6 @@ export function renderInventory(itemsToRender) {
     const quantityBadge = cardClone.querySelector(".quantity-badge");
     quantityBadge.textContent = badgeText;
     quantityBadge.className = `quantity-badge ${badgeClass}`;
-
     const imageContainer = cardClone.querySelector(".card-image-container");
     const placeholder = cardClone.querySelector(".card-image-placeholder");
 
@@ -199,7 +192,6 @@ export function renderInventory(itemsToRender) {
     cardClone.querySelector(".card-sku").textContent = `SKU: ${sanitizeHTML(
       item.sku || ""
     )}`;
-
     const isIQD = appState.activeCurrency === "IQD";
     const price = isIQD ? item.sellPriceIqd || 0 : item.sellPriceUsd || 0;
     const symbol = isIQD ? "د.ع" : "$";
@@ -216,11 +208,9 @@ export function renderInventory(itemsToRender) {
   elements.inventoryGrid
     .querySelectorAll(".card-image[data-src]")
     .forEach(img => imageObserver.observe(img));
-
   elements.inventoryGrid
     .querySelectorAll(".product-card")
     .forEach(card => animationObserver.observe(card));
-
   if (appState.visibleItemCount < itemsToRender.length) {
     elements.loadMoreTrigger.style.display = "block";
     loadMoreObserver.observe(elements.loadMoreTrigger);
@@ -234,7 +224,6 @@ export function renderInventory(itemsToRender) {
 export function updateProductCard(itemId) {
   const card = document.querySelector(`.product-card[data-id="${itemId}"]`);
   const item = appState.inventory.items.find(i => i.id === itemId);
-
   if (!card || !item) {
     return;
   }
@@ -297,7 +286,6 @@ export function updateStats() {
 export function renderCategoryFilter() {
   const { categoryFilterBar } = elements;
   if (!categoryFilterBar) return;
-
   const categories = [
     ...new Set(
       appState.inventory.items.map(item => item.category).filter(Boolean)
@@ -315,7 +303,6 @@ export function renderCategoryFilter() {
     allButton.classList.add("active");
   }
   fragment.appendChild(allButton);
-
   categories.forEach(category => {
     const chipButton = document.createElement("button");
     chipButton.className = "category-chip";
@@ -353,7 +340,6 @@ function renderSalesLog(filteredSales) {
 
   const isIQD = appState.activeCurrency === "IQD";
   const symbol = isIQD ? "د.ع" : "$";
-
   const salesByDay = filteredSales.reduce((acc, sale) => {
     const date = sale.saleDate;
     if (!acc[date]) {
@@ -362,7 +348,6 @@ function renderSalesLog(filteredSales) {
     acc[date].push(sale);
     return acc;
   }, {});
-
   const logHTML = Object.entries(salesByDay)
     .map(([date, sales]) => {
       const dateObj = new Date(date);
@@ -418,7 +403,8 @@ function renderSalesLog(filteredSales) {
                   </button>
                 </div>
                 <div class="sale-datetime">
-                  التاريخ: ${sale.saleDate} | الوقت: ${saleTime}
+                  التاريخ: ${sale.saleDate} |
+                  الوقت: ${saleTime}
                 </div>
               </div>
               <div class="item-details">
@@ -484,7 +470,6 @@ export const renderDashboard = () => {
       return saleDate >= startDate && saleDate <= now;
     })
     .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
   const isIQD = appState.activeCurrency === "IQD";
   const totalSales = filteredSales.reduce(
     (sum, sale) =>
@@ -528,7 +513,6 @@ export const renderDashboard = () => {
 
   renderSalesLog(filteredSales);
 };
-
 export function renderSupplierList() {
   elements.supplierListContainer.innerHTML = "";
   if (appState.suppliers.length === 0) {
@@ -547,7 +531,7 @@ export function renderSupplierList() {
         <button class="icon-btn edit-supplier-btn" data-id="${
           supplier.id
         }" title="تعديل المورّد">
-          <iconify-icon icon="material-symbols:edit-outline-rounded"></iconify-icon>
+           <iconify-icon icon="material-symbols:edit-outline-rounded"></iconify-icon>
         </button>
         <button class="icon-btn danger-btn delete-supplier-btn" data-id="${
           supplier.id
@@ -591,54 +575,95 @@ const formatRelativeTime = date => {
   const minutes = Math.round(seconds / 60);
   const hours = Math.round(minutes / 60);
   const days = Math.round(hours / 24);
-
   if (seconds < 60) return `قبل لحظات`;
   if (minutes < 60) return `قبل ${minutes} دقيقة`;
   if (hours < 24) return `قبل ${hours} ساعة`;
   if (days < 30) return `قبل ${days} يوم`;
   return date.toLocaleString("ar-EG");
 };
-
-const getActionDetails = (log) => {
-    const name = `<strong>${sanitizeHTML(log.targetName)}</strong>`;
-    const details = log.details;
-    const from = sanitizeHTML(String(details.from ?? ''));
-    const to = sanitizeHTML(String(details.to ?? ''));
-
-    switch (log.action) {
-        case 'ITEM_CREATED':
-            return { icon: 'material-symbols:add-box-outline', class: 'create', description: `تم إنشاء منتج جديد: ${name}.` };
-        case 'PRICE_UPDATED':
-            return { icon: 'material-symbols:price-change-outline', class: 'update', description: `تم تغيير سعر ${name} من <span class="old-value">${Number(from).toLocaleString()}</span> إلى <span class="new-value">${Number(to).toLocaleString()}</span>.` };
-        case 'QUANTITY_UPDATED':
-            // MODIFIED: Handle optional reason
-            let qtyDescription = `تم تعديل كمية ${name} من ${from} إلى ${to}.`;
-            if (details.reason && details.reason.trim() !== '') {
-                qtyDescription += ` (السبب: ${sanitizeHTML(details.reason)})`;
-            }
-            return { icon: 'material-symbols:inventory-2-outline', class: 'update', description: qtyDescription };
-        case 'SALE_RECORDED':
-            return { icon: 'material-symbols:shopping-cart-outline', class: 'sale', description: `تم بيع ${details.quantity} قطعة من ${name}.` };
-        case 'ITEM_DELETED':
-            return { icon: 'material-symbols:delete-outline', class: 'delete', description: `تم حذف المنتج: ${name}.` };
-        case 'NAME_UPDATED':
-             return { icon: 'material-symbols:edit-outline', class: 'update', description: `تم تغيير اسم المنتج من "${from}" إلى "${to}".`};
-        case 'SKU_UPDATED':
-             return { icon: 'material-symbols:qr-code-2', class: 'update', description: `تم تغيير SKU للمنتج ${name} من "${from}" إلى "${to}".`};
-        case 'CATEGORY_UPDATED':
-             return { icon: 'material-symbols:folder-open-outline', class: 'update', description: `تم تغيير فئة ${name} من "${from || 'بلا فئة'}" إلى "${to}".`};
-        case 'NOTES_UPDATED':
-             return { icon: 'material-symbols:note-stack-add-outline', class: 'update', description: `تم تحديث الملاحظات للمنتج ${name}.`};
-        default:
-             return { icon: 'material-symbols:edit-document-outline', class: 'update', description: `تم تحديث بيانات ${name} (${log.action}).` };
-    }
+const getActionDetails = log => {
+  const name = `<strong>${sanitizeHTML(log.targetName)}</strong>`;
+  const details = log.details;
+  const from = sanitizeHTML(String(details.from ?? ""));
+  const to = sanitizeHTML(String(details.to ?? ""));
+  switch (log.action) {
+    case "ITEM_CREATED":
+      return {
+        icon: "material-symbols:add-box-outline",
+        class: "create",
+        description: `تم إنشاء منتج جديد: ${name}.`,
+      };
+    case "PRICE_UPDATED":
+      return {
+        icon: "material-symbols:price-change-outline",
+        class: "update",
+        description: `تم تغيير سعر ${name} من <span class="old-value">${Number(
+          from
+        ).toLocaleString()}</span> إلى <span class="new-value">${Number(
+          to
+        ).toLocaleString()}</span>.`,
+      };
+    case "QUANTITY_UPDATED":
+      // MODIFIED: Handle optional reason
+      let qtyDescription = `تم تعديل كمية ${name} من ${from} إلى ${to}.`;
+      if (details.reason && details.reason.trim() !== "") {
+        qtyDescription += ` (السبب: ${sanitizeHTML(details.reason)})`;
+      }
+      return {
+        icon: "material-symbols:inventory-2-outline",
+        class: "update",
+        description: qtyDescription,
+      };
+    case "SALE_RECORDED":
+      return {
+        icon: "material-symbols:shopping-cart-outline",
+        class: "sale",
+        description: `تم بيع ${details.quantity} قطعة من ${name}.`,
+      };
+    case "ITEM_DELETED":
+      return {
+        icon: "material-symbols:delete-outline",
+        class: "delete",
+        description: `تم حذف المنتج: ${name}.`,
+      };
+    case "NAME_UPDATED":
+      return {
+        icon: "material-symbols:edit-outline",
+        class: "update",
+        description: `تم تغيير اسم المنتج من "${from}" إلى "${to}".`,
+      };
+    case "SKU_UPDATED":
+      return {
+        icon: "material-symbols:qr-code-2",
+        class: "update",
+        description: `تم تغيير SKU للمنتج ${name} من "${from}" إلى "${to}".`,
+      };
+    case "CATEGORY_UPDATED":
+      return {
+        icon: "material-symbols:folder-open-outline",
+        class: "update",
+        description: `تم تغيير فئة ${name} من "${
+          from || "بلا فئة"
+        }" إلى "${to}".`,
+      };
+    case "NOTES_UPDATED":
+      return {
+        icon: "material-symbols:note-stack-add-outline",
+        class: "update",
+        description: `تم تحديث الملاحظات للمنتج ${name}.`,
+      };
+    default:
+      return {
+        icon: "material-symbols:edit-document-outline",
+        class: "update",
+        description: `تم تحديث بيانات ${name} (${log.action}).`,
+      };
+  }
 };
-
 
 export function renderAuditLog() {
   if (!elements.auditLogList) return;
   elements.auditLogList.innerHTML = "";
-
   if (!appState.auditLog || appState.auditLog.length === 0) {
     elements.auditLogList.innerHTML =
       '<p style="padding: 1rem;">لا توجد نشاطات مسجلة بعد.</p>';
@@ -662,12 +687,11 @@ export function renderAuditLog() {
     iconElement.className = `log-icon ${actionClass}`;
     iconify.setAttribute("icon", icon);
     descriptionElement.innerHTML = description;
-    metaElement.textContent = `بواسطة ${logItem.user} • ${formatRelativeTime(
-      new Date(logItem.timestamp)
-    )}`;
+    metaElement.innerHTML = `بواسطة <span class="log-user">${sanitizeHTML(
+      logItem.user
+    )}</span> • ${formatRelativeTime(new Date(logItem.timestamp))}`;
 
     fragment.appendChild(clone);
   });
-
   elements.auditLogList.appendChild(fragment);
-}
+    }
