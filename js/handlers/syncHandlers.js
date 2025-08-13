@@ -1,3 +1,4 @@
+
 // js/handlers/syncHandlers.js
 import { appState } from "../state.js";
 import * as api from "../api.js";
@@ -6,43 +7,24 @@ import { sanitizeHTML } from "../utils.js";
 import { showStatus, hideSyncStatus } from "../notifications.js";
 import { getDOMElements, openModal } from "../ui.js";
 
-function setupSettingsTabs(elements) {
-  elements.settingsNavList.addEventListener("click", e => {
-    e.preventDefault();
-    const targetLink = e.target.closest(".settings-nav-link");
-    if (!targetLink) return;
-
-    // Deactivate all links and hide all panes
-    elements.settingsNavList
-      .querySelectorAll(".settings-nav-link")
-      .forEach(link => link.classList.remove("active"));
-    elements.settingsPanes.forEach(pane => pane.classList.remove("active"));
-
-    // Activate the clicked link and show the corresponding pane
-    targetLink.classList.add("active");
-    const targetPaneId = targetLink.dataset.target;
-    const targetPane = document.getElementById(targetPaneId);
-    if (targetPane) {
-      targetPane.classList.add("active");
-    }
-  });
-}
-
-function populateSettingsModal() {
+function populateSyncModal() {
   const elements = getDOMElements();
   if (appState.syncConfig) {
     elements.githubUsernameInput.value = appState.syncConfig.username;
     elements.githubRepoInput.value = appState.syncConfig.repo;
     elements.githubPatInput.value = appState.syncConfig.pat;
   }
-  elements.currentUserNameInput.value = appState.currentUser;
-  elements.exchangeRateInput.value = appState.exchangeRate || "";
-  openModal(elements.settingsModal);
+  if (appState.exchangeRate) {
+    elements.exchangeRateInput.value = appState.exchangeRate;
+  } else {
+    elements.exchangeRateInput.value = "";
+  }
+  openModal(elements.syncModal);
 }
 
 function generateMagicLink() {
   if (!appState.syncConfig) {
-    showStatus("يجب حفظ إعدادات المزامنة أولاً.", "error");
+    showStatus("يجب حفظ الإعدادات أولاً.", "error");
     return;
   }
   const { magicLinkContainer, magicLinkOutput } = getDOMElements();
@@ -366,10 +348,8 @@ async function handleRestoreBackup(event) {
 }
 
 export function setupSyncListeners(elements) {
-  setupSettingsTabs(elements);
-
-  elements.settingsBtn.addEventListener("click", () => {
-    populateSettingsModal();
+  elements.syncSettingsBtn.addEventListener("click", () => {
+    populateSyncModal();
     const { magicLinkContainer } = getDOMElements();
     magicLinkContainer.classList.add("view-hidden");
 
@@ -393,43 +373,52 @@ export function setupSyncListeners(elements) {
       }
     });
   });
-
-  elements.closeSettingsBtn.addEventListener("click", () =>
-    elements.settingsModal.close()
-  );
-  elements.cancelSettingsBtn.addEventListener("click", () =>
-    elements.settingsModal.close()
+  elements.cancelSyncBtn.addEventListener("click", () =>
+    elements.syncModal.close()
   );
 
-  elements.settingsForm.addEventListener("submit", async e => {
+  elements.syncForm.addEventListener("submit", async e => {
     e.preventDefault();
     appState.syncConfig = {
       username: elements.githubUsernameInput.value.trim(),
       repo: elements.githubRepoInput.value.trim(),
       pat: elements.githubPatInput.value.trim(),
     };
-    appState.currentUser = elements.currentUserNameInput.value.trim() || "المستخدم";
-    appState.exchangeRate = parseFloat(elements.exchangeRateInput.value) || 0;
-    
+    appState.exchangeRate =
+      parseFloat(document.getElementById("exchange-rate").value) || 0;
     saveConfig();
-    elements.settingsModal.close();
-    showStatus("جاري حفظ الإعدادات وإعادة المزامنة...", "syncing");
+    elements.syncModal.close();
     await initializeApp();
+  });
+  const advancedSettingsToggle = document.getElementById(
+    "advanced-settings-toggle"
+  );
+  const advancedSettingsContainer = document.getElementById(
+    "advanced-settings-container"
+  );
+  advancedSettingsToggle.addEventListener("click", () => {
+    advancedSettingsToggle.classList.toggle("open");
+    advancedSettingsContainer.classList.toggle("open");
   });
 
   elements.cleanupImagesBtn.addEventListener("click", handleImageCleanup);
   elements.downloadBackupBtn.addEventListener("click", handleDownloadBackup);
   elements.restoreBackupInput.addEventListener("change", handleRestoreBackup);
-  elements.backupToTelegramBtn.addEventListener("click", handleBackupToTelegram);
-  elements.manualArchiveBtn.addEventListener("click", handleManualArchive);
-  elements.viewArchivesBtn.addEventListener("click", openArchiveBrowser);
+  document
+    .getElementById("backup-to-telegram-btn")
+    .addEventListener("click", handleBackupToTelegram);
+  document
+    .getElementById("manual-archive-btn")
+    .addEventListener("click", handleManualArchive);
+  document
+    .getElementById("view-archives-btn")
+    .addEventListener("click", openArchiveBrowser);
   elements.generateMagicLinkBtn.addEventListener("click", generateMagicLink);
   document
     .getElementById("close-archive-browser-btn")
     .addEventListener("click", () =>
       document.getElementById("archive-browser-modal").close()
     );
-
   document
     .getElementById("archive-list-container")
     .addEventListener("click", async e => {
@@ -447,7 +436,7 @@ export function setupSyncListeners(elements) {
               `Delete archive file: ${path}`
             );
             showStatus("تم حذف الأرشيف بنجاح!", "success");
-            openArchiveBrowser(); 
+            openArchiveBrowser();
           } catch (error) {
             showStatus(`فشل حذف الأرشيف: ${error.message}`, "error", {
               duration: 5000,
@@ -495,4 +484,4 @@ export function setupSyncListeners(elements) {
         detailsContainer.innerHTML = `<p style="color: var(--danger-color);">فشل تحميل الملف: ${error.message}</p>`;
       }
     });
-  }
+               }
