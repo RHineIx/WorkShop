@@ -1,68 +1,81 @@
 /* css/components/_activity-log.css */
 
 .activity-log-container h2 {
-    margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
 }
 
 .log-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    background-color: var(--border-color);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-sm);
-    overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background-color: var(--border-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  overflow: hidden;
 }
 
 .log-entry {
-    background-color: var(--surface-color);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-    padding: var(--spacing-md);
-    transition: background-color var(--transition-speed);
+  background-color: var(--surface-color);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  transition: background-color var(--transition-speed);
 }
 .log-entry:hover {
-    background-color: var(--bg-color);
+  background-color: var(--bg-color);
 }
 
 .log-icon {
-    flex-shrink: 0;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 20px;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
 }
-.log-icon.create { background-color: var(--success-color); }
-.log-icon.update { background-color: var(--warning-color); }
-.log-icon.delete { background-color: var(--danger-color); }
-.log-icon.sale { background-color: #3b82f6; } /* Info color */
+.log-icon.create {
+  background-color: var(--success-color);
+}
+.log-icon.update {
+  background-color: var(--warning-color);
+}
+.log-icon.delete {
+  background-color: var(--danger-color);
+}
+.log-icon.sale {
+  background-color: #3b82f6;
+} /* Info color */
 
 .log-content {
-    flex-grow: 1;
+  flex-grow: 1;
 }
 
 .log-description {
-    font-size: 0.95rem;
-    font-weight: 500;
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 .log-description strong {
-    color: var(--accent-color);
+  color: var(--accent-color);
 }
 .log-description .old-value {
-    text-decoration: line-through;
-    color: var(--danger-color);
+  text-decoration: line-through;
+  color: var(--danger-color);
 }
 .log-description .new-value {
-    color: var(--success-color);
-    font-weight: 700;
+  color: var(--success-color);
+  font-weight: 700;
 }
 
 .log-meta {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.log-meta .log-user {
+  color: var(--accent-color);
+  font-weight: 700;
 }
