@@ -2,11 +2,15 @@
 import { appState } from "./state.js";
 import { fetchImageWithAuth } from "./api.js";
 import { elements } from "./dom.js";
-import { filterAndRenderItems, renderDashboard, renderAuditLog } from "./renderer.js"; // MODIFIED
+import {
+  filterAndRenderItems,
+  renderDashboard,
+  renderAuditLog,
+} from "./renderer.js";
 import { showStatus } from "./notifications.js";
+import { pushState } from "./navigation.js";
 
 let countdownInterval = null;
-
 export function getDOMElements() {
   return elements;
 }
@@ -51,7 +55,6 @@ export function updateRateLimitDisplay() {
       elements.rateLimitDisplay.textContent = `${remaining}/${limit} طلبات متبقية | إعادة التعيين بعد ${minutes}د ${seconds}ث`;
     }
   };
-
   clearInterval(countdownInterval);
   updateDisplay();
   countdownInterval = setInterval(updateDisplay, 1000);
@@ -82,14 +85,20 @@ export function openModal(dialogElement) {
     document.body.style.top = `-${appState.scrollPosition}px`;
     document.body.classList.add("body-scroll-locked");
   }
+  pushState();
   dialogElement.addEventListener("close", handleModalClose, { once: true });
   appState.modalStack.push(dialogElement);
   dialogElement.appendChild(elements.toastContainer);
   dialogElement.showModal();
 }
 
-// MODIFIED to handle the new view
 export function toggleView(viewToShow) {
+  if (appState.currentView !== "inventory" && viewToShow === "inventory") {
+    // This case is handled by the back button popstate, so we don't push a new state.
+  } else if (appState.currentView !== viewToShow && viewToShow !== "inventory") {
+    pushState();
+  }
+
   appState.currentView = viewToShow;
   const isInventory = viewToShow === "inventory";
   const isDashboard = viewToShow === "dashboard";
@@ -97,7 +106,10 @@ export function toggleView(viewToShow) {
 
   elements.inventoryViewContainer.classList.toggle("view-hidden", !isInventory);
   elements.dashboardViewContainer.classList.toggle("view-hidden", !isDashboard);
-  elements.activityLogViewContainer.classList.toggle("view-hidden", !isActivityLog);
+  elements.activityLogViewContainer.classList.toggle(
+    "view-hidden",
+    !isActivityLog
+  );
 
   elements.inventoryToggleBtn.classList.remove("active-view-btn");
   elements.dashboardToggleBtn.classList.remove("active-view-btn");
@@ -126,7 +138,6 @@ export function setTheme(themeName) {
   const oldBgColor = getComputedStyle(document.body).backgroundColor;
   overlay.style.backgroundColor = oldBgColor;
   overlay.classList.add("visible");
-
   setTimeout(() => {
     document.body.className = `theme-${themeName}`;
     const icon = elements.themeToggleBtn.querySelector("iconify-icon");
@@ -141,7 +152,6 @@ export function setTheme(themeName) {
     localStorage.setItem("inventoryAppTheme", themeName);
     overlay.classList.remove("visible");
   }, 300);
-
   setTimeout(() => {
     overlay.dataset.transitioning = "false";
   }, 600);
@@ -150,18 +160,17 @@ export function setTheme(themeName) {
 export function updateCurrencyDisplay() {
   const isIQD = appState.activeCurrency === "IQD";
   elements.currencyToggleBtn.textContent = isIQD ? "د.ع" : "$";
-  
   switch (appState.currentView) {
-    case 'inventory':
+    case "inventory":
       filterAndRenderItems();
       if (elements.detailsModal.open && appState.currentItemId) {
         openDetailsModal(appState.currentItemId);
       }
       break;
-    case 'dashboard':
+    case "dashboard":
       renderDashboard();
       break;
-    case 'activity-log':
+    case "activity-log":
       renderAuditLog();
       break;
   }
@@ -179,7 +188,6 @@ export function updateSaleTotal() {
 export function openDetailsModal(itemId) {
   const item = appState.inventory.items.find(i => i.id === itemId);
   if (!item) return;
-
   appState.currentItemId = itemId;
   appState.itemStateBeforeEdit = JSON.parse(JSON.stringify(item));
   elements.detailsName.textContent = item.name;
@@ -198,7 +206,6 @@ export function openDetailsModal(itemId) {
     item.sellPriceUsd || 0
   ).toLocaleString()}`;
   elements.detailsNotesContent.textContent = item.notes || "لا توجد ملاحظات.";
-
   const pnContainer = elements.detailsPnGridContainer;
   pnContainer.innerHTML = "";
   pnContainer.classList.add("view-hidden");
@@ -222,7 +229,6 @@ export function openDetailsModal(itemId) {
         showStatus("فشل النسخ إلى الحافظة", "error");
       });
   };
-
   if (item.oemPartNumber || item.compatiblePartNumber) {
     const pnGrid = document.createElement("div");
     pnGrid.className = "details-pn-grid";
@@ -231,7 +237,6 @@ export function openDetailsModal(itemId) {
       label.className = "pn-grid-label";
       label.textContent = "رمز OEM";
       pnGrid.appendChild(label);
-
       const valueContainer = document.createElement("div");
       valueContainer.className = "pn-grid-value";
       const tag = document.createElement("span");
