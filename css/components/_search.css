@@ -28,6 +28,8 @@
   height: 100%;
   flex-grow: 1;
   color: var(--text-primary);
+  font-family: var(--font-family);
+  font-weight: 700;
 }
 
 /* Remove default focus outline for the input, as the parent container handles it */
