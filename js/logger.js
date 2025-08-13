@@ -7,7 +7,6 @@ export const ACTION_TYPES = {
     ITEM_CREATED: 'ITEM_CREATED',
     ITEM_DELETED: 'ITEM_DELETED',
     SALE_RECORDED: 'SALE_RECORDED',
-    // Specific updates for clarity in the log
     NAME_UPDATED: 'NAME_UPDATED',
     SKU_UPDATED: 'SKU_UPDATED',
     CATEGORY_UPDATED: 'CATEGORY_UPDATED',
@@ -20,6 +19,7 @@ export const ACTION_TYPES = {
 
 /**
  * Creates a log entry and saves it.
+ * This function will now throw an error if the remote save fails.
  * @param {object} logData - The data for the log entry.
  * @param {string} logData.action - One of the ACTION_TYPES.
  * @param {string} logData.targetId - The ID of the item affected.
@@ -39,18 +39,13 @@ export async function logAction({ action, targetId, targetName, details = {} }) 
 
     appState.auditLog.push(newLogEntry);
     
-    // For immediate UI update and local persistence
     saveLocalData();
     const { renderAuditLog } = await import('./renderer.js');
     if (appState.currentView === 'activity-log') {
         renderAuditLog();
     }
 
-    // Save to remote
-    try {
-        await api.saveAuditLog();
-    } catch (error) {
-        console.error("Failed to save audit log to remote:", error);
-        // The log is saved locally, it will sync on the next successful operation.
-    }
+    // Remote save operation. The try...catch block is removed.
+    // If api.saveAuditLog() fails, the error will be propagated up to the caller.
+    await api.saveAuditLog();
 }
