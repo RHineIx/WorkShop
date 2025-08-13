@@ -5,26 +5,44 @@ import { saveConfig, initializeApp, saveLocalData } from "../app.js";
 import { sanitizeHTML } from "../utils.js";
 import { showStatus, hideSyncStatus } from "../notifications.js";
 import { getDOMElements, openModal } from "../ui.js";
-import { elements } from "../dom.js"; // تم التعديل هنا: إضافة استيراد elements
 
-// تم التعديل هنا: إضافة الدالة التي تم حذفها بالخطأ
-function populateSyncModal() {
+function setupSettingsTabs(elements) {
+  elements.settingsNavList.addEventListener("click", e => {
+    e.preventDefault();
+    const targetLink = e.target.closest(".settings-nav-link");
+    if (!targetLink) return;
+
+    // Deactivate all links and hide all panes
+    elements.settingsNavList
+      .querySelectorAll(".settings-nav-link")
+      .forEach(link => link.classList.remove("active"));
+    elements.settingsPanes.forEach(pane => pane.classList.remove("active"));
+
+    // Activate the clicked link and show the corresponding pane
+    targetLink.classList.add("active");
+    const targetPaneId = targetLink.dataset.target;
+    const targetPane = document.getElementById(targetPaneId);
+    if (targetPane) {
+      targetPane.classList.add("active");
+    }
+  });
+}
+
+function populateSettingsModal() {
+  const elements = getDOMElements();
   if (appState.syncConfig) {
     elements.githubUsernameInput.value = appState.syncConfig.username;
     elements.githubRepoInput.value = appState.syncConfig.repo;
     elements.githubPatInput.value = appState.syncConfig.pat;
   }
-  if (appState.exchangeRate) {
-    elements.exchangeRateInput.value = appState.exchangeRate;
-  } else {
-    elements.exchangeRateInput.value = "";
-  }
-  openModal(elements.syncModal);
+  elements.currentUserNameInput.value = appState.currentUser;
+  elements.exchangeRateInput.value = appState.exchangeRate || "";
+  openModal(elements.settingsModal);
 }
 
 function generateMagicLink() {
   if (!appState.syncConfig) {
-    showStatus("يجب حفظ الإعدادات أولاً.", "error");
+    showStatus("يجب حفظ إعدادات المزامنة أولاً.", "error");
     return;
   }
   const { magicLinkContainer, magicLinkOutput } = getDOMElements();
@@ -66,7 +84,6 @@ async function handleImageCleanup() {
     const orphanedImages = allRepoImages.filter(
       repoImage => !usedImages.has(repoImage.path)
     );
-
     if (orphanedImages.length === 0) {
       hideSyncStatus();
       showStatus("لا توجد صور غير مستخدمة ليتم حذفها.", "success");
@@ -117,11 +134,9 @@ async function handleManualArchive() {
     acc[monthKey].push(sale);
     return acc;
   }, {});
-
   const archivesToCreate = Object.entries(salesByMonth).filter(
     ([key]) => key !== currentMonthKey
   );
-
   if (archivesToCreate.length === 0) {
     showStatus("لا توجد مبيعات من الشهور السابقة لأرشفتها.", "success");
     return;
@@ -151,7 +166,6 @@ async function handleManualArchive() {
     appState.inventory.lastArchiveTimestamp = new Date().toLocaleString(
       "ar-EG"
     );
-
     await api.saveSales();
     await api.saveToGitHub();
     saveLocalData();
@@ -193,7 +207,6 @@ async function openArchiveBrowser() {
     "<p>اختر شهراً من القائمة أعلاه لعرض تفاصيله.</p>";
 
   openModal(modal);
-
   try {
     const files = await api.getGitHubDirectoryListing("archives");
     if (files.length === 0) {
@@ -295,7 +308,6 @@ async function handleBackupToTelegram() {
 async function handleRestoreBackup(event) {
   const file = event.target.files[0];
   if (!file) return;
-
   if (
     !confirm(
       "هل أنت متأكد من رغبتك في استعادة البيانات من هذا الملف؟ سيتم الكتابة فوق جميع بياناتك الحالية."
@@ -311,7 +323,6 @@ async function handleRestoreBackup(event) {
     const inventoryFile = zip.file("inventory.json");
     const salesFile = zip.file("sales.json");
     const suppliersFile = zip.file("suppliers.json");
-
     if (!inventoryFile || !salesFile || !suppliersFile) {
       throw new Error(
         "ملف النسخة الاحتياطية غير صالح أو لا يحتوي على الملفات المطلوبة."
@@ -321,7 +332,6 @@ async function handleRestoreBackup(event) {
     const inventoryData = JSON.parse(await inventoryFile.async("string"));
     const salesData = JSON.parse(await salesFile.async("string"));
     const suppliersData = JSON.parse(await suppliersFile.async("string"));
-
     if (
       !inventoryData.items ||
       !Array.isArray(salesData) ||
@@ -356,8 +366,10 @@ async function handleRestoreBackup(event) {
 }
 
 export function setupSyncListeners(elements) {
-  elements.syncSettingsBtn.addEventListener("click", () => {
-    populateSyncModal();
+  setupSettingsTabs(elements);
+
+  elements.settingsBtn.addEventListener("click", () => {
+    populateSettingsModal();
     const { magicLinkContainer } = getDOMElements();
     magicLinkContainer.classList.add("view-hidden");
 
@@ -381,49 +393,37 @@ export function setupSyncListeners(elements) {
       }
     });
   });
-  elements.cancelSyncBtn.addEventListener("click", () =>
-    elements.syncModal.close()
+
+  elements.closeSettingsBtn.addEventListener("click", () =>
+    elements.settingsModal.close()
+  );
+  elements.cancelSettingsBtn.addEventListener("click", () =>
+    elements.settingsModal.close()
   );
 
-  elements.syncForm.addEventListener("submit", async e => {
+  elements.settingsForm.addEventListener("submit", async e => {
     e.preventDefault();
     appState.syncConfig = {
       username: elements.githubUsernameInput.value.trim(),
       repo: elements.githubRepoInput.value.trim(),
       pat: elements.githubPatInput.value.trim(),
     };
-    appState.exchangeRate =
-      parseFloat(document.getElementById("exchange-rate").value) || 0;
+    appState.currentUser = elements.currentUserNameInput.value.trim() || "المستخدم";
+    appState.exchangeRate = parseFloat(elements.exchangeRateInput.value) || 0;
+    
     saveConfig();
-    elements.syncModal.close();
+    elements.settingsModal.close();
+    showStatus("جاري حفظ الإعدادات وإعادة المزامنة...", "syncing");
     await initializeApp();
-  });
-
-  const advancedSettingsToggle = document.getElementById(
-    "advanced-settings-toggle"
-  );
-  const advancedSettingsContainer = document.getElementById(
-    "advanced-settings-container"
-  );
-  advancedSettingsToggle.addEventListener("click", () => {
-    advancedSettingsToggle.classList.toggle("open");
-    advancedSettingsContainer.classList.toggle("open");
   });
 
   elements.cleanupImagesBtn.addEventListener("click", handleImageCleanup);
   elements.downloadBackupBtn.addEventListener("click", handleDownloadBackup);
   elements.restoreBackupInput.addEventListener("change", handleRestoreBackup);
-  document
-    .getElementById("backup-to-telegram-btn")
-    .addEventListener("click", handleBackupToTelegram);
-  document
-    .getElementById("manual-archive-btn")
-    .addEventListener("click", handleManualArchive);
-  document
-    .getElementById("view-archives-btn")
-    .addEventListener("click", openArchiveBrowser);
+  elements.backupToTelegramBtn.addEventListener("click", handleBackupToTelegram);
+  elements.manualArchiveBtn.addEventListener("click", handleManualArchive);
+  elements.viewArchivesBtn.addEventListener("click", openArchiveBrowser);
   elements.generateMagicLinkBtn.addEventListener("click", generateMagicLink);
-
   document
     .getElementById("close-archive-browser-btn")
     .addEventListener("click", () =>
@@ -447,7 +447,7 @@ export function setupSyncListeners(elements) {
               `Delete archive file: ${path}`
             );
             showStatus("تم حذف الأرشيف بنجاح!", "success");
-            openArchiveBrowser();
+            openArchiveBrowser(); 
           } catch (error) {
             showStatus(`فشل حذف الأرشيف: ${error.message}`, "error", {
               duration: 5000,
@@ -469,7 +469,6 @@ export function setupSyncListeners(elements) {
       }
       item.classList.add("active");
       detailsContainer.innerHTML = "<p>جاري تحميل البيانات...</p>";
-
       try {
         const data = await api.fetchGitHubFile(item.dataset.path);
         const symbol = appState.activeCurrency === "IQD" ? "د.ع" : "$";
@@ -496,4 +495,4 @@ export function setupSyncListeners(elements) {
         detailsContainer.innerHTML = `<p style="color: var(--danger-color);">فشل تحميل الملف: ${error.message}</p>`;
       }
     });
-}
+  }
