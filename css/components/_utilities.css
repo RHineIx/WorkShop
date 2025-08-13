@@ -87,13 +87,8 @@
   background-color: var(--text-secondary);
 }
 
-#sync-form p a {
-  color: var(--accent-color);
-  font-weight: bold;
-  text-decoration: none;
-}
-#sync-form p a:hover {
-  text-decoration: underline;
+#sync-form p{
+  text-align: center;
 }
 .bestsellers-container {
   margin-top: var(--spacing-lg);
