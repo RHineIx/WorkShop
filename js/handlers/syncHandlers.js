@@ -4,7 +4,23 @@ import * as api from "../api.js";
 import { saveConfig, initializeApp, saveLocalData } from "../app.js";
 import { sanitizeHTML } from "../utils.js";
 import { showStatus, hideSyncStatus } from "../notifications.js";
-import { getDOMElements, openModal, populateSyncModal } from "../ui.js";
+import { getDOMElements, openModal } from "../ui.js";
+import { elements } from "../dom.js"; // تم التعديل هنا: إضافة استيراد elements
+
+// تم التعديل هنا: إضافة الدالة التي تم حذفها بالخطأ
+function populateSyncModal() {
+  if (appState.syncConfig) {
+    elements.githubUsernameInput.value = appState.syncConfig.username;
+    elements.githubRepoInput.value = appState.syncConfig.repo;
+    elements.githubPatInput.value = appState.syncConfig.pat;
+  }
+  if (appState.exchangeRate) {
+    elements.exchangeRateInput.value = appState.exchangeRate;
+  } else {
+    elements.exchangeRateInput.value = "";
+  }
+  openModal(elements.syncModal);
+}
 
 function generateMagicLink() {
   if (!appState.syncConfig) {
@@ -33,7 +49,11 @@ async function handleImageCleanup() {
     showStatus("يرجى إعداد المزامنة أولاً.", "error", { duration: 5000 });
     return;
   }
-  if (!confirm("هل أنت متأكد من رغبتك في حذف جميع الصور غير المستخدمة نهائياً من المستودع؟ لا يمكن التراجع عن هذا الإجراء.")) {
+  if (
+    !confirm(
+      "هل أنت متأكد من رغبتك في حذف جميع الصور غير المستخدمة نهائياً من المستودع؟ لا يمكن التراجع عن هذا الإجراء."
+    )
+  ) {
     return;
   }
 
@@ -53,7 +73,10 @@ async function handleImageCleanup() {
       return;
     }
 
-    showStatus(`تم العثور على ${orphanedImages.length} صورة... جاري الحذف.`, "syncing");
+    showStatus(
+      `تم العثور على ${orphanedImages.length} صورة... جاري الحذف.`,
+      "syncing"
+    );
     let deletedCount = 0;
     for (const image of orphanedImages) {
       await api.deleteFileFromGitHub(
@@ -82,10 +105,14 @@ async function handleManualArchive() {
   }
 
   const now = new Date();
-  const currentMonthKey = `${now.getFullYear()}_${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const currentMonthKey = `${now.getFullYear()}_${String(
+    now.getMonth() + 1
+  ).padStart(2, "0")}`;
   const salesByMonth = appState.sales.reduce((acc, sale) => {
     const saleDate = new Date(sale.saleDate);
-    const monthKey = `${saleDate.getFullYear()}_${String(saleDate.getMonth() + 1).padStart(2, "0")}`;
+    const monthKey = `${saleDate.getFullYear()}_${String(
+      saleDate.getMonth() + 1
+    ).padStart(2, "0")}`;
     if (!acc[monthKey]) acc[monthKey] = [];
     acc[monthKey].push(sale);
     return acc;
@@ -100,7 +127,11 @@ async function handleManualArchive() {
     return;
   }
 
-  if (!confirm(`سيتم أرشفة المبيعات لـ ${archivesToCreate.length} شهر. هل أنت متأكد؟`)) {
+  if (
+    !confirm(
+      `سيتم أرشفة المبيعات لـ ${archivesToCreate.length} شهر. هل أنت متأكد؟`
+    )
+  ) {
     return;
   }
 
@@ -117,7 +148,9 @@ async function handleManualArchive() {
     }
 
     appState.sales = salesByMonth[currentMonthKey] || [];
-    appState.inventory.lastArchiveTimestamp = new Date().toLocaleString("ar-EG");
+    appState.inventory.lastArchiveTimestamp = new Date().toLocaleString(
+      "ar-EG"
+    );
 
     await api.saveSales();
     await api.saveToGitHub();
@@ -125,7 +158,11 @@ async function handleManualArchive() {
     updateLastArchiveDateDisplay();
 
     hideSyncStatus();
-    showStatus(`تمت أرشفة ${archivesToCreate.length} شهر من السجلات بنجاح.`, "success", { duration: 5000 });
+    showStatus(
+      `تمت أرشفة ${archivesToCreate.length} شهر من السجلات بنجاح.`,
+      "success",
+      { duration: 5000 }
+    );
   } catch (error) {
     console.error("Manual archive failed:", error);
     hideSyncStatus();
@@ -152,7 +189,8 @@ async function openArchiveBrowser() {
   const listContainer = document.getElementById("archive-list-container");
   const detailsContainer = document.getElementById("archive-details-container");
   listContainer.innerHTML = "<p>جاري تحميل قائمة الأرشيف...</p>";
-  detailsContainer.innerHTML = "<p>اختر شهراً من القائمة أعلاه لعرض تفاصيله.</p>";
+  detailsContainer.innerHTML =
+    "<p>اختر شهراً من القائمة أعلاه لعرض تفاصيله.</p>";
 
   openModal(modal);
 
@@ -172,7 +210,10 @@ async function openArchiveBrowser() {
 
         const itemText = document.createElement("span");
         itemText.className = "archive-item-text";
-        itemText.textContent = file.name.replace("sales_", "").replace(".json", "").replace("_", "-");
+        itemText.textContent = file.name
+          .replace("sales_", "")
+          .replace(".json", "")
+          .replace("_", "-");
         item.appendChild(itemText);
 
         const deleteButton = document.createElement("button");
@@ -201,7 +242,10 @@ async function handleDownloadBackup() {
     const blob = await zip.generateAsync({ type: "blob" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+    const timestamp = new Date()
+      .toISOString()
+      .slice(0, 19)
+      .replace(/[:T]/g, "-");
     link.download = `rhineix-workshop-backup-${timestamp}.zip`;
     document.body.appendChild(link);
     link.click();
@@ -220,31 +264,43 @@ async function handleDownloadBackup() {
 }
 
 async function handleBackupToTelegram() {
-    if (!appState.syncConfig) {
-        showStatus("يرجى إعداد المزامنة أولاً.", "error");
-        return;
+  if (!appState.syncConfig) {
+    showStatus("يرجى إعداد المزامنة أولاً.", "error");
+    return;
+  }
+  if (
+    !confirm("هل أنت متأكد من رغبتك في إنشاء وإرسال نسخة احتياطية إلى تليجرام؟")
+  ) {
+    return;
+  }
+  showStatus("جاري طلب النسخة الاحتياطية...", "syncing");
+  try {
+    const success = await api.triggerBackupWorkflow();
+    if (success) {
+      hideSyncStatus();
+      showStatus(
+        "تم إرسال الطلب بنجاح! ستصلك النسخة الاحتياطية على تليجرام قريبًا.",
+        "success",
+        { duration: 6000 }
+      );
     }
-    if (!confirm("هل أنت متأكد من رغبتك في إنشاء وإرسال نسخة احتياطية إلى تليجرام؟")) {
-        return;
-    }
-    showStatus("جاري طلب النسخة الاحتياطية...", "syncing");
-    try {
-        const success = await api.triggerBackupWorkflow();
-        if (success) {
-            hideSyncStatus();
-            showStatus("تم إرسال الطلب بنجاح! ستصلك النسخة الاحتياطية على تليجرام قريبًا.", "success", { duration: 6000 });
-        }
-    } catch (error) {
-        hideSyncStatus();
-        showStatus(`فشل إرسال الطلب: ${error.message}`, "error", { duration: 6000 });
-    }
+  } catch (error) {
+    hideSyncStatus();
+    showStatus(`فشل إرسال الطلب: ${error.message}`, "error", {
+      duration: 6000,
+    });
+  }
 }
 
 async function handleRestoreBackup(event) {
   const file = event.target.files[0];
   if (!file) return;
 
-  if (!confirm("هل أنت متأكد من رغبتك في استعادة البيانات من هذا الملف؟ سيتم الكتابة فوق جميع بياناتك الحالية.")) {
+  if (
+    !confirm(
+      "هل أنت متأكد من رغبتك في استعادة البيانات من هذا الملف؟ سيتم الكتابة فوق جميع بياناتك الحالية."
+    )
+  ) {
     event.target.value = "";
     return;
   }
@@ -257,15 +313,21 @@ async function handleRestoreBackup(event) {
     const suppliersFile = zip.file("suppliers.json");
 
     if (!inventoryFile || !salesFile || !suppliersFile) {
-      throw new Error("ملف النسخة الاحتياطية غير صالح أو لا يحتوي على الملفات المطلوبة.");
+      throw new Error(
+        "ملف النسخة الاحتياطية غير صالح أو لا يحتوي على الملفات المطلوبة."
+      );
     }
 
     const inventoryData = JSON.parse(await inventoryFile.async("string"));
     const salesData = JSON.parse(await salesFile.async("string"));
     const suppliersData = JSON.parse(await suppliersFile.async("string"));
 
-    if (!inventoryData.items || !Array.isArray(salesData) || !Array.isArray(suppliersData)) {
-        throw new Error("محتوى ملف النسخة الاحتياطية غير صالح.");
+    if (
+      !inventoryData.items ||
+      !Array.isArray(salesData) ||
+      !Array.isArray(suppliersData)
+    ) {
+      throw new Error("محتوى ملف النسخة الاحتياطية غير صالح.");
     }
 
     appState.inventory = inventoryData;
@@ -274,14 +336,20 @@ async function handleRestoreBackup(event) {
 
     saveLocalData();
     hideSyncStatus();
-    showStatus("تمت استعادة البيانات بنجاح! سيتم إعادة تحميل التطبيق.", "success", { duration: 4000 });
+    showStatus(
+      "تمت استعادة البيانات بنجاح! سيتم إعادة تحميل التطبيق.",
+      "success",
+      { duration: 4000 }
+    );
     setTimeout(() => {
       location.reload();
     }, 4000);
   } catch (error) {
     console.error("Restore failed:", error);
     hideSyncStatus();
-    showStatus(`فشلت عملية الاستعادة: ${error.message}`, "error", { duration: 5000 });
+    showStatus(`فشلت عملية الاستعادة: ${error.message}`, "error", {
+      duration: 5000,
+    });
   } finally {
     event.target.value = "";
   }
@@ -313,23 +381,30 @@ export function setupSyncListeners(elements) {
       }
     });
   });
-  elements.cancelSyncBtn.addEventListener("click", () => elements.syncModal.close());
+  elements.cancelSyncBtn.addEventListener("click", () =>
+    elements.syncModal.close()
+  );
 
-  elements.syncForm.addEventListener("submit", async (e) => {
+  elements.syncForm.addEventListener("submit", async e => {
     e.preventDefault();
     appState.syncConfig = {
       username: elements.githubUsernameInput.value.trim(),
       repo: elements.githubRepoInput.value.trim(),
       pat: elements.githubPatInput.value.trim(),
     };
-    appState.exchangeRate = parseFloat(document.getElementById("exchange-rate").value) || 0;
+    appState.exchangeRate =
+      parseFloat(document.getElementById("exchange-rate").value) || 0;
     saveConfig();
     elements.syncModal.close();
     await initializeApp();
   });
 
-  const advancedSettingsToggle = document.getElementById("advanced-settings-toggle");
-  const advancedSettingsContainer = document.getElementById("advanced-settings-container");
+  const advancedSettingsToggle = document.getElementById(
+    "advanced-settings-toggle"
+  );
+  const advancedSettingsContainer = document.getElementById(
+    "advanced-settings-container"
+  );
   advancedSettingsToggle.addEventListener("click", () => {
     advancedSettingsToggle.classList.toggle("open");
     advancedSettingsContainer.classList.toggle("open");
@@ -338,36 +413,56 @@ export function setupSyncListeners(elements) {
   elements.cleanupImagesBtn.addEventListener("click", handleImageCleanup);
   elements.downloadBackupBtn.addEventListener("click", handleDownloadBackup);
   elements.restoreBackupInput.addEventListener("change", handleRestoreBackup);
-  document.getElementById("backup-to-telegram-btn").addEventListener("click", handleBackupToTelegram);
-  document.getElementById("manual-archive-btn").addEventListener("click", handleManualArchive);
-  document.getElementById("view-archives-btn").addEventListener("click", openArchiveBrowser);
+  document
+    .getElementById("backup-to-telegram-btn")
+    .addEventListener("click", handleBackupToTelegram);
+  document
+    .getElementById("manual-archive-btn")
+    .addEventListener("click", handleManualArchive);
+  document
+    .getElementById("view-archives-btn")
+    .addEventListener("click", openArchiveBrowser);
   elements.generateMagicLinkBtn.addEventListener("click", generateMagicLink);
 
-  document.getElementById("close-archive-browser-btn").addEventListener("click", () => document.getElementById("archive-browser-modal").close());
+  document
+    .getElementById("close-archive-browser-btn")
+    .addEventListener("click", () =>
+      document.getElementById("archive-browser-modal").close()
+    );
 
-  document.getElementById("archive-list-container").addEventListener("click", async (e) => {
+  document
+    .getElementById("archive-list-container")
+    .addEventListener("click", async e => {
       const deleteButton = e.target.closest(".archive-delete-btn");
       if (deleteButton) {
         e.stopPropagation();
         const path = deleteButton.dataset.path;
         const sha = deleteButton.dataset.sha;
         if (confirm(`هل أنت متأكد من حذف هذا الأرشيف (${path}) نهائياً؟`)) {
-            showStatus("جاري حذف الأرشيف...", "syncing");
-            try {
-                await api.deleteFileFromGitHub(path, sha, `Delete archive file: ${path}`);
-                showStatus("تم حذف الأرشيف بنجاح!", "success");
-                openArchiveBrowser();
-            } catch (error) {
-                showStatus(`فشل حذف الأرشيف: ${error.message}`, "error", { duration: 5000 });
-            }
+          showStatus("جاري حذف الأرشيف...", "syncing");
+          try {
+            await api.deleteFileFromGitHub(
+              path,
+              sha,
+              `Delete archive file: ${path}`
+            );
+            showStatus("تم حذف الأرشيف بنجاح!", "success");
+            openArchiveBrowser();
+          } catch (error) {
+            showStatus(`فشل حذف الأرشيف: ${error.message}`, "error", {
+              duration: 5000,
+            });
+          }
         }
         return;
       }
-      
+
       const item = e.target.closest(".archive-item");
       if (!item) return;
 
-      const detailsContainer = document.getElementById("archive-details-container");
+      const detailsContainer = document.getElementById(
+        "archive-details-container"
+      );
       const container = item.parentElement;
       if (container.querySelector(".active")) {
         container.querySelector(".active").classList.remove("active");
@@ -380,11 +475,20 @@ export function setupSyncListeners(elements) {
         const symbol = appState.activeCurrency === "IQD" ? "د.ع" : "$";
         let tableHTML = `<table class="archive-table"><thead><tr><th>المنتج</th><th>الكمية</th><th>السعر</th><th>التاريخ</th></tr></thead><tbody>`;
         data.forEach(sale => {
-            const price = appState.activeCurrency === "IQD" ? sale.sellPriceIqd : sale.sellPriceUsd;
-            tableHTML += `<tr><td>${sale.itemName}</td><td>${sale.quantitySold}</td><td>${price.toLocaleString()} ${symbol}</td><td>${sale.saleDate}</td></tr>`;
-            if (sale.notes) {
-                tableHTML += `<tr class="archive-notes-row"><td colspan="4"><iconify-icon icon="material-symbols:notes-outline-rounded"></iconify-icon> ${sanitizeHTML(sale.notes)}</td></tr>`;
-            }
+          const price =
+            appState.activeCurrency === "IQD"
+              ? sale.sellPriceIqd
+              : sale.sellPriceUsd;
+          tableHTML += `<tr><td>${sale.itemName}</td><td>${
+            sale.quantitySold
+          }</td><td>${price.toLocaleString()} ${symbol}</td><td>${
+            sale.saleDate
+          }</td></tr>`;
+          if (sale.notes) {
+            tableHTML += `<tr class="archive-notes-row"><td colspan="4"><iconify-icon icon="material-symbols:notes-outline-rounded"></iconify-icon> ${sanitizeHTML(
+              sale.notes
+            )}</td></tr>`;
+          }
         });
         tableHTML += "</tbody></table>";
         detailsContainer.innerHTML = tableHTML;

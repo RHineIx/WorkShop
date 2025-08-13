@@ -1,9 +1,10 @@
 // js/handlers/inventoryHandlers.js
 import { appState } from "../state.js";
 import { debounce } from "../utils.js";
-import { openSaleModal, openDetailsModal } from "../ui.js";
+import { openDetailsModal } from "../ui.js";
 import { showStatus } from "../notifications.js";
 import { filterAndRenderItems, renderCategoryFilter } from "../renderer.js";
+import { openSaleModal } from "./modalHandlers.js"; // تم التعديل هنا
 import {
   enterSelectionMode,
   exitSelectionMode,
@@ -146,4 +147,4 @@ export function setupInventoryListeners(elements) {
 
     filterAndRenderItems(true);
   });
-  }
+}

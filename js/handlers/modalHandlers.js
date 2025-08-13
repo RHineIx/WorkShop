@@ -5,7 +5,12 @@ import { ConflictError } from "../api.js";
 import { generateUniqueSKU, compressImage } from "../utils.js";
 import { saveLocalData } from "../app.js";
 import { showConfirmationModal } from "../ui_helpers.js";
-import { getDOMElements, openModal, updateSaleTotal } from "../ui.js";
+import {
+  getDOMElements,
+  openModal,
+  updateSaleTotal,
+  openDetailsModal,
+} from "../ui.js";
 import {
   filterAndRenderItems,
   renderCategoryFilter,
@@ -155,7 +160,8 @@ async function handleSaleFormSubmit(e) {
   }
 }
 
-function openItemModal(itemId = null) {
+// تم التعديل هنا: إضافة export
+export function openItemModal(itemId = null) {
   const elements = getDOMElements();
   elements.itemForm.reset();
   appState.selectedImageFile = null;
@@ -213,7 +219,8 @@ function openItemModal(itemId = null) {
   openModal(elements.itemModal);
 }
 
-function openSaleModal(itemId) {
+// تم التعديل هنا: إضافة export
+export function openSaleModal(itemId) {
   const elements = getDOMElements();
   const item = appState.inventory.items.find(i => i.id === itemId);
   if (!item) return;
@@ -327,7 +334,7 @@ async function handleItemFormSubmit(e) {
     getDOMElements().itemModal.close();
     hideSyncStatus();
     showStatus("تم حفظ التغييرات بنجاح!", "success");
-    const { openDetailsModal } = await import("../ui.js");
+
     if (appState.currentItemId === itemData.id) {
       openDetailsModal(itemData.id);
     }
@@ -640,4 +647,4 @@ export function setupModalListeners(elements) {
   document
     .getElementById("sale-price")
     .addEventListener("input", updateSaleTotal);
-  }
+}

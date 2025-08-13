@@ -1,11 +1,23 @@
 // js/app.js
 import { appState } from "./state.js";
 import * as api from "./api.js";
-import * as ui from "./ui.js";
+import {
+  displayVersionInfo,
+  setTheme,
+  toggleView,
+  updateCurrencyDisplay,
+  getDOMElements,
+} from "./ui.js";
+import {
+  renderInventorySkeleton,
+  filterAndRenderItems,
+  renderCategoryFilter,
+  populateCategoryDatalist,
+} from "./renderer.js";
+import { showStatus, hideSyncStatus } from "./notifications.js";
 import { setupEventListeners } from "./eventSetup.js";
-import { setupLayoutAdjustments } from "./layout.js"; // Import the new function
+import { setupLayoutAdjustments } from "./layout.js";
 
-// --- LOCAL STORAGE & CONFIG ---
 export function loadConfig() {
   const savedConfig = localStorage.getItem("inventoryAppSyncConfig");
   if (savedConfig) {
@@ -34,11 +46,10 @@ function handleMagicLink() {
     const encodedData = window.location.hash.substring(7);
     const decodedJson = atob(encodedData);
     const config = JSON.parse(decodedJson);
-
     if (config.username && config.repo && config.pat) {
       appState.syncConfig = config;
       saveConfig();
-      ui.showStatus("تم الإعداد بنجاح!", "success");
+      showStatus("تم الإعداد بنجاح!", "success");
       history.replaceState(
         null,
         "",
@@ -48,7 +59,7 @@ function handleMagicLink() {
     }
   } catch (error) {
     console.error("Failed to process magic link:", error);
-    ui.showStatus("فشل معالجة رابط الإعداد.", "error");
+    showStatus("فشل معالجة رابط الإعداد.", "error");
     history.replaceState(
       null,
       "",
@@ -91,10 +102,10 @@ function handleUrlShortcuts() {
   setTimeout(() => {
     switch (hash) {
       case "#add-item":
-        ui.getDOMElements().addItemBtn.click();
+        getDOMElements().addItemBtn.click();
         break;
       case "#dashboard":
-        ui.toggleView("dashboard");
+        toggleView("dashboard");
         break;
     }
     history.replaceState(
@@ -123,39 +134,39 @@ function registerServiceWorker() {
   }
 }
 
-// --- INITIALIZATION ---
 export async function initializeApp() {
   console.log("Initializing Inventory Management App...");
 
   const magicLinkProcessed = handleMagicLink();
 
   setupEventListeners();
-  setupLayoutAdjustments(); // Call the new layout function
+  setupLayoutAdjustments();
 
   loadConfig();
   const savedTheme = localStorage.getItem("inventoryAppTheme") || "light";
   const savedCurrency = localStorage.getItem("inventoryAppCurrency") || "IQD";
   appState.activeCurrency = savedCurrency;
-  ui.setTheme(savedTheme);
+  setTheme(savedTheme);
 
   try {
     const response = await fetch("version.json?t=" + Date.now());
     if (response.ok) {
       const versionData = await response.json();
-      ui.displayVersionInfo(versionData);
+      displayVersionInfo(versionData);
     }
   } catch (error) {
     console.error("Could not fetch version info:", error);
   }
 
-  ui.renderInventorySkeleton();
+  renderInventorySkeleton();
 
   if (appState.syncConfig) {
-    ui.showStatus("جاري مزامنة البيانات...", "syncing");
+    showStatus("جاري مزامنة البيانات...", "syncing");
     try {
       const [inventoryResult, salesResult, suppliersResult] = await Promise.all(
         [api.fetchFromGitHub(), api.fetchSales(), api.fetchSuppliers()]
       );
+
       if (inventoryResult) {
         appState.inventory = inventoryResult.data;
         appState.fileSha = inventoryResult.sha;
@@ -170,13 +181,13 @@ export async function initializeApp() {
       }
 
       saveLocalData();
-      ui.hideSyncStatus();
+      hideSyncStatus();
       if (!magicLinkProcessed) {
-        ui.showStatus("تمت المزامنة بنجاح!", "success");
+        showStatus("تمت المزامنة بنجاح!", "success");
       }
     } catch (error) {
-      ui.hideSyncStatus();
-      ui.showStatus(`خطأ في المزامنة: ${error.message}`, "error", {
+      hideSyncStatus();
+      showStatus(`خطأ في المزامنة: ${error.message}`, "error", {
         duration: 5000,
       });
       loadLocalData();
@@ -189,11 +200,10 @@ export async function initializeApp() {
     "./handlers/syncHandlers.js"
   );
   updateLastArchiveDateDisplay();
-  ui.filterAndRenderItems();
-  ui.renderCategoryFilter();
-  ui.populateCategoryDatalist();
-  ui.updateCurrencyDisplay();
-
+  filterAndRenderItems();
+  renderCategoryFilter();
+  populateCategoryDatalist();
+  updateCurrencyDisplay();
   handleUrlShortcuts();
   registerServiceWorker();
 
