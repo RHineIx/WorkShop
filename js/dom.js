@@ -17,7 +17,7 @@ export const elements = {
   // Header
   themeToggleBtn: document.getElementById("theme-toggle-btn"),
   addItemBtn: document.getElementById("add-item-btn"),
-  settingsBtn: document.getElementById("settings-btn"),
+  syncSettingsBtn: document.getElementById("sync-settings-btn"),
   currencyToggleBtn: document.getElementById("currency-toggle-btn"),
   inventoryToggleBtn: document.getElementById("inventory-toggle-btn"),
   dashboardToggleBtn: document.getElementById("dashboard-toggle-btn"),
@@ -84,14 +84,10 @@ export const elements = {
   salePriceCurrency: document.getElementById("sale-price-currency"),
   saleTotalPrice: document.getElementById("sale-total-price"),
 
-  // Settings Modal
-  settingsModal: document.getElementById("settings-modal"),
-  settingsForm: document.getElementById("settings-form"),
-  closeSettingsBtn: document.getElementById("close-settings-btn"),
-  cancelSettingsBtn: document.getElementById("cancel-settings-btn"),
-  settingsNavList: document.getElementById("settings-nav-list"),
-  settingsPanes: document.querySelectorAll(".settings-pane"),
-  currentUserNameInput: document.getElementById("current-user-name"),
+  // Sync Modal
+  syncModal: document.getElementById("sync-modal"),
+  syncForm: document.getElementById("sync-form"),
+  cancelSyncBtn: document.getElementById("cancel-sync-btn"),
   githubUsernameInput: document.getElementById("github-username"),
   githubRepoInput: document.getElementById("github-repo"),
   githubPatInput: document.getElementById("github-pat"),
@@ -103,10 +99,6 @@ export const elements = {
   generateMagicLinkBtn: document.getElementById("generate-magic-link-btn"),
   magicLinkContainer: document.getElementById("magic-link-container"),
   magicLinkOutput: document.getElementById("magic-link-output"),
-  appVersionDisplay: document.getElementById("app-version-display"),
-  manualArchiveBtn: document.getElementById("manual-archive-btn"),
-  viewArchivesBtn: document.getElementById("view-archives-btn"),
-  backupToTelegramBtn: document.getElementById("backup-to-telegram-btn"),
 
   // Supplier UI Elements
   supplierManagerModal: document.getElementById("supplier-manager-modal"),
@@ -138,6 +130,9 @@ export const elements = {
   increasePaddingBtn: document.getElementById("increase-padding-btn"),
   decreasePaddingBtn: document.getElementById("decrease-padding-btn"),
   bgColorInput: document.getElementById("bg-color-input"),
+
+  // App Version
+  appVersionDisplay: document.getElementById("app-version-display"),
 
   // Bulk Actions UI
   bulkActionsBar: document.getElementById("bulk-actions-bar"),
