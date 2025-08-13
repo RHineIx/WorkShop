@@ -1,5 +1,5 @@
 // js/eventSetup.js
-import * as ui from "./ui.js";
+import { getDOMElements } from "./ui.js"; // تم تصحيح المسار هنا
 import { setupGeneralListeners, setupViewToggleListeners } from "./handlers/generalHandlers.js";
 import { setupInventoryListeners } from "./handlers/inventoryHandlers.js";
 import { setupModalListeners } from "./handlers/modalHandlers.js";
@@ -9,7 +9,7 @@ import { setupSyncListeners } from "./handlers/syncHandlers.js";
 import { setupBulkActionListeners } from "./handlers/bulkActionHandlers.js";
 
 export function setupEventListeners() {
-  const elements = ui.getDOMElements();
+  const elements = getDOMElements();
 
   setupGeneralListeners(elements);
   setupViewToggleListeners(elements);
