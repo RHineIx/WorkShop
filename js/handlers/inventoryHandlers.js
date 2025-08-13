@@ -1,31 +1,27 @@
 // js/handlers/inventoryHandlers.js
 import { appState } from "../state.js";
-import * as ui from "../ui.js";
 import { debounce } from "../utils.js";
+import { openSaleModal, openDetailsModal } from "../ui.js";
+import { showStatus } from "../notifications.js";
+import { filterAndRenderItems, renderCategoryFilter } from "../renderer.js";
 import {
   enterSelectionMode,
   exitSelectionMode,
   toggleSelection,
 } from "./bulkActionHandlers.js";
-// --- GESTURE DETECTION LOGIC ---
 
-// Module-scoped variables for gesture detection
 let pointerDownTime = 0;
 let pointerDownX = 0;
 let pointerDownY = 0;
-let isDragging = false; // Flag to determine if a scroll/drag has occurred
+let isDragging = false;
 
 const moveThreshold = 16;
-// Pixels user can move before it's considered a drag
 const longPressDuration = 600;
-// Milliseconds to hold for a long press
 
 function handlePointerDown(e) {
-  // We only care about the primary button (left-click or single touch)
   if (e.pointerType === "mouse" && e.button !== 0) return;
+
   const card = e.target.closest(".product-card");
-  // The problematic line has been removed from here.
-  // We only check if the click is outside a card.
   if (!card) {
     return;
   }
@@ -44,84 +40,76 @@ function handlePointerMove(e) {
 
   if (deltaX > moveThreshold || deltaY > moveThreshold) {
     isDragging = true;
-    // It's a scroll gesture
   }
 }
 
 function handlePointerUp(e) {
   const card = e.target.closest(".product-card");
   if (!card) return;
-  // If the pointer was dragged, it's a scroll, so do nothing.
+
   if (isDragging) {
-    pointerDownTime = 0; // Reset state
+    pointerDownTime = 0;
     return;
   }
 
   const pressDuration = Date.now() - pointerDownTime;
   pointerDownTime = 0;
-  // Reset state
 
-  // It's a long press
   if (pressDuration >= longPressDuration && !e.target.closest(".icon-btn")) {
     if (navigator.vibrate) {
       navigator.vibrate(50);
-      // Haptic feedback
     }
 
     if (!appState.isSelectionModeActive) {
       enterSelectionMode(card);
     } else {
-      toggleSelection(card); // Allow toggling on long press too
+      toggleSelection(card);
     }
 
-    // Prevent the click event that might follow
     e.preventDefault();
     e.stopPropagation();
   } else {
-    // It's a normal tap/click
     if (appState.isSelectionModeActive) {
-      // On selection mode, only toggle if the click is not on a button
       if (!e.target.closest(".icon-btn")) {
         toggleSelection(card);
       }
     } else {
-      // This is a normal click action, we check if a button was the target
       const itemId = card.dataset.id;
       if (e.target.closest(".sell-btn")) {
         const item = appState.inventory.items.find(i => i.id === itemId);
         if (item && item.quantity > 0) {
-          ui.openSaleModal(itemId);
+          openSaleModal(itemId);
         } else {
-          ui.showStatus("هذا المنتج نافد من المخزون.", "error");
+          showStatus("هذا المنتج نافد من المخزون.", "error");
         }
       } else if (e.target.closest(".details-btn")) {
-        ui.openDetailsModal(itemId);
+        openDetailsModal(itemId);
       }
-      // If the click was on the card itself but not a button, do nothing (or open details)
     }
   }
 }
 
 export function setupInventoryListeners(elements) {
-  // --- Grid Interaction (Click and Long Press) ---
   elements.inventoryGrid.addEventListener("pointerdown", handlePointerDown);
   elements.inventoryGrid.addEventListener("pointermove", handlePointerMove);
   elements.inventoryGrid.addEventListener("pointerup", handlePointerUp);
   elements.inventoryGrid.addEventListener("contextmenu", e =>
     e.preventDefault()
   );
-  // --- Search, Sort, Filter ---
+
   elements.searchBar.addEventListener(
     "input",
     debounce(e => {
       appState.searchTerm = e.target.value;
-      ui.filterAndRenderItems(true); // Reset pagination
+      filterAndRenderItems(true);
     }, 300)
   );
+
   elements.sortOptions.addEventListener("change", e => {
     appState.currentSortOption = e.target.value;
-    ui.filterAndRenderItems(true); // Reset pagination
+    filterAndRenderItems(true);
   });
+
   elements.statsContainer.addEventListener("click", e => {
     const card = e.target.closest(".stat-card");
     if (!card) return;
@@ -136,28 +124,26 @@ export function setupInventoryListeners(elements) {
     } else {
       appState.activeFilter = "all";
       appState.selectedCategory = "all";
-      ui.renderCategoryFilter();
+      renderCategoryFilter();
     }
-    ui.filterAndRenderItems(true);
+    filterAndRenderItems(true);
   });
 
-  // --- NEW: Category Filter Bar Listener ---
   elements.categoryFilterBar.addEventListener("click", e => {
     const chip = e.target.closest(".category-chip");
     if (!chip) return;
 
     const category = chip.dataset.category;
-    if (appState.selectedCategory === category) return; // Do nothing if already active
+    if (appState.selectedCategory === category) return;
 
     appState.selectedCategory = category;
 
-    // Visually update the active chip immediately
     const currentActive = elements.categoryFilterBar.querySelector(".active");
     if (currentActive) {
       currentActive.classList.remove("active");
     }
     chip.classList.add("active");
 
-    ui.filterAndRenderItems(true); // Filter and re-render
+    filterAndRenderItems(true);
   });
-}
+  }
