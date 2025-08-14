@@ -40,6 +40,7 @@ export const elements = {
   // Activity Log Elements
   auditLogList: document.getElementById("audit-log-list"),
   clearLogBtn: document.getElementById("clear-log-btn"),
+  activityLogFilter: document.getElementById('activity-log-filter'),
 
   // Details Modal
   detailsModal: document.getElementById("details-modal"),
