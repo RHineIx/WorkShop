@@ -7,7 +7,6 @@ import { showStatus, updateStatus } from "../notifications.js";
 import { renderAuditLog } from "../renderer.js";
 import { ConflictError } from "../api.js";
 
-// REFACTORED: Switched to Optimistic UI pattern
 async function handleLogCleanup() {
   if (!appState.auditLog || appState.auditLog.length === 0) {
     showStatus("سجل النشاطات فارغ بالفعل.", "info");
@@ -22,11 +21,9 @@ async function handleLogCleanup() {
   });
   if (!confirmed) return;
 
-  // 1. Store original state for potential rollback
   const originalLog = JSON.parse(JSON.stringify(appState.auditLog));
   const originalLogFileSha = appState.auditLogFileSha;
 
-  // 2. Update state and UI immediately
   appState.auditLog = [];
   saveLocalData();
   if (appState.currentView === "activity-log") {
@@ -34,7 +31,6 @@ async function handleLogCleanup() {
   }
   showStatus("تم تنظيف السجل محليًا.", "success", { duration: 2000 });
 
-  // 3. Sync in the background
   const syncToastId = showStatus("جاري مزامنة السجل...", "syncing");
   try {
     const { sha: latestSha } = await api.fetchAuditLog();
@@ -45,7 +41,7 @@ async function handleLogCleanup() {
     updateStatus(syncToastId, "تمت مزامنة السجل بنجاح!", "success");
   } catch (error) {
     console.error("Log cleanup sync failed, rolling back:", error);
-    appState.auditLog = originalLog; // Rollback
+    appState.auditLog = originalLog; 
     saveLocalData();
     if (appState.currentView === "activity-log") {
       renderAuditLog();
@@ -58,4 +54,12 @@ export function setupActivityLogListeners(elements) {
   if (elements.clearLogBtn) {
     elements.clearLogBtn.addEventListener("click", handleLogCleanup);
   }
-}
+
+  // NEW: Add event listener for the filter dropdown
+  if (elements.activityLogFilter) {
+      elements.activityLogFilter.addEventListener('change', (e) => {
+          appState.activityLogFilter = e.target.value;
+          renderAuditLog();
+      });
+  }
+      }
