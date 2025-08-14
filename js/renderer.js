@@ -55,13 +55,11 @@ const loadMoreObserver = new IntersectionObserver(
 );
 
 export function getAllUniqueCategories() {
-  return [
-    ...new Set(
-      appState.inventory.items
-        .flatMap(item => item.categories || [])
-        .filter(Boolean)
-    ),
-  ].sort();
+    return [
+        ...new Set(
+            appState.inventory.items.flatMap(item => item.categories || []).filter(Boolean)
+        ),
+    ].sort();
 }
 
 function getFilteredItems() {
@@ -70,9 +68,7 @@ function getFilteredItems() {
     items = items.filter(item => item.quantity <= item.alertLevel);
   }
   if (appState.selectedCategory && appState.selectedCategory !== "all") {
-    items = items.filter(item =>
-      (item.categories || []).includes(appState.selectedCategory)
-    );
+    items = items.filter(item => (item.categories || []).includes(appState.selectedCategory));
   }
   if (appState.searchTerm) {
     const searchTerms = appState.searchTerm
@@ -195,17 +191,15 @@ export function renderInventory(itemsToRender) {
       placeholder.remove();
     }
 
-    const tagsContainer = cardClone.querySelector(
-      ".card-category-tags-container"
-    );
-    tagsContainer.innerHTML = "";
+    const tagsContainer = cardClone.querySelector(".card-category-tags-container");
+    tagsContainer.innerHTML = ''; 
     if (item.categories && item.categories.length > 0) {
-      item.categories.forEach(category => {
-        const tag = document.createElement("span");
-        tag.className = "card-category-tag";
-        tag.textContent = sanitizeHTML(category);
-        tagsContainer.appendChild(tag);
-      });
+        item.categories.forEach(category => {
+            const tag = document.createElement('span');
+            tag.className = 'card-category-tag';
+            tag.textContent = sanitizeHTML(category);
+            tagsContainer.appendChild(tag);
+        });
     }
 
     cardClone.querySelector(".card-name").textContent = sanitizeHTML(item.name);
@@ -351,9 +345,17 @@ function renderSalesLog(filteredSales) {
   }, {});
   const logHTML = Object.entries(salesByDay)
     .map(([date, sales]) => {
-      const dateObj = new Date(date);
-      const dayHeader = new Intl.DateTimeFormat("ar-SA-u-nu-latn", {
+      // CHANGED: Use a more robust way to parse the date string.
+      const [year, month, day] = date.split('-').map(Number);
+      const dateObj = new Date(year, month - 1, day);
+      
+      // Add 12 hours to the date to avoid timezone issues and better align with the Hijri day.
+      dateObj.setHours(12);
+
+      // CHANGED: Added "ca-islamic" to specify the Islamic calendar.
+      const dayHeader = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-nu-latn", {
         dateStyle: "full",
+        timeZone: "Asia/Baghdad" // Ensure consistency regardless of user's system timezone
       }).format(dateObj);
 
       const salesCardsHTML = sales
@@ -585,12 +587,11 @@ const formatRelativeTime = date => {
 const getActionDetails = log => {
   const name = `<strong>${sanitizeHTML(log.targetName)}</strong>`;
   const details = log.details;
-
-  const formatCategories = cats => {
-    if (!Array.isArray(cats))
-      return `"${sanitizeHTML(String(cats ?? "")) || "بلا فئة"}"`;
+  
+  const formatCategories = (cats) => {
+    if (!Array.isArray(cats)) return `"${sanitizeHTML(String(cats ?? '')) || 'بلا فئة'}"`;
     if (cats.length === 0) return '"بلا فئة"';
-    return `"${cats.map(c => sanitizeHTML(c)).join(", ")}"`;
+    return `"${cats.map(c => sanitizeHTML(c)).join(', ')}"`;
   };
 
   const from = details.from;
@@ -614,9 +615,7 @@ const getActionDetails = log => {
         ).toLocaleString()}</span>.`,
       };
     case "QUANTITY_UPDATED":
-      let qtyDescription = `تم تعديل كمية ${name} من ${sanitizeHTML(
-        String(from)
-      )} إلى ${sanitizeHTML(String(to))}.`;
+      let qtyDescription = `تم تعديل كمية ${name} من ${sanitizeHTML(String(from))} إلى ${sanitizeHTML(String(to))}.`;
       if (details.reason && details.reason.trim() !== "") {
         qtyDescription += ` (السبب: ${sanitizeHTML(details.reason)})`;
       }
@@ -641,25 +640,19 @@ const getActionDetails = log => {
       return {
         icon: "material-symbols:edit-outline",
         class: "update",
-        description: `تم تغيير اسم المنتج من "${sanitizeHTML(
-          String(from)
-        )}" إلى "${sanitizeHTML(String(to))}".`,
+        description: `تم تغيير اسم المنتج من "${sanitizeHTML(String(from))}" إلى "${sanitizeHTML(String(to))}".`,
       };
     case "SKU_UPDATED":
       return {
         icon: "material-symbols:qr-code-2",
         class: "update",
-        description: `تم تغيير SKU للمنتج ${name} من "${sanitizeHTML(
-          String(from)
-        )}" إلى "${sanitizeHTML(String(to))}".`,
+        description: `تم تغيير SKU للمنتج ${name} من "${sanitizeHTML(String(from))}" إلى "${sanitizeHTML(String(to))}".`,
       };
     case "CATEGORY_UPDATED":
       return {
         icon: "material-symbols:folder-open-outline",
         class: "update",
-        description: `تم تغيير فئة ${name} من ${formatCategories(
-          from
-        )} إلى ${formatCategories(to)}.`,
+        description: `تم تغيير فئة ${name} من ${formatCategories(from)} إلى ${formatCategories(to)}.`,
       };
     case "NOTES_UPDATED":
       return {
@@ -709,4 +702,4 @@ export function renderAuditLog() {
     fragment.appendChild(clone);
   });
   elements.auditLogList.appendChild(fragment);
-}
+              }
