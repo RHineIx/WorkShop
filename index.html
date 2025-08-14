@@ -231,15 +231,24 @@
         <section class="activity-log-container">
           <div class="activity-log-header">
             <h2>سجل نشاطات المخزون</h2>
-            <button
-              id="clear-log-btn"
-              class="icon-btn"
-              title="تنظيف سجل النشاطات"
-            >
-              <iconify-icon
-                icon="material-symbols:delete-outline-rounded"
-              ></iconify-icon>
-            </button>
+            <div class="activity-log-actions">
+                <select id="activity-log-filter">
+                    <option value="all">كل النشاطات</option>
+                    <option value="sale">المبيعات</option>
+                    <option value="quantity">تعديلات الكمية</option>
+                    <option value="lifecycle">إنشاء / حذف</option>
+                    <option value="other">تحديثات أخرى</option>
+                </select>
+                <button
+                  id="clear-log-btn"
+                  class="icon-btn"
+                  title="تنظيف سجل النشاطات"
+                >
+                  <iconify-icon
+                    icon="material-symbols:delete-outline-rounded"
+                  ></iconify-icon>
+                </button>
+            </div>
           </div>
           <div id="audit-log-list" class="log-list"></div>
         </section>
@@ -462,46 +471,26 @@
               </div>
             </div>
           </fieldset>
-
+          
           <fieldset>
             <legend>الفئات</legend>
-            <div class="fieldset-content">
-              <div class="form-group">
-                <div
-                  id="category-input-container"
-                  class="category-input-container"
-                >
-                  <div
-                    id="selected-categories-container"
-                    class="selected-categories"
-                  ></div>
-                  <div class="input-area">
-                    <input
-                      type="text"
-                      id="category-input-field"
-                      placeholder="اكتب فئة جديدة..."
-                    />
-                    <button
-                      type="button"
-                      id="add-category-btn"
-                      title="إضافة فئة"
-                    >
-                      <iconify-icon icon="material-symbols:add"></iconify-icon>
-                    </button>
-                  </div>
-                  <div
-                    id="available-categories-container"
-                    class="available-categories-container"
-                  >
-                    <p>الفئات المقترحة:</p>
-                    <div
-                      id="available-categories-list"
-                      class="available-categories-list"
-                    ></div>
-                  </div>
+             <div class="fieldset-content">
+                <div class="form-group">
+                    <div id="category-input-container" class="category-input-container">
+                        <div id="selected-categories-container" class="selected-categories"></div>
+                        <div class="input-area">
+                            <input type="text" id="category-input-field" placeholder="اكتب فئة جديدة...">
+                            <button type="button" id="add-category-btn" title="إضافة فئة">
+                                <iconify-icon icon="material-symbols:add"></iconify-icon>
+                            </button>
+                        </div>
+                        <div id="available-categories-container" class="available-categories-container">
+                            <p>الفئات المقترحة:</p>
+                            <div id="available-categories-list" class="available-categories-list"></div>
+                        </div>
+                    </div>
                 </div>
-              </div>
-            </div>
+             </div>
           </fieldset>
 
           <fieldset>
@@ -619,7 +608,9 @@
 
         <hr class="maintenance-divider" />
 
-        <p>سيتم حفظ بياناتك في ملفات JSON داخل مستودع GitHub خاص.</p>
+        <p>
+          سيتم حفظ بياناتك في ملفات JSON داخل مستودع GitHub خاص.
+        </p>
 
         <div class="form-group">
           <label for="github-username">اسم المستخدم في GitHub</label>
@@ -960,52 +951,31 @@
     </div>
 
     <dialog id="bulk-category-modal">
-      <form id="bulk-category-form">
-        <h3>تغيير فئة العناصر المحددة</h3>
-        <p>
-          القائمة الجديدة التي تبنيها هنا ستحل محل (تستبدل) جميع الفئات القديمة
-          للمنتجات المحددة.
-        </p>
-        <div class="form-group">
-          <div
-            id="bulk-category-input-container"
-            class="category-input-container"
-          >
-            <div
-              id="bulk-selected-categories-container"
-              class="selected-categories"
-            ></div>
-            <div class="input-area">
-              <input
-                type="text"
-                id="bulk-category-input-field"
-                placeholder="اكتب فئة جديدة..."
-              />
-              <button
-                type="button"
-                id="bulk-add-category-btn"
-                title="إضافة فئة"
-              >
-                <iconify-icon icon="material-symbols:add"></iconify-icon>
-              </button>
+        <form id="bulk-category-form">
+            <h3>تغيير فئة العناصر المحددة</h3>
+            <p>
+                القائمة الجديدة التي تبنيها هنا ستحل محل (تستبدل) جميع الفئات القديمة للمنتجات المحددة.
+            </p>
+            <div class="form-group">
+                <div id="bulk-category-input-container" class="category-input-container">
+                    <div id="bulk-selected-categories-container" class="selected-categories"></div>
+                    <div class="input-area">
+                        <input type="text" id="bulk-category-input-field" placeholder="اكتب فئة جديدة...">
+                        <button type="button" id="bulk-add-category-btn" title="إضافة فئة">
+                            <iconify-icon icon="material-symbols:add"></iconify-icon>
+                        </button>
+                    </div>
+                    <div id="bulk-available-categories-container" class="available-categories-container">
+                        <p>الفئات المقترحة:</p>
+                        <div id="bulk-available-categories-list" class="available-categories-list"></div>
+                    </div>
+                </div>
             </div>
-            <div
-              id="bulk-available-categories-container"
-              class="available-categories-container"
-            >
-              <p>الفئات المقترحة:</p>
-              <div
-                id="bulk-available-categories-list"
-                class="available-categories-list"
-              ></div>
+            <div class="modal-actions">
+                <button type="submit">حفظ التغييرات</button>
+                <button type="button" data-close>إلغاء</button>
             </div>
-          </div>
-        </div>
-        <div class="modal-actions">
-          <button type="submit">حفظ التغييرات</button>
-          <button type="button" data-close>إلغاء</button>
-        </div>
-      </form>
+        </form>
     </dialog>
 
     <dialog id="bulk-supplier-modal">
@@ -1047,12 +1017,7 @@
     <dialog id="reason-modal">
       <form
         id="reason-form"
-        style="
-          padding: 1.5rem;
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        "
+        style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem"
       >
         <h3>سبب تغيير الكمية (اختياري)</h3>
         <div class="form-group">
@@ -1126,14 +1091,14 @@
         </div>
       </div>
     </template>
-
+    
     <template id="category-pill-template">
-      <div class="category-pill">
-        <button class="remove-pill-btn" title="إزالة">
-          <iconify-icon icon="material-symbols:close-small"></iconify-icon>
-        </button>
-        <span class="pill-text"></span>
-      </div>
+        <div class="category-pill">
+            <button class="remove-pill-btn" title="إزالة">
+                <iconify-icon icon="material-symbols:close-small"></iconify-icon>
+            </button>
+            <span class="pill-text"></span>
+        </div>
     </template>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -1142,4 +1107,4 @@
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
     <script type="module" src="js/main.js"></script>
   </body>
-</html>
+                                    </html>
