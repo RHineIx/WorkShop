@@ -349,9 +349,8 @@ function renderSalesLog(filteredSales) {
       const [year, month, day] = date.split('-').map(Number);
       const dateObj = new Date(year, month - 1, day);
       
-      dateObj.setHours(12);
-
-      const dayHeader = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-nu-latn", {
+      // CHANGED: Reverted to Gregorian calendar by removing "-ca-islamic"
+      const dayHeader = new Intl.DateTimeFormat("ar-SA-u-nu-latn", {
         dateStyle: "full",
         timeZone: "Asia/Baghdad"
       }).format(dateObj);
