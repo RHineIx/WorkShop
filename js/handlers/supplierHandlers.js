@@ -2,9 +2,12 @@
 import { appState } from "../state.js";
 import * as api from "../api.js";
 import { saveLocalData } from "../app.js";
-import { showStatus, hideSyncStatus } from "../notifications.js";
-import { renderSupplierList, populateSupplierDropdown } from "../renderer.js";
+import { showStatus, hideSyncStatus, updateStatus } from "../notifications.js";
+import { renderSupplierList, populateSupplierDropdown, filterAndRenderItems } from "../renderer.js";
 import { getDOMElements, openModal } from "../ui.js";
+import { showConfirmationModal } from "../ui_helpers.js";
+import { ConflictError } from "../api.js";
+
 
 async function handleSupplierFormSubmit(e) {
   e.preventDefault();
@@ -17,71 +20,119 @@ async function handleSupplierFormSubmit(e) {
     return;
   }
 
-  if (id) {
+  // --- OPTIMISTIC UI for Add/Edit Supplier ---
+  const originalSuppliers = JSON.parse(JSON.stringify(appState.suppliers));
+  let updatedSupplier;
+  const isEditing = !!id;
+
+  if (isEditing) {
     const supplier = appState.suppliers.find(s => s.id === id);
     if (supplier) {
       supplier.name = name;
       supplier.phone = phone;
+      updatedSupplier = supplier;
     }
   } else {
     if (appState.suppliers.some(s => s.name.toLowerCase() === name.toLowerCase())) {
       showStatus("هذا المورّد موجود بالفعل.", "error");
       return;
     }
-    const newSupplier = { id: `sup_${Date.now()}`, name, phone };
-    appState.suppliers.push(newSupplier);
+    updatedSupplier = { id: `sup_${Date.now()}`, name, phone };
+    appState.suppliers.push(updatedSupplier);
   }
+  
+  // Update UI Immediately
+  renderSupplierList();
+  populateSupplierDropdown(elements.itemSupplierSelect.value);
+  elements.supplierForm.reset();
+  elements.supplierIdInput.value = "";
+  elements.supplierFormTitle.textContent = "إضافة مورّد جديد";
+  elements.cancelEditSupplierBtn.classList.add("view-hidden");
+  showStatus(`تم ${isEditing ? 'تعديل' : 'إضافة'} المورّد محليًا.`, "success", { duration: 2000 });
 
-  const actionText = id ? "تعديل" : "إضافة";
-  showStatus(`جاري ${actionText} المورّد...`, "syncing");
+  // Sync in background
+  const syncToastId = showStatus(`جاري مزامنة المورّد...`, "syncing");
   try {
+    const { sha: latestSha } = await api.fetchSuppliers();
+    if (latestSha !== originalSuppliers.fileSha) {
+        throw new ConflictError("Supplier list was updated elsewhere.");
+    }
+
     await api.saveSuppliers();
+    saveLocalData();
+    updateStatus(syncToastId, `تمت مزامنة المورّد بنجاح!`, "success");
+
+  } catch (error) {
+    console.error("Supplier sync failed, rolling back:", error);
+    appState.suppliers = originalSuppliers; // Rollback
     renderSupplierList();
     populateSupplierDropdown(elements.itemSupplierSelect.value);
-    hideSyncStatus();
-    showStatus(`تم ${actionText} المورّد بنجاح!`, "success");
-    elements.supplierForm.reset();
-    elements.supplierIdInput.value = "";
-    elements.supplierFormTitle.textContent = "إضافة مورّد جديد";
-    elements.cancelEditSupplierBtn.classList.add("view-hidden");
-  } catch (error) {
-    hideSyncStatus();
-    showStatus(`فشل حفظ المورّد: ${error.message}`, "error");
+    updateStatus(syncToastId, `فشل مزامنة المورّد! تم استرجاع البيانات.`, "error");
   }
 }
 
+// REFACTORED: Switched to Optimistic UI pattern
 async function handleDeleteSupplier(supplierId) {
   const linkedProductsCount = appState.inventory.items.filter(
     item => item.supplierId === supplierId
   ).length;
   let confirmMessage = "هل أنت متأكد من رغبتك في حذف هذا المورّد نهائياً؟";
   if (linkedProductsCount > 0) {
-    confirmMessage = `هذا المورّد مرتبط بـ ${linkedProductsCount} منتجات.\nهل أنت متأكد من حذفه؟ سيتم فك ارتباطه من هذه المنتجات.`;
+    confirmMessage += `\nهذا المورّد مرتبط بـ ${linkedProductsCount} منتجات سيتم فك ارتباطها.`;
   }
 
-  if (confirm(confirmMessage)) {
-    showStatus("جاري حذف المورّد...", "syncing");
+  const confirmed = await showConfirmationModal({
+      title: "تأكيد الحذف",
+      message: confirmMessage,
+      confirmText: "نعم, حذف"
+  });
+
+  if (confirmed) {
+    // 1. Store original state for potential rollback
+    const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
+    const originalSuppliers = JSON.parse(JSON.stringify(appState.suppliers));
+
+    // 2. Update state and UI immediately
+    if (linkedProductsCount > 0) {
+      appState.inventory.items.forEach(item => {
+        if (item.supplierId === supplierId) {
+          item.supplierId = null;
+        }
+      });
+    }
+    appState.suppliers = appState.suppliers.filter(s => s.id !== supplierId);
+
+    saveLocalData();
+    renderSupplierList();
+    filterAndRenderItems(); // Re-render inventory in case items were unlinked
+    populateSupplierDropdown(getDOMElements().itemSupplierSelect.value);
+    showStatus("تم حذف المورّد محليًا.", "success", { duration: 2000 });
+
+    // 3. Sync in the background
+    const syncToastId = showStatus("جاري مزامنة الحذف...", "syncing");
     try {
-      if (linkedProductsCount > 0) {
-        appState.inventory.items.forEach(item => {
-          if (item.supplierId === supplierId) {
-            item.supplierId = null;
-          }
-        });
-        await api.saveToGitHub();
-      }
+        const { sha: latestInvSha } = await api.fetchFromGitHub();
+        const { sha: latestSupSha } = await api.fetchSuppliers();
 
-      appState.suppliers = appState.suppliers.filter(s => s.id !== supplierId);
-      await api.saveSuppliers();
+        if (latestInvSha !== originalInventory.fileSha || latestSupSha !== originalSuppliers.fileSha) {
+            throw new ConflictError("Data was updated elsewhere.");
+        }
+        
+        if (linkedProductsCount > 0) {
+            await api.saveToGitHub();
+        }
+        await api.saveSuppliers();
+        updateStatus(syncToastId, "تمت مزامنة الحذف بنجاح!", "success");
 
+    } catch (error) {
+      console.error("Supplier deletion sync failed, rolling back:", error);
+      appState.inventory = originalInventory; // Rollback
+      appState.suppliers = originalSuppliers; // Rollback
       saveLocalData();
       renderSupplierList();
+      filterAndRenderItems();
       populateSupplierDropdown(getDOMElements().itemSupplierSelect.value);
-      hideSyncStatus();
-      showStatus("تم حذف المورّد بنجاح!", "success");
-    } catch (error) {
-      hideSyncStatus();
-      showStatus(`فشل حذف المورّد: ${error.message}`, "error");
+      updateStatus(syncToastId, "فشل مزامنة الحذف! تم استرجاع البيانات.", "error");
     }
   }
 }
@@ -96,7 +147,6 @@ export function setupSupplierListeners(elements) {
   });
 
   elements.supplierForm.addEventListener("submit", handleSupplierFormSubmit);
-
   elements.supplierListContainer.addEventListener("click", e => {
     const deleteBtn = e.target.closest(".delete-supplier-btn");
     if (deleteBtn) {
@@ -116,11 +166,10 @@ export function setupSupplierListeners(elements) {
       }
     }
   });
-
   elements.cancelEditSupplierBtn.addEventListener("click", () => {
     elements.supplierForm.reset();
     elements.supplierIdInput.value = "";
     elements.supplierFormTitle.textContent = "إضافة مورّد جديد";
     elements.cancelEditSupplierBtn.classList.add("view-hidden");
   });
-                                       }
+}
