@@ -6,12 +6,11 @@ import { saveLocalData } from "../app.js";
 import { pushState } from "../navigation.js";
 import * as renderer from "../renderer.js";
 import * as notifications from "../notifications.js";
+import { ConflictError } from "../api.js";
 
 let longPressTriggered = false;
-// NEW: Manager for the bulk category input component
 let bulkCategoryInputManager = null;
 
-// NEW: Logic to manage the interactive category input for the bulk modal
 function setupBulkCategoryInput() {
     const elements = ui.getDOMElements();
     const {
@@ -22,7 +21,6 @@ function setupBulkCategoryInput() {
         categoryPillTemplate
     } = elements;
 
-    // State is always fresh and starts empty for bulk operations
     let selectedCategories = new Set();
     const allCategories = new Set(renderer.getAllUniqueCategories());
 
@@ -78,7 +76,6 @@ function setupBulkCategoryInput() {
         bulkCategoryInputField.focus();
     };
 
-    // Attach event listeners
     bulkAddCategoryBtn.onclick = handleAddAction;
     bulkCategoryInputField.onkeydown = (e) => {
         if (e.key === 'Enter') {
@@ -87,7 +84,6 @@ function setupBulkCategoryInput() {
         }
     };
     
-    // Initial render
     render();
 
     return {
@@ -145,96 +141,86 @@ export function toggleSelection(card) {
   }
 }
 
+// REFACTORED: Switched to Optimistic UI pattern
 async function handleBulkCategoryChange(e) {
   e.preventDefault();
   
-  // CHANGED: Get categories from the interactive component manager
   const newCategories = bulkCategoryInputManager.getSelectedCategories();
-  
   if (newCategories.length === 0) {
       notifications.showStatus("يرجى اختيار فئة واحدة على الأقل.", "error");
       return;
   };
 
-  notifications.showStatus("التحقق من البيانات...", "syncing");
+  // 1. Store original state for potential rollback
+  const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
+
+  // 2. Update state and UI immediately
+  appState.selectedItemIds.forEach(id => {
+    const item = appState.inventory.items.find(i => i.id === id);
+    if (item) item.categories = newCategories;
+  });
+  saveLocalData();
+  renderer.filterAndRenderItems(true);
+  renderer.renderCategoryFilter();
+  ui.getDOMElements().bulkCategoryModal.close();
+  exitSelectionMode();
+  notifications.showStatus("تم تحديث الفئات محليًا.", "success", { duration: 2000 });
+
+  // 3. Sync in the background
+  const syncToastId = notifications.showStatus("جاري مزامنة الفئات...", "syncing");
   try {
-    const { data: latestInventory, sha: latestSha } = await api.fetchFromGitHub();
-
-    if (latestSha !== appState.fileSha) {
-      notifications.hideSyncStatus();
-      notifications.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
-        showRefreshButton: true,
-      });
-      return;
+    const { sha: latestSha } = await api.fetchFromGitHub();
+    if (latestSha !== originalInventory.fileSha) {
+      throw new ConflictError("Conflict detected while syncing bulk category change.");
     }
-
-    appState.inventory = latestInventory;
-    appState.fileSha = latestSha;
-
-    appState.selectedItemIds.forEach(id => {
-      const item = appState.inventory.items.find(i => i.id === id);
-      // This will replace the old categories with the new ones
-      if (item) item.categories = newCategories;
-    });
-
     await api.saveToGitHub();
-    saveLocalData();
-    notifications.hideSyncStatus();
-    notifications.showStatus(
-      `تم تحديث فئة ${appState.selectedItemIds.size} عناصر بنجاح.`,
-      "success"
-    );
+    // No need to log bulk changes for now, can be added later
+    notifications.updateStatus(syncToastId, "تمت مزامنة الفئات بنجاح!", "success");
   } catch (error) {
-    notifications.hideSyncStatus();
-    notifications.showStatus(`فشل تحديث الفئة: ${error.message}`, "error");
-  } finally {
-    ui.getDOMElements().bulkCategoryModal.close();
-    exitSelectionMode();
+    console.error("Bulk category sync failed, rolling back:", error);
+    appState.inventory = originalInventory; // Rollback
+    saveLocalData();
     renderer.filterAndRenderItems(true);
-    renderer.populateCategoryDatalist();
     renderer.renderCategoryFilter();
+    notifications.updateStatus(syncToastId, "فشل المزامنة! تم استرجاع البيانات.", "error");
   }
 }
 
+// REFACTORED: Switched to Optimistic UI pattern
 async function handleBulkSupplierChange(e) {
   e.preventDefault();
   const newSupplierId = e.target.elements["bulk-item-supplier"].value;
   if (!newSupplierId) return;
 
-  notifications.showStatus("التحقق من البيانات...", "syncing");
+  // 1. Store original state for potential rollback
+  const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
+
+  // 2. Update state and UI immediately
+  appState.selectedItemIds.forEach(id => {
+    const item = appState.inventory.items.find(i => i.id === id);
+    if (item) item.supplierId = newSupplierId;
+  });
+  saveLocalData();
+  renderer.filterAndRenderItems(true);
+  ui.getDOMElements().bulkSupplierModal.close();
+  exitSelectionMode();
+  notifications.showStatus("تم تحديث المورّد محليًا.", "success", { duration: 2000 });
+
+  // 3. Sync in the background
+  const syncToastId = notifications.showStatus("جاري مزامنة المورّد...", "syncing");
   try {
-    const { data: latestInventory, sha: latestSha } = await api.fetchFromGitHub();
-
-    if (latestSha !== appState.fileSha) {
-      notifications.hideSyncStatus();
-      notifications.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
-        showRefreshButton: true,
-      });
-      return;
+    const { sha: latestSha } = await api.fetchFromGitHub();
+    if (latestSha !== originalInventory.fileSha) {
+        throw new ConflictError("Conflict detected while syncing bulk supplier change.");
     }
-
-    appState.inventory = latestInventory;
-    appState.fileSha = latestSha;
-
-    appState.selectedItemIds.forEach(id => {
-      const item = appState.inventory.items.find(i => i.id === id);
-      if (item) item.supplierId = newSupplierId;
-    });
-
     await api.saveToGitHub();
-    saveLocalData();
-    notifications.hideSyncStatus();
-    notifications.showStatus(
-      `تم تحديث مورّد ${appState.selectedItemIds.size} عناصر بنجاح.`,
-      "success"
-    );
+    notifications.updateStatus(syncToastId, "تمت مزامنة المورّد بنجاح!", "success");
   } catch (error) {
-    notifications.hideSyncStatus();
-    notifications.showStatus(`فشل تحديث المورّد: ${error.message}`, "error");
-  } finally {
-    ui.getDOMElements().bulkSupplierModal.close();
-    exitSelectionMode();
+    console.error("Bulk supplier sync failed, rolling back:", error);
+    appState.inventory = originalInventory; // Rollback
+    saveLocalData();
     renderer.filterAndRenderItems(true);
+    notifications.updateStatus(syncToastId, "فشل المزامنة! تم استرجاع البيانات.", "error");
   }
 }
 
@@ -242,7 +228,6 @@ export function setupBulkActionListeners(elements) {
   document
     .getElementById("bulk-change-category-btn")
     .addEventListener("click", () => {
-      // CHANGED: Initialize the interactive component when the modal is opened
       bulkCategoryInputManager = setupBulkCategoryInput();
       ui.openModal(elements.bulkCategoryModal);
     });
@@ -270,4 +255,4 @@ export function setupBulkActionListeners(elements) {
   elements.bulkSupplierModal
     .querySelector("[data-close]")
     .addEventListener("click", () => elements.bulkSupplierModal.close());
-}
+      }
