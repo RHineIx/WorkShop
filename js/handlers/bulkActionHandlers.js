@@ -6,13 +6,10 @@ import { saveLocalData } from "../app.js";
 import { pushState } from "../navigation.js";
 import * as renderer from "../renderer.js";
 import * as notifications from "../notifications.js";
-import { ConflictError } from "../api.js";
 
 let longPressTriggered = false;
-// NEW: Manager for the bulk category input component
 let bulkCategoryInputManager = null;
 
-// NEW: Logic to manage the interactive category input for the bulk modal
 function setupBulkCategoryInput() {
     const elements = ui.getDOMElements();
     const {
@@ -23,7 +20,6 @@ function setupBulkCategoryInput() {
         categoryPillTemplate
     } = elements;
 
-    // State is always fresh and starts empty for bulk operations
     let selectedCategories = new Set();
     const allCategories = new Set(renderer.getAllUniqueCategories());
 
@@ -78,8 +74,7 @@ function setupBulkCategoryInput() {
         bulkCategoryInputField.value = '';
         bulkCategoryInputField.focus();
     };
-
-    // Use .onclick for simplicity as these elements are single-use per modal instance
+    
     bulkAddCategoryBtn.onclick = handleAddAction;
     bulkCategoryInputField.onkeydown = (e) => {
         if (e.key === 'Enter') {
@@ -88,9 +83,8 @@ function setupBulkCategoryInput() {
         }
     };
     
-    // Initial render
     render();
-
+    
     return {
         getSelectedCategories: () => Array.from(selectedCategories)
     };
@@ -146,10 +140,8 @@ export function toggleSelection(card) {
   }
 }
 
-// REFACTORED: To use the new interactive component
 async function handleBulkCategoryChange(e) {
   e.preventDefault();
-  
   const newCategories = bulkCategoryInputManager.getSelectedCategories();
   
   if (newCategories.length === 0) {
@@ -163,6 +155,7 @@ async function handleBulkCategoryChange(e) {
     const item = appState.inventory.items.find(i => i.id === id);
     if (item) item.categories = newCategories;
   });
+
   saveLocalData();
   renderer.filterAndRenderItems(true);
   renderer.renderCategoryFilter();
@@ -172,11 +165,7 @@ async function handleBulkCategoryChange(e) {
 
   const syncToastId = notifications.showStatus("جاري مزامنة الفئات...", "syncing");
   try {
-    const { sha: latestSha } = await api.fetchFromGitHub();
-    if (latestSha !== originalInventory.fileSha) {
-      throw new ConflictError("Conflict detected while syncing bulk category change.");
-    }
-    await api.saveToGitHub();
+    await api.saveInventory();
     notifications.updateStatus(syncToastId, "تمت مزامنة الفئات بنجاح!", "success");
   } catch (error) {
     console.error("Bulk category sync failed, rolling back:", error);
@@ -199,6 +188,7 @@ async function handleBulkSupplierChange(e) {
     const item = appState.inventory.items.find(i => i.id === id);
     if (item) item.supplierId = newSupplierId;
   });
+
   saveLocalData();
   renderer.filterAndRenderItems(true);
   ui.getDOMElements().bulkSupplierModal.close();
@@ -207,11 +197,7 @@ async function handleBulkSupplierChange(e) {
 
   const syncToastId = notifications.showStatus("جاري مزامنة المورّد...", "syncing");
   try {
-    const { sha: latestSha } = await api.fetchFromGitHub();
-    if (latestSha !== originalInventory.fileSha) {
-        throw new ConflictError("Conflict detected while syncing bulk supplier change.");
-    }
-    await api.saveToGitHub();
+    await api.saveInventory();
     notifications.updateStatus(syncToastId, "تمت مزامنة المورّد بنجاح!", "success");
   } catch (error) {
     console.error("Bulk supplier sync failed, rolling back:", error);
@@ -226,7 +212,6 @@ export function setupBulkActionListeners(elements) {
   document
     .getElementById("bulk-change-category-btn")
     .addEventListener("click", () => {
-      // CHANGED: Initialize the interactive component when the modal is opened
       bulkCategoryInputManager = setupBulkCategoryInput();
       ui.openModal(elements.bulkCategoryModal);
     });
@@ -240,6 +225,7 @@ export function setupBulkActionListeners(elements) {
   document
     .getElementById("cancel-selection-btn")
     .addEventListener("click", exitSelectionMode);
+
   elements.bulkCategoryForm.addEventListener(
     "submit",
     handleBulkCategoryChange
