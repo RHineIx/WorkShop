@@ -94,7 +94,6 @@ function loadLocalData() {
   if (savedSuppliers) {
     appState.suppliers = JSON.parse(savedSuppliers);
   }
-  // ADDED
   const savedAuditLog = localStorage.getItem("auditLogAppData");
   if (savedAuditLog) {
     appState.auditLog = JSON.parse(savedAuditLog);
@@ -105,7 +104,7 @@ export function saveLocalData() {
   localStorage.setItem("inventoryAppData", JSON.stringify(appState.inventory));
   localStorage.setItem("salesAppData", JSON.stringify(appState.sales));
   localStorage.setItem("suppliersAppData", JSON.stringify(appState.suppliers));
-  localStorage.setItem("auditLogAppData", JSON.stringify(appState.auditLog)); // ADDED
+  localStorage.setItem("auditLogAppData", JSON.stringify(appState.auditLog));
 }
 
 function handleUrlShortcuts() {
@@ -130,24 +129,55 @@ function handleUrlShortcuts() {
 
 function registerServiceWorker() {
   if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker
-        .register("./sw.js")
-        .then(registration => {
-          console.log(
-            "ServiceWorker registration successful with scope: ",
-            registration.scope
-          );
-        })
-        .catch(err => {
-          console.log("ServiceWorker registration failed: ", err);
+    navigator.serviceWorker
+      .register("./sw.js")
+      .then(registration => {
+        console.log("ServiceWorker registration successful.");
+
+        registration.addEventListener("updatefound", () => {
+          const newWorker = registration.installing;
+          console.log("New service worker found. State:", newWorker.state);
+
+          newWorker.addEventListener("statechange", () => {
+            if (
+              newWorker.state === "installed" &&
+              navigator.serviceWorker.controller
+            ) {
+              console.log("New service worker installed and waiting.");
+              showStatus("نسخة جديدة من التطبيق متوفرة!", "info", {
+                duration: 0,
+                showRefreshButton: true,
+              });
+
+              const refreshButton = document.querySelector(
+                ".status-refresh-btn"
+              );
+              if (refreshButton) {
+                refreshButton.onclick = () => {
+                  newWorker.postMessage({ type: "SKIP_WAITING" });
+                };
+              }
+            }
+          });
         });
+      })
+      .catch(err => {
+        console.error("ServiceWorker registration failed: ", err);
+      });
+
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      console.log("New service worker has taken control. Reloading...");
+      window.location.reload();
     });
   }
 }
 
 export async function initializeApp() {
   console.log("Initializing Inventory Management App...");
+
+  // Moved Service Worker registration to the beginning for robustness.
+  // This ensures the update mechanism is active even if the rest of the app fails.
+  registerServiceWorker();
 
   const magicLinkProcessed = handleMagicLink();
 
@@ -224,7 +254,6 @@ export async function initializeApp() {
   renderAuditLog();
   updateCurrencyDisplay();
   handleUrlShortcuts();
-  registerServiceWorker();
 
   console.log("App Initialized Successfully.");
 }

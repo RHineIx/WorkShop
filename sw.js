@@ -1,5 +1,6 @@
 // js/sw.js
-const CACHE_NAME = "workshop-v5.24.2"; // IMPORTANT: Remember to bump this version number with every new deployment
+const CACHE_NAME = "workshop-v5.24.3";
+// IMPORTANT: Remember to bump this version number with every new deployment
 const URLS_TO_CACHE = [
   "/",
   "/index.html",
@@ -20,8 +21,7 @@ self.addEventListener("install", event => {
       return cache.addAll(URLS_TO_CACHE);
     })
   );
-  // Force the new service worker to activate immediately.
-  self.skipWaiting();
+  // We removed self.skipWaiting() from here to allow the user to control the update.
 });
 
 self.addEventListener("activate", event => {
@@ -39,6 +39,13 @@ self.addEventListener("activate", event => {
   );
   // Take control of all open tabs immediately.
   return self.clients.claim();
+});
+
+// Listen for a message from the client to skip waiting.
+self.addEventListener("message", event => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("fetch", event => {
