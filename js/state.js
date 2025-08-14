@@ -15,6 +15,8 @@ export const appState = {
   searchTerm: "",
   selectedCategory: "all",
   currentSortOption: "default",
+  // NEW: State for the activity log filter
+  activityLogFilter: "all",
   currentItemId: null,
   itemStateBeforeEdit: null,
   activeCurrency: "IQD",
@@ -27,7 +29,7 @@ export const appState = {
   fileSha: null,
   salesFileSha: null,
   suppliersFileSha: null,
-  auditLogFileSha: null, // ADDED
+  auditLogFileSha: null,
   isSyncing: false,
   selectedImageFile: null,
   imageCache: new Map(),
