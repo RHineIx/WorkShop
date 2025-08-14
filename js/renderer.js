@@ -54,10 +54,6 @@ const loadMoreObserver = new IntersectionObserver(
   { rootMargin: "0px 0px 400px 0px" }
 );
 
-/**
- * NEW: Helper function to get a unique list of all categories from the inventory.
- * @returns {string[]} An array of unique category strings.
- */
 export function getAllUniqueCategories() {
   return [
     ...new Set(
@@ -65,7 +61,7 @@ export function getAllUniqueCategories() {
         .flatMap(item => item.categories || [])
         .filter(Boolean)
     ),
-  ].sort(); // Sort them alphabetically
+  ].sort();
 }
 
 function getFilteredItems() {
@@ -310,7 +306,6 @@ export function updateStats() {
 export function renderCategoryFilter() {
   const { categoryFilterBar } = elements;
   if (!categoryFilterBar) return;
-  // CHANGED: Use the new helper function
   const categories = getAllUniqueCategories();
   categoryFilterBar.innerHTML = "";
   const fragment = document.createDocumentFragment();
@@ -335,18 +330,6 @@ export function renderCategoryFilter() {
     fragment.appendChild(chipButton);
   });
   categoryFilterBar.appendChild(fragment);
-}
-
-export function populateCategoryDatalist() {
-  // CHANGED: Use the new helper function
-  const categories = getAllUniqueCategories();
-  const datalist = elements.categoryDatalist;
-  datalist.innerHTML = "";
-  categories.forEach(category => {
-    const option = document.createElement("option");
-    option.value = sanitizeHTML(category);
-    datalist.appendChild(option);
-  });
 }
 
 function renderSalesLog(filteredSales) {

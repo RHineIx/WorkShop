@@ -960,13 +960,60 @@
     </div>
 
     <dialog id="bulk-category-modal">
-      <form id="bulk-category-form">
+      <form
+        id="bulk-category-form"
+        style="
+          padding: 1.5rem;
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        "
+      >
         <h3>تغيير فئة العناصر المحددة</h3>
-        <div class="form-group">
-          <label for="bulk-item-category"
-            >الفئات الجديدة (مفصولة بفاصلة ,)</label
+        <p
+          style="
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin: -8px 0 8px 0;
+          "
+        >
+          القائمة الجديدة التي تبنيها هنا ستحل محل (تستبدل) جميع الفئات القديمة
+          للمنتجات المحددة.
+        </p>
+        <div class="form-group" style="margin-bottom: 0">
+          <div
+            id="bulk-category-input-container"
+            class="category-input-container"
           >
-          <input type="text" id="bulk-item-category" required />
+            <div
+              id="bulk-selected-categories-container"
+              class="selected-categories"
+            ></div>
+            <div class="input-area">
+              <input
+                type="text"
+                id="bulk-category-input-field"
+                placeholder="اكتب فئة جديدة..."
+              />
+              <button
+                type="button"
+                id="bulk-add-category-btn"
+                title="إضافة فئة"
+              >
+                <iconify-icon icon="material-symbols:add"></iconify-icon>
+              </button>
+            </div>
+          </div>
+          <div
+            id="bulk-available-categories-container"
+            class="available-categories-container"
+          >
+            <p>الفئات المقترحة:</p>
+            <div
+              id="bulk-available-categories-list"
+              class="available-categories-list"
+            ></div>
+          </div>
         </div>
         <div class="modal-actions">
           <button type="submit">حفظ التغييرات</button>

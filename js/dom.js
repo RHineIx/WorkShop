@@ -69,20 +69,15 @@ export const elements = {
   imageUploadInput: document.getElementById("item-image-upload"),
   pasteImageBtn: document.getElementById("paste-image-btn"),
   imagePreview: document.getElementById("image-preview"),
-
-  // NEW: Interactive Category Component Elements
+  
+  // Interactive Category Component Elements
   categoryInputContainer: document.getElementById("category-input-container"),
-  selectedCategoriesContainer: document.getElementById(
-    "selected-categories-container"
-  ),
+  selectedCategoriesContainer: document.getElementById("selected-categories-container"),
   categoryInputField: document.getElementById("category-input-field"),
   addCategoryBtn: document.getElementById("add-category-btn"),
-  availableCategoriesContainer: document.getElementById(
-    "available-categories-container"
-  ),
+  availableCategoriesContainer: document.getElementById("available-categories-container"),
   availableCategoriesList: document.getElementById("available-categories-list"),
-
-  categoryDatalist: document.getElementById("category-list"),
+  
   imagePlaceholder: document.getElementById("image-placeholder"),
   regenerateSkuBtn: document.getElementById("regenerate-sku-btn"),
 
@@ -157,6 +152,11 @@ export const elements = {
   bulkSupplierModal: document.getElementById("bulk-supplier-modal"),
   bulkSupplierForm: document.getElementById("bulk-supplier-form"),
   bulkSupplierSelect: document.getElementById("bulk-item-supplier"),
+  // NEW: Elements for the interactive bulk category modal
+  bulkSelectedCategoriesContainer: document.getElementById("bulk-selected-categories-container"),
+  bulkCategoryInputField: document.getElementById("bulk-category-input-field"),
+  bulkAddCategoryBtn: document.getElementById("bulk-add-category-btn"),
+  bulkAvailableCategoriesList: document.getElementById("bulk-available-categories-list"),
 
   // Floating Action Buttons
   scrollToTopBtn: document.getElementById("scroll-to-top-btn"),
@@ -181,6 +181,5 @@ export const elements = {
   // Templates
   productCardTemplate: document.getElementById("product-card-template"),
   logEntryTemplate: document.getElementById("log-entry-template"),
-  // NEW: Template for category pills
   categoryPillTemplate: document.getElementById("category-pill-template"),
 };

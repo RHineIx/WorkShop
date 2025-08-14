@@ -84,7 +84,8 @@
 }
 
 
-.input-area #add-category-btn {
+.input-area #add-category-btn,
+#bulk-add-category-btn {
     flex-shrink: 0;
     width: 38px;
     height: 38px;
@@ -100,13 +101,14 @@
     transition: all 0.25s ease;
 }
 
-.input-area #add-category-btn:hover {
+.input-area #add-category-btn:hover,
+#bulk-add-category-btn:hover {
     background-color: var(--accent-color);
     border-color: var(--accent-color);
     color: white;
 }
 
-.input-area #add-category-btn iconify-icon {
+.input-area #add-category-btn, #bulk-add-category-btn iconify-icon {
     font-size: 20px;
 }
 
