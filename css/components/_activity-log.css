@@ -5,11 +5,51 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--spacing-lg);
+  flex-wrap: wrap; /* Allow wrapping on small screens */
+  gap: var(--spacing-md);
 }
 
 .activity-log-header h2 {
   margin-bottom: 0;
 }
+
+/* NEW: Container for the filter and clear button */
+.activity-log-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+/* NEW: Style for the filter dropdown */
+#activity-log-filter {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    padding: 0.625rem 2.25rem 0.625rem 0.75rem;
+    font-family: var(--font-family);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23718096' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 0.75rem center;
+    transition: all var(--transition-speed) ease;
+}
+
+#activity-log-filter:hover {
+    border-color: var(--accent-color);
+}
+
+#activity-log-filter:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 0.1875rem var(--accent-soft-bg);
+}
+
 
 #clear-log-btn {
   background-color: transparent;
@@ -68,7 +108,7 @@
 }
 .log-icon.sale {
   background-color: #3b82f6;
-} /* Info color */
+}
 
 .log-content {
   flex-grow: 1;
@@ -98,4 +138,4 @@
 .log-meta .log-user {
   color: var(--accent-color);
   font-weight: 700;
-}
+  }
