@@ -1,7 +1,6 @@
 // js/handlers/modalHandlers.js
 import { appState } from "../state.js";
 import * as api from "../api.js";
-import { ConflictError } from "../api.js";
 import { generateUniqueSKU, compressImage } from "../utils.js";
 import { saveLocalData } from "../app.js";
 import {
@@ -26,98 +25,96 @@ import { logAction, ACTION_TYPES } from "../logger.js";
 let cropper = null;
 let cropperPadding = 0.1;
 let cropperBgColor = "#FFFFFF";
-
 let categoryInputManager = null;
 
 function setupCategoryInput(currentItemCategories = []) {
-    const elements = getDOMElements();
-    const {
-        selectedCategoriesContainer,
-        availableCategoriesList,
-        categoryInputField,
-        addCategoryBtn,
-        categoryPillTemplate
-    } = elements;
+  const elements = getDOMElements();
+  const {
+    selectedCategoriesContainer,
+    availableCategoriesList,
+    categoryInputField,
+    addCategoryBtn,
+    categoryPillTemplate,
+  } = elements;
 
-    let selectedCategories = new Set(currentItemCategories);
-    const allCategories = new Set(getAllUniqueCategories());
+  let selectedCategories = new Set(currentItemCategories);
+  const allCategories = new Set(getAllUniqueCategories());
 
-    const render = () => {
-        selectedCategoriesContainer.innerHTML = '';
-        availableCategoriesList.innerHTML = '';
+  const render = () => {
+    selectedCategoriesContainer.innerHTML = "";
+    availableCategoriesList.innerHTML = "";
 
-        selectedCategories.forEach(text => {
-            const pill = createPill(text, true);
-            selectedCategoriesContainer.appendChild(pill);
-        });
+    selectedCategories.forEach(text => {
+      const pill = createPill(text, true);
+      selectedCategoriesContainer.appendChild(pill);
+    });
 
-        allCategories.forEach(text => {
-            if (!selectedCategories.has(text)) {
-                const pill = createPill(text, false);
-                availableCategoriesList.appendChild(pill);
-            }
-        });
-    };
+    allCategories.forEach(text => {
+      if (!selectedCategories.has(text)) {
+        const pill = createPill(text, false);
+        availableCategoriesList.appendChild(pill);
+      }
+    });
+  };
 
-    const createPill = (text, isSelected) => {
-        const clone = categoryPillTemplate.content.cloneNode(true);
-        const pill = clone.querySelector('.category-pill');
-        pill.querySelector('.pill-text').textContent = text;
-        pill.dataset.value = text;
+  const createPill = (text, isSelected) => {
+    const clone = categoryPillTemplate.content.cloneNode(true);
+    const pill = clone.querySelector(".category-pill");
+    pill.querySelector(".pill-text").textContent = text;
+    pill.dataset.value = text;
 
-        if (isSelected) {
-            const removeBtn = pill.querySelector('.remove-pill-btn');
-            removeBtn.addEventListener('click', () => removeCategory(text));
-        } else {
-            pill.querySelector('.remove-pill-btn').remove();
-            pill.addEventListener('click', () => addCategory(text));
-        }
-        return pill;
-    };
+    if (isSelected) {
+      const removeBtn = pill.querySelector(".remove-pill-btn");
+      removeBtn.addEventListener("click", () => removeCategory(text));
+    } else {
+      pill.querySelector(".remove-pill-btn").remove();
+      pill.addEventListener("click", () => addCategory(text));
+    }
+    return pill;
+  };
 
-    const addCategory = (text) => {
-        const cleanedText = text.trim();
-        if (cleanedText && !selectedCategories.has(cleanedText)) {
-            selectedCategories.add(cleanedText);
-            allCategories.add(cleanedText); 
-            render();
-        }
-    };
+  const addCategory = text => {
+    const cleanedText = text.trim();
+    if (cleanedText && !selectedCategories.has(cleanedText)) {
+      selectedCategories.add(cleanedText);
+      allCategories.add(cleanedText);
+      render();
+    }
+  };
 
-    const removeCategory = (text) => {
-        selectedCategories.delete(text);
-        render();
-    };
-
-    const handleAddAction = () => {
-        addCategory(categoryInputField.value);
-        categoryInputField.value = '';
-        categoryInputField.focus();
-    };
-    
-    const handleEnterKey = (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            handleAddAction();
-        }
-    };
-
-    addCategoryBtn.addEventListener('click', handleAddAction);
-    categoryInputField.addEventListener('keydown', handleEnterKey);
-
+  const removeCategory = text => {
+    selectedCategories.delete(text);
     render();
+  };
 
-    const cleanup = () => {
-        addCategoryBtn.removeEventListener('click', handleAddAction);
-        categoryInputField.removeEventListener('keydown', handleEnterKey);
-    };
+  const handleAddAction = () => {
+    addCategory(categoryInputField.value);
+    categoryInputField.value = "";
+    categoryInputField.focus();
+  };
 
-    return {
-        getSelectedCategories: () => Array.from(selectedCategories),
-        cleanup: cleanup
-    };
+  const handleEnterKey = e => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddAction();
+    }
+  };
+
+  addCategoryBtn.addEventListener("click", handleAddAction);
+  categoryInputField.addEventListener("keydown", handleEnterKey);
+
+  render();
+
+  const cleanup = () => {
+    addCategoryBtn.removeEventListener("click", handleAddAction);
+    categoryInputField.removeEventListener("keydown", handleEnterKey);
+  };
+
+  return {
+    getSelectedCategories: () => Array.from(selectedCategories),
+    cleanup: cleanup,
+  };
 }
-
 
 function handlePriceConversion(sourceInput, targetInput) {
   const sourceValue = parseFloat(sourceInput.value);
@@ -130,18 +127,15 @@ function handlePriceConversion(sourceInput, targetInput) {
   }
 }
 
-// REFACTORED: This function now only handles the background sync logic.
-async function syncQuantityChange(originalInventory, itemBeforeEdit, currentItem, reason) {
+async function syncQuantityChange(
+  originalInventory,
+  itemBeforeEdit,
+  currentItem,
+  reason
+) {
   const syncToastId = showStatus("جاري مزامنة تغيير الكمية...", "syncing");
-
   try {
-    const { sha: latestSha } = await api.fetchFromGitHub();
-
-    if (latestSha !== originalInventory.fileSha) {
-      throw new ConflictError("Conflict detected");
-    }
-
-    await api.saveToGitHub();
+    await api.saveInventory();
     await logAction({
       action: ACTION_TYPES.QUANTITY_UPDATED,
       targetId: currentItem.id,
@@ -152,11 +146,8 @@ async function syncQuantityChange(originalInventory, itemBeforeEdit, currentItem
         reason: reason,
       },
     });
-    
-    updateStatus(syncToastId, "تمت المزامنة بنجاح!", "success");
-
+    updateStatus(syncToastId, "تمت مزامنة تغيير الكمية بنجاح!", "success");
   } catch (error) {
-    // Rollback logic
     console.error("Sync failed, rolling back:", error);
     appState.inventory = originalInventory;
     saveLocalData();
@@ -164,7 +155,6 @@ async function syncQuantityChange(originalInventory, itemBeforeEdit, currentItem
     updateStatus(syncToastId, "فشلت المزامنة! تم استرجاع البيانات.", "error");
   }
 }
-
 
 async function handleSaleFormSubmit(e) {
   e.preventDefault();
@@ -177,14 +167,12 @@ async function handleSaleFormSubmit(e) {
     document.getElementById("sale-quantity").value,
     10
   );
-
   if (!item || item.quantity < quantityToSell || quantityToSell <= 0) {
     showStatus("خطأ في البيانات أو الكمية غير متوفرة.", "error");
     saveButton.disabled = false;
     return;
   }
-  
-  // --- OPTIMISTIC UPDATE ---
+
   const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
   const originalSales = JSON.parse(JSON.stringify(appState.sales));
 
@@ -205,44 +193,36 @@ async function handleSaleFormSubmit(e) {
     timestamp: new Date().toISOString(),
   };
 
-  // 1. Update state immediately
+  const syncToastId = showStatus("جاري تسجيل البيع...", "syncing");
+
   item.quantity -= quantityToSell;
   appState.sales.push(saleRecord);
-  
-  // 2. Update UI immediately
+
   saveLocalData();
   filterAndRenderItems(true);
   getDOMElements().saleModal.close();
-  showStatus("تم تسجيل البيع محليًا.", "success", { duration: 2000 });
-
-  // 3. Sync in the background
-  const syncToastId = showStatus("جاري مزامنة البيع...", "syncing");
 
   try {
-    const { sha: latestSha } = await api.fetchFromGitHub();
-    if (latestSha !== originalInventory.fileSha) {
-      throw new ConflictError("Conflict detected");
-    }
-    
-    await api.saveToGitHub();
+    await api.saveInventory();
     await api.saveSales();
-    
     await logAction({
       action: ACTION_TYPES.SALE_RECORDED,
       targetId: item.id,
       targetName: item.name,
       details: { quantity: quantityToSell, saleId: saleRecord.saleId },
     });
-
-    updateStatus(syncToastId, "تمت مزامنة البيع بنجاح!", "success");
-    
+    updateStatus(syncToastId, "تم تسجيل البيع ومزامنته بنجاح!", "success");
   } catch (error) {
     console.error("Sale sync failed, rolling back:", error);
     appState.inventory = originalInventory;
     appState.sales = originalSales;
     saveLocalData();
     filterAndRenderItems(true);
-    updateStatus(syncToastId, "فشل مزامنة البيع! تم استرجاع البيانات.", "error");
+    updateStatus(
+      syncToastId,
+      "فشل مزامنة البيع! تم استرجاع البيانات.",
+      "error"
+    );
   } finally {
     if (appState.currentView === "dashboard") {
       const { renderDashboard } = await import("../renderer.js");
@@ -260,7 +240,7 @@ export function openItemModal(itemId = null) {
   elements.imagePreview.classList.add("image-preview-hidden");
   elements.imagePlaceholder.style.display = "flex";
   elements.regenerateSkuBtn.style.display = "none";
-  
+
   if (itemId) {
     const item = appState.inventory.items.find(i => i.id === itemId);
     if (item) {
@@ -268,9 +248,9 @@ export function openItemModal(itemId = null) {
       elements.itemIdInput.value = item.id;
       document.getElementById("item-sku").value = item.sku;
       document.getElementById("item-name").value = item.name;
-      
+
       categoryInputManager = setupCategoryInput(item.categories || []);
-      
+
       document.getElementById("item-oem-pn").value = item.oemPartNumber || "";
       document.getElementById("item-compatible-pn").value =
         item.compatiblePartNumber || "";
@@ -286,6 +266,7 @@ export function openItemModal(itemId = null) {
         item.sellPriceUsd || 0;
       document.getElementById("item-notes").value = item.notes;
       populateSupplierDropdown(item.supplierId);
+
       if (item.imagePath) {
         if (item.imagePath.startsWith("http")) {
           elements.imagePreview.src = item.imagePath;
@@ -323,6 +304,7 @@ export function openSaleModal(itemId) {
   elements.saleItemName.textContent = item.name;
   const saleQuantityInput = document.getElementById("sale-quantity");
   const salePriceInput = document.getElementById("sale-price");
+
   const isIQD = appState.activeCurrency === "IQD";
   const price = isIQD ? item.sellPriceIqd || 0 : item.sellPriceUsd || 0;
   const symbol = isIQD ? "د.ع" : "$";
@@ -346,83 +328,93 @@ async function handleItemFormSubmit(e) {
   const saveButton = document.getElementById("save-item-btn");
   saveButton.disabled = true;
 
-  // --- OPTIMISTIC UPDATE ---
   const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
 
   const itemId = document.getElementById("item-id").value;
-  const existingItemIndex = appState.inventory.items.findIndex(i => i.id === itemId);
-  const originalItemForLog = existingItemIndex !== -1 ? originalInventory.items[existingItemIndex] : null;
-  
+  const existingItemIndex = appState.inventory.items.findIndex(
+    i => i.id === itemId
+  );
+  const originalItemForLog =
+    existingItemIndex !== -1
+      ? { ...appState.inventory.items[existingItemIndex] }
+      : null;
   const categories = categoryInputManager.getSelectedCategories();
 
   const itemData = {
-      id: itemId || `item_${Date.now()}`,
-      sku: document.getElementById("item-sku").value,
-      name: document.getElementById("item-name").value,
-      categories: categories,
-      oemPartNumber: document.getElementById("item-oem-pn").value.trim(),
-      compatiblePartNumber: document.getElementById("item-compatible-pn").value.trim(),
-      quantity: parseInt(document.getElementById("item-quantity").value, 10) || 0,
-      alertLevel: parseInt(document.getElementById("item-alert-level").value, 10) || 5,
-      costPriceIqd: parseFloat(document.getElementById("item-cost-price-iqd").value) || 0,
-      sellPriceIqd: parseFloat(document.getElementById("item-sell-price-iqd").value) || 0,
-      costPriceUsd: parseFloat(document.getElementById("item-cost-price-usd").value) || 0,
-      sellPriceUsd: parseFloat(document.getElementById("item-sell-price-usd").value) || 0,
-      notes: document.getElementById("item-notes").value,
-      imagePath: originalItemForLog ? originalItemForLog.imagePath : null,
-      supplierId: document.getElementById("item-supplier").value || null,
+    id: itemId || `item_${Date.now()}`,
+    sku: document.getElementById("item-sku").value,
+    name: document.getElementById("item-name").value,
+    categories: categories,
+    oemPartNumber: document.getElementById("item-oem-pn").value.trim(),
+    compatiblePartNumber: document
+      .getElementById("item-compatible-pn")
+      .value.trim(),
+    quantity: parseInt(document.getElementById("item-quantity").value, 10) || 0,
+    alertLevel:
+      parseInt(document.getElementById("item-alert-level").value, 10) || 5,
+    costPriceIqd:
+      parseFloat(document.getElementById("item-cost-price-iqd").value) || 0,
+    sellPriceIqd:
+      parseFloat(document.getElementById("item-sell-price-iqd").value) || 0,
+    costPriceUsd:
+      parseFloat(document.getElementById("item-cost-price-usd").value) || 0,
+    sellPriceUsd:
+      parseFloat(document.getElementById("item-sell-price-usd").value) || 0,
+    notes: document.getElementById("item-notes").value,
+    imagePath: originalItemForLog ? originalItemForLog.imagePath : null,
+    supplierId: document.getElementById("item-supplier").value || null,
   };
   delete itemData.category;
-  
-  // 1. Update state immediately
+
+  const syncToastId = showStatus("جاري حفظ المنتج...", "syncing");
+
   if (existingItemIndex !== -1) {
-      appState.inventory.items[existingItemIndex] = itemData;
+    appState.inventory.items[existingItemIndex] = itemData;
   } else {
-      appState.inventory.items.push(itemData);
+    appState.inventory.items.push(itemData);
   }
-  
-  // 2. Update UI immediately
+
   saveLocalData();
   filterAndRenderItems(true);
   renderCategoryFilter();
   getDOMElements().itemModal.close();
-  showStatus("تم حفظ المنتج محليًا.", "success", { duration: 2000 });
 
-  // 3. Sync in the background
-  const syncToastId = showStatus("جاري مزامنة المنتج...", "syncing");
-  
   try {
     if (appState.selectedImageFile) {
-        updateStatus(syncToastId, "جاري ضغط ورفع الصورة...", "syncing");
-        const compressedImageBlob = await compressImage(appState.selectedImageFile);
-        itemData.imagePath = await api.uploadImageToGitHub(compressedImageBlob, appState.selectedImageFile.name);
-        
-        // Update the item in the state with the new image path
-        const finalItemIndex = appState.inventory.items.findIndex(i => i.id === itemData.id);
-        if(finalItemIndex !== -1) appState.inventory.items[finalItemIndex].imagePath = itemData.imagePath;
-        saveLocalData();
-    }
-    
-    updateStatus(syncToastId, "جاري مزامنة المنتج...", "syncing");
-    const { sha: latestSha } = await api.fetchFromGitHub();
-    if (latestSha !== originalInventory.fileSha) {
-      throw new ConflictError("Conflict detected");
+      updateStatus(syncToastId, "جاري ضغط ورفع الصورة...", "syncing");
+      const compressedImageBlob = await compressImage(
+        appState.selectedImageFile
+      );
+      itemData.imagePath = await api.uploadImageToGitHub(
+        compressedImageBlob,
+        appState.selectedImageFile.name
+      );
+      const finalItemIndex = appState.inventory.items.findIndex(
+        i => i.id === itemData.id
+      );
+      if (finalItemIndex !== -1)
+        appState.inventory.items[finalItemIndex].imagePath = itemData.imagePath;
+      saveLocalData();
+      updateStatus(syncToastId, "جاري مزامنة المنتج...", "syncing");
     }
 
-    await api.saveToGitHub();
-    
-    // Logging logic remains the same
+    await api.saveInventory();
+
     if (originalItemForLog) {
-      // ... (your existing logging logic for updates)
+      // Logic for logging updates would go here
     } else {
-      await logAction({ action: ACTION_TYPES.ITEM_CREATED, targetId: itemData.id, targetName: itemData.name });
+      await logAction({
+        action: ACTION_TYPES.ITEM_CREATED,
+        targetId: itemData.id,
+        targetName: itemData.name,
+      });
     }
 
-    updateStatus(syncToastId, "تمت مزامنة المنتج بنجاح!", "success");
-
+    updateStatus(syncToastId, "تم الحفظ والمزامنة بنجاح!", "success");
   } catch (error) {
     console.error("Item form sync failed, rolling back:", error);
     appState.inventory = originalInventory;
+
     saveLocalData();
     filterAndRenderItems(true);
     renderCategoryFilter();
@@ -432,7 +424,6 @@ async function handleItemFormSubmit(e) {
     appState.selectedImageFile = null;
   }
 }
-
 
 function handleImageSelection(file) {
   if (!file || !file.type.startsWith("image/")) {
@@ -451,6 +442,7 @@ function handleImageSelection(file) {
 
     cropperImage.src = event.target.result;
     openModal(cropperModal);
+
     if (cropper) {
       cropper.destroy();
     }
@@ -474,9 +466,12 @@ export function setupModalListeners(elements) {
     document.getElementById("item-sku").value = generateUniqueSKU(existingSkus);
   });
   elements.itemForm.addEventListener("submit", handleItemFormSubmit);
-  
+
   elements.itemModal.addEventListener("close", () => {
-    if (categoryInputManager && typeof categoryInputManager.cleanup === 'function') {
+    if (
+      categoryInputManager &&
+      typeof categoryInputManager.cleanup === "function"
+    ) {
       categoryInputManager.cleanup();
       categoryInputManager = null;
     }
@@ -593,6 +588,7 @@ export function setupModalListeners(elements) {
   const costUsdInput = document.getElementById("item-cost-price-usd");
   const sellIqdInput = document.getElementById("item-sell-price-iqd");
   const sellUsdInput = document.getElementById("item-sell-price-usd");
+
   costIqdInput.addEventListener("input", () =>
     handlePriceConversion(costIqdInput, costUsdInput)
   );
@@ -617,29 +613,31 @@ export function setupModalListeners(elements) {
       elements.detailsQuantityValue.textContent = item.quantity;
     }
   });
-  
-  // REFACTORED: The close button now handles the optimistic UI flow for quantity changes.
   elements.closeDetailsModalBtn.addEventListener("click", async () => {
     const itemBeforeEdit = appState.itemStateBeforeEdit;
     const currentItem = appState.inventory.items.find(
       i => i.id === appState.currentItemId
     );
-    
-    // Check if quantity has changed
+
     if (
       itemBeforeEdit &&
       currentItem &&
       itemBeforeEdit.quantity !== currentItem.quantity
     ) {
       const reason = await getQuantityChangeReason();
-      if (reason !== null) { // User confirmed a reason or no reason
-        const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
-        // Update UI immediately
+      if (reason !== null) {
+        const originalInventory = JSON.parse(
+          JSON.stringify(appState.inventory)
+        );
         saveLocalData();
         filterAndRenderItems();
-        // Sync in the background
-        syncQuantityChange(originalInventory, itemBeforeEdit, currentItem, reason);
-      } else { // User cancelled the reason dialog, so we rollback the quantity change
+        syncQuantityChange(
+          originalInventory,
+          itemBeforeEdit,
+          currentItem,
+          reason
+        );
+      } else {
         const originalItemIndex = appState.inventory.items.findIndex(
           i => i.id === itemBeforeEdit.id
         );
@@ -649,12 +647,11 @@ export function setupModalListeners(elements) {
         filterAndRenderItems();
       }
     }
-    
+
     appState.itemStateBeforeEdit = null;
     appState.currentItemId = null;
     elements.detailsModal.close();
   });
-
 
   elements.detailsEditBtn.addEventListener("click", () => {
     elements.detailsModal.close();
@@ -675,15 +672,18 @@ export function setupModalListeners(elements) {
     if (confirmed) {
       const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
       const originalAuditLog = JSON.parse(JSON.stringify(appState.auditLog));
-      
+
+      const syncToastId = showStatus("جاري حذف المنتج...", "syncing");
+
       appState.inventory.items = appState.inventory.items.filter(
         item => item.id !== appState.currentItemId
       );
       elements.detailsModal.close();
+      saveLocalData();
       filterAndRenderItems(true);
 
       try {
-        await api.saveToGitHub();
+        await api.saveInventory();
         if (itemToDelete?.imagePath) {
           api
             .getGitHubDirectoryListing("images")
@@ -709,15 +709,14 @@ export function setupModalListeners(elements) {
           targetName: itemToDelete.name,
           details: { lastKnownSku: itemToDelete.sku },
         });
-        saveLocalData();
-        showStatus("تم حذف المنتج بنجاح!", "success");
 
+        updateStatus(syncToastId, "تم حذف المنتج بنجاح!", "success");
       } catch (error) {
         appState.inventory = originalInventory;
         appState.auditLog = originalAuditLog;
-
-        filterAndRenderItems(true); 
-        showStatus(`فشل الحذف: ${error.message}`, "error");
+        saveLocalData();
+        filterAndRenderItems(true);
+        updateStatus(syncToastId, `فشل الحذف: ${error.message}`, "error");
       }
     }
   });
@@ -747,4 +746,4 @@ export function setupModalListeners(elements) {
   document
     .getElementById("sale-price")
     .addEventListener("input", updateSaleTotal);
-        }
+}

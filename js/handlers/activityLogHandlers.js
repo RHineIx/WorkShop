@@ -5,7 +5,6 @@ import { saveLocalData } from "../app.js";
 import { showConfirmationModal } from "../ui_helpers.js";
 import { showStatus, updateStatus } from "../notifications.js";
 import { renderAuditLog } from "../renderer.js";
-import { ConflictError } from "../api.js";
 
 async function handleLogCleanup() {
   if (!appState.auditLog || appState.auditLog.length === 0) {
@@ -19,10 +18,10 @@ async function handleLogCleanup() {
       "هل أنت متأكد من رغبتك في حذف جميع إدخالات سجل النشاطات نهائياً؟ لا يمكن التراجع عن هذا الإجراء.",
     confirmText: "نعم, حذف الكل",
   });
+
   if (!confirmed) return;
 
   const originalLog = JSON.parse(JSON.stringify(appState.auditLog));
-  const originalLogFileSha = appState.auditLogFileSha;
 
   appState.auditLog = [];
   saveLocalData();
@@ -33,10 +32,6 @@ async function handleLogCleanup() {
 
   const syncToastId = showStatus("جاري مزامنة السجل...", "syncing");
   try {
-    const { sha: latestSha } = await api.fetchAuditLog();
-    if (latestSha !== originalLogFileSha) {
-      throw new ConflictError("Audit log was updated elsewhere.");
-    }
     await api.saveAuditLog();
     updateStatus(syncToastId, "تمت مزامنة السجل بنجاح!", "success");
   } catch (error) {
@@ -55,11 +50,10 @@ export function setupActivityLogListeners(elements) {
     elements.clearLogBtn.addEventListener("click", handleLogCleanup);
   }
 
-  // NEW: Add event listener for the filter dropdown
   if (elements.activityLogFilter) {
       elements.activityLogFilter.addEventListener('change', (e) => {
           appState.activityLogFilter = e.target.value;
           renderAuditLog();
       });
   }
-      }
+}

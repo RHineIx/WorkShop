@@ -6,8 +6,6 @@ import { showStatus, hideSyncStatus, updateStatus } from "../notifications.js";
 import { renderSupplierList, populateSupplierDropdown, filterAndRenderItems } from "../renderer.js";
 import { getDOMElements, openModal } from "../ui.js";
 import { showConfirmationModal } from "../ui_helpers.js";
-import { ConflictError } from "../api.js";
-
 
 async function handleSupplierFormSubmit(e) {
   e.preventDefault();
@@ -15,12 +13,12 @@ async function handleSupplierFormSubmit(e) {
   const id = elements.supplierIdInput.value;
   const name = document.getElementById("supplier-name").value.trim();
   const phone = document.getElementById("supplier-phone").value.trim();
+
   if (!name) {
     showStatus("يرجى إدخال اسم المورّد.", "error");
     return;
   }
 
-  // --- OPTIMISTIC UI for Add/Edit Supplier ---
   const originalSuppliers = JSON.parse(JSON.stringify(appState.suppliers));
   let updatedSupplier;
   const isEditing = !!id;
@@ -41,7 +39,6 @@ async function handleSupplierFormSubmit(e) {
     appState.suppliers.push(updatedSupplier);
   }
   
-  // Update UI Immediately
   renderSupplierList();
   populateSupplierDropdown(elements.itemSupplierSelect.value);
   elements.supplierForm.reset();
@@ -50,28 +47,20 @@ async function handleSupplierFormSubmit(e) {
   elements.cancelEditSupplierBtn.classList.add("view-hidden");
   showStatus(`تم ${isEditing ? 'تعديل' : 'إضافة'} المورّد محليًا.`, "success", { duration: 2000 });
 
-  // Sync in background
   const syncToastId = showStatus(`جاري مزامنة المورّد...`, "syncing");
   try {
-    const { sha: latestSha } = await api.fetchSuppliers();
-    if (latestSha !== originalSuppliers.fileSha) {
-        throw new ConflictError("Supplier list was updated elsewhere.");
-    }
-
     await api.saveSuppliers();
     saveLocalData();
     updateStatus(syncToastId, `تمت مزامنة المورّد بنجاح!`, "success");
-
   } catch (error) {
     console.error("Supplier sync failed, rolling back:", error);
-    appState.suppliers = originalSuppliers; // Rollback
+    appState.suppliers = originalSuppliers;
     renderSupplierList();
     populateSupplierDropdown(elements.itemSupplierSelect.value);
     updateStatus(syncToastId, `فشل مزامنة المورّد! تم استرجاع البيانات.`, "error");
   }
 }
 
-// REFACTORED: Switched to Optimistic UI pattern
 async function handleDeleteSupplier(supplierId) {
   const linkedProductsCount = appState.inventory.items.filter(
     item => item.supplierId === supplierId
@@ -88,11 +77,9 @@ async function handleDeleteSupplier(supplierId) {
   });
 
   if (confirmed) {
-    // 1. Store original state for potential rollback
     const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
     const originalSuppliers = JSON.parse(JSON.stringify(appState.suppliers));
 
-    // 2. Update state and UI immediately
     if (linkedProductsCount > 0) {
       appState.inventory.items.forEach(item => {
         if (item.supplierId === supplierId) {
@@ -104,30 +91,21 @@ async function handleDeleteSupplier(supplierId) {
 
     saveLocalData();
     renderSupplierList();
-    filterAndRenderItems(); // Re-render inventory in case items were unlinked
+    filterAndRenderItems();
     populateSupplierDropdown(getDOMElements().itemSupplierSelect.value);
     showStatus("تم حذف المورّد محليًا.", "success", { duration: 2000 });
 
-    // 3. Sync in the background
     const syncToastId = showStatus("جاري مزامنة الحذف...", "syncing");
     try {
-        const { sha: latestInvSha } = await api.fetchFromGitHub();
-        const { sha: latestSupSha } = await api.fetchSuppliers();
-
-        if (latestInvSha !== originalInventory.fileSha || latestSupSha !== originalSuppliers.fileSha) {
-            throw new ConflictError("Data was updated elsewhere.");
-        }
-        
         if (linkedProductsCount > 0) {
-            await api.saveToGitHub();
+            await api.saveInventory();
         }
         await api.saveSuppliers();
         updateStatus(syncToastId, "تمت مزامنة الحذف بنجاح!", "success");
-
     } catch (error) {
       console.error("Supplier deletion sync failed, rolling back:", error);
-      appState.inventory = originalInventory; // Rollback
-      appState.suppliers = originalSuppliers; // Rollback
+      appState.inventory = originalInventory;
+      appState.suppliers = originalSuppliers;
       saveLocalData();
       renderSupplierList();
       filterAndRenderItems();
