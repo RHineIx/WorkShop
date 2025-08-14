@@ -3,6 +3,7 @@ import { appState } from "./state.js";
 import { fetchImageWithAuth } from "./api.js";
 import { sanitizeHTML } from "./utils.js";
 import { elements } from "./dom.js";
+import { ACTION_TYPES } from "./logger.js";
 
 const ITEMS_PER_PAGE = 20;
 const imageObserver = new IntersectionObserver(
@@ -345,17 +346,14 @@ function renderSalesLog(filteredSales) {
   }, {});
   const logHTML = Object.entries(salesByDay)
     .map(([date, sales]) => {
-      // CHANGED: Use a more robust way to parse the date string.
       const [year, month, day] = date.split('-').map(Number);
       const dateObj = new Date(year, month - 1, day);
       
-      // Add 12 hours to the date to avoid timezone issues and better align with the Hijri day.
       dateObj.setHours(12);
 
-      // CHANGED: Added "ca-islamic" to specify the Islamic calendar.
       const dayHeader = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-nu-latn", {
         dateStyle: "full",
-        timeZone: "Asia/Baghdad" // Ensure consistency regardless of user's system timezone
+        timeZone: "Asia/Baghdad"
       }).format(dateObj);
 
       const salesCardsHTML = sales
@@ -672,15 +670,47 @@ const getActionDetails = log => {
 export function renderAuditLog() {
   if (!elements.auditLogList) return;
   elements.auditLogList.innerHTML = "";
-  if (!appState.auditLog || appState.auditLog.length === 0) {
+
+  let logsToRender = [...appState.auditLog];
+
+  const filter = appState.activityLogFilter;
+  if (filter !== 'all') {
+    const otherUpdateTypes = [
+        ACTION_TYPES.NAME_UPDATED, 
+        ACTION_TYPES.SKU_UPDATED, 
+        ACTION_TYPES.CATEGORY_UPDATED,
+        ACTION_TYPES.PRICE_UPDATED,
+        ACTION_TYPES.NOTES_UPDATED,
+        ACTION_TYPES.IMAGE_UPDATED,
+        ACTION_TYPES.SUPPLIER_UPDATED
+    ];
+
+    logsToRender = appState.auditLog.filter(log => {
+        switch (filter) {
+            case 'sale':
+                return log.action === ACTION_TYPES.SALE_RECORDED;
+            case 'quantity':
+                return log.action === ACTION_TYPES.QUANTITY_UPDATED;
+            case 'lifecycle':
+                return log.action === ACTION_TYPES.ITEM_CREATED || log.action === ACTION_TYPES.ITEM_DELETED;
+            case 'other':
+                return otherUpdateTypes.includes(log.action);
+            default:
+                return true;
+        }
+    });
+  }
+
+  if (logsToRender.length === 0) {
     elements.auditLogList.innerHTML =
-      '<p style="padding: 1rem;">لا توجد نشاطات مسجلة بعد.</p>';
+      '<p style="padding: 1rem;">لا توجد نشاطات تطابق هذا الفلتر.</p>';
     return;
   }
 
-  const sortedLog = [...appState.auditLog].sort(
+  const sortedLog = logsToRender.sort(
     (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
   );
+  
   const fragment = document.createDocumentFragment();
 
   sortedLog.forEach(logItem => {
@@ -702,4 +732,4 @@ export function renderAuditLog() {
     fragment.appendChild(clone);
   });
   elements.auditLogList.appendChild(fragment);
-              }
+      }
