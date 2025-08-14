@@ -349,8 +349,8 @@ function renderSalesLog(filteredSales) {
       const [year, month, day] = date.split('-').map(Number);
       const dateObj = new Date(year, month - 1, day);
       
-      // CHANGED: Reverted to Gregorian calendar by removing "-ca-islamic"
-      const dayHeader = new Intl.DateTimeFormat("ar-SA-u-nu-latn", {
+      // CHANGED: Explicitly set the calendar to Gregorian ('ca-gregory') to override any browser defaults.
+      const dayHeader = new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", {
         dateStyle: "full",
         timeZone: "Asia/Baghdad"
       }).format(dateObj);
@@ -731,4 +731,4 @@ export function renderAuditLog() {
     fragment.appendChild(clone);
   });
   elements.auditLogList.appendChild(fragment);
-      }
+    }
