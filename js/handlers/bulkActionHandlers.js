@@ -4,6 +4,8 @@ import * as ui from "../ui.js";
 import * as api from "../api.js";
 import { saveLocalData } from "../app.js";
 import { pushState } from "../navigation.js";
+import * as renderer from "../renderer.js";
+import * as notifications from "../notifications.js";
 
 let longPressTriggered = false;
 export function isLongPressTriggered() {
@@ -59,37 +61,48 @@ async function handleBulkCategoryChange(e) {
   e.preventDefault();
   const newCategory = e.target.elements["bulk-item-category"].value.trim();
   if (!newCategory) return;
-  ui.showStatus("التحقق من البيانات...", "syncing");
+
+  notifications.showStatus("التحقق من البيانات...", "syncing");
   try {
-    const { sha: latestSha } = await api.fetchFromGitHub();
+    const { data: latestInventory, sha: latestSha } =
+      await api.fetchFromGitHub();
+
     if (latestSha !== appState.fileSha) {
-      ui.hideSyncStatus();
-      ui.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
-        showRefreshButton: true,
-      });
+      notifications.hideSyncStatus();
+      notifications.showStatus(
+        "البيانات غير محدّثة. تم تحديثها من جهاز آخر.",
+        "error",
+        {
+          showRefreshButton: true,
+        }
+      );
       return;
     }
+
+    appState.inventory = latestInventory;
+    appState.fileSha = latestSha;
 
     appState.selectedItemIds.forEach(id => {
       const item = appState.inventory.items.find(i => i.id === id);
       if (item) item.category = newCategory;
     });
+
     await api.saveToGitHub();
     saveLocalData();
-    ui.hideSyncStatus();
-    ui.showStatus(
+    notifications.hideSyncStatus();
+    notifications.showStatus(
       `تم تحديث فئة ${appState.selectedItemIds.size} عناصر بنجاح.`,
       "success"
     );
   } catch (error) {
-    ui.hideSyncStatus();
-    ui.showStatus(`فشل تحديث الفئة: ${error.message}`, "error");
+    notifications.hideSyncStatus();
+    notifications.showStatus(`فشل تحديث الفئة: ${error.message}`, "error");
   } finally {
     ui.getDOMElements().bulkCategoryModal.close();
     exitSelectionMode();
-    ui.filterAndRenderItems(true);
-    ui.populateCategoryDatalist();
-    ui.renderCategoryFilter();
+    renderer.filterAndRenderItems(true);
+    renderer.populateCategoryDatalist();
+    renderer.renderCategoryFilter();
   }
 }
 
@@ -98,35 +111,45 @@ async function handleBulkSupplierChange(e) {
   const newSupplierId = e.target.elements["bulk-item-supplier"].value;
   if (!newSupplierId) return;
 
-  ui.showStatus("التحقق من البيانات...", "syncing");
+  notifications.showStatus("التحقق من البيانات...", "syncing");
   try {
-    const { sha: latestSha } = await api.fetchFromGitHub();
+    const { data: latestInventory, sha: latestSha } =
+      await api.fetchFromGitHub();
+
     if (latestSha !== appState.fileSha) {
-      ui.hideSyncStatus();
-      ui.showStatus("البيانات غير محدّثة. تم تحديثها من جهاز آخر.", "error", {
-        showRefreshButton: true,
-      });
+      notifications.hideSyncStatus();
+      notifications.showStatus(
+        "البيانات غير محدّثة. تم تحديثها من جهاز آخر.",
+        "error",
+        {
+          showRefreshButton: true,
+        }
+      );
       return;
     }
+
+    appState.inventory = latestInventory;
+    appState.fileSha = latestSha;
 
     appState.selectedItemIds.forEach(id => {
       const item = appState.inventory.items.find(i => i.id === id);
       if (item) item.supplierId = newSupplierId;
     });
+
     await api.saveToGitHub();
     saveLocalData();
-    ui.hideSyncStatus();
-    ui.showStatus(
+    notifications.hideSyncStatus();
+    notifications.showStatus(
       `تم تحديث مورّد ${appState.selectedItemIds.size} عناصر بنجاح.`,
       "success"
     );
   } catch (error) {
-    ui.hideSyncStatus();
-    ui.showStatus(`فشل تحديث المورّد: ${error.message}`, "error");
+    notifications.hideSyncStatus();
+    notifications.showStatus(`فشل تحديث المورّد: ${error.message}`, "error");
   } finally {
     ui.getDOMElements().bulkSupplierModal.close();
     exitSelectionMode();
-    ui.filterAndRenderItems(true);
+    renderer.filterAndRenderItems(true);
   }
 }
 
@@ -140,7 +163,8 @@ export function setupBulkActionListeners(elements) {
   document
     .getElementById("bulk-change-supplier-btn")
     .addEventListener("click", () => {
-      ui.populateBulkSupplierDropdown();
+      // --- FIX: This now correctly calls the function from the renderer module ---
+      renderer.populateBulkSupplierDropdown();
       elements.bulkSupplierForm.reset();
       ui.openModal(elements.bulkSupplierModal);
     });

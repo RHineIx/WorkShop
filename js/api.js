@@ -49,7 +49,6 @@ const b64toBlob = (b64Data, contentType = "", sliceSize = 512) => {
   }
   return new Blob(byteArrays, { type: contentType });
 };
-
 const toBase64 = file =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -57,7 +56,6 @@ const toBase64 = file =>
     reader.onload = () => resolve(reader.result.split(",")[1]);
     reader.onerror = error => reject(error);
   });
-
 async function fetchJsonFromGitHub(filePath, defaultValue) {
   if (!appState.syncConfig) return null;
   const { username, repo } = appState.syncConfig;
@@ -86,31 +84,33 @@ async function fetchJsonFromGitHub(filePath, defaultValue) {
 }
 
 async function saveJsonToGitHub(filePath, dataObject, sha, commitMessage) {
-    if (!appState.syncConfig) throw new Error("Sync config is not set.");
-    const { username, repo } = appState.syncConfig;
-    const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${filePath}`;
+  if (!appState.syncConfig) throw new Error("Sync config is not set.");
+  const { username, repo } = appState.syncConfig;
+  const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${filePath}`;
 
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify(dataObject, null, 2))));
-    const body = {
-        message: `${commitMessage} - ${new Date().toISOString()}`,
-        content: content,
-        sha: sha,
-    };
+  const content = btoa(
+    unescape(encodeURIComponent(JSON.stringify(dataObject, null, 2)))
+  );
+  const body = {
+    message: `${commitMessage} - ${new Date().toISOString()}`,
+    content: content,
+    sha: sha,
+  };
+  const response = await apiFetch(apiUrl, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+  if (response.status === 409) {
+    throw new ConflictError(
+      `Conflict Error: The file '${filePath}' was updated elsewhere.`
+    );
+  }
+  if (!response.ok) {
+    throw new Error(`Failed to save '${filePath}': ${response.statusText}`);
+  }
 
-    const response = await apiFetch(apiUrl, {
-        method: "PUT",
-        body: JSON.stringify(body),
-    });
-
-    if (response.status === 409) {
-        throw new ConflictError(`Conflict Error: The file '${filePath}' was updated elsewhere.`);
-    }
-    if (!response.ok) {
-        throw new Error(`Failed to save '${filePath}': ${response.statusText}`);
-    }
-
-    const responseData = await response.json();
-    return responseData.content.sha;
+  const responseData = await response.json();
+  return responseData.content.sha;
 }
 
 export const triggerBackupWorkflow = async () => {
@@ -119,7 +119,6 @@ export const triggerBackupWorkflow = async () => {
   }
   const { username, repo } = appState.syncConfig;
   const url = `https://api.github.com/repos/${username}/${repo}/actions/workflows/backup-to-telegram.yml/dispatches`;
-
   const response = await apiFetch(url, {
     method: "POST",
     body: JSON.stringify({
@@ -177,7 +176,6 @@ export const fetchImageWithAuth = async path => {
   if (!appState.syncConfig) return null;
   const { username, repo } = appState.syncConfig;
   const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
-
   try {
     const response = await apiFetch(apiUrl);
     if (!response.ok) throw new Error("Failed to fetch image from GitHub");
@@ -192,7 +190,6 @@ export const fetchImageWithAuth = async path => {
     return null;
   }
 };
-
 export const uploadImageToGitHub = async (imageBlob, originalFileName) => {
   if (!appState.syncConfig) {
     throw new Error("يجب إعداد المزامنة أولاً لرفع الصور.");
@@ -214,7 +211,6 @@ export const uploadImageToGitHub = async (imageBlob, originalFileName) => {
   const data = await response.json();
   return data.content.path;
 };
-
 export const fetchFromGitHub = async () => {
   const result = await fetchJsonFromGitHub("inventory.json", {
     items: [],
@@ -226,13 +222,13 @@ export const fetchFromGitHub = async () => {
   return result;
 };
 
+// REFACTORED: This function now directly uses the sha from appState.
+// The calling function is responsible for ensuring appState is up-to-date.
 export const saveToGitHub = async () => {
-  // Always fetch latest sha before saving to avoid conflicts
-  const { sha } = await fetchJsonFromGitHub("inventory.json", {});
   appState.fileSha = await saveJsonToGitHub(
     "inventory.json",
     appState.inventory,
-    sha,
+    appState.fileSha, // Use the sha already in the state
     "Update inventory data"
   );
 };
@@ -240,10 +236,11 @@ export const saveToGitHub = async () => {
 export const fetchSales = async () => {
   return await fetchJsonFromGitHub("sales.json", []);
 };
-
 export const saveSales = async () => {
-    const { sha } = await fetchJsonFromGitHub("sales.json", []);
-    appState.salesFileSha = await saveJsonToGitHub(
+  // This function can also be improved, but we will leave it for now
+  // as it's not related to the current bug.
+  const { sha } = await fetchJsonFromGitHub("sales.json", []);
+  appState.salesFileSha = await saveJsonToGitHub(
     "sales.json",
     appState.sales,
     sha,
@@ -254,10 +251,9 @@ export const saveSales = async () => {
 export const fetchSuppliers = async () => {
   return await fetchJsonFromGitHub("suppliers.json", []);
 };
-
 export const saveSuppliers = async () => {
-    const { sha } = await fetchJsonFromGitHub("suppliers.json", []);
-    appState.suppliersFileSha = await saveJsonToGitHub(
+  const { sha } = await fetchJsonFromGitHub("suppliers.json", []);
+  appState.suppliersFileSha = await saveJsonToGitHub(
     "suppliers.json",
     appState.suppliers,
     sha,
@@ -271,8 +267,8 @@ export const fetchAuditLog = async () => {
 };
 
 export const saveAuditLog = async () => {
-    const { sha } = await fetchJsonFromGitHub("audit-log.json", []);
-    appState.auditLogFileSha = await saveJsonToGitHub(
+  const { sha } = await fetchJsonFromGitHub("audit-log.json", []);
+  appState.auditLogFileSha = await saveJsonToGitHub(
     "audit-log.json",
     appState.auditLog,
     sha,
@@ -285,7 +281,6 @@ export const deleteFileFromGitHub = async (path, sha, message) => {
   if (!appState.syncConfig) return false;
   const { username, repo } = appState.syncConfig;
   const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
-
   const response = await apiFetch(apiUrl, {
     method: "DELETE",
     body: JSON.stringify({ message, sha }),
@@ -295,7 +290,6 @@ export const deleteFileFromGitHub = async (path, sha, message) => {
   }
   return response.ok;
 };
-
 export const getGitHubDirectoryListing = async path => {
   if (!appState.syncConfig) return [];
   const { username, repo } = appState.syncConfig;
@@ -309,14 +303,12 @@ export const getGitHubDirectoryListing = async path => {
   const data = await response.json();
   return Array.isArray(data) ? data : [];
 };
-
 export const createGitHubFile = async (path, content, message) => {
   if (!appState.syncConfig) return;
   const { username, repo } = appState.syncConfig;
   const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
 
   const base64Content = btoa(unescape(encodeURIComponent(content)));
-
   const response = await apiFetch(apiUrl, {
     method: "PUT",
     body: JSON.stringify({ message, content: base64Content }),
