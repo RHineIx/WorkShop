@@ -177,22 +177,30 @@
   flex-direction: column;
   flex-grow: 1;
 }
+
+.card-category-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-sm);
+  min-height: 25px; 
+}
+
 .card-category-tag {
   align-self: flex-start;
   background-color: var(--accent-soft-bg);
   color: var(--accent-soft-text);
-  padding: 0.25rem 0.625rem; /* 4px 10px */
-  border-radius: 0.375rem; /* 6px */
-  font-size: 0.75rem; /* 12px */
+  padding: 0.25rem 0.625rem; 
+  border-radius: 0.375rem; 
+  font-size: 0.75rem; 
   font-weight: 700;
-  margin-bottom: var(--spacing-sm);
 }
 
 .card-name {
-  font-size: 1.0625rem; /* 17px */
+  font-size: 1.0625rem; 
   font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 0.25rem; /* 4px */
+  margin-bottom: 0.25rem; 
   line-height: 1.4;
   flex-grow: 1;
   display: -webkit-box;
@@ -202,7 +210,7 @@
   overflow: hidden;
 }
 .card-sku {
-  font-size: 0.8125rem; /* 13px */
+  font-size: 0.8125rem; 
   font-weight: 500;
   color: var(--text-secondary);
   margin-bottom: var(--spacing-sm);
@@ -221,32 +229,32 @@
   gap: var(--spacing-sm);
 }
 .card-price {
-  font-size: 1.125rem; /* 18px */
+  font-size: 1.125rem; 
   font-weight: 800;
   color: var(--accent-color);
 }
 /* MODIFIED QUANTITY BADGE STYLE */
 .quantity-badge {
   position: absolute;
-  top: 0.625rem; /* 10px */
-  right: 0.625rem; /* 10px */
-  padding: 0.25rem 0.625rem; /* 4px 10px */
-  border-radius: 1.25rem; /* 20px */
-  font-size: 0.75rem; /* 12px */
+  top: 0.625rem; 
+  right: 0.625rem; 
+  padding: 0.25rem 0.625rem; 
+  border-radius: 1.25rem; 
+  font-size: 0.75rem; 
   font-weight: 700;
   color: white;
   background-color: var(--accent-color);
-  box-shadow: 0 0 0.75rem rgba(42, 105, 199, 0.7); /* 12px */
+  box-shadow: 0 0 0.75rem rgba(42, 105, 199, 0.7); 
   z-index: 5;
 }
 .quantity-badge.low-stock {
   background-color: var(--warning-color);
   color: var(--text-primary);
-  box-shadow: 0 0 0.75rem rgba(237, 137, 54, 0.7); /* 12px */
+  box-shadow: 0 0 0.75rem rgba(237, 137, 54, 0.7); 
 }
 .quantity-badge.out-of-stock {
   background-color: var(--danger-color);
-  box-shadow: 0 0 0.75rem rgba(229, 62, 62, 0.7); /* 12px */
+  box-shadow: 0 0 0.75rem rgba(229, 62, 62, 0.7); 
 }
 
 .skeleton-card {
@@ -257,9 +265,8 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  /* FIX: Apply the same width constraints as the real card */
   width: 100%;
-  max-width: 16rem; /* 256px */
+  max-width: 16rem; 
 }
 .skeleton-card .skeleton-image {
   width: 100%;
@@ -270,22 +277,16 @@
   padding: var(--spacing-sm);
 }
 
-/* --- Container Queries for a truly fluid card --- */
-
-/* For very narrow cards, adjust typography */
 @container (width < 10rem) {
-  /* ~160px */
   .card-name {
-    font-size: 0.95rem; /* ~15px */
+    font-size: 0.95rem;
   }
   .card-price {
-    font-size: 1rem; /* 16px */
+    font-size: 1rem;
   }
 }
 
-/* For cards smaller than 12rem, stack the footer */
 @container (width < 12rem) {
-  /* ~192px */
   .card-footer {
     flex-direction: column;
     align-items: flex-start;
@@ -299,10 +300,7 @@
   }
 }
 
-/* Comprehensive scaling for very narrow screens */
-/* UNIFIED BREAKPOINT */
 @media (max-width: 30rem) {
-  /* 480px */
   .stat-card {
     flex-direction: column;
     align-items: center;
@@ -317,62 +315,56 @@
     font-size: 1.25rem;
   }
 
-  /* Reduce padding inside the card */
   .card-info {
     padding: var(--spacing-sm);
   }
 
-  /* Shrink the category tag */
   .card-category-tag {
     font-size: 0.7rem;
     padding: 0.15rem 0.4rem;
+  }
+  
+  .card-category-tags-container {
     margin-bottom: var(--spacing-xs);
   }
 
-  /* Shrink the product name font */
   .card-name {
     font-size: 0.9rem;
-    -webkit-line-clamp: 3; /* Allow 3 lines if needed */
+    -webkit-line-clamp: 3; 
     line-clamp: 3;
     margin-bottom: var(--spacing-xs);
   }
 
-  /* Shrink the SKU font */
   .card-sku {
     font-size: 0.7rem;
     margin-bottom: var(--spacing-sm);
   }
 
-  /* Shrink the price font */
   .card-price {
-    font-size: 1rem; /* 16px */
+    font-size: 1rem;
   }
 
-  /* Ensure footer stays horizontal but with less space */
   .card-footer {
     gap: var(--spacing-sm);
   }
 
-  /* Shrink the gap between buttons */
   .card-actions {
     gap: var(--spacing-xs);
   }
 
-  /* Significantly shrink the buttons and their icons */
   .card-actions .icon-btn {
-    width: 2rem; /* 32px */
-    height: 2rem; /* 32px */
+    width: 2rem; 
+    height: 2rem; 
   }
 
   .card-actions .icon-btn iconify-icon {
-    font-size: 1.1rem; /* ~17.6px */
+    font-size: 1.1rem;
   }
 
-  /* Shrink the quantity badge */
   .quantity-badge {
-    font-size: 0.65rem; /* ~10.4px */
+    font-size: 0.65rem;
     padding: 0.15rem 0.5rem;
     top: 0.5rem;
     right: 0.5rem;
   }
-  }
+}

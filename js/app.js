@@ -20,6 +20,21 @@ import { setupEventListeners } from "./eventSetup.js";
 import { setupLayoutAdjustments } from "./layout.js";
 import { initNavigationListener } from "./navigation.js";
 
+function migrateDataModelIfNeeded() {
+  let isDataUpdated = false;
+  if (appState.inventory && appState.inventory.items) {
+    appState.inventory.items.forEach(item => {
+      if (typeof item.category === 'string' && item.category && !Array.isArray(item.categories)) {
+        console.log(`Migrating item: ${item.name}`);
+        item.categories = [item.category];
+        delete item.category;
+        isDataUpdated = true;
+      }
+    });
+  }
+  return isDataUpdated;
+}
+
 export function loadConfig() {
   const savedConfig = localStorage.getItem("inventoryAppSyncConfig");
   if (savedConfig) {
@@ -129,54 +144,45 @@ function handleUrlShortcuts() {
 
 function registerServiceWorker() {
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker
-      .register("./sw.js")
-      .then(registration => {
-        console.log("ServiceWorker registration successful.");
+    navigator.serviceWorker.register('./sw.js').then(registration => {
+      console.log('ServiceWorker registration successful.');
 
-        registration.addEventListener("updatefound", () => {
-          const newWorker = registration.installing;
-          console.log("New service worker found. State:", newWorker.state);
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        console.log('New service worker found. State:', newWorker.state);
 
-          newWorker.addEventListener("statechange", () => {
-            if (
-              newWorker.state === "installed" &&
-              navigator.serviceWorker.controller
-            ) {
-              console.log("New service worker installed and waiting.");
-              showStatus("نسخة جديدة من التطبيق متوفرة!", "info", {
-                duration: 0,
-                showRefreshButton: true,
-              });
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            console.log('New service worker installed and waiting.');
+            showStatus('نسخة جديدة من التطبيق متوفرة!', 'info', {
+              duration: 0, 
+              showRefreshButton: true,
+            });
 
-              const refreshButton = document.querySelector(
-                ".status-refresh-btn"
-              );
-              if (refreshButton) {
-                refreshButton.onclick = () => {
-                  newWorker.postMessage({ type: "SKIP_WAITING" });
-                };
-              }
+            const refreshButton = document.querySelector('.status-refresh-btn');
+            if (refreshButton) {
+              refreshButton.onclick = () => {
+                newWorker.postMessage({ type: 'SKIP_WAITING' });
+              };
             }
-          });
+          }
         });
-      })
-      .catch(err => {
-        console.error("ServiceWorker registration failed: ", err);
       });
+    }).catch(err => {
+      console.error('ServiceWorker registration failed: ', err);
+    });
 
-    navigator.serviceWorker.addEventListener("controllerchange", () => {
-      console.log("New service worker has taken control. Reloading...");
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      console.log('New service worker has taken control. Reloading...');
       window.location.reload();
     });
   }
 }
 
+
 export async function initializeApp() {
   console.log("Initializing Inventory Management App...");
 
-  // Moved Service Worker registration to the beginning for robustness.
-  // This ensures the update mechanism is active even if the rest of the app fails.
   registerServiceWorker();
 
   const magicLinkProcessed = handleMagicLink();
@@ -201,6 +207,7 @@ export async function initializeApp() {
   }
 
   renderInventorySkeleton();
+  
   if (appState.syncConfig) {
     showStatus("جاري مزامنة البيانات...", "syncing");
     try {
@@ -227,8 +234,16 @@ export async function initializeApp() {
         appState.auditLog = auditLogResult.data;
         appState.auditLogFileSha = auditLogResult.sha;
       }
+      
+      if (migrateDataModelIfNeeded()) {
+        showStatus("جاري تحديث هيكل البيانات...", "syncing");
+        await api.saveToGitHub();
+        saveLocalData();
+        showStatus("تم تحديث هيكل البيانات بنجاح!", "success");
+      } else {
+        saveLocalData();
+      }
 
-      saveLocalData();
       hideSyncStatus();
       if (!magicLinkProcessed) {
         showStatus("تمت المزامنة بنجاح!", "success");
@@ -239,9 +254,17 @@ export async function initializeApp() {
         duration: 5000,
       });
       loadLocalData();
+      if (migrateDataModelIfNeeded()) {
+          saveLocalData();
+          console.log("Local data model migrated.");
+      }
     }
   } else {
     loadLocalData();
+    if (migrateDataModelIfNeeded()) {
+        saveLocalData();
+        console.log("Local data model migrated.");
+    }
   }
 
   const { updateLastArchiveDateDisplay } = await import(
@@ -254,6 +277,6 @@ export async function initializeApp() {
   renderAuditLog();
   updateCurrencyDisplay();
   handleUrlShortcuts();
-
+  
   console.log("App Initialized Successfully.");
 }

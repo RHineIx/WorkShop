@@ -59,8 +59,15 @@ export function toggleSelection(card) {
 
 async function handleBulkCategoryChange(e) {
   e.preventDefault();
-  const newCategory = e.target.elements["bulk-item-category"].value.trim();
-  if (!newCategory) return;
+  const categoriesString = e.target.elements["bulk-item-category"].value.trim();
+  if (!categoriesString) return;
+
+  const newCategories = categoriesString
+    .split(",")
+    .map(c => c.trim())
+    .filter(Boolean);
+
+  if (newCategories.length === 0) return;
 
   notifications.showStatus("التحقق من البيانات...", "syncing");
   try {
@@ -84,7 +91,7 @@ async function handleBulkCategoryChange(e) {
 
     appState.selectedItemIds.forEach(id => {
       const item = appState.inventory.items.find(i => i.id === id);
-      if (item) item.category = newCategory;
+      if (item) item.categories = newCategories;
     });
 
     await api.saveToGitHub();
@@ -163,7 +170,6 @@ export function setupBulkActionListeners(elements) {
   document
     .getElementById("bulk-change-supplier-btn")
     .addEventListener("click", () => {
-      // --- FIX: This now correctly calls the function from the renderer module ---
       renderer.populateBulkSupplierDropdown();
       elements.bulkSupplierForm.reset();
       ui.openModal(elements.bulkSupplierModal);

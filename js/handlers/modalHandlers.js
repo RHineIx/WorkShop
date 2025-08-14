@@ -19,6 +19,8 @@ import {
   renderCategoryFilter,
   populateCategoryDatalist,
   populateSupplierDropdown,
+  // NEW: Import the new helper function
+  getAllUniqueCategories,
 } from "../renderer.js";
 import { showStatus, hideSyncStatus } from "../notifications.js";
 import { logAction, ACTION_TYPES } from "../logger.js";
@@ -26,6 +28,100 @@ import { logAction, ACTION_TYPES } from "../logger.js";
 let cropper = null;
 let cropperPadding = 0.1;
 let cropperBgColor = "#FFFFFF";
+
+// NEW: This variable will hold the state and methods for the category input component
+let categoryInputManager = null;
+
+// NEW: This is the main logic block for the new interactive category input component.
+// It sets up the component's state, event listeners, and rendering logic.
+function setupCategoryInput(currentItemCategories = []) {
+    const elements = getDOMElements();
+    const {
+        selectedCategoriesContainer,
+        availableCategoriesList,
+        categoryInputField,
+        addCategoryBtn,
+        categoryPillTemplate
+    } = elements;
+
+    let selectedCategories = new Set(currentItemCategories);
+    const allCategories = new Set(getAllUniqueCategories());
+
+    const render = () => {
+        // Clear existing pills
+        selectedCategoriesContainer.innerHTML = '';
+        availableCategoriesList.innerHTML = '';
+
+        // Render selected pills
+        selectedCategories.forEach(text => {
+            const pill = createPill(text, true);
+            selectedCategoriesContainer.appendChild(pill);
+        });
+
+        // Render available pills
+        allCategories.forEach(text => {
+            if (!selectedCategories.has(text)) {
+                const pill = createPill(text, false);
+                availableCategoriesList.appendChild(pill);
+            }
+        });
+    };
+
+    const createPill = (text, isSelected) => {
+        const clone = categoryPillTemplate.content.cloneNode(true);
+        const pill = clone.querySelector('.category-pill');
+        pill.querySelector('.pill-text').textContent = text;
+        pill.dataset.value = text;
+
+        if (isSelected) {
+            const removeBtn = pill.querySelector('.remove-pill-btn');
+            removeBtn.addEventListener('click', () => removeCategory(text));
+        } else {
+            pill.querySelector('.remove-pill-btn').remove();
+            pill.addEventListener('click', () => addCategory(text));
+        }
+        return pill;
+    };
+
+    const addCategory = (text) => {
+        const cleanedText = text.trim();
+        if (cleanedText && !selectedCategories.has(cleanedText)) {
+            selectedCategories.add(cleanedText);
+            allCategories.add(cleanedText); // Also add to the master list if it's new
+            render();
+        }
+    };
+
+    const removeCategory = (text) => {
+        selectedCategories.delete(text);
+        render();
+    };
+
+    const handleAddAction = () => {
+        addCategory(categoryInputField.value);
+        categoryInputField.value = '';
+        categoryInputField.focus();
+    };
+
+    // Attach event listeners
+    addCategoryBtn.onclick = handleAddAction;
+    categoryInputField.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleAddAction();
+        }
+    };
+
+    // Initial render
+    render();
+
+    // Return an object with a method to get the final state
+    return {
+        getSelectedCategories: () => Array.from(selectedCategories)
+    };
+}
+
+
 function handlePriceConversion(sourceInput, targetInput) {
   const sourceValue = parseFloat(sourceInput.value);
   const rate = appState.exchangeRate;
@@ -194,6 +290,7 @@ export function openItemModal(itemId = null) {
   elements.imagePreview.classList.add("image-preview-hidden");
   elements.imagePlaceholder.style.display = "flex";
   elements.regenerateSkuBtn.style.display = "none";
+  
   if (itemId) {
     const item = appState.inventory.items.find(i => i.id === itemId);
     if (item) {
@@ -201,7 +298,10 @@ export function openItemModal(itemId = null) {
       elements.itemIdInput.value = item.id;
       document.getElementById("item-sku").value = item.sku;
       document.getElementById("item-name").value = item.name;
-      document.getElementById("item-category").value = item.category;
+      
+      // CHANGED: Initialize the new category component with the item's categories
+      categoryInputManager = setupCategoryInput(item.categories || []);
+      
       document.getElementById("item-oem-pn").value = item.oemPartNumber || "";
       document.getElementById("item-compatible-pn").value =
         item.compatiblePartNumber || "";
@@ -238,6 +338,9 @@ export function openItemModal(itemId = null) {
     elements.itemIdInput.value = "";
     elements.regenerateSkuBtn.style.display = "flex";
     populateSupplierDropdown();
+
+    // CHANGED: Initialize the category component for a new item (empty)
+    categoryInputManager = setupCategoryInput([]);
   }
   openModal(elements.itemModal);
 }
@@ -320,11 +423,14 @@ async function handleItemFormSubmit(e) {
       );
     }
 
+    // CHANGED: Get categories from the new interactive component manager
+    const categories = categoryInputManager.getSelectedCategories();
+
     const itemData = {
       id: itemId || `item_${Date.now()}`,
       sku: document.getElementById("item-sku").value,
       name: document.getElementById("item-name").value,
-      category: document.getElementById("item-category").value,
+      categories: categories, // Assign the array here
       oemPartNumber: document.getElementById("item-oem-pn").value.trim(),
       compatiblePartNumber: document
         .getElementById("item-compatible-pn")
@@ -345,6 +451,9 @@ async function handleItemFormSubmit(e) {
       imagePath: imagePath,
       supplierId: document.getElementById("item-supplier").value || null,
     };
+    
+    // Defensive cleanup of old property
+    delete itemData.category;
 
     if (existingItemIndex !== -1) {
       appState.inventory.items[existingItemIndex] = itemData;
@@ -361,7 +470,10 @@ async function handleItemFormSubmit(e) {
 
     if (originalItem) {
       const compareAndLog = async (field, action) => {
-        if (originalItem[field] !== itemData[field]) {
+        const oldValue = JSON.stringify(originalItem[field]);
+        const newValue = JSON.stringify(itemData[field]);
+        
+        if (oldValue !== newValue) {
           await logAction({
             action,
             targetId: itemData.id,
@@ -372,11 +484,10 @@ async function handleItemFormSubmit(e) {
       };
       await compareAndLog("name", ACTION_TYPES.NAME_UPDATED);
       await compareAndLog("sku", ACTION_TYPES.SKU_UPDATED);
-      await compareAndLog("category", ACTION_TYPES.CATEGORY_UPDATED);
+      await compareAndLog("categories", ACTION_TYPES.CATEGORY_UPDATED);
       await compareAndLog("notes", ACTION_TYPES.NOTES_UPDATED);
       await compareAndLog("imagePath", ACTION_TYPES.IMAGE_UPDATED);
       await compareAndLog("supplierId", ACTION_TYPES.SUPPLIER_UPDATED);
-
       if (originalItem.quantity !== itemData.quantity) {
         await logAction({
           action: ACTION_TYPES.QUANTITY_UPDATED,
@@ -662,7 +773,6 @@ export function setupModalListeners(elements) {
     });
 
     if (confirmed) {
-      // Save the state of both inventory and audit log before trying to change them.
       const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
       const originalAuditLog = JSON.parse(JSON.stringify(appState.auditLog));
       
@@ -693,23 +803,20 @@ export function setupModalListeners(elements) {
             );
         }
 
-        // The logAction now throws an error on failure, which will be caught here.
         await logAction({
           action: ACTION_TYPES.ITEM_DELETED,
           targetId: itemToDelete.id,
           targetName: itemToDelete.name,
           details: { lastKnownSku: itemToDelete.sku },
         });
-
         saveLocalData();
         showStatus("تم حذف المنتج بنجاح!", "success");
 
       } catch (error) {
-        // Full rollback if any step fails
         appState.inventory = originalInventory;
         appState.auditLog = originalAuditLog;
 
-        filterAndRenderItems(true); // Re-render with the rolled-back state
+        filterAndRenderItems(true); 
         showStatus(`فشل الحذف: ${error.message}`, "error");
       }
     }
@@ -740,4 +847,4 @@ export function setupModalListeners(elements) {
   document
     .getElementById("sale-price")
     .addEventListener("input", updateSaleTotal);
-                 }
+}

@@ -69,6 +69,19 @@ export const elements = {
   imageUploadInput: document.getElementById("item-image-upload"),
   pasteImageBtn: document.getElementById("paste-image-btn"),
   imagePreview: document.getElementById("image-preview"),
+
+  // NEW: Interactive Category Component Elements
+  categoryInputContainer: document.getElementById("category-input-container"),
+  selectedCategoriesContainer: document.getElementById(
+    "selected-categories-container"
+  ),
+  categoryInputField: document.getElementById("category-input-field"),
+  addCategoryBtn: document.getElementById("add-category-btn"),
+  availableCategoriesContainer: document.getElementById(
+    "available-categories-container"
+  ),
+  availableCategoriesList: document.getElementById("available-categories-list"),
+
   categoryDatalist: document.getElementById("category-list"),
   imagePlaceholder: document.getElementById("image-placeholder"),
   regenerateSkuBtn: document.getElementById("regenerate-sku-btn"),
@@ -168,4 +181,6 @@ export const elements = {
   // Templates
   productCardTemplate: document.getElementById("product-card-template"),
   logEntryTemplate: document.getElementById("log-entry-template"),
+  // NEW: Template for category pills
+  categoryPillTemplate: document.getElementById("category-pill-template"),
 };

@@ -53,13 +53,30 @@ const loadMoreObserver = new IntersectionObserver(
   },
   { rootMargin: "0px 0px 400px 0px" }
 );
+
+/**
+ * NEW: Helper function to get a unique list of all categories from the inventory.
+ * @returns {string[]} An array of unique category strings.
+ */
+export function getAllUniqueCategories() {
+  return [
+    ...new Set(
+      appState.inventory.items
+        .flatMap(item => item.categories || [])
+        .filter(Boolean)
+    ),
+  ].sort(); // Sort them alphabetically
+}
+
 function getFilteredItems() {
   let items = [...appState.inventory.items];
   if (appState.activeFilter === "low_stock") {
     items = items.filter(item => item.quantity <= item.alertLevel);
   }
   if (appState.selectedCategory && appState.selectedCategory !== "all") {
-    items = items.filter(item => item.category === appState.selectedCategory);
+    items = items.filter(item =>
+      (item.categories || []).includes(appState.selectedCategory)
+    );
   }
   if (appState.searchTerm) {
     const searchTerms = appState.searchTerm
@@ -74,6 +91,7 @@ function getFilteredItems() {
           item.notes,
           item.oemPartNumber,
           item.compatiblePartNumber,
+          ...(item.categories || []),
         ]
           .join(" ")
           .toLowerCase();
@@ -181,11 +199,17 @@ export function renderInventory(itemsToRender) {
       placeholder.remove();
     }
 
-    const categoryTag = cardClone.querySelector(".card-category-tag");
-    if (item.category) {
-      categoryTag.textContent = sanitizeHTML(item.category);
-    } else {
-      categoryTag.remove();
+    const tagsContainer = cardClone.querySelector(
+      ".card-category-tags-container"
+    );
+    tagsContainer.innerHTML = "";
+    if (item.categories && item.categories.length > 0) {
+      item.categories.forEach(category => {
+        const tag = document.createElement("span");
+        tag.className = "card-category-tag";
+        tag.textContent = sanitizeHTML(category);
+        tagsContainer.appendChild(tag);
+      });
     }
 
     cardClone.querySelector(".card-name").textContent = sanitizeHTML(item.name);
@@ -286,11 +310,8 @@ export function updateStats() {
 export function renderCategoryFilter() {
   const { categoryFilterBar } = elements;
   if (!categoryFilterBar) return;
-  const categories = [
-    ...new Set(
-      appState.inventory.items.map(item => item.category).filter(Boolean)
-    ),
-  ];
+  // CHANGED: Use the new helper function
+  const categories = getAllUniqueCategories();
   categoryFilterBar.innerHTML = "";
   const fragment = document.createDocumentFragment();
 
@@ -317,11 +338,8 @@ export function renderCategoryFilter() {
 }
 
 export function populateCategoryDatalist() {
-  const categories = [
-    ...new Set(
-      appState.inventory.items.map(item => item.category).filter(Boolean)
-    ),
-  ];
+  // CHANGED: Use the new helper function
+  const categories = getAllUniqueCategories();
   const datalist = elements.categoryDatalist;
   datalist.innerHTML = "";
   categories.forEach(category => {
@@ -531,7 +549,7 @@ export function renderSupplierList() {
         <button class="icon-btn edit-supplier-btn" data-id="${
           supplier.id
         }" title="تعديل المورّد">
-           <iconify-icon icon="material-symbols:edit-outline-rounded"></iconify-icon>
+          <iconify-icon icon="material-symbols:edit-outline-rounded"></iconify-icon>
         </button>
         <button class="icon-btn danger-btn delete-supplier-btn" data-id="${
           supplier.id
@@ -584,8 +602,17 @@ const formatRelativeTime = date => {
 const getActionDetails = log => {
   const name = `<strong>${sanitizeHTML(log.targetName)}</strong>`;
   const details = log.details;
-  const from = sanitizeHTML(String(details.from ?? ""));
-  const to = sanitizeHTML(String(details.to ?? ""));
+
+  const formatCategories = cats => {
+    if (!Array.isArray(cats))
+      return `"${sanitizeHTML(String(cats ?? "")) || "بلا فئة"}"`;
+    if (cats.length === 0) return '"بلا فئة"';
+    return `"${cats.map(c => sanitizeHTML(c)).join(", ")}"`;
+  };
+
+  const from = details.from;
+  const to = details.to;
+
   switch (log.action) {
     case "ITEM_CREATED":
       return {
@@ -604,8 +631,9 @@ const getActionDetails = log => {
         ).toLocaleString()}</span>.`,
       };
     case "QUANTITY_UPDATED":
-      // MODIFIED: Handle optional reason
-      let qtyDescription = `تم تعديل كمية ${name} من ${from} إلى ${to}.`;
+      let qtyDescription = `تم تعديل كمية ${name} من ${sanitizeHTML(
+        String(from)
+      )} إلى ${sanitizeHTML(String(to))}.`;
       if (details.reason && details.reason.trim() !== "") {
         qtyDescription += ` (السبب: ${sanitizeHTML(details.reason)})`;
       }
@@ -630,21 +658,25 @@ const getActionDetails = log => {
       return {
         icon: "material-symbols:edit-outline",
         class: "update",
-        description: `تم تغيير اسم المنتج من "${from}" إلى "${to}".`,
+        description: `تم تغيير اسم المنتج من "${sanitizeHTML(
+          String(from)
+        )}" إلى "${sanitizeHTML(String(to))}".`,
       };
     case "SKU_UPDATED":
       return {
         icon: "material-symbols:qr-code-2",
         class: "update",
-        description: `تم تغيير SKU للمنتج ${name} من "${from}" إلى "${to}".`,
+        description: `تم تغيير SKU للمنتج ${name} من "${sanitizeHTML(
+          String(from)
+        )}" إلى "${sanitizeHTML(String(to))}".`,
       };
     case "CATEGORY_UPDATED":
       return {
         icon: "material-symbols:folder-open-outline",
         class: "update",
-        description: `تم تغيير فئة ${name} من "${
-          from || "بلا فئة"
-        }" إلى "${to}".`,
+        description: `تم تغيير فئة ${name} من ${formatCategories(
+          from
+        )} إلى ${formatCategories(to)}.`,
       };
     case "NOTES_UPDATED":
       return {
@@ -694,4 +726,4 @@ export function renderAuditLog() {
     fragment.appendChild(clone);
   });
   elements.auditLogList.appendChild(fragment);
-    }
+}
