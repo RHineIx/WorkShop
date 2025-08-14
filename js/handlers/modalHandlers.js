@@ -17,7 +17,6 @@ import {
 import {
   filterAndRenderItems,
   renderCategoryFilter,
-  // REMOVED: populateCategoryDatalist is no longer exported or used.
   populateSupplierDropdown,
   getAllUniqueCategories,
 } from "../renderer.js";
@@ -30,86 +29,98 @@ let cropperBgColor = "#FFFFFF";
 
 let categoryInputManager = null;
 
+// REFACTORED: This function now uses addEventListener and returns a cleanup method.
 function setupCategoryInput(currentItemCategories = []) {
-  const elements = getDOMElements();
-  const {
-    selectedCategoriesContainer,
-    availableCategoriesList,
-    categoryInputField,
-    addCategoryBtn,
-    categoryPillTemplate,
-  } = elements;
+    const elements = getDOMElements();
+    const {
+        selectedCategoriesContainer,
+        availableCategoriesList,
+        categoryInputField,
+        addCategoryBtn,
+        categoryPillTemplate
+    } = elements;
 
-  let selectedCategories = new Set(currentItemCategories);
-  const allCategories = new Set(getAllUniqueCategories());
+    let selectedCategories = new Set(currentItemCategories);
+    const allCategories = new Set(getAllUniqueCategories());
 
-  const render = () => {
-    selectedCategoriesContainer.innerHTML = "";
-    availableCategoriesList.innerHTML = "";
+    const render = () => {
+        selectedCategoriesContainer.innerHTML = '';
+        availableCategoriesList.innerHTML = '';
 
-    selectedCategories.forEach(text => {
-      const pill = createPill(text, true);
-      selectedCategoriesContainer.appendChild(pill);
-    });
+        selectedCategories.forEach(text => {
+            const pill = createPill(text, true);
+            selectedCategoriesContainer.appendChild(pill);
+        });
 
-    allCategories.forEach(text => {
-      if (!selectedCategories.has(text)) {
-        const pill = createPill(text, false);
-        availableCategoriesList.appendChild(pill);
-      }
-    });
-  };
+        allCategories.forEach(text => {
+            if (!selectedCategories.has(text)) {
+                const pill = createPill(text, false);
+                availableCategoriesList.appendChild(pill);
+            }
+        });
+    };
 
-  const createPill = (text, isSelected) => {
-    const clone = categoryPillTemplate.content.cloneNode(true);
-    const pill = clone.querySelector(".category-pill");
-    pill.querySelector(".pill-text").textContent = text;
-    pill.dataset.value = text;
+    const createPill = (text, isSelected) => {
+        const clone = categoryPillTemplate.content.cloneNode(true);
+        const pill = clone.querySelector('.category-pill');
+        pill.querySelector('.pill-text').textContent = text;
+        pill.dataset.value = text;
 
-    if (isSelected) {
-      const removeBtn = pill.querySelector(".remove-pill-btn");
-      removeBtn.addEventListener("click", () => removeCategory(text));
-    } else {
-      pill.querySelector(".remove-pill-btn").remove();
-      pill.addEventListener("click", () => addCategory(text));
-    }
-    return pill;
-  };
+        if (isSelected) {
+            const removeBtn = pill.querySelector('.remove-pill-btn');
+            removeBtn.addEventListener('click', () => removeCategory(text));
+        } else {
+            pill.querySelector('.remove-pill-btn').remove();
+            pill.addEventListener('click', () => addCategory(text));
+        }
+        return pill;
+    };
 
-  const addCategory = text => {
-    const cleanedText = text.trim();
-    if (cleanedText && !selectedCategories.has(cleanedText)) {
-      selectedCategories.add(cleanedText);
-      allCategories.add(cleanedText);
-      render();
-    }
-  };
+    const addCategory = (text) => {
+        const cleanedText = text.trim();
+        if (cleanedText && !selectedCategories.has(cleanedText)) {
+            selectedCategories.add(cleanedText);
+            allCategories.add(cleanedText);
+            render();
+        }
+    };
 
-  const removeCategory = text => {
-    selectedCategories.delete(text);
+    const removeCategory = (text) => {
+        selectedCategories.delete(text);
+        render();
+    };
+
+    const handleAddAction = () => {
+        addCategory(categoryInputField.value);
+        categoryInputField.value = '';
+        categoryInputField.focus();
+    };
+    
+    const handleEnterKey = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleAddAction();
+        }
+    };
+
+    // Use addEventListener for more robust event handling
+    addCategoryBtn.addEventListener('click', handleAddAction);
+    categoryInputField.addEventListener('keydown', handleEnterKey);
+
     render();
-  };
 
-  const handleAddAction = () => {
-    addCategory(categoryInputField.value);
-    categoryInputField.value = "";
-    categoryInputField.focus();
-  };
+    // The cleanup function to remove the listeners we added
+    const cleanup = () => {
+        addCategoryBtn.removeEventListener('click', handleAddAction);
+        categoryInputField.removeEventListener('keydown', handleEnterKey);
+    };
 
-  addCategoryBtn.onclick = handleAddAction;
-  categoryInputField.onkeydown = e => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAddAction();
-    }
-  };
-
-  render();
-
-  return {
-    getSelectedCategories: () => Array.from(selectedCategories),
-  };
+    return {
+        getSelectedCategories: () => Array.from(selectedCategories),
+        cleanup: cleanup
+    };
 }
+
 
 function handlePriceConversion(sourceInput, targetInput) {
   const sourceValue = parseFloat(sourceInput.value);
@@ -279,7 +290,7 @@ export function openItemModal(itemId = null) {
   elements.imagePreview.classList.add("image-preview-hidden");
   elements.imagePlaceholder.style.display = "flex";
   elements.regenerateSkuBtn.style.display = "none";
-
+  
   if (itemId) {
     const item = appState.inventory.items.find(i => i.id === itemId);
     if (item) {
@@ -287,9 +298,9 @@ export function openItemModal(itemId = null) {
       elements.itemIdInput.value = item.id;
       document.getElementById("item-sku").value = item.sku;
       document.getElementById("item-name").value = item.name;
-
+      
       categoryInputManager = setupCategoryInput(item.categories || []);
-
+      
       document.getElementById("item-oem-pn").value = item.oemPartNumber || "";
       document.getElementById("item-compatible-pn").value =
         item.compatiblePartNumber || "";
@@ -416,7 +427,7 @@ async function handleItemFormSubmit(e) {
       id: itemId || `item_${Date.now()}`,
       sku: document.getElementById("item-sku").value,
       name: document.getElementById("item-name").value,
-      categories: categories,
+      categories: categories, 
       oemPartNumber: document.getElementById("item-oem-pn").value.trim(),
       compatiblePartNumber: document
         .getElementById("item-compatible-pn")
@@ -437,7 +448,7 @@ async function handleItemFormSubmit(e) {
       imagePath: imagePath,
       supplierId: document.getElementById("item-supplier").value || null,
     };
-
+    
     delete itemData.category;
 
     if (existingItemIndex !== -1) {
@@ -457,7 +468,7 @@ async function handleItemFormSubmit(e) {
       const compareAndLog = async (field, action) => {
         const oldValue = JSON.stringify(originalItem[field]);
         const newValue = JSON.stringify(itemData[field]);
-
+        
         if (oldValue !== newValue) {
           await logAction({
             action,
@@ -507,8 +518,6 @@ async function handleItemFormSubmit(e) {
 
     filterAndRenderItems(true);
     renderCategoryFilter();
-    // REMOVED: No longer need to call this here.
-    // populateCategoryDatalist();
 
     if (appState.currentItemId === itemData.id) {
       openDetailsModal(itemData.id);
@@ -562,6 +571,15 @@ export function setupModalListeners(elements) {
     document.getElementById("item-sku").value = generateUniqueSKU(existingSkus);
   });
   elements.itemForm.addEventListener("submit", handleItemFormSubmit);
+  
+  // NEW: Add a listener to the modal's close event to clean up our component
+  elements.itemModal.addEventListener("close", () => {
+    if (categoryInputManager && typeof categoryInputManager.cleanup === 'function') {
+      categoryInputManager.cleanup();
+      categoryInputManager = null; // Reset the manager
+    }
+  });
+
   elements.cancelItemBtn.addEventListener("click", () =>
     elements.itemModal.close()
   );
@@ -761,7 +779,7 @@ export function setupModalListeners(elements) {
     if (confirmed) {
       const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
       const originalAuditLog = JSON.parse(JSON.stringify(appState.auditLog));
-
+      
       appState.inventory.items = appState.inventory.items.filter(
         item => item.id !== appState.currentItemId
       );
@@ -797,11 +815,12 @@ export function setupModalListeners(elements) {
         });
         saveLocalData();
         showStatus("تم حذف المنتج بنجاح!", "success");
+
       } catch (error) {
         appState.inventory = originalInventory;
         appState.auditLog = originalAuditLog;
 
-        filterAndRenderItems(true);
+        filterAndRenderItems(true); 
         showStatus(`فشل الحذف: ${error.message}`, "error");
       }
     }

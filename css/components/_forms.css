@@ -13,6 +13,7 @@
   color: var(--text-secondary);
 }
 
+/* CHANGED: Added selectors for bulk modal inputs */
 #item-form input,
 #item-form textarea,
 #item-form select,
@@ -20,17 +21,21 @@
 #sale-form input,
 #sale-form textarea,
 #supplier-form input,
-#quantity-change-reason /* ADDED */ {
+#bulk-category-form input, /* Added this */
+#bulk-supplier-form select, /* Added this */
+#quantity-change-reason {
   width: 100%;
   padding: 0.75rem var(--spacing-md); /* 12px */
   font-family: var(--font-family);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-sm);
   background-color: var(--surface-color);
-  color: var(--text-primary);
+  color: var(--text-primary); /* This rule will now apply correctly */
   font-size: 1rem; /* 16px */
   transition: all var(--transition-speed);
 }
+
+/* CHANGED: Added selectors for bulk modal inputs focus state */
 #item-form input:focus,
 #item-form textarea:focus,
 #item-form select:focus,
@@ -38,7 +43,9 @@
 #sale-form input:focus,
 #sale-form textarea:focus,
 #supplier-form input:focus,
-#quantity-change-reason:focus /* ADDED */ {
+#bulk-category-form input:focus, /* Added this */
+#bulk-supplier-form select:focus, /* Added this */
+#quantity-change-reason:focus {
   outline: none;
   border-color: var(--accent-color);
   box-shadow: 0 0 0 0.1875rem var(--accent-soft-bg); /* 3px */
@@ -46,7 +53,7 @@
 
 #item-form textarea,
 #sale-form textarea,
-#quantity-change-reason /* ADDED */ {
+#quantity-change-reason {
   min-height: 5rem; /* 80px */
   width: 100%;
   resize: vertical;
@@ -58,9 +65,7 @@
   gap: var(--spacing-md);
 }
 
-/* Make form rows switch to horizontal layout on slightly larger screens */
 @media (min-width: 30rem) {
-  /* 480px - Adjusted for better responsiveness */
   .form-row {
     flex-direction: row;
   }
@@ -96,7 +101,6 @@ input[type="number"] {
   appearance: textfield;
 }
 
-/* NEW: Fieldset styles */
 fieldset {
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-sm);
@@ -223,7 +227,6 @@ select {
   padding-left: 0.75rem; /* 12px */
 }
 
-/* --- NEW: Sale Modal Specific Layout --- */
 .sale-item-name-display {
   display: block;
   font-size: 1.125rem; /* 18px */
@@ -240,12 +243,12 @@ select {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--spacing-md);
-  align-items: flex-end; /* Aligns items to the bottom nicely */
+  align-items: flex-end;
   margin-bottom: var(--spacing-lg);
 }
 
 .sale-total-container {
-  grid-column: 1 / -1; /* Span across both columns */
+  grid-column: 1 / -1;
   margin-top: var(--spacing-sm);
   padding: var(--spacing-md);
   background-color: var(--bg-color);
@@ -267,7 +270,6 @@ select {
   font-size: 1.25rem; /* 20px */
 }
 
-/* On mobile, stack the sale grid */
 @media (max-width: 30rem) {
   .sale-details-grid {
     grid-template-columns: 1fr;

@@ -1,145 +1,155 @@
 /* css/components/_category-input.css */
 
 .form-group .category-input-container {
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-sm);
-    padding: var(--spacing-sm);
-    transition: all 0.25s ease;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-sm);
+  transition: all 0.25s ease;
 }
 
 .form-group .category-input-container:focus-within {
-    border-color: var(--accent-color);
-    box-shadow: 0 0 0 3px var(--accent-soft-bg);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px var(--accent-soft-bg);
 }
 
 .selected-categories {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-sm);
-    min-height: 40px;
-    align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  min-height: 40px;
+  align-items: center;
+  padding-bottom: var(--spacing-md);
 }
 
 .category-pill {
-    display: inline-flex;
-    align-items: center;
-    background-color: var(--accent-soft-bg);
-    color: var(--accent-color);
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 700;
-    animation: fadeIn 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--accent-soft-bg);
+  color: var(--accent-color);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  animation: fadeIn 0.3s ease;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.9); }
-    to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .remove-pill-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    margin-right: 6px;
-    margin-left: -4px;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--accent-color);
-    opacity: 0.7;
-    transition: opacity 0.2s;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-right: 6px;
+  margin-left: -4px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-color);
+  opacity: 0.7;
+  transition: opacity 0.2s;
 }
 
 .remove-pill-btn:hover {
-    opacity: 1;
+  opacity: 1;
 }
 
 .remove-pill-btn iconify-icon {
-    font-size: 18px;
+  font-size: 18px;
 }
 
 .input-area {
-    display: flex;
-    gap: var(--spacing-sm);
-    margin-top: var(--spacing-md);
+  display: flex;
+  gap: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+  /* CHANGED: Added a subtle border top for separation */
+  border-top: 1px solid var(--border-color);
 }
 
 .input-area input {
-    flex-grow: 1;
-    border: none;
-    outline: none;
-    padding: 8px 4px;
-    font-family: var(--font-family);
-    font-size: 1rem; /* 16px */
-    background: transparent;
-    width: 100%;
-    margin: 0; /* Override default input margins */
-}
-/* Remove focus styles from child input as parent handles it */
-.input-area input:focus {
-    box-shadow: none;
-    border-color: transparent;
+  flex-grow: 1;
+  border: none;
+  outline: none;
+  padding: 8px 4px;
+  font-family: var(--font-family);
+  font-size: 1rem; /* 16px */
+  background: transparent;
+  width: 100%;
+  margin: 0;
 }
 
+.input-area input:focus {
+  box-shadow: none;
+  border-color: transparent;
+}
 
 .input-area #add-category-btn,
-#bulk-add-category-btn {
-    flex-shrink: 0;
-    width: 38px;
-    height: 38px;
-    padding: 0;
-    border-radius: var(--border-radius-sm);
-    border: 1px solid var(--border-color);
-    background-color: var(--bg-color);
-    color: var(--text-primary);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.25s ease;
+.input-area #bulk-add-category-btn {
+  /* Apply to both buttons */
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
 }
 
 .input-area #add-category-btn:hover,
-#bulk-add-category-btn:hover {
-    background-color: var(--accent-color);
-    border-color: var(--accent-color);
-    color: white;
+.input-area #bulk-add-category-btn:hover {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+  color: white;
 }
 
-.input-area #add-category-btn, #bulk-add-category-btn iconify-icon {
-    font-size: 20px;
+.input-area #add-category-btn iconify-icon,
+.input-area #bulk-add-category-btn iconify-icon {
+  font-size: 20px;
 }
 
 .available-categories-container {
-    margin-top: var(--spacing-md);
-    padding-top: var(--spacing-md);
-    border-top: 1px solid var(--border-color);
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  /* REMOVED: The border-top is no longer needed here */
 }
 
 .available-categories-container p {
-    margin: 0 0 var(--spacing-sm) 0;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-secondary);
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
 .available-categories-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-sm);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
 }
 
 .available-categories-list .category-pill {
-    cursor: pointer;
-    background-color: var(--bg-color);
-    color: var(--text-secondary);
-    transition: all 0.25s ease;
+  cursor: pointer;
+  background-color: var(--bg-color);
+  color: var(--text-secondary);
+  transition: all 0.25s ease;
 }
 
 .available-categories-list .category-pill:hover {
-    background-color: var(--accent-soft-bg);
-    color: var(--accent-color);
-    transform: translateY(-2px);
+  background-color: var(--accent-soft-bg);
+  color: var(--accent-color);
+  transform: translateY(-2px);
 }
