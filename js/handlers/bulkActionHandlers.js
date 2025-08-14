@@ -9,8 +9,10 @@ import * as notifications from "../notifications.js";
 import { ConflictError } from "../api.js";
 
 let longPressTriggered = false;
+// NEW: Manager for the bulk category input component
 let bulkCategoryInputManager = null;
 
+// NEW: Logic to manage the interactive category input for the bulk modal
 function setupBulkCategoryInput() {
     const elements = ui.getDOMElements();
     const {
@@ -21,6 +23,7 @@ function setupBulkCategoryInput() {
         categoryPillTemplate
     } = elements;
 
+    // State is always fresh and starts empty for bulk operations
     let selectedCategories = new Set();
     const allCategories = new Set(renderer.getAllUniqueCategories());
 
@@ -76,6 +79,7 @@ function setupBulkCategoryInput() {
         bulkCategoryInputField.focus();
     };
 
+    // Use .onclick for simplicity as these elements are single-use per modal instance
     bulkAddCategoryBtn.onclick = handleAddAction;
     bulkCategoryInputField.onkeydown = (e) => {
         if (e.key === 'Enter') {
@@ -84,6 +88,7 @@ function setupBulkCategoryInput() {
         }
     };
     
+    // Initial render
     render();
 
     return {
@@ -141,20 +146,19 @@ export function toggleSelection(card) {
   }
 }
 
-// REFACTORED: Switched to Optimistic UI pattern
+// REFACTORED: To use the new interactive component
 async function handleBulkCategoryChange(e) {
   e.preventDefault();
   
   const newCategories = bulkCategoryInputManager.getSelectedCategories();
+  
   if (newCategories.length === 0) {
       notifications.showStatus("يرجى اختيار فئة واحدة على الأقل.", "error");
       return;
   };
 
-  // 1. Store original state for potential rollback
   const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
 
-  // 2. Update state and UI immediately
   appState.selectedItemIds.forEach(id => {
     const item = appState.inventory.items.find(i => i.id === id);
     if (item) item.categories = newCategories;
@@ -166,7 +170,6 @@ async function handleBulkCategoryChange(e) {
   exitSelectionMode();
   notifications.showStatus("تم تحديث الفئات محليًا.", "success", { duration: 2000 });
 
-  // 3. Sync in the background
   const syncToastId = notifications.showStatus("جاري مزامنة الفئات...", "syncing");
   try {
     const { sha: latestSha } = await api.fetchFromGitHub();
@@ -174,11 +177,10 @@ async function handleBulkCategoryChange(e) {
       throw new ConflictError("Conflict detected while syncing bulk category change.");
     }
     await api.saveToGitHub();
-    // No need to log bulk changes for now, can be added later
     notifications.updateStatus(syncToastId, "تمت مزامنة الفئات بنجاح!", "success");
   } catch (error) {
     console.error("Bulk category sync failed, rolling back:", error);
-    appState.inventory = originalInventory; // Rollback
+    appState.inventory = originalInventory;
     saveLocalData();
     renderer.filterAndRenderItems(true);
     renderer.renderCategoryFilter();
@@ -186,16 +188,13 @@ async function handleBulkCategoryChange(e) {
   }
 }
 
-// REFACTORED: Switched to Optimistic UI pattern
 async function handleBulkSupplierChange(e) {
   e.preventDefault();
   const newSupplierId = e.target.elements["bulk-item-supplier"].value;
   if (!newSupplierId) return;
 
-  // 1. Store original state for potential rollback
   const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
 
-  // 2. Update state and UI immediately
   appState.selectedItemIds.forEach(id => {
     const item = appState.inventory.items.find(i => i.id === id);
     if (item) item.supplierId = newSupplierId;
@@ -206,7 +205,6 @@ async function handleBulkSupplierChange(e) {
   exitSelectionMode();
   notifications.showStatus("تم تحديث المورّد محليًا.", "success", { duration: 2000 });
 
-  // 3. Sync in the background
   const syncToastId = notifications.showStatus("جاري مزامنة المورّد...", "syncing");
   try {
     const { sha: latestSha } = await api.fetchFromGitHub();
@@ -217,7 +215,7 @@ async function handleBulkSupplierChange(e) {
     notifications.updateStatus(syncToastId, "تمت مزامنة المورّد بنجاح!", "success");
   } catch (error) {
     console.error("Bulk supplier sync failed, rolling back:", error);
-    appState.inventory = originalInventory; // Rollback
+    appState.inventory = originalInventory;
     saveLocalData();
     renderer.filterAndRenderItems(true);
     notifications.updateStatus(syncToastId, "فشل المزامنة! تم استرجاع البيانات.", "error");
@@ -228,6 +226,7 @@ export function setupBulkActionListeners(elements) {
   document
     .getElementById("bulk-change-category-btn")
     .addEventListener("click", () => {
+      // CHANGED: Initialize the interactive component when the modal is opened
       bulkCategoryInputManager = setupBulkCategoryInput();
       ui.openModal(elements.bulkCategoryModal);
     });
@@ -255,4 +254,4 @@ export function setupBulkActionListeners(elements) {
   elements.bulkSupplierModal
     .querySelector("[data-close]")
     .addEventListener("click", () => elements.bulkSupplierModal.close());
-      }
+}
