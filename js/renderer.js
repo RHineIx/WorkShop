@@ -54,13 +54,14 @@ const loadMoreObserver = new IntersectionObserver(
   },
   { rootMargin: "0px 0px 400px 0px" }
 );
-
 export function getAllUniqueCategories() {
-    return [
-        ...new Set(
-            appState.inventory.items.flatMap(item => item.categories || []).filter(Boolean)
-        ),
-    ].sort();
+  return [
+    ...new Set(
+      appState.inventory.items
+        .flatMap(item => item.categories || [])
+        .filter(Boolean)
+    ),
+  ].sort();
 }
 
 function getFilteredItems() {
@@ -69,7 +70,9 @@ function getFilteredItems() {
     items = items.filter(item => item.quantity <= item.alertLevel);
   }
   if (appState.selectedCategory && appState.selectedCategory !== "all") {
-    items = items.filter(item => (item.categories || []).includes(appState.selectedCategory));
+    items = items.filter(item =>
+      (item.categories || []).includes(appState.selectedCategory)
+    );
   }
   if (appState.searchTerm) {
     const searchTerms = appState.searchTerm
@@ -175,6 +178,7 @@ export function renderInventory(itemsToRender) {
     const quantityBadge = cardClone.querySelector(".quantity-badge");
     quantityBadge.textContent = badgeText;
     quantityBadge.className = `quantity-badge ${badgeClass}`;
+
     const imageContainer = cardClone.querySelector(".card-image-container");
     const placeholder = cardClone.querySelector(".card-image-placeholder");
 
@@ -192,21 +196,24 @@ export function renderInventory(itemsToRender) {
       placeholder.remove();
     }
 
-    const tagsContainer = cardClone.querySelector(".card-category-tags-container");
-    tagsContainer.innerHTML = ''; 
+    const tagsContainer = cardClone.querySelector(
+      ".card-category-tags-container"
+    );
+    tagsContainer.innerHTML = "";
     if (item.categories && item.categories.length > 0) {
-        item.categories.forEach(category => {
-            const tag = document.createElement('span');
-            tag.className = 'card-category-tag';
-            tag.textContent = sanitizeHTML(category);
-            tagsContainer.appendChild(tag);
-        });
+      item.categories.forEach(category => {
+        const tag = document.createElement("span");
+        tag.className = "card-category-tag";
+        tag.textContent = sanitizeHTML(category);
+        tagsContainer.appendChild(tag);
+      });
     }
 
     cardClone.querySelector(".card-name").textContent = sanitizeHTML(item.name);
     cardClone.querySelector(".card-sku").textContent = `SKU: ${sanitizeHTML(
       item.sku || ""
     )}`;
+
     const isIQD = appState.activeCurrency === "IQD";
     const price = isIQD ? item.sellPriceIqd || 0 : item.sellPriceUsd || 0;
     const symbol = isIQD ? "د.ع" : "$";
@@ -223,9 +230,11 @@ export function renderInventory(itemsToRender) {
   elements.inventoryGrid
     .querySelectorAll(".card-image[data-src]")
     .forEach(img => imageObserver.observe(img));
+
   elements.inventoryGrid
     .querySelectorAll(".product-card")
     .forEach(card => animationObserver.observe(card));
+
   if (appState.visibleItemCount < itemsToRender.length) {
     elements.loadMoreTrigger.style.display = "block";
     loadMoreObserver.observe(elements.loadMoreTrigger);
@@ -234,6 +243,27 @@ export function renderInventory(itemsToRender) {
   }
 
   updateStats();
+}
+
+export function updateProductCardImage(itemId, newImageBlobUrl) {
+  const card = document.querySelector(`.product-card[data-id="${itemId}"]`);
+  if (!card) return;
+
+  const imageContainer = card.querySelector(".card-image-container");
+  if (!imageContainer) return;
+
+  const existingImage = imageContainer.querySelector(".card-image");
+  if (existingImage) existingImage.remove();
+
+  const existingPlaceholder = imageContainer.querySelector(
+    ".card-image-placeholder"
+  );
+  if (existingPlaceholder) existingPlaceholder.remove();
+
+  const newImg = document.createElement("img");
+  newImg.className = "card-image";
+  newImg.src = newImageBlobUrl;
+  imageContainer.appendChild(newImg);
 }
 
 export function updateProductCard(itemId) {
@@ -314,6 +344,7 @@ export function renderCategoryFilter() {
     allButton.classList.add("active");
   }
   fragment.appendChild(allButton);
+
   categories.forEach(category => {
     const chipButton = document.createElement("button");
     chipButton.className = "category-chip";
@@ -327,122 +358,101 @@ export function renderCategoryFilter() {
   categoryFilterBar.appendChild(fragment);
 }
 
+// --- REFACTORED FUNCTION ---
 function renderSalesLog(filteredSales) {
+  const { salesLogContent } = elements;
+  salesLogContent.innerHTML = "";
+
   if (filteredSales.length === 0) {
-    elements.salesLogContent.innerHTML =
+    salesLogContent.innerHTML =
       "<div><p>لا توجد مبيعات في هذه الفترة.</p></div>";
     return;
   }
 
   const isIQD = appState.activeCurrency === "IQD";
   const symbol = isIQD ? "د.ع" : "$";
+
   const salesByDay = filteredSales.reduce((acc, sale) => {
     const date = sale.saleDate;
-    if (!acc[date]) {
-      acc[date] = [];
-    }
+    if (!acc[date]) acc[date] = [];
     acc[date].push(sale);
     return acc;
   }, {});
-  const logHTML = Object.entries(salesByDay)
-    .map(([date, sales]) => {
-      const [year, month, day] = date.split('-').map(Number);
-      const dateObj = new Date(year, month - 1, day);
-      
-      // CHANGED: Explicitly set the calendar to Gregorian ('ca-gregory') to override any browser defaults.
-      const dayHeader = new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", {
-        dateStyle: "full",
-        timeZone: "Asia/Baghdad"
-      }).format(dateObj);
 
-      const salesCardsHTML = sales
-        .map(sale => {
-          const item =
-            appState.inventory.items.find(i => i.id === sale.itemId) || {};
-          const sellPrice = isIQD ? sale.sellPriceIqd : sale.sellPriceUsd;
-          const costPrice = isIQD ? sale.costPriceIqd : sale.costPriceUsd;
-          const totalSellPrice = sellPrice * sale.quantitySold;
-          const profit = (sellPrice - costPrice) * sale.quantitySold;
-          const profitClass =
-            profit >= 0 ? "profit-positive" : "profit-negative";
-          const profitIcon =
-            profit >= 0
-              ? "material-symbols:trending-up-rounded"
-              : "material-symbols:trending-down-rounded";
+  const dayGroupTemplate = document.getElementById("day-group-template");
+  const saleItemTemplate = document.getElementById("sale-item-template");
+  const mainFragment = document.createDocumentFragment();
 
-          const saleTime = new Date(sale.timestamp).toLocaleTimeString(
-            "ar-IQ",
-            {
-              hour: "numeric",
-              minute: "numeric",
-              hour12: true,
-            }
-          );
-          return `
-            <div class="sale-item" data-sale-id="${sale.saleId}">
-              <div class="item-header">
-                <div class="item-info">
-                  <div class="item-product-name">${sanitizeHTML(
-                    sale.itemName
-                  )}</div>
-                  <div class="item-product-sku">${sanitizeHTML(
-                    item.sku || "N/A"
-                  )}</div>
-                </div>
-                <div class="item-meta">
-                  <div class="meta-label">الكمية</div>
-                  <div class="meta-value">x${sale.quantitySold}</div>
-                </div>
-                <div class="item-meta">
-                  <div class="meta-label">الإجمالي</div>
-                  <div class="meta-value meta-price">${totalSellPrice.toLocaleString()}</div>
-                </div>
-                <div>
-                  <button class="icon-btn danger-btn delete-sale-btn" title="حذف السجل">
-                    <iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon>
-                  </button>
-                </div>
-                <div class="sale-datetime">
-                  التاريخ: ${sale.saleDate} |
-                  الوقت: ${saleTime}
-                </div>
-              </div>
-              <div class="item-details">
-                <ul class="details-list">
-                  <li class="${profitClass}">
-                    <div class="detail-label-group">
-                      <iconify-icon icon="${profitIcon}"></iconify-icon>
-                      <span class="label">الربح</span>
-                    </div>
-                    <span class="value">${profit.toLocaleString()} ${symbol}</span>
-                  </li>
-                  ${
-                    sale.notes
-                      ? `<li>
-                          <div class="detail-label-group">
-                            <iconify-icon icon="solar:notes-outline"></iconify-icon>
-                            <span class="label">ملاحظات</span>
-                          </div>
-                          <span class="value">${sanitizeHTML(sale.notes)}</span>
-                        </li>`
-                      : ""
-                  }
-                </ul>
-              </div>
-            </div>
-          `;
-        })
-        .join("");
+  for (const [date, sales] of Object.entries(salesByDay)) {
+    const dayGroupClone = dayGroupTemplate.content.cloneNode(true);
+    const dayGroupElement = dayGroupClone.querySelector(".day-group");
+    const salesListElement = dayGroupElement.querySelector(".sales-list");
 
-      return `
-        <div class="day-group">
-          <h3 class="day-header">${dayHeader}</h3>
-          <div class="sales-list">${salesCardsHTML}</div>
-        </div>
-      `;
-    })
-    .join("");
-  elements.salesLogContent.innerHTML = `<div>${logHTML}</div>`;
+    const [year, month, day] = date.split("-").map(Number);
+    const dateObj = new Date(year, month - 1, day);
+    const dayHeader = new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", {
+      dateStyle: "full",
+      timeZone: "Asia/Baghdad",
+    }).format(dateObj);
+    dayGroupElement.querySelector(".day-header").textContent = dayHeader;
+
+    sales.forEach(sale => {
+      const item =
+        appState.inventory.items.find(i => i.id === sale.itemId) || {};
+      const saleItemClone = saleItemTemplate.content.cloneNode(true);
+      const saleItemElement = saleItemClone.querySelector(".sale-item");
+
+      saleItemElement.dataset.saleId = sale.saleId;
+      saleItemElement.querySelector(".item-product-name").textContent =
+        sanitizeHTML(sale.itemName);
+      saleItemElement.querySelector(".item-product-sku").textContent =
+        sanitizeHTML(item.sku || "N/A");
+      saleItemElement.querySelector(
+        ".sale-quantity"
+      ).textContent = `x${sale.quantitySold}`;
+
+      const sellPrice = isIQD ? sale.sellPriceIqd : sale.sellPriceUsd;
+      const totalSellPrice = sellPrice * sale.quantitySold;
+      saleItemElement.querySelector(".meta-price").textContent =
+        totalSellPrice.toLocaleString();
+
+      const costPrice = isIQD ? sale.costPriceIqd : sale.costPriceUsd;
+      const profit = (sellPrice - costPrice) * sale.quantitySold;
+      const profitClass = profit >= 0 ? "profit-positive" : "profit-negative";
+      const profitIcon =
+        profit >= 0
+          ? "material-symbols:trending-up-rounded"
+          : "material-symbols:trending-down-rounded";
+
+      const profitItem = saleItemElement.querySelector(".profit-item");
+      profitItem.classList.add(profitClass);
+      profitItem.querySelector(".profit-icon").setAttribute("icon", profitIcon);
+      profitItem.querySelector(
+        ".profit-value"
+      ).textContent = `${profit.toLocaleString()} ${symbol}`;
+
+      if (sale.notes) {
+        const notesItem = saleItemElement.querySelector(".notes-item");
+        notesItem.style.display = "flex";
+        notesItem.querySelector(".notes-value").textContent = sanitizeHTML(
+          sale.notes
+        );
+      }
+
+      const saleTime = new Date(sale.timestamp).toLocaleTimeString("ar-IQ", {
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      });
+      saleItemElement.querySelector(
+        ".sale-datetime"
+      ).textContent = `التاريخ: ${sale.saleDate} | الوقت: ${saleTime}`;
+
+      salesListElement.appendChild(saleItemElement);
+    });
+    mainFragment.appendChild(dayGroupElement);
+  }
+  salesLogContent.appendChild(mainFragment);
 }
 
 export const renderDashboard = () => {
@@ -470,6 +480,7 @@ export const renderDashboard = () => {
       return saleDate >= startDate && saleDate <= now;
     })
     .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
   const isIQD = appState.activeCurrency === "IQD";
   const totalSales = filteredSales.reduce(
     (sum, sale) =>
@@ -490,6 +501,7 @@ export const renderDashboard = () => {
   filteredSales.forEach(sale => {
     itemSales[sale.itemId] = (itemSales[sale.itemId] || 0) + sale.quantitySold;
   });
+
   const sortedBestsellers = Object.entries(itemSales)
     .map(([itemId, count]) => {
       const item = appState.inventory.items.find(i => i.id === itemId);
@@ -497,6 +509,7 @@ export const renderDashboard = () => {
     })
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
+
   elements.bestsellersList.innerHTML = "";
   if (sortedBestsellers.length > 0) {
     sortedBestsellers.forEach(item => {
@@ -513,6 +526,7 @@ export const renderDashboard = () => {
 
   renderSalesLog(filteredSales);
 };
+
 export function renderSupplierList() {
   elements.supplierListContainer.innerHTML = "";
   if (appState.suppliers.length === 0) {
@@ -531,7 +545,7 @@ export function renderSupplierList() {
         <button class="icon-btn edit-supplier-btn" data-id="${
           supplier.id
         }" title="تعديل المورّد">
-          <iconify-icon icon="material-symbols:edit-outline-rounded"></iconify-icon>
+           <iconify-icon icon="material-symbols:edit-outline-rounded"></iconify-icon>
         </button>
         <button class="icon-btn danger-btn delete-supplier-btn" data-id="${
           supplier.id
@@ -575,20 +589,23 @@ const formatRelativeTime = date => {
   const minutes = Math.round(seconds / 60);
   const hours = Math.round(minutes / 60);
   const days = Math.round(hours / 24);
+
   if (seconds < 60) return `قبل لحظات`;
   if (minutes < 60) return `قبل ${minutes} دقيقة`;
   if (hours < 24) return `قبل ${hours} ساعة`;
   if (days < 30) return `قبل ${days} يوم`;
   return date.toLocaleString("ar-EG");
 };
+
 const getActionDetails = log => {
   const name = `<strong>${sanitizeHTML(log.targetName)}</strong>`;
   const details = log.details;
-  
-  const formatCategories = (cats) => {
-    if (!Array.isArray(cats)) return `"${sanitizeHTML(String(cats ?? '')) || 'بلا فئة'}"`;
+
+  const formatCategories = cats => {
+    if (!Array.isArray(cats))
+      return `"${sanitizeHTML(String(cats ?? "")) || "بلا فئة"}"`;
     if (cats.length === 0) return '"بلا فئة"';
-    return `"${cats.map(c => sanitizeHTML(c)).join(', ')}"`;
+    return `"${cats.map(c => sanitizeHTML(c)).join(", ")}"`;
   };
 
   const from = details.from;
@@ -612,7 +629,9 @@ const getActionDetails = log => {
         ).toLocaleString()}</span>.`,
       };
     case "QUANTITY_UPDATED":
-      let qtyDescription = `تم تعديل كمية ${name} من ${sanitizeHTML(String(from))} إلى ${sanitizeHTML(String(to))}.`;
+      let qtyDescription = `تم تعديل كمية ${name} من ${sanitizeHTML(
+        String(from)
+      )} إلى ${sanitizeHTML(String(to))}.`;
       if (details.reason && details.reason.trim() !== "") {
         qtyDescription += ` (السبب: ${sanitizeHTML(details.reason)})`;
       }
@@ -637,19 +656,25 @@ const getActionDetails = log => {
       return {
         icon: "material-symbols:edit-outline",
         class: "update",
-        description: `تم تغيير اسم المنتج من "${sanitizeHTML(String(from))}" إلى "${sanitizeHTML(String(to))}".`,
+        description: `تم تغيير اسم المنتج من "${sanitizeHTML(
+          String(from)
+        )}" إلى "${sanitizeHTML(String(to))}".`,
       };
     case "SKU_UPDATED":
       return {
         icon: "material-symbols:qr-code-2",
         class: "update",
-        description: `تم تغيير SKU للمنتج ${name} من "${sanitizeHTML(String(from))}" إلى "${sanitizeHTML(String(to))}".`,
+        description: `تم تغيير SKU للمنتج ${name} من "${sanitizeHTML(
+          String(from)
+        )}" إلى "${sanitizeHTML(String(to))}".`,
       };
     case "CATEGORY_UPDATED":
       return {
         icon: "material-symbols:folder-open-outline",
         class: "update",
-        description: `تم تغيير فئة ${name} من ${formatCategories(from)} إلى ${formatCategories(to)}.`,
+        description: `تم تغيير فئة ${name} من ${formatCategories(
+          from
+        )} إلى ${formatCategories(to)}.`,
       };
     case "NOTES_UPDATED":
       return {
@@ -673,30 +698,32 @@ export function renderAuditLog() {
   let logsToRender = [...appState.auditLog];
 
   const filter = appState.activityLogFilter;
-  if (filter !== 'all') {
+  if (filter !== "all") {
     const otherUpdateTypes = [
-        ACTION_TYPES.NAME_UPDATED, 
-        ACTION_TYPES.SKU_UPDATED, 
-        ACTION_TYPES.CATEGORY_UPDATED,
-        ACTION_TYPES.PRICE_UPDATED,
-        ACTION_TYPES.NOTES_UPDATED,
-        ACTION_TYPES.IMAGE_UPDATED,
-        ACTION_TYPES.SUPPLIER_UPDATED
+      ACTION_TYPES.NAME_UPDATED,
+      ACTION_TYPES.SKU_UPDATED,
+      ACTION_TYPES.CATEGORY_UPDATED,
+      ACTION_TYPES.PRICE_UPDATED,
+      ACTION_TYPES.NOTES_UPDATED,
+      ACTION_TYPES.IMAGE_UPDATED,
+      ACTION_TYPES.SUPPLIER_UPDATED,
     ];
-
     logsToRender = appState.auditLog.filter(log => {
-        switch (filter) {
-            case 'sale':
-                return log.action === ACTION_TYPES.SALE_RECORDED;
-            case 'quantity':
-                return log.action === ACTION_TYPES.QUANTITY_UPDATED;
-            case 'lifecycle':
-                return log.action === ACTION_TYPES.ITEM_CREATED || log.action === ACTION_TYPES.ITEM_DELETED;
-            case 'other':
-                return otherUpdateTypes.includes(log.action);
-            default:
-                return true;
-        }
+      switch (filter) {
+        case "sale":
+          return log.action === ACTION_TYPES.SALE_RECORDED;
+        case "quantity":
+          return log.action === ACTION_TYPES.QUANTITY_UPDATED;
+        case "lifecycle":
+          return (
+            log.action === ACTION_TYPES.ITEM_CREATED ||
+            log.action === ACTION_TYPES.ITEM_DELETED
+          );
+        case "other":
+          return otherUpdateTypes.includes(log.action);
+        default:
+          return true;
+      }
     });
   }
 
@@ -709,7 +736,6 @@ export function renderAuditLog() {
   const sortedLog = logsToRender.sort(
     (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
   );
-  
   const fragment = document.createDocumentFragment();
 
   sortedLog.forEach(logItem => {
@@ -731,4 +757,4 @@ export function renderAuditLog() {
     fragment.appendChild(clone);
   });
   elements.auditLogList.appendChild(fragment);
-    }
+}

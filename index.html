@@ -477,7 +477,7 @@
           
           <fieldset>
             <legend>الفئات</legend>
-             <div class="fieldset-content">
+            <div class="fieldset-content">
                 <div class="form-group">
                     <div id="category-input-container" class="category-input-container">
                         <div id="selected-categories-container" class="selected-categories"></div>
@@ -493,7 +493,7 @@
                         </div>
                     </div>
                 </div>
-             </div>
+            </div>
           </fieldset>
 
           <fieldset>
@@ -1111,6 +1111,56 @@
             </button>
             <span class="pill-text"></span>
         </div>
+    </template>
+
+    <template id="day-group-template">
+      <div class="day-group">
+        <h3 class="day-header"></h3>
+        <div class="sales-list"></div>
+      </div>
+    </template>
+
+    <template id="sale-item-template">
+      <div class="sale-item">
+        <div class="item-header">
+          <div class="item-info">
+            <div class="item-product-name"></div>
+            <div class="item-product-sku"></div>
+          </div>
+          <div class="item-meta">
+            <div class="meta-label">الكمية</div>
+            <div class="meta-value sale-quantity"></div>
+          </div>
+          <div class="item-meta">
+            <div class="meta-label">الإجمالي</div>
+            <div class="meta-value meta-price"></div>
+          </div>
+          <div>
+            <button class="icon-btn danger-btn delete-sale-btn" title="حذف السجل">
+              <iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon>
+            </button>
+          </div>
+          <div class="sale-datetime"></div>
+        </div>
+        <div class="item-details">
+          <ul class="details-list">
+            <li class="profit-item">
+              <div class="detail-label-group">
+                <iconify-icon class="profit-icon"></iconify-icon>
+                <span class="label">الربح</span>
+              </div>
+              <span class="value profit-value"></span>
+            </li>
+            <li class="notes-item" style="display: none;">
+              <div class="detail-label-group">
+                <iconify-icon icon="solar:notes-outline"></iconify-icon>
+                <span class="label">ملاحظات</span>
+              </div>
+              <span class="value notes-value"></span>
+            </li>
+          </ul>
+        </div>
+      </div>
     </template>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>

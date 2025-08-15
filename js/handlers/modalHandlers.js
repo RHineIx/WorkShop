@@ -18,6 +18,7 @@ import {
   renderCategoryFilter,
   populateSupplierDropdown,
   getAllUniqueCategories,
+  updateProductCardImage,
 } from "../renderer.js";
 import { showStatus, hideStatus } from "../notifications.js";
 import { logAction, ACTION_TYPES } from "../logger.js";
@@ -217,7 +218,10 @@ async function handleSaleFormSubmit(e) {
     saveLocalData();
     filterAndRenderItems(true);
     hideStatus(syncToastId);
-    showStatus("فشل مزامنة البيع! تم استرجاع البيانات.", "error");
+    showStatus(
+      "فشل مزامنة البيع! تم استرجاع البيانات.",
+      "error"
+    );
   } finally {
     if (appState.currentView === "dashboard") {
       const { renderDashboard } = await import("../renderer.js");
@@ -368,154 +372,90 @@ async function handleItemFormSubmit(e) {
     appState.inventory.items.push(itemData);
   }
 
-  saveLocalData();
-  filterAndRenderItems(true);
-  renderCategoryFilter();
+  // Close modal before sync to improve perceived performance
   getDOMElements().itemModal.close();
 
-  // --- REFACTORED LOGIC START ---
   try {
     if (appState.selectedImageFile) {
       const compressedImageBlob = await compressImage(
         appState.selectedImageFile
       );
+      
+      // --- NEW LOGIC: Update cache and UI immediately ---
+      const blobUrl = URL.createObjectURL(compressedImageBlob);
+      updateProductCardImage(itemData.id, blobUrl);
+      // --- END NEW LOGIC ---
+
       itemData.imagePath = await api.uploadImageToGitHub(
         compressedImageBlob,
         appState.selectedImageFile.name
       );
+      
+      // Update the final item in the state with the real path
       const finalItemIndex = appState.inventory.items.findIndex(
         i => i.id === itemData.id
       );
-      if (finalItemIndex !== -1)
+      if (finalItemIndex !== -1) {
         appState.inventory.items[finalItemIndex].imagePath = itemData.imagePath;
-      saveLocalData();
+        // Update the cache with the real path for future loads
+        appState.imageCache.set(itemData.imagePath, blobUrl);
+      }
     }
+    
+    // The rest of the optimistic UI updates happen here
+    saveLocalData();
+    filterAndRenderItems(true); // This re-renders other data, but image is already updated
+    renderCategoryFilter();
 
-    // Step 1: Await the primary data save.
     await api.saveInventory();
 
-    // Step 2: If primary save is successful, show success to the user immediately.
     hideStatus(syncToastId);
     showStatus("تم الحفظ والمزامنة بنجاح!", "success");
 
-    // Step 3: Attempt to log the actions in the background.
-    // Errors here will be caught and logged, but won't trigger the main rollback.
     const loggingPromises = [];
     if (originalItemForLog) {
-      if (originalItemForLog.name !== itemData.name) {
-        loggingPromises.push(
-          logAction({
-            action: ACTION_TYPES.NAME_UPDATED,
-            targetId: itemData.id,
-            targetName: itemData.name,
-            details: { from: originalItemForLog.name, to: itemData.name },
-          })
-        );
-      }
-      if (originalItemForLog.sku !== itemData.sku) {
-        loggingPromises.push(
-          logAction({
-            action: ACTION_TYPES.SKU_UPDATED,
-            targetId: itemData.id,
-            targetName: itemData.name,
-            details: { from: originalItemForLog.sku, to: itemData.sku },
-          })
-        );
-      }
-      if (
-        JSON.stringify(originalItemForLog.categories || []) !==
-        JSON.stringify(itemData.categories)
-      ) {
-        loggingPromises.push(
-          logAction({
-            action: ACTION_TYPES.CATEGORY_UPDATED,
-            targetId: itemData.id,
-            targetName: itemData.name,
-            details: {
-              from: originalItemForLog.categories || [],
-              to: itemData.categories,
-            },
-          })
-        );
-      }
-      if (originalItemForLog.quantity !== itemData.quantity) {
-        loggingPromises.push(
-          logAction({
-            action: ACTION_TYPES.QUANTITY_UPDATED,
-            targetId: itemData.id,
-            targetName: itemData.name,
-            details: {
-              from: originalItemForLog.quantity,
-              to: itemData.quantity,
-              reason: "تعديل مباشر",
-            },
-          })
-        );
-      }
-      if (originalItemForLog.sellPriceIqd !== itemData.sellPriceIqd) {
-        loggingPromises.push(
-          logAction({
-            action: ACTION_TYPES.PRICE_UPDATED,
-            targetId: itemData.id,
-            targetName: itemData.name,
-            details: {
-              from: `${originalItemForLog.sellPriceIqd} د.ع`,
-              to: `${itemData.sellPriceIqd} د.ع`,
-            },
-          })
-        );
-      }
-      if (originalItemForLog.notes !== itemData.notes) {
-        loggingPromises.push(
-          logAction({
-            action: ACTION_TYPES.NOTES_UPDATED,
-            targetId: itemData.id,
-            targetName: itemData.name,
-          })
-        );
-      }
-      if (appState.selectedImageFile) {
-        loggingPromises.push(
-          logAction({
-            action: ACTION_TYPES.IMAGE_UPDATED,
-            targetId: itemData.id,
-            targetName: itemData.name,
-          })
-        );
-      }
-      if (originalItemForLog.supplierId !== itemData.supplierId) {
-        loggingPromises.push(
-          logAction({
-            action: ACTION_TYPES.SUPPLIER_UPDATED,
-            targetId: itemData.id,
-            targetName: itemData.name,
-          })
-        );
-      }
+        if (originalItemForLog.name !== itemData.name) {
+            loggingPromises.push(logAction({ action: ACTION_TYPES.NAME_UPDATED, targetId: itemData.id, targetName: itemData.name, details: { from: originalItemForLog.name, to: itemData.name } }));
+        }
+        if (originalItemForLog.sku !== itemData.sku) {
+            loggingPromises.push(logAction({ action: ACTION_TYPES.SKU_UPDATED, targetId: itemData.id, targetName: itemData.name, details: { from: originalItemForLog.sku, to: itemData.sku } }));
+        }
+        if (JSON.stringify(originalItemForLog.categories || []) !== JSON.stringify(itemData.categories)) {
+            loggingPromises.push(logAction({ action: ACTION_TYPES.CATEGORY_UPDATED, targetId: itemData.id, targetName: itemData.name, details: { from: originalItemForLog.categories || [], to: itemData.categories } }));
+        }
+        if (originalItemForLog.quantity !== itemData.quantity) {
+            loggingPromises.push(logAction({ action: ACTION_TYPES.QUANTITY_UPDATED, targetId: itemData.id, targetName: itemData.name, details: { from: originalItemForLog.quantity, to: itemData.quantity, reason: "تعديل مباشر" } }));
+        }
+        if (originalItemForLog.sellPriceIqd !== itemData.sellPriceIqd) {
+            loggingPromises.push(logAction({ action: ACTION_TYPES.PRICE_UPDATED, targetId: itemData.id, targetName: itemData.name, details: { from: `${originalItemForLog.sellPriceIqd} د.ع`, to: `${itemData.sellPriceIqd} د.ع` } }));
+        }
+        if (originalItemForLog.notes !== itemData.notes) {
+            loggingPromises.push(logAction({ action: ACTION_TYPES.NOTES_UPDATED, targetId: itemData.id, targetName: itemData.name }));
+        }
+        if (appState.selectedImageFile) {
+            loggingPromises.push(logAction({ action: ACTION_TYPES.IMAGE_UPDATED, targetId: itemData.id, targetName: itemData.name }));
+        }
+        if (originalItemForLog.supplierId !== itemData.supplierId) {
+            loggingPromises.push(logAction({ action: ACTION_TYPES.SUPPLIER_UPDATED, targetId: itemData.id, targetName: itemData.name }));
+        }
     } else {
-      loggingPromises.push(
-        logAction({
-          action: ACTION_TYPES.ITEM_CREATED,
-          targetId: itemData.id,
-          targetName: itemData.name,
-        })
-      );
+      loggingPromises.push(logAction({
+        action: ACTION_TYPES.ITEM_CREATED,
+        targetId: itemData.id,
+        targetName: itemData.name,
+      }));
     }
-
+    
     if (loggingPromises.length > 0) {
       Promise.all(loggingPromises).catch(logError => {
-        console.error(
-          "Audit log sync failed, but inventory was saved:",
-          logError
-        );
+        console.error("Audit log sync failed, but inventory was saved:", logError);
         showStatus("تم حفظ المنتج، لكن فشل تحديث سجل النشاط.", "warning");
       });
     }
+
   } catch (error) {
-    // This catch block now only handles critical failures from saving the inventory/image.
     console.error("Item form sync failed, rolling back:", error);
     appState.inventory = originalInventory;
-
     saveLocalData();
     filterAndRenderItems(true);
     renderCategoryFilter();
@@ -525,7 +465,6 @@ async function handleItemFormSubmit(e) {
     saveButton.disabled = false;
     appState.selectedImageFile = null;
   }
-  // --- REFACTORED LOGIC END ---
 }
 
 function handleImageSelection(file) {
@@ -701,10 +640,10 @@ export function setupModalListeners(elements) {
     );
     const quantityInput = elements.detailsQuantityValue;
     if (item) {
-      let qty = parseInt(quantityInput.value, 10) || 0;
-      qty++;
-      quantityInput.value = qty;
-      item.quantity = qty;
+        let qty = parseInt(quantityInput.value, 10) || 0;
+        qty++;
+        quantityInput.value = qty;
+        item.quantity = qty;
     }
   });
   elements.detailsDecreaseBtn.addEventListener("click", () => {
@@ -713,26 +652,24 @@ export function setupModalListeners(elements) {
     );
     const quantityInput = elements.detailsQuantityValue;
     if (item) {
-      let qty = parseInt(quantityInput.value, 10) || 0;
-      if (qty > 0) {
-        qty--;
-        quantityInput.value = qty;
-        item.quantity = qty;
-      }
+        let qty = parseInt(quantityInput.value, 10) || 0;
+        if (qty > 0) {
+            qty--;
+            quantityInput.value = qty;
+            item.quantity = qty;
+        }
     }
   });
-  elements.detailsQuantityValue.addEventListener("change", e => {
-    const item = appState.inventory.items.find(
-      i => i.id === appState.currentItemId
-    );
+  elements.detailsQuantityValue.addEventListener('change', (e) => {
+    const item = appState.inventory.items.find(i => i.id === appState.currentItemId);
     if (item) {
-      const newQty = parseInt(e.target.value, 10) || 0;
-      if (newQty < 0) {
-        e.target.value = 0;
-        item.quantity = 0;
-      } else {
-        item.quantity = newQty;
-      }
+        const newQty = parseInt(e.target.value, 10) || 0;
+        if (newQty < 0) {
+            e.target.value = 0;
+            item.quantity = 0;
+        } else {
+            item.quantity = newQty;
+        }
     }
   });
   elements.closeDetailsModalBtn.addEventListener("click", async () => {
