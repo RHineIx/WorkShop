@@ -238,6 +238,7 @@ dialog::backdrop {
   height: auto; /* Maintain aspect ratio */
   max-height: 40vh; /* Limit maximum height to take reasonable screen space */
   display: block;
+  border-radius: var(--border-radius-md);
   object-fit: contain; /* Ensure the entire image is visible within the container */
 }
 .item-image-details {
