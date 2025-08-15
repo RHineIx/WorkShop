@@ -87,7 +87,7 @@
   background-color: var(--text-secondary);
 }
 
-#sync-form p{
+#sync-form p {
   text-align: center;
 }
 .bestsellers-container {
@@ -99,22 +99,6 @@
 }
 .bestsellers-container h3 {
   margin-bottom: var(--spacing-md);
-}
-.bestsellers-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
-.bestseller-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-sm);
-  background-color: var(--bg-color);
-  border-radius: var(--border-radius-sm);
-}
-.bestseller-name {
-  font-weight: 500;
 }
 .bestseller-count {
   font-weight: 700;
@@ -178,6 +162,11 @@
   white-space: nowrap;
   border: 0;
 }
+.text-secondary {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
 /* --- Enhanced Empty State --- */
 .empty-state {
   grid-column: 1 / -1; /* Make it span all grid columns */
@@ -190,7 +179,7 @@
 
 .empty-state::before {
   content: "ไม่มีรายการ"; /* Use a placeholder from a different language to show it's an icon */
-  font-family: 'Iconify'; /* This assumes Iconify could be used this way, for a real icon you would use SVG or an icon font */
+  font-family: "Iconify"; /* This assumes Iconify could be used this way, for a real icon you would use SVG or an icon font */
   display: block;
   font-size: 48px;
   margin-bottom: var(--spacing-md);
@@ -198,7 +187,7 @@
   /* For a real implementation, you'd use a proper icon, but this demonstrates the structure.
  */
   /* Let's use a text-based icon for simplicity with CSS only */
-  content: '¯\\_(ツ)_/¯';
+  content: "¯\\_(ツ)_/¯";
   font-family: monospace;
   font-size: 2.1rem;
 }

@@ -235,21 +235,6 @@ label[for="restore-backup-input"].cleanup-btn:hover {
 .status-refresh-btn:hover {
   background-color: rgba(0, 0, 0, 0.4);
 }
-.category-filter-toggle-btn {
-  position: absolute;
-  left: 0.5rem; /* 8px */
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-secondary);
-  background-color: transparent;
-  border-radius: var(--border-radius-sm);
-}
-.category-filter-toggle-btn:hover {
-  background-color: var(--bg-color);
-  color: var(--text-primary);
-  transform: translateY(-50%) scale(1.1);
-  box-shadow: none;
-}
 .time-filter-controls {
   display: flex;
   gap: var(--spacing-sm);

@@ -593,8 +593,3 @@ dialog::backdrop {
   align-items: center;
   gap: var(--spacing-sm);
 }
-
-.text-secondary {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-               }

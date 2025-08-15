@@ -18,7 +18,6 @@ import { showStatus, hideSyncStatus } from "./notifications.js";
 import { setupEventListeners } from "./eventSetup.js";
 import { setupLayoutAdjustments } from "./layout.js";
 import { initNavigationListener } from "./navigation.js";
-
 function migrateDataModelIfNeeded() {
   let isDataUpdated = false;
   if (appState.inventory && appState.inventory.items) {
@@ -182,7 +181,6 @@ function registerServiceWorker() {
       .catch(err => {
         console.error("ServiceWorker registration failed: ", err);
       });
-
     navigator.serviceWorker.addEventListener("controllerchange", () => {
       console.log("New service worker has taken control. Reloading...");
       window.location.reload();
@@ -217,7 +215,6 @@ export async function initializeApp() {
   }
 
   renderInventorySkeleton();
-
   if (appState.syncConfig) {
     showStatus("جاري مزامنة البيانات...", "syncing");
     try {
@@ -247,7 +244,7 @@ export async function initializeApp() {
 
       if (migrateDataModelIfNeeded()) {
         showStatus("جاري تحديث هيكل البيانات...", "syncing");
-        await api.saveToGitHub();
+        await api.saveInventory();
         saveLocalData();
         showStatus("تم تحديث هيكل البيانات بنجاح!", "success");
       } else {
