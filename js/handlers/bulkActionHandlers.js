@@ -161,12 +161,11 @@ async function handleBulkCategoryChange(e) {
   renderer.renderCategoryFilter();
   ui.getDOMElements().bulkCategoryModal.close();
   exitSelectionMode();
-  notifications.showStatus("تم تحديث الفئات محليًا.", "success", { duration: 2000 });
-
-  const syncToastId = notifications.showStatus("جاري مزامنة الفئات...", "syncing");
+  
+  const syncToastId = notifications.showStatus("جاري حفظ تغيير الفئات...", "syncing");
   try {
     await api.saveInventory();
-    notifications.updateStatus(syncToastId, "تمت مزامنة الفئات بنجاح!", "success");
+    notifications.updateStatus(syncToastId, "تم حفظ تغيير الفئات ومزامنتها بنجاح!", "success");
   } catch (error) {
     console.error("Bulk category sync failed, rolling back:", error);
     appState.inventory = originalInventory;
@@ -193,12 +192,11 @@ async function handleBulkSupplierChange(e) {
   renderer.filterAndRenderItems(true);
   ui.getDOMElements().bulkSupplierModal.close();
   exitSelectionMode();
-  notifications.showStatus("تم تحديث المورّد محليًا.", "success", { duration: 2000 });
 
-  const syncToastId = notifications.showStatus("جاري مزامنة المورّد...", "syncing");
+  const syncToastId = notifications.showStatus("جاري حفظ تغيير المورّد...", "syncing");
   try {
     await api.saveInventory();
-    notifications.updateStatus(syncToastId, "تمت مزامنة المورّد بنجاح!", "success");
+    notifications.updateStatus(syncToastId, "تم حفظ تغيير المورّد ومزامنته بنجاح!", "success");
   } catch (error) {
     console.error("Bulk supplier sync failed, rolling back:", error);
     appState.inventory = originalInventory;

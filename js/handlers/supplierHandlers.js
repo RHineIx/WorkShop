@@ -22,6 +22,7 @@ async function handleSupplierFormSubmit(e) {
   const originalSuppliers = JSON.parse(JSON.stringify(appState.suppliers));
   let updatedSupplier;
   const isEditing = !!id;
+  const actionText = isEditing ? 'تعديل' : 'إضافة';
 
   if (isEditing) {
     const supplier = appState.suppliers.find(s => s.id === id);
@@ -39,19 +40,19 @@ async function handleSupplierFormSubmit(e) {
     appState.suppliers.push(updatedSupplier);
   }
   
+  const syncToastId = showStatus(`جاري ${actionText} المورّد...`, "syncing");
+
   renderSupplierList();
   populateSupplierDropdown(elements.itemSupplierSelect.value);
   elements.supplierForm.reset();
   elements.supplierIdInput.value = "";
   elements.supplierFormTitle.textContent = "إضافة مورّد جديد";
   elements.cancelEditSupplierBtn.classList.add("view-hidden");
-  showStatus(`تم ${isEditing ? 'تعديل' : 'إضافة'} المورّد محليًا.`, "success", { duration: 2000 });
-
-  const syncToastId = showStatus(`جاري مزامنة المورّد...`, "syncing");
+  
   try {
     await api.saveSuppliers();
     saveLocalData();
-    updateStatus(syncToastId, `تمت مزامنة المورّد بنجاح!`, "success");
+    updateStatus(syncToastId, `تم ${actionText} المورّد ومزامنته بنجاح!`, "success");
   } catch (error) {
     console.error("Supplier sync failed, rolling back:", error);
     appState.suppliers = originalSuppliers;
@@ -93,15 +94,14 @@ async function handleDeleteSupplier(supplierId) {
     renderSupplierList();
     filterAndRenderItems();
     populateSupplierDropdown(getDOMElements().itemSupplierSelect.value);
-    showStatus("تم حذف المورّد محليًا.", "success", { duration: 2000 });
-
-    const syncToastId = showStatus("جاري مزامنة الحذف...", "syncing");
+    
+    const syncToastId = showStatus("جاري حذف المورّد...", "syncing");
     try {
         if (linkedProductsCount > 0) {
             await api.saveInventory();
         }
         await api.saveSuppliers();
-        updateStatus(syncToastId, "تمت مزامنة الحذف بنجاح!", "success");
+        updateStatus(syncToastId, "تم حذف المورّد ومزامنته بنجاح!", "success");
     } catch (error) {
       console.error("Supplier deletion sync failed, rolling back:", error);
       appState.inventory = originalInventory;

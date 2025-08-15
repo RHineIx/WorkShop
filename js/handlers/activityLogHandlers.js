@@ -28,12 +28,11 @@ async function handleLogCleanup() {
   if (appState.currentView === "activity-log") {
     renderAuditLog();
   }
-  showStatus("تم تنظيف السجل محليًا.", "success", { duration: 2000 });
 
-  const syncToastId = showStatus("جاري مزامنة السجل...", "syncing");
+  const syncToastId = showStatus("جاري تنظيف السجل...", "syncing");
   try {
     await api.saveAuditLog();
-    updateStatus(syncToastId, "تمت مزامنة السجل بنجاح!", "success");
+    updateStatus(syncToastId, "تم تنظيف السجل ومزامنته بنجاح!", "success");
   } catch (error) {
     console.error("Log cleanup sync failed, rolling back:", error);
     appState.auditLog = originalLog; 
