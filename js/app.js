@@ -12,7 +12,6 @@ import {
   renderInventorySkeleton,
   filterAndRenderItems,
   renderCategoryFilter,
-  // REMOVED: populateCategoryDatalist is no longer exported or used.
   renderAuditLog,
 } from "./renderer.js";
 import { showStatus, hideSyncStatus } from "./notifications.js";
@@ -284,8 +283,6 @@ export async function initializeApp() {
   updateLastArchiveDateDisplay();
   filterAndRenderItems();
   renderCategoryFilter();
-  // REMOVED: The function call is no longer needed.
-  // populateCategoryDatalist();
   renderAuditLog();
   updateCurrencyDisplay();
   handleUrlShortcuts();

@@ -15,7 +15,6 @@ export const appState = {
   searchTerm: "",
   selectedCategory: "all",
   currentSortOption: "default",
-  // NEW: State for the activity log filter
   activityLogFilter: "all",
   currentItemId: null,
   itemStateBeforeEdit: null,
