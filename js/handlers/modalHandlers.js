@@ -19,7 +19,7 @@ import {
   populateSupplierDropdown,
   getAllUniqueCategories,
 } from "../renderer.js";
-import { showStatus, hideStatus, updateStatus } from "../notifications.js";
+import { showStatus, hideStatus } from "../notifications.js";
 import { logAction, ACTION_TYPES } from "../logger.js";
 
 let cropper = null;
@@ -139,13 +139,15 @@ async function syncQuantityChange(
         reason: reason,
       },
     });
-    updateStatus(syncToastId, "تمت مزامنة تغيير الكمية بنجاح!", "success");
+    hideStatus(syncToastId);
+    showStatus("تمت مزامنة تغيير الكمية بنجاح!", "success");
   } catch (error) {
     console.error("Sync failed, rolling back:", error);
     appState.inventory = originalInventory;
     saveLocalData();
     filterAndRenderItems();
-    updateStatus(syncToastId, "فشلت المزامنة! تم استرجاع البيانات.", "error");
+    hideStatus(syncToastId);
+    showStatus("فشلت المزامنة! تم استرجاع البيانات.", "error");
   }
 }
 
@@ -202,15 +204,16 @@ async function handleSaleFormSubmit(e) {
       targetName: item.name,
       details: { quantity: quantityToSell, saleId: saleRecord.saleId },
     });
-    updateStatus(syncToastId, "تم تسجيل البيع ومزامنته بنجاح!", "success");
+    hideStatus(syncToastId);
+    showStatus("تم تسجيل البيع ومزامنته بنجاح!", "success");
   } catch (error) {
     console.error("Sale sync failed, rolling back:", error);
     appState.inventory = originalInventory;
     appState.sales = originalSales;
     saveLocalData();
     filterAndRenderItems(true);
-    updateStatus(
-      syncToastId,
+    hideStatus(syncToastId);
+    showStatus(
       "فشل مزامنة البيع! تم استرجاع البيانات.",
       "error"
     );
@@ -350,7 +353,13 @@ async function handleItemFormSubmit(e) {
     supplierId: document.getElementById("item-supplier").value || null,
   };
   delete itemData.category;
-  const syncToastId = showStatus("جاري حفظ المنتج...", "syncing");
+  
+  let syncToastId;
+  if (appState.selectedImageFile) {
+    syncToastId = showStatus("جاري ضغط ورفع الصورة...", "syncing");
+  } else {
+    syncToastId = showStatus("جاري حفظ المنتج...", "syncing");
+  }
 
   if (existingItemIndex !== -1) {
     appState.inventory.items[existingItemIndex] = itemData;
@@ -364,7 +373,6 @@ async function handleItemFormSubmit(e) {
   getDOMElements().itemModal.close();
   try {
     if (appState.selectedImageFile) {
-      updateStatus(syncToastId, "جاري ضغط ورفع الصورة...", "syncing");
       const compressedImageBlob = await compressImage(
         appState.selectedImageFile
       );
@@ -378,118 +386,50 @@ async function handleItemFormSubmit(e) {
       if (finalItemIndex !== -1)
         appState.inventory.items[finalItemIndex].imagePath = itemData.imagePath;
       saveLocalData();
-      updateStatus(syncToastId, "جاري مزامنة المنتج...", "syncing");
     }
 
     await api.saveInventory();
-
+    
     const loggingPromises = [];
     if (originalItemForLog) {
       if (originalItemForLog.name !== itemData.name) {
-        loggingPromises.push(
-          logAction({
-            action: ACTION_TYPES.NAME_UPDATED,
-            targetId: itemData.id,
-            targetName: itemData.name,
-            details: { from: originalItemForLog.name, to: itemData.name },
-          })
-        );
+        loggingPromises.push(logAction({ action: ACTION_TYPES.NAME_UPDATED, targetId: itemData.id, targetName: itemData.name, details: { from: originalItemForLog.name, to: itemData.name } }));
       }
       if (originalItemForLog.sku !== itemData.sku) {
-        loggingPromises.push(
-          logAction({
-            action: ACTION_TYPES.SKU_UPDATED,
-            targetId: itemData.id,
-            targetName: itemData.name,
-            details: { from: originalItemForLog.sku, to: itemData.sku },
-          })
-        );
+        loggingPromises.push(logAction({ action: ACTION_TYPES.SKU_UPDATED, targetId: itemData.id, targetName: itemData.name, details: { from: originalItemForLog.sku, to: itemData.sku } }));
       }
-      if (
-        JSON.stringify(originalItemForLog.categories || []) !==
-        JSON.stringify(itemData.categories)
-      ) {
-        loggingPromises.push(
-          logAction({
-            action: ACTION_TYPES.CATEGORY_UPDATED,
-            targetId: itemData.id,
-            targetName: itemData.name,
-            details: {
-              from: originalItemForLog.categories || [],
-              to: itemData.categories,
-            },
-          })
-        );
+      if (JSON.stringify(originalItemForLog.categories || []) !== JSON.stringify(itemData.categories)) {
+        loggingPromises.push(logAction({ action: ACTION_TYPES.CATEGORY_UPDATED, targetId: itemData.id, targetName: itemData.name, details: { from: originalItemForLog.categories || [], to: itemData.categories } }));
       }
       if (originalItemForLog.quantity !== itemData.quantity) {
-        loggingPromises.push(
-          logAction({
-            action: ACTION_TYPES.QUANTITY_UPDATED,
-            targetId: itemData.id,
-            targetName: itemData.name,
-            details: {
-              from: originalItemForLog.quantity,
-              to: itemData.quantity,
-              reason: "تعديل مباشر",
-            },
-          })
-        );
+        loggingPromises.push(logAction({ action: ACTION_TYPES.QUANTITY_UPDATED, targetId: itemData.id, targetName: itemData.name, details: { from: originalItemForLog.quantity, to: itemData.quantity, reason: "تعديل مباشر" } }));
       }
       if (originalItemForLog.sellPriceIqd !== itemData.sellPriceIqd) {
-        loggingPromises.push(
-          logAction({
-            action: ACTION_TYPES.PRICE_UPDATED,
-            targetId: itemData.id,
-            targetName: itemData.name,
-            details: {
-              from: `${originalItemForLog.sellPriceIqd} د.ع`,
-              to: `${itemData.sellPriceIqd} د.ع`,
-            },
-          })
-        );
+        loggingPromises.push(logAction({ action: ACTION_TYPES.PRICE_UPDATED, targetId: itemData.id, targetName: itemData.name, details: { from: `${originalItemForLog.sellPriceIqd} د.ع`, to: `${itemData.sellPriceIqd} د.ع` } }));
       }
       if (originalItemForLog.notes !== itemData.notes) {
-        loggingPromises.push(
-          logAction({
-            action: ACTION_TYPES.NOTES_UPDATED,
-            targetId: itemData.id,
-            targetName: itemData.name,
-          })
-        );
+        loggingPromises.push(logAction({ action: ACTION_TYPES.NOTES_UPDATED, targetId: itemData.id, targetName: itemData.name }));
       }
       if (appState.selectedImageFile) {
-        loggingPromises.push(
-          logAction({
-            action: ACTION_TYPES.IMAGE_UPDATED,
-            targetId: itemData.id,
-            targetName: itemData.name,
-          })
-        );
+        loggingPromises.push(logAction({ action: ACTION_TYPES.IMAGE_UPDATED, targetId: itemData.id, targetName: itemData.name }));
       }
       if (originalItemForLog.supplierId !== itemData.supplierId) {
-        loggingPromises.push(
-          logAction({
-            action: ACTION_TYPES.SUPPLIER_UPDATED,
-            targetId: itemData.id,
-            targetName: itemData.name,
-          })
-        );
+        loggingPromises.push(logAction({ action: ACTION_TYPES.SUPPLIER_UPDATED, targetId: itemData.id, targetName: itemData.name }));
       }
     } else {
-      loggingPromises.push(
-        logAction({
-          action: ACTION_TYPES.ITEM_CREATED,
-          targetId: itemData.id,
-          targetName: itemData.name,
-        })
-      );
+      loggingPromises.push(logAction({
+        action: ACTION_TYPES.ITEM_CREATED,
+        targetId: itemData.id,
+        targetName: itemData.name,
+      }));
     }
-
+    
     if (loggingPromises.length > 0) {
-      await Promise.all(loggingPromises);
+        await Promise.all(loggingPromises);
     }
-
-    updateStatus(syncToastId, "تم الحفظ والمزامنة بنجاح!", "success");
+    
+    hideStatus(syncToastId);
+    showStatus("تم الحفظ والمزامنة بنجاح!", "success");
   } catch (error) {
     console.error("Item form sync failed, rolling back:", error);
     appState.inventory = originalInventory;
@@ -497,7 +437,8 @@ async function handleItemFormSubmit(e) {
     saveLocalData();
     filterAndRenderItems(true);
     renderCategoryFilter();
-    updateStatus(syncToastId, "فشلت المزامنة! تم استرجاع البيانات.", "error");
+    hideStatus(syncToastId);
+    showStatus("فشلت المزامنة! تم استرجاع البيانات.", "error");
   } finally {
     saveButton.disabled = false;
     appState.selectedImageFile = null;
@@ -675,18 +616,38 @@ export function setupModalListeners(elements) {
     const item = appState.inventory.items.find(
       i => i.id === appState.currentItemId
     );
+    const quantityInput = elements.detailsQuantityValue;
     if (item) {
-      item.quantity++;
-      elements.detailsQuantityValue.textContent = item.quantity;
+        let qty = parseInt(quantityInput.value, 10) || 0;
+        qty++;
+        quantityInput.value = qty;
+        item.quantity = qty;
     }
   });
   elements.detailsDecreaseBtn.addEventListener("click", () => {
     const item = appState.inventory.items.find(
       i => i.id === appState.currentItemId
     );
-    if (item && item.quantity > 0) {
-      item.quantity--;
-      elements.detailsQuantityValue.textContent = item.quantity;
+    const quantityInput = elements.detailsQuantityValue;
+    if (item) {
+        let qty = parseInt(quantityInput.value, 10) || 0;
+        if (qty > 0) {
+            qty--;
+            quantityInput.value = qty;
+            item.quantity = qty;
+        }
+    }
+  });
+  elements.detailsQuantityValue.addEventListener('change', (e) => {
+    const item = appState.inventory.items.find(i => i.id === appState.currentItemId);
+    if (item) {
+        const newQty = parseInt(e.target.value, 10) || 0;
+        if (newQty < 0) {
+            e.target.value = 0;
+            item.quantity = 0;
+        } else {
+            item.quantity = newQty;
+        }
     }
   });
   elements.closeDetailsModalBtn.addEventListener("click", async () => {
@@ -784,13 +745,15 @@ export function setupModalListeners(elements) {
           targetName: itemToDelete.name,
           details: { lastKnownSku: itemToDelete.sku },
         });
-        updateStatus(syncToastId, "تم حذف المنتج بنجاح!", "success");
+        hideStatus(syncToastId);
+        showStatus("تم حذف المنتج بنجاح!", "success");
       } catch (error) {
         appState.inventory = originalInventory;
         appState.auditLog = originalAuditLog;
         saveLocalData();
         filterAndRenderItems(true);
-        updateStatus(syncToastId, `فشل الحذف: ${error.message}`, "error");
+        hideStatus(syncToastId);
+        showStatus(`فشل الحذف: ${error.message}`, "error");
       }
     }
   });

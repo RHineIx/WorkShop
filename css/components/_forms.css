@@ -30,7 +30,8 @@
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-sm);
   background-color: var(--surface-color);
-  color: var(--text-primary); /* This rule will now apply correctly */
+  color: var(--text-primary);
+  /* This rule will now apply correctly */
   font-size: 1rem; /* 16px */
   transition: all var(--transition-speed);
 }
@@ -54,7 +55,8 @@
 #item-form textarea,
 #sale-form textarea,
 #quantity-change-reason {
-  min-height: 5rem; /* 80px */
+  min-height: 5rem;
+  /* 80px */
   width: 100%;
   resize: vertical;
 }
@@ -133,7 +135,8 @@ legend {
 }
 
 .image-preview-wrapper {
-  width: 7.5rem; /* 120px */
+  width: 7.5rem;
+  /* 120px */
   height: 7.5rem; /* 120px */
   border-radius: 50%;
   position: relative;
@@ -157,7 +160,8 @@ legend {
   color: var(--text-secondary);
 }
 #image-placeholder iconify-icon {
-  font-size: 3.125rem; /* 50px */
+  font-size: 3.125rem;
+  /* 50px */
 }
 
 .quantity-controls input[type="number"] {
@@ -206,7 +210,8 @@ select {
 
 .currency-symbol {
   position: absolute;
-  left: 0.75rem; /* 12px */
+  left: 0.75rem;
+  /* 12px */
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-secondary);
@@ -214,7 +219,8 @@ select {
 }
 
 .input-with-currency input {
-  padding-left: 2.8125rem !important; /* 45px */
+  padding-left: 2.8125rem !important;
+  /* 45px */
 }
 
 #sale-date::-webkit-calendar-picker-indicator {
@@ -224,7 +230,34 @@ select {
 
 #sale-date {
   text-align: center;
-  padding-left: 0.75rem; /* 12px */
+  padding-left: 0.75rem;
+  /* 12px */
+}
+
+/* --- REFACTORED: Sale Modal Layout --- */
+#sale-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem; /* Consistent vertical spacing */
+}
+
+#sale-form .form-group label {
+  margin-bottom: var(--spacing-sm);
+}
+
+#sale-form h3 {
+  text-align: center;
+  margin-bottom: 0;
+}
+
+.sale-item-info {
+  text-align: center;
+}
+
+.sale-item-info p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
 }
 
 .sale-item-name-display {
@@ -233,10 +266,10 @@ select {
   font-weight: bold;
   color: var(--accent-color);
   background-color: var(--bg-color);
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: var(--spacing-md);
   border-radius: var(--border-radius-sm);
   text-align: center;
-  margin-bottom: var(--spacing-md);
+  margin-top: var(--spacing-sm);
 }
 
 .sale-details-grid {
@@ -244,7 +277,6 @@ select {
   grid-template-columns: 1fr 1fr;
   gap: var(--spacing-md);
   align-items: flex-end;
-  margin-bottom: var(--spacing-lg);
 }
 
 .sale-total-container {

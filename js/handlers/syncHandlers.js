@@ -3,7 +3,7 @@ import { appState } from "../state.js";
 import * as api from "../api.js";
 import { saveConfig, initializeApp, saveLocalData } from "../app.js";
 import { sanitizeHTML } from "../utils.js";
-import { showStatus, hideSyncStatus } from "../notifications.js";
+import { showStatus, hideStatus } from "../notifications.js";
 import { getDOMElements, openModal } from "../ui.js";
 import { showConfirmationModal } from "../ui_helpers.js";
 
@@ -60,7 +60,7 @@ async function handleImageCleanup() {
   });
   if (!confirmed) return;
 
-  showStatus("جاري البحث عن الصور غير المستخدمة...", "syncing");
+  const syncToastId = showStatus("جاري البحث عن الصور غير المستخدمة...", "syncing");
   try {
     const allRepoImages = await api.getGitHubDirectoryListing("images");
     const usedImages = new Set(
@@ -70,15 +70,17 @@ async function handleImageCleanup() {
       repoImage => !usedImages.has(repoImage.path)
     );
     if (orphanedImages.length === 0) {
-      hideSyncStatus();
+      hideStatus(syncToastId);
       showStatus("لا توجد صور غير مستخدمة ليتم حذفها.", "success");
       return;
     }
 
-    showStatus(
+    const newToastId = showStatus(
       `تم العثور على ${orphanedImages.length} صورة... جاري الحذف.`,
       "syncing"
     );
+    hideStatus(syncToastId);
+
     let deletedCount = 0;
     for (const image of orphanedImages) {
       await api.deleteFileFromGitHub(
@@ -88,12 +90,12 @@ async function handleImageCleanup() {
       );
       deletedCount++;
     }
-    hideSyncStatus();
+    hideStatus(newToastId);
     showStatus(`تم حذف ${deletedCount} صورة غير مستخدمة بنجاح.`, "success", {
       duration: 5000,
     });
   } catch (error) {
-    hideSyncStatus();
+    hideStatus(syncToastId);
     showStatus(`حدث خطأ: ${error.message}`, "error", { duration: 5000 });
   }
 }
@@ -135,7 +137,7 @@ async function handleManualArchive() {
     return;
   }
 
-  showStatus("جاري أرشفة البيانات...", "syncing");
+  const syncToastId = showStatus("جاري أرشفة البيانات...", "syncing");
   try {
     for (const [monthKey, salesData] of archivesToCreate) {
       const path = `archives/sales_${monthKey}.json`;
@@ -152,11 +154,11 @@ async function handleManualArchive() {
       "ar-EG"
     );
     await api.saveSales();
-    await api.saveToGitHub();
+    await api.saveInventory();
     saveLocalData();
     updateLastArchiveDateDisplay();
 
-    hideSyncStatus();
+    hideStatus(syncToastId);
     showStatus(
       `تمت أرشفة ${archivesToCreate.length} شهر من السجلات بنجاح.`,
       "success",
@@ -164,7 +166,7 @@ async function handleManualArchive() {
     );
   } catch (error) {
     console.error("Manual archive failed:", error);
-    hideSyncStatus();
+    hideStatus(syncToastId);
     showStatus(`فشلت عملية الأرشفة: ${error.message}`, "error", {
       duration: 5000,
     });
@@ -230,14 +232,13 @@ async function openArchiveBrowser() {
 }
 
 async function handleDownloadBackup() {
-  showStatus("جاري تجهيز النسخة الاحتياطية...", "syncing");
+  const syncToastId = showStatus("جاري تجهيز النسخة الاحتياطية...", "syncing");
   try {
     const zip = new JSZip();
     zip.file("inventory.json", JSON.stringify(appState.inventory, null, 2));
     zip.file("sales.json", JSON.stringify(appState.sales, null, 2));
     zip.file("suppliers.json", JSON.stringify(appState.suppliers, null, 2));
     zip.file("audit-log.json", JSON.stringify(appState.auditLog, null, 2));
-
     const blob = await zip.generateAsync({ type: "blob" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -251,11 +252,11 @@ async function handleDownloadBackup() {
     document.body.removeChild(link);
     URL.revokeObjectURL(link.href);
 
-    hideSyncStatus();
+    hideStatus(syncToastId);
     showStatus("تم تنزيل النسخة الاحتياطية بنجاح!", "success");
   } catch (error) {
     console.error("Backup failed:", error);
-    hideSyncStatus();
+    hideStatus(syncToastId);
     showStatus(`فشل إنشاء النسخة الاحتياطية: ${error.message}`, "error", {
       duration: 5000,
     });
@@ -273,14 +274,13 @@ async function handleBackupToTelegram() {
     confirmText: "نعم, إرسال",
     isDanger: false,
   });
-
   if (!confirmed) return;
 
-  showStatus("جاري طلب النسخة الاحتياطية...", "syncing");
+  const syncToastId = showStatus("جاري طلب النسخة الاحتياطية...", "syncing");
   try {
     const success = await api.triggerBackupWorkflow();
     if (success) {
-      hideSyncStatus();
+      hideStatus(syncToastId);
       showStatus(
         "تم إرسال الطلب بنجاح! ستصلك النسخة الاحتياطية على تليجرام قريبًا.",
         "success",
@@ -288,7 +288,7 @@ async function handleBackupToTelegram() {
       );
     }
   } catch (error) {
-    hideSyncStatus();
+    hideStatus(syncToastId);
     showStatus(`فشل إرسال الطلب: ${error.message}`, "error", {
       duration: 6000,
     });
@@ -298,20 +298,18 @@ async function handleBackupToTelegram() {
 async function handleRestoreBackup(event) {
   const file = event.target.files[0];
   if (!file) return;
-
   const confirmed = await showConfirmationModal({
     title: "تأكيد الاستعادة",
     message:
       "هل أنت متأكد من رغبتك في استعادة البيانات من هذا الملف؟ سيتم الكتابة فوق جميع بياناتك الحالية.",
     confirmText: "نعم, استعادة",
   });
-
   if (!confirmed) {
     event.target.value = "";
     return;
   }
 
-  showStatus("جاري استعادة النسخة الاحتياطية...", "syncing");
+  const syncToastId = showStatus("جاري استعادة النسخة الاحتياطية...", "syncing");
   try {
     const zip = await JSZip.loadAsync(file);
     const inventoryFile = zip.file("inventory.json");
@@ -345,7 +343,7 @@ async function handleRestoreBackup(event) {
     appState.auditLog = auditLogData;
 
     saveLocalData();
-    hideSyncStatus();
+    hideStatus(syncToastId);
     showStatus(
       "تمت استعادة البيانات بنجاح! سيتم إعادة تحميل التطبيق.",
       "success",
@@ -356,7 +354,7 @@ async function handleRestoreBackup(event) {
     }, 4000);
   } catch (error) {
     console.error("Restore failed:", error);
-    hideSyncStatus();
+    hideStatus(syncToastId);
     showStatus(`فشلت عملية الاستعادة: ${error.message}`, "error", {
       duration: 5000,
     });
@@ -393,6 +391,7 @@ export function setupSyncListeners(elements) {
       }
     });
   });
+
   elements.cancelSyncBtn.addEventListener("click", () =>
     elements.syncModal.close()
   );
@@ -412,6 +411,7 @@ export function setupSyncListeners(elements) {
     elements.syncModal.close();
     await initializeApp();
   });
+
   const advancedSettingsToggle = document.getElementById(
     "advanced-settings-toggle"
   );
@@ -441,6 +441,7 @@ export function setupSyncListeners(elements) {
     .addEventListener("click", () =>
       document.getElementById("archive-browser-modal").close()
     );
+
   document
     .getElementById("archive-list-container")
     .addEventListener("click", async e => {
@@ -455,16 +456,18 @@ export function setupSyncListeners(elements) {
           confirmText: "نعم, حذف",
         });
         if (confirmed) {
-          showStatus("جاري حذف الأرشيف...", "syncing");
+          const syncToastId = showStatus("جاري حذف الأرشيف...", "syncing");
           try {
             await api.deleteFileFromGitHub(
               path,
               sha,
               `Delete archive file: ${path}`
             );
+            hideStatus(syncToastId);
             showStatus("تم حذف الأرشيف بنجاح!", "success");
             openArchiveBrowser();
           } catch (error) {
+            hideStatus(syncToastId);
             showStatus(`فشل حذف الأرشيف: ${error.message}`, "error", {
               duration: 5000,
             });
@@ -475,7 +478,6 @@ export function setupSyncListeners(elements) {
 
       const item = e.target.closest(".archive-item");
       if (!item) return;
-
       const detailsContainer = document.getElementById(
         "archive-details-container"
       );
@@ -511,4 +513,4 @@ export function setupSyncListeners(elements) {
         detailsContainer.innerHTML = `<p style="color: var(--danger-color);">فشل تحميل الملف: ${error.message}</p>`;
       }
     });
-    }
+}

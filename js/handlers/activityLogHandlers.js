@@ -3,7 +3,7 @@ import { appState } from "../state.js";
 import * as api from "../api.js";
 import { saveLocalData } from "../app.js";
 import { showConfirmationModal } from "../ui_helpers.js";
-import { showStatus, updateStatus } from "../notifications.js";
+import { showStatus, hideStatus } from "../notifications.js";
 import { renderAuditLog } from "../renderer.js";
 
 async function handleLogCleanup() {
@@ -18,7 +18,6 @@ async function handleLogCleanup() {
       "هل أنت متأكد من رغبتك في حذف جميع إدخالات سجل النشاطات نهائياً؟ لا يمكن التراجع عن هذا الإجراء.",
     confirmText: "نعم, حذف الكل",
   });
-
   if (!confirmed) return;
 
   const originalLog = JSON.parse(JSON.stringify(appState.auditLog));
@@ -32,7 +31,8 @@ async function handleLogCleanup() {
   const syncToastId = showStatus("جاري تنظيف السجل...", "syncing");
   try {
     await api.saveAuditLog();
-    updateStatus(syncToastId, "تم تنظيف السجل ومزامنته بنجاح!", "success");
+    hideStatus(syncToastId);
+    showStatus("تم تنظيف السجل ومزامنته بنجاح!", "success");
   } catch (error) {
     console.error("Log cleanup sync failed, rolling back:", error);
     appState.auditLog = originalLog; 
@@ -40,7 +40,8 @@ async function handleLogCleanup() {
     if (appState.currentView === "activity-log") {
       renderAuditLog();
     }
-    updateStatus(syncToastId, "فشل المزامنة! تم استرجاع البيانات.", "error");
+    hideStatus(syncToastId);
+    showStatus("فشل المزامنة! تم استرجاع البيانات.", "error");
   }
 }
 

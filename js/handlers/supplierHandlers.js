@@ -2,7 +2,7 @@
 import { appState } from "../state.js";
 import * as api from "../api.js";
 import { saveLocalData } from "../app.js";
-import { showStatus, hideSyncStatus, updateStatus } from "../notifications.js";
+import { showStatus, hideStatus } from "../notifications.js";
 import { renderSupplierList, populateSupplierDropdown, filterAndRenderItems } from "../renderer.js";
 import { getDOMElements, openModal } from "../ui.js";
 import { showConfirmationModal } from "../ui_helpers.js";
@@ -52,13 +52,15 @@ async function handleSupplierFormSubmit(e) {
   try {
     await api.saveSuppliers();
     saveLocalData();
-    updateStatus(syncToastId, `تم ${actionText} المورّد ومزامنته بنجاح!`, "success");
+    hideStatus(syncToastId);
+    showStatus(`تم ${actionText} المورّد ومزامنته بنجاح!`, "success");
   } catch (error) {
     console.error("Supplier sync failed, rolling back:", error);
     appState.suppliers = originalSuppliers;
     renderSupplierList();
     populateSupplierDropdown(elements.itemSupplierSelect.value);
-    updateStatus(syncToastId, `فشل مزامنة المورّد! تم استرجاع البيانات.`, "error");
+    hideStatus(syncToastId);
+    showStatus(`فشل مزامنة المورّد! تم استرجاع البيانات.`, "error");
   }
 }
 
@@ -101,7 +103,8 @@ async function handleDeleteSupplier(supplierId) {
             await api.saveInventory();
         }
         await api.saveSuppliers();
-        updateStatus(syncToastId, "تم حذف المورّد ومزامنته بنجاح!", "success");
+        hideStatus(syncToastId);
+        showStatus("تم حذف المورّد ومزامنته بنجاح!", "success");
     } catch (error) {
       console.error("Supplier deletion sync failed, rolling back:", error);
       appState.inventory = originalInventory;
@@ -110,7 +113,8 @@ async function handleDeleteSupplier(supplierId) {
       renderSupplierList();
       filterAndRenderItems();
       populateSupplierDropdown(getDOMElements().itemSupplierSelect.value);
-      updateStatus(syncToastId, "فشل مزامنة الحذف! تم استرجاع البيانات.", "error");
+      hideStatus(syncToastId);
+      showStatus("فشل مزامنة الحذف! تم استرجاع البيانات.", "error");
     }
   }
 }

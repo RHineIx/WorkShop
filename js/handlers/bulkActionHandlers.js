@@ -7,9 +7,7 @@ import { pushState } from "../navigation.js";
 import * as renderer from "../renderer.js";
 import * as notifications from "../notifications.js";
 
-let longPressTriggered = false;
 let bulkCategoryInputManager = null;
-
 function setupBulkCategoryInput() {
     const elements = ui.getDOMElements();
     const {
@@ -19,19 +17,15 @@ function setupBulkCategoryInput() {
         bulkAddCategoryBtn,
         categoryPillTemplate
     } = elements;
-
     let selectedCategories = new Set();
     const allCategories = new Set(renderer.getAllUniqueCategories());
-
     const render = () => {
         bulkSelectedCategoriesContainer.innerHTML = '';
         bulkAvailableCategoriesList.innerHTML = '';
-
         selectedCategories.forEach(text => {
             const pill = createPill(text, true);
             bulkSelectedCategoriesContainer.appendChild(pill);
         });
-
         allCategories.forEach(text => {
             if (!selectedCategories.has(text)) {
                 const pill = createPill(text, false);
@@ -45,7 +39,6 @@ function setupBulkCategoryInput() {
         const pill = clone.querySelector('.category-pill');
         pill.querySelector('.pill-text').textContent = text;
         pill.dataset.value = text;
-
         if (isSelected) {
             const removeBtn = pill.querySelector('.remove-pill-btn');
             removeBtn.addEventListener('click', () => removeCategory(text));
@@ -55,7 +48,6 @@ function setupBulkCategoryInput() {
         }
         return pill;
     };
-
     const addCategory = (text) => {
         const cleanedText = text.trim();
         if (cleanedText && !selectedCategories.has(cleanedText)) {
@@ -74,7 +66,6 @@ function setupBulkCategoryInput() {
         bulkCategoryInputField.value = '';
         bulkCategoryInputField.focus();
     };
-    
     bulkAddCategoryBtn.onclick = handleAddAction;
     bulkCategoryInputField.onkeydown = (e) => {
         if (e.key === 'Enter') {
@@ -88,15 +79,6 @@ function setupBulkCategoryInput() {
     return {
         getSelectedCategories: () => Array.from(selectedCategories)
     };
-}
-
-
-export function isLongPressTriggered() {
-  return longPressTriggered;
-}
-
-export function setLongPressTriggered(value) {
-  longPressTriggered = value;
 }
 
 export function enterSelectionMode(card) {
@@ -143,19 +125,16 @@ export function toggleSelection(card) {
 async function handleBulkCategoryChange(e) {
   e.preventDefault();
   const newCategories = bulkCategoryInputManager.getSelectedCategories();
-  
   if (newCategories.length === 0) {
       notifications.showStatus("يرجى اختيار فئة واحدة على الأقل.", "error");
       return;
   };
-
   const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
 
   appState.selectedItemIds.forEach(id => {
     const item = appState.inventory.items.find(i => i.id === id);
     if (item) item.categories = newCategories;
   });
-
   saveLocalData();
   renderer.filterAndRenderItems(true);
   renderer.renderCategoryFilter();
@@ -165,14 +144,16 @@ async function handleBulkCategoryChange(e) {
   const syncToastId = notifications.showStatus("جاري حفظ تغيير الفئات...", "syncing");
   try {
     await api.saveInventory();
-    notifications.updateStatus(syncToastId, "تم حفظ تغيير الفئات ومزامنتها بنجاح!", "success");
+    notifications.hideStatus(syncToastId);
+    notifications.showStatus("تم حفظ تغيير الفئات ومزامنتها بنجاح!", "success");
   } catch (error) {
     console.error("Bulk category sync failed, rolling back:", error);
     appState.inventory = originalInventory;
     saveLocalData();
     renderer.filterAndRenderItems(true);
     renderer.renderCategoryFilter();
-    notifications.updateStatus(syncToastId, "فشل المزامنة! تم استرجاع البيانات.", "error");
+    notifications.hideStatus(syncToastId);
+    notifications.showStatus("فشل المزامنة! تم استرجاع البيانات.", "error");
   }
 }
 
@@ -182,12 +163,10 @@ async function handleBulkSupplierChange(e) {
   if (!newSupplierId) return;
 
   const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
-
   appState.selectedItemIds.forEach(id => {
     const item = appState.inventory.items.find(i => i.id === id);
     if (item) item.supplierId = newSupplierId;
   });
-
   saveLocalData();
   renderer.filterAndRenderItems(true);
   ui.getDOMElements().bulkSupplierModal.close();
@@ -196,13 +175,15 @@ async function handleBulkSupplierChange(e) {
   const syncToastId = notifications.showStatus("جاري حفظ تغيير المورّد...", "syncing");
   try {
     await api.saveInventory();
-    notifications.updateStatus(syncToastId, "تم حفظ تغيير المورّد ومزامنته بنجاح!", "success");
+    notifications.hideStatus(syncToastId);
+    notifications.showStatus("تم حفظ تغيير المورّد ومزامنته بنجاح!", "success");
   } catch (error) {
     console.error("Bulk supplier sync failed, rolling back:", error);
     appState.inventory = originalInventory;
     saveLocalData();
     renderer.filterAndRenderItems(true);
-    notifications.updateStatus(syncToastId, "فشل المزامنة! تم استرجاع البيانات.", "error");
+    notifications.hideStatus(syncToastId);
+    notifications.showStatus("فشل المزامنة! تم استرجاع البيانات.", "error");
   }
 }
 
@@ -223,7 +204,6 @@ export function setupBulkActionListeners(elements) {
   document
     .getElementById("cancel-selection-btn")
     .addEventListener("click", exitSelectionMode);
-
   elements.bulkCategoryForm.addEventListener(
     "submit",
     handleBulkCategoryChange

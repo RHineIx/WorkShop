@@ -1,22 +1,28 @@
 /* css/components/_utilities.css */
 
 /* --- Utilities and Global Styles --- */
+.text-secondary {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
 
-/* --- Toast Notifications (Improved) --- */
+/* --- REFACTORED: Toast Notifications --- */
 .toast-container {
   position: fixed;
   bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 2147483647; /* Use maximum possible z-index to stay on top */
+  z-index: 2147483647;
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  flex-direction: column-reverse; /* New items appear on top */
   align-items: center;
+  gap: 0; /* Gap is now controlled by transforms */
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .toast {
-  padding: 14px 20px;
+  padding: 14px 20px 14px 45px; /* Add padding for close button */
   border-radius: var(--border-radius-sm);
   color: var(--text-primary);
   background-color: var(--surface-color);
@@ -26,23 +32,73 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  min-width: 320px;
+  width: 340px;
   max-width: 90vw;
   font-weight: 700;
+  position: absolute;
+  bottom: 0;
   opacity: 0;
-  transform: translateY(100px) scale(0.95);
-  transition: all 0.5s cubic-bezier(0.21, 1.02, 0.73, 1);
+  transform-origin: bottom center;
+  transition: all 0.3s cubic-bezier(0.21, 1.02, 0.73, 1);
+  will-change: transform, opacity;
 }
 
 .toast.show {
   opacity: 1;
-  transform: translateY(0) scale(1);
+}
+
+/* Layered (Default) State */
+.toast:nth-last-child(1) { z-index: 4; }
+.toast:nth-last-child(2) { transform: translateY(12px) scale(0.96); z-index: 3; }
+.toast:nth-last-child(3) { transform: translateY(24px) scale(0.92); z-index: 2; }
+.toast:nth-last-child(n+4) { opacity: 0; transform: translateY(30px) scale(0.9); }
+
+/* Stacked (Expanded) State */
+.toast-container.stacked {
+  cursor: default;
+  gap: 12px; /* Re-introduce gap for stacked view */
+}
+
+.toast-container.stacked .toast {
+  position: relative;
+  transform: translateY(0) scale(1) !important;
+  opacity: 1 !important;
 }
 
 .toast .toast__icon {
   display: flex;
   align-items: center;
   font-size: 28px;
+  flex-shrink: 0;
+}
+
+.toast__close-btn {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.toast__close-btn:hover {
+  background-color: var(--danger-soft-bg);
+  color: var(--danger-color);
+  border-color: transparent;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.toast__close-btn iconify-icon {
+  font-size: 20px;
 }
 
 /* Color Variants */
@@ -87,26 +143,8 @@
   background-color: var(--text-secondary);
 }
 
-#sync-form p {
+#sync-form p{
   text-align: center;
-}
-.bestsellers-container {
-  margin-top: var(--spacing-lg);
-  background-color: var(--surface-color);
-  border-radius: var(--border-radius-md);
-  padding: var(--spacing-md);
-  border: 1px solid var(--border-color);
-}
-.bestsellers-container h3 {
-  margin-bottom: var(--spacing-md);
-}
-.bestseller-count {
-  font-weight: 700;
-  color: var(--accent-color);
-  background-color: var(--surface-color);
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 12px;
 }
 .last-archive-text {
   font-size: 12px;
@@ -162,11 +200,6 @@
   white-space: nowrap;
   border: 0;
 }
-.text-secondary {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-}
-
 /* --- Enhanced Empty State --- */
 .empty-state {
   grid-column: 1 / -1; /* Make it span all grid columns */
@@ -179,7 +212,8 @@
 
 .empty-state::before {
   content: "ไม่มีรายการ"; /* Use a placeholder from a different language to show it's an icon */
-  font-family: "Iconify"; /* This assumes Iconify could be used this way, for a real icon you would use SVG or an icon font */
+  font-family: 'Iconify';
+  /* This assumes Iconify could be used this way, for a real icon you would use SVG or an icon font */
   display: block;
   font-size: 48px;
   margin-bottom: var(--spacing-md);
@@ -187,7 +221,7 @@
   /* For a real implementation, you'd use a proper icon, but this demonstrates the structure.
  */
   /* Let's use a text-based icon for simplicity with CSS only */
-  content: "¯\\_(ツ)_/¯";
+  content: '¯\\_(ツ)_/¯';
   font-family: monospace;
   font-size: 2.1rem;
 }

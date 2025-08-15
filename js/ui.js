@@ -114,7 +114,6 @@ export function toggleView(viewToShow) {
   elements.inventoryToggleBtn.classList.remove("active-view-btn");
   elements.dashboardToggleBtn.classList.remove("active-view-btn");
   elements.activityLogToggleBtn.classList.remove("active-view-btn");
-
   if (isInventory) {
     elements.inventoryToggleBtn.classList.add("active-view-btn");
   } else if (isDashboard) {
@@ -179,7 +178,8 @@ export function updateCurrencyDisplay() {
 export function updateSaleTotal() {
   const quantity = parseInt(elements.saleQuantityInput.value, 10) || 0;
   const unitPrice =
-    parseFloat(document.getElementById("sale-price").value) || 0;
+    parseFloat(document.getElementById("sale-price").value) ||
+    0;
   const totalPrice = quantity * unitPrice;
   const symbol = appState.activeCurrency === "IQD" ? "د.ع" : "$";
   elements.saleTotalPrice.textContent = `${totalPrice.toLocaleString()} ${symbol}`;
@@ -192,7 +192,7 @@ export function openDetailsModal(itemId) {
   appState.itemStateBeforeEdit = JSON.parse(JSON.stringify(item));
   elements.detailsName.textContent = item.name;
   elements.detailsSku.textContent = `SKU: ${item.sku || "N/A"}`;
-  elements.detailsQuantityValue.textContent = item.quantity;
+  elements.detailsQuantityValue.value = item.quantity;
   elements.detailsCostIqd.textContent = `${(
     item.costPriceIqd || 0
   ).toLocaleString()} د.ع`;

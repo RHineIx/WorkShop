@@ -14,7 +14,10 @@
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://rhineix.github.io/WorkShop/" />
     <meta property="og:title" content="MASTER الم" />
-    <meta property="og:description" content="تطبيق ويب لإدارة مخزون الورشة" />
+    <meta
+      property="og:description"
+      content="تطبيق ويب لإدارة مخزون الورشة"
+    />
     <meta
       property="og:image"
       content="https://raw.githubusercontent.com/RHineIx/WorkShop/refs/heads/main/social-preview.jpg"
@@ -310,7 +313,7 @@
                 >
                   -
                 </button>
-                <span class="quantity-value" id="details-quantity-value"></span>
+                <input type="number" id="details-quantity-value" min="0" />
                 <button
                   class="quantity-btn"
                   id="details-increase-btn"
@@ -769,8 +772,10 @@
         <h3>تأكيد عملية البيع</h3>
         <input type="hidden" id="sale-item-id" />
 
-        <p>تأكيد تفاصيل البيع للمنتج التالي:</p>
-        <strong id="sale-item-name" class="sale-item-name-display"></strong>
+        <div class="sale-item-info">
+            <p>تأكيد تفاصيل البيع للمنتج التالي:</p>
+            <strong id="sale-item-name" class="sale-item-name-display"></strong>
+        </div>
 
         <div class="sale-details-grid">
           <div class="form-group">
@@ -807,11 +812,18 @@
             <span id="sale-total-price" class="total-value"></span>
           </div>
         </div>
-        <label for="sale-date">تاريخ البيع</label>
-        <input type="date" id="sale-date" required />
 
-        <label for="sale-notes">ملاحظات على البيع</label>
-        <textarea id="sale-notes" rows="3"></textarea>
+        <hr class="maintenance-divider" />
+
+        <div class="form-group">
+            <label for="sale-date">تاريخ البيع</label>
+            <input type="date" id="sale-date" required />
+        </div>
+
+        <div class="form-group">
+            <label for="sale-notes">ملاحظات على البيع</label>
+            <textarea id="sale-notes" rows="3"></textarea>
+        </div>
 
         <div class="modal-actions">
           <button type="submit" id="confirm-sale-btn" class="primary-action">
@@ -1106,4 +1118,4 @@
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
     <script type="module" src="js/main.js"></script>
   </body>
-                                    </html>
+</html>
