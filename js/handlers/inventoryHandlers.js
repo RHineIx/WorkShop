@@ -4,7 +4,7 @@ import { debounce } from "../utils.js";
 import { openDetailsModal } from "../ui.js";
 import { showStatus } from "../notifications.js";
 import { filterAndRenderItems, renderCategoryFilter } from "../renderer.js";
-import { openSaleModal } from "./modalHandlers.js"; // تم التعديل هنا
+import { openSaleModal } from "./modalHandlers.js";
 import {
   enterSelectionMode,
   exitSelectionMode,
@@ -85,6 +85,9 @@ function handlePointerUp(e) {
         }
       } else if (e.target.closest(".details-btn")) {
         openDetailsModal(itemId);
+      } else {
+        // Handle a click on the card itself, but not on the buttons
+        openDetailsModal(itemId);
       }
     }
   }
@@ -105,12 +108,10 @@ export function setupInventoryListeners(elements) {
       filterAndRenderItems(true);
     }, 300)
   );
-
   elements.sortOptions.addEventListener("change", e => {
     appState.currentSortOption = e.target.value;
     filterAndRenderItems(true);
   });
-
   elements.statsContainer.addEventListener("click", e => {
     const card = e.target.closest(".stat-card");
     if (!card) return;
@@ -129,7 +130,6 @@ export function setupInventoryListeners(elements) {
     }
     filterAndRenderItems(true);
   });
-
   elements.categoryFilterBar.addEventListener("click", e => {
     const chip = e.target.closest(".category-chip");
     if (!chip) return;
