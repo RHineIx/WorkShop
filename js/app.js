@@ -6,7 +6,7 @@ import {
   setTheme,
   toggleView,
   updateCurrencyDisplay,
-  getDOMElements,
+  elements,
 } from "./ui.js";
 import {
   renderInventorySkeleton,
@@ -130,7 +130,7 @@ function handleUrlShortcuts() {
   setTimeout(() => {
     switch (hash) {
       case "#add-item":
-        getDOMElements().addItemBtn.click();
+        elements.addItemBtn.click();
         break;
       case "#dashboard":
         toggleView("dashboard");

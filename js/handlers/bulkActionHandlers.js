@@ -1,6 +1,6 @@
 // js/handlers/bulkActionHandlers.js
 import { appState } from "../state.js";
-import * as ui from "../ui.js";
+import { elements, openModal, updateBulkActionsBar } from "../ui.js";
 import * as api from "../api.js";
 import { saveLocalData } from "../app.js";
 import { pushState } from "../navigation.js";
@@ -9,7 +9,6 @@ import * as notifications from "../notifications.js";
 
 let bulkCategoryInputManager = null;
 function setupBulkCategoryInput() {
-    const elements = ui.getDOMElements();
     const {
         bulkSelectedCategoriesContainer,
         bulkAvailableCategoriesList,
@@ -84,7 +83,7 @@ function setupBulkCategoryInput() {
 export function enterSelectionMode(card) {
   appState.isSelectionModeActive = true;
   pushState();
-  ui.getDOMElements().inventoryGrid.classList.add("selection-mode");
+  elements.inventoryGrid.classList.add("selection-mode");
   if (card) {
     toggleSelection(card);
   }
@@ -94,13 +93,12 @@ export function exitSelectionMode() {
   appState.isSelectionModeActive = false;
   appState.selectedItemIds.clear();
 
-  const elements = ui.getDOMElements();
   elements.inventoryGrid.classList.remove("selection-mode");
   elements.inventoryGrid
     .querySelectorAll(".product-card.selected")
     .forEach(card => card.classList.remove("selected"));
 
-  ui.updateBulkActionsBar();
+  updateBulkActionsBar();
 }
 
 export function toggleSelection(card) {
@@ -118,7 +116,7 @@ export function toggleSelection(card) {
   if (appState.selectedItemIds.size === 0) {
     exitSelectionMode();
   } else {
-    ui.updateBulkActionsBar();
+    updateBulkActionsBar();
   }
 }
 
@@ -138,7 +136,7 @@ async function handleBulkCategoryChange(e) {
   saveLocalData();
   renderer.filterAndRenderItems(true);
   renderer.renderCategoryFilter();
-  ui.getDOMElements().bulkCategoryModal.close();
+  elements.bulkCategoryModal.close();
   exitSelectionMode();
   
   const syncToastId = notifications.showStatus("جاري حفظ تغيير الفئات...", "syncing");
@@ -169,7 +167,7 @@ async function handleBulkSupplierChange(e) {
   });
   saveLocalData();
   renderer.filterAndRenderItems(true);
-  ui.getDOMElements().bulkSupplierModal.close();
+  elements.bulkSupplierModal.close();
   exitSelectionMode();
 
   const syncToastId = notifications.showStatus("جاري حفظ تغيير المورّد...", "syncing");
@@ -192,14 +190,14 @@ export function setupBulkActionListeners(elements) {
     .getElementById("bulk-change-category-btn")
     .addEventListener("click", () => {
       bulkCategoryInputManager = setupBulkCategoryInput();
-      ui.openModal(elements.bulkCategoryModal);
+      openModal(elements.bulkCategoryModal);
     });
   document
     .getElementById("bulk-change-supplier-btn")
     .addEventListener("click", () => {
       renderer.populateBulkSupplierDropdown();
       elements.bulkSupplierForm.reset();
-      ui.openModal(elements.bulkSupplierModal);
+      openModal(elements.bulkSupplierModal);
     });
   document
     .getElementById("cancel-selection-btn")

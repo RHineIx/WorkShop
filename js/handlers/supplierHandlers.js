@@ -4,12 +4,11 @@ import * as api from "../api.js";
 import { saveLocalData } from "../app.js";
 import { showStatus, hideStatus } from "../notifications.js";
 import { renderSupplierList, populateSupplierDropdown, filterAndRenderItems } from "../renderer.js";
-import { getDOMElements, openModal } from "../ui.js";
+import { elements, openModal } from "../ui.js";
 import { showConfirmationModal } from "../ui_helpers.js";
 
 async function handleSupplierFormSubmit(e) {
   e.preventDefault();
-  const elements = getDOMElements();
   const id = elements.supplierIdInput.value;
   const name = document.getElementById("supplier-name").value.trim();
   const phone = document.getElementById("supplier-phone").value.trim();
@@ -23,7 +22,6 @@ async function handleSupplierFormSubmit(e) {
   let updatedSupplier;
   const isEditing = !!id;
   const actionText = isEditing ? 'تعديل' : 'إضافة';
-
   if (isEditing) {
     const supplier = appState.suppliers.find(s => s.id === id);
     if (supplier) {
@@ -78,11 +76,9 @@ async function handleDeleteSupplier(supplierId) {
       message: confirmMessage,
       confirmText: "نعم, حذف"
   });
-
   if (confirmed) {
     const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
     const originalSuppliers = JSON.parse(JSON.stringify(appState.suppliers));
-
     if (linkedProductsCount > 0) {
       appState.inventory.items.forEach(item => {
         if (item.supplierId === supplierId) {
@@ -95,8 +91,7 @@ async function handleDeleteSupplier(supplierId) {
     saveLocalData();
     renderSupplierList();
     filterAndRenderItems();
-    populateSupplierDropdown(getDOMElements().itemSupplierSelect.value);
-    
+    populateSupplierDropdown(elements.itemSupplierSelect.value);
     const syncToastId = showStatus("جاري حذف المورّد...", "syncing");
     try {
         if (linkedProductsCount > 0) {
@@ -112,7 +107,7 @@ async function handleDeleteSupplier(supplierId) {
       saveLocalData();
       renderSupplierList();
       filterAndRenderItems();
-      populateSupplierDropdown(getDOMElements().itemSupplierSelect.value);
+      populateSupplierDropdown(elements.itemSupplierSelect.value);
       hideStatus(syncToastId);
       showStatus("فشل مزامنة الحذف! تم استرجاع البيانات.", "error");
     }
