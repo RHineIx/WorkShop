@@ -3,8 +3,6 @@ import { appState } from "./state.js";
 import { getImage, storeImage } from "./db.js";
 import { updateRateLimitDisplay } from "./ui.js";
 
-// The ConflictError class is no longer needed with the "last write wins" strategy.
-
 async function apiFetch(url, options = {}) {
   if (!appState.syncConfig || !appState.syncConfig.pat) {
     throw new Error("GitHub PAT is not configured.");
@@ -16,7 +14,6 @@ async function apiFetch(url, options = {}) {
     Accept: "application/vnd.github.v3+json",
     ...options.headers,
   };
-
   const response = await fetch(url, { ...options, headers });
 
   if (response.headers.has("x-ratelimit-limit")) {
@@ -45,7 +42,6 @@ const b64toBlob = (b64Data, contentType = "", sliceSize = 512) => {
   }
   return new Blob(byteArrays, { type: contentType });
 };
-
 const toBase64 = file =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -53,7 +49,6 @@ const toBase64 = file =>
     reader.onload = () => resolve(reader.result.split(",")[1]);
     reader.onerror = error => reject(error);
   });
-
 async function fetchJsonFromGitHub(filePath, defaultValue) {
   if (!appState.syncConfig) return null;
   const { username, repo } = appState.syncConfig;
@@ -88,18 +83,15 @@ async function saveJsonToGitHub(filePath, dataObject, sha, commitMessage) {
   const content = btoa(
     unescape(encodeURIComponent(JSON.stringify(dataObject, null, 2)))
   );
-
   const body = {
     message: `${commitMessage} - ${new Date().toISOString()}`,
     content: content,
     sha: sha,
   };
-
   const response = await apiFetch(apiUrl, {
     method: "PUT",
     body: JSON.stringify(body),
   });
-
   if (!response.ok) {
     // This will catch real commit errors, but not the 409 conflict we are now ignoring.
     throw new Error(`Failed to save '${filePath}': ${response.statusText}`);
@@ -111,28 +103,44 @@ async function saveJsonToGitHub(filePath, dataObject, sha, commitMessage) {
 
 // REFACTORED: Centralized "Last Write Wins" save logic
 async function forceSave(filePath, dataObject, commitMessage) {
-    const { sha } = await fetchJsonFromGitHub(filePath, dataObject);
-    const newSha = await saveJsonToGitHub(filePath, dataObject, sha, commitMessage);
-    return newSha;
+  const { sha } = await fetchJsonFromGitHub(filePath, dataObject);
+  const newSha = await saveJsonToGitHub(
+    filePath,
+    dataObject,
+    sha,
+    commitMessage
+  );
+  return newSha;
 }
 
 export const saveInventory = async () => {
-    appState.fileSha = await forceSave("inventory.json", appState.inventory, "Update inventory data");
+  appState.fileSha = await forceSave(
+    "inventory.json",
+    appState.inventory,
+    "Update inventory data"
+  );
 };
-
 export const saveSales = async () => {
-    appState.salesFileSha = await forceSave("sales.json", appState.sales, "Update sales data");
+  appState.salesFileSha = await forceSave(
+    "sales.json",
+    appState.sales,
+    "Update sales data"
+  );
 };
-
 export const saveSuppliers = async () => {
-    appState.suppliersFileSha = await forceSave("suppliers.json", appState.suppliers, "Update suppliers data");
+  appState.suppliersFileSha = await forceSave(
+    "suppliers.json",
+    appState.suppliers,
+    "Update suppliers data"
+  );
 };
-
 export const saveAuditLog = async () => {
-    appState.auditLogFileSha = await forceSave("audit-log.json", appState.auditLog, "Update audit log");
+  appState.auditLogFileSha = await forceSave(
+    "audit-log.json",
+    appState.auditLog,
+    "Update audit log"
+  );
 };
-
-
 // --- IMAGE AND OTHER FUNCTIONS (UNCHANGED) ---
 
 export const triggerBackupWorkflow = async () => {
@@ -212,7 +220,6 @@ export const fetchImageWithAuth = async path => {
     return null;
   }
 };
-
 export const uploadImageToGitHub = async (imageBlob, originalFileName) => {
   if (!appState.syncConfig) {
     throw new Error("يجب إعداد المزامنة أولاً لرفع الصور.");
@@ -234,7 +241,6 @@ export const uploadImageToGitHub = async (imageBlob, originalFileName) => {
   const data = await response.json();
   return data.content.path;
 };
-
 export const fetchFromGitHub = async () => {
   const result = await fetchJsonFromGitHub("inventory.json", {
     items: [],
@@ -249,15 +255,12 @@ export const fetchFromGitHub = async () => {
 export const fetchSales = async () => {
   return await fetchJsonFromGitHub("sales.json", []);
 };
-
 export const fetchSuppliers = async () => {
   return await fetchJsonFromGitHub("suppliers.json", []);
 };
-
 export const fetchAuditLog = async () => {
   return await fetchJsonFromGitHub("audit-log.json", []);
 };
-
 export const deleteFileFromGitHub = async (path, sha, message) => {
   if (!appState.syncConfig) return false;
   const { username, repo } = appState.syncConfig;
@@ -271,7 +274,6 @@ export const deleteFileFromGitHub = async (path, sha, message) => {
   }
   return response.ok;
 };
-
 export const getGitHubDirectoryListing = async path => {
   if (!appState.syncConfig) return [];
   const { username, repo } = appState.syncConfig;
@@ -285,7 +287,6 @@ export const getGitHubDirectoryListing = async path => {
   const data = await response.json();
   return Array.isArray(data) ? data : [];
 };
-
 export const createGitHubFile = async (path, content, message) => {
   if (!appState.syncConfig) return;
   const { username, repo } = appState.syncConfig;
