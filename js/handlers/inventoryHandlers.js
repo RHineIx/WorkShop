@@ -11,21 +11,79 @@ import {
   toggleSelection,
 } from "./bulkActionHandlers.js";
 
+// State for pointer interactions to detect clicks vs. drags vs. long presses
 let pointerDownTime = 0;
 let pointerDownX = 0;
 let pointerDownY = 0;
 let isDragging = false;
 
-const moveThreshold = 16;
-const longPressDuration = 600;
+// Configuration thresholds
+const MOVE_THRESHOLD = 16; // Pixels
+const LONG_PRESS_DURATION = 600; // Milliseconds
 
-function handlePointerDown(e) {
-  if (e.pointerType === "mouse" && e.button !== 0) return;
+/**
+ * Handles the logic for a short click on a product card.
+ * @param {HTMLElement} card The product card element that was clicked.
+ * @param {EventTarget} target The specific element that was the click target.
+ */
+function handleCardClick(card, target) {
+  if (appState.isSelectionModeActive) {
+    // In selection mode, any click (that isn't a button) toggles selection.
+    if (!target.closest(".icon-btn")) {
+      toggleSelection(card);
+    }
+  } else {
+    // In normal mode, clicks trigger actions.
+    const itemId = card.dataset.id;
+    if (target.closest(".sell-btn")) {
+      const item = appState.inventory.items.find(i => i.id === itemId);
+      if (item && item.quantity > 0) {
+        openSaleModal(itemId);
+      } else {
+        showStatus("هذا المنتج نافد من المخزون.", "error");
+      }
+    } else if (target.closest(".details-btn")) {
+      openDetailsModal(itemId);
+    } else {
+      // A click anywhere else on the card opens details.
+      openDetailsModal(itemId);
+    }
+  }
+}
 
-  const card = e.target.closest(".product-card");
-  if (!card) {
+/**
+ * Handles the logic for a long press on a product card.
+ * @param {HTMLElement} card The product card element.
+ * @param {Event} event The original pointer event.
+ */
+function handleCardLongPress(card, event) {
+  // Long press shouldn't trigger if it's on an action button.
+  if (event.target.closest(".icon-btn")) {
     return;
   }
+
+  if (navigator.vibrate) {
+    navigator.vibrate(50);
+  }
+
+  if (!appState.isSelectionModeActive) {
+    enterSelectionMode(card);
+  } else {
+    toggleSelection(card);
+  }
+
+  // Prevent any further events like context menu, etc.
+  event.preventDefault();
+  event.stopPropagation();
+}
+
+/**
+ * Initializes the pointer state on pointerdown.
+ * @param {PointerEvent} e The pointer event.
+ */
+function handlePointerDown(e) {
+  if (e.pointerType === "mouse" && e.button !== 0) return;
+  if (!e.target.closest(".product-card")) return;
 
   isDragging = false;
   pointerDownTime = Date.now();
@@ -33,70 +91,50 @@ function handlePointerDown(e) {
   pointerDownY = e.clientY;
 }
 
+/**
+ * Detects if the pointer is being dragged.
+ * @param {PointerEvent} e The pointer event.
+ */
 function handlePointerMove(e) {
   if (isDragging || pointerDownTime === 0) return;
 
   const deltaX = Math.abs(e.clientX - pointerDownX);
   const deltaY = Math.abs(e.clientY - pointerDownY);
 
-  if (deltaX > moveThreshold || deltaY > moveThreshold) {
+  if (deltaX > MOVE_THRESHOLD || deltaY > MOVE_THRESHOLD) {
     isDragging = true;
+    pointerDownTime = 0; // Reset to cancel click/long-press
   }
 }
 
+/**
+ * The main event handler for pointerup, which orchestrates the interaction logic.
+ * @param {PointerEvent} e The pointer event.
+ */
 function handlePointerUp(e) {
   const card = e.target.closest(".product-card");
-  if (!card) return;
-
-  if (isDragging) {
+  if (!card || isDragging || pointerDownTime === 0) {
     pointerDownTime = 0;
+    isDragging = false;
     return;
   }
 
   const pressDuration = Date.now() - pointerDownTime;
   pointerDownTime = 0;
 
-  if (pressDuration >= longPressDuration && !e.target.closest(".icon-btn")) {
-    if (navigator.vibrate) {
-      navigator.vibrate(50);
-    }
-
-    if (!appState.isSelectionModeActive) {
-      enterSelectionMode(card);
-    } else {
-      toggleSelection(card);
-    }
-
-    e.preventDefault();
-    e.stopPropagation();
+  if (pressDuration >= LONG_PRESS_DURATION) {
+    handleCardLongPress(card, e);
   } else {
-    if (appState.isSelectionModeActive) {
-      if (!e.target.closest(".icon-btn")) {
-        toggleSelection(card);
-      }
-    } else {
-      const itemId = card.dataset.id;
-      if (e.target.closest(".sell-btn")) {
-        const item = appState.inventory.items.find(i => i.id === itemId);
-        if (item && item.quantity > 0) {
-          openSaleModal(itemId);
-        } else {
-          showStatus("هذا المنتج نافد من المخزون.", "error");
-        }
-      } else if (e.target.closest(".details-btn")) {
-        openDetailsModal(itemId);
-      } else {
-        // Handle a click on the card itself, but not on the buttons
-        openDetailsModal(itemId);
-      }
-    }
+    handleCardClick(card, e.target);
   }
 }
 
 export function setupInventoryListeners(elements) {
+  // --- Event Delegation for the entire inventory grid ---
   elements.inventoryGrid.addEventListener("pointerdown", handlePointerDown);
   elements.inventoryGrid.addEventListener("pointermove", handlePointerMove);
   elements.inventoryGrid.addEventListener("pointerup", handlePointerUp);
+  // Prevent context menu on long press (especially on mobile)
   elements.inventoryGrid.addEventListener("contextmenu", e =>
     e.preventDefault()
   );
