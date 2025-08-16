@@ -1,0 +1,39 @@
+/* css/components/_search.css */
+
+/* --- Enhanced Search Component --- */
+
+/* 1. Main container for the search input */
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  transition: border-color var(--transition-speed),
+    box-shadow var(--transition-speed);
+}
+
+/* 2. Style the container when it or its children are focused */
+.search-container:focus-within {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px var(--accent-soft-bg);
+}
+
+/* 3. Reset the search input to blend into the new container */
+#search-bar {
+  border: none;
+  background-color: transparent;
+  padding: 12px 16px;
+  height: 100%;
+  flex-grow: 1;
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-weight: 700;
+}
+
+/* Remove default focus outline for the input, as the parent container handles it */
+#search-bar:focus {
+  outline: none;
+  box-shadow: none;
+}

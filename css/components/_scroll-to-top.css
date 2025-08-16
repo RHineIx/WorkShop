@@ -1,0 +1,54 @@
+/* css/components/_scroll-to-top.css */
+
+.scroll-to-top-btn {
+  position: fixed;
+  bottom: var(--spacing-lg);
+  right: var(--spacing-lg);
+  z-index: 100;
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 50%;
+  background-color: var(--accent-color);
+  color: white;
+  box-shadow: var(--shadow-strong);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-speed) ease;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(100%);
+}
+
+.scroll-to-top-btn.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.scroll-to-top-btn:hover {
+  background-color: var(--accent-color-hover);
+  transform: scale(1.05);
+}
+
+.scroll-to-top-btn:active {
+  transform: scale(0.95);
+}
+
+.scroll-to-top-btn iconify-icon {
+  font-size: 24px;
+}
+
+@media (max-width: 639px) {
+  .scroll-to-top-btn {
+    /* 56px is the height of the bulk actions bar */
+    bottom: calc(var(--spacing-md) + env(safe-area-inset-bottom) + 24px);
+  }
+
+  .bulk-actions-bar.visible + .scroll-to-top-btn {
+    /* Move the button up when the bulk actions bar is visible */
+    transform: translateY(-56px);
+  }
+}
