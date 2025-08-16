@@ -27,7 +27,6 @@ let cropper = null;
 let cropperPadding = 0.1;
 let cropperBgColor = "#FFFFFF";
 let categoryInputManager = null;
-
 function setupCategoryInput(currentItemCategories = []) {
   const elements = getDOMElements();
   const {
@@ -39,7 +38,6 @@ function setupCategoryInput(currentItemCategories = []) {
   } = elements;
   let selectedCategories = new Set(currentItemCategories);
   const allCategories = new Set(getAllUniqueCategories());
-
   const render = () => {
     selectedCategoriesContainer.innerHTML = "";
     availableCategoriesList.innerHTML = "";
@@ -79,18 +77,15 @@ function setupCategoryInput(currentItemCategories = []) {
       render();
     }
   };
-
   const removeCategory = text => {
     selectedCategories.delete(text);
     render();
   };
-
   const handleAddAction = () => {
     addCategory(categoryInputField.value);
     categoryInputField.value = "";
     categoryInputField.focus();
   };
-
   const handleEnterKey = e => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -152,7 +147,15 @@ async function syncQuantityChange(
     saveLocalData();
     filterAndRenderItems();
     hideStatus(syncToastId);
-    showStatus("فشلت المزامنة! تم استرجاع البيانات.", "error");
+
+    if (error instanceof api.ConflictError) {
+      showStatus("حدث تعارض قم بتحديث الصفحة اولاً.", "error", {
+        duration: 0,
+        showRefreshButton: true,
+      });
+    } else {
+      showStatus("فشلت المزامنة! تم استرجاع البيانات.", "error");
+    }
   }
 }
 
@@ -218,10 +221,15 @@ async function handleSaleFormSubmit(e) {
     saveLocalData();
     filterAndRenderItems(true);
     hideStatus(syncToastId);
-    showStatus(
-      "فشل مزامنة البيع! تم استرجاع البيانات.",
-      "error"
-    );
+
+    if (error instanceof api.ConflictError) {
+      showStatus("حدث تعارض قم بتحديث الصفحة اولاً.", "error", {
+        duration: 0,
+        showRefreshButton: true,
+      });
+    } else {
+      showStatus("فشل مزامنة البيع! تم استرجاع البيانات.", "error");
+    }
   } finally {
     if (appState.currentView === "dashboard") {
       const { renderDashboard } = await import("../renderer.js");
@@ -372,39 +380,30 @@ async function handleItemFormSubmit(e) {
     appState.inventory.items.push(itemData);
   }
 
-  // Close modal before sync to improve perceived performance
   getDOMElements().itemModal.close();
-
   try {
     if (appState.selectedImageFile) {
       const compressedImageBlob = await compressImage(
         appState.selectedImageFile
       );
-      
-      // --- NEW LOGIC: Update cache and UI immediately ---
       const blobUrl = URL.createObjectURL(compressedImageBlob);
       updateProductCardImage(itemData.id, blobUrl);
-      // --- END NEW LOGIC ---
 
       itemData.imagePath = await api.uploadImageToGitHub(
         compressedImageBlob,
         appState.selectedImageFile.name
       );
-      
-      // Update the final item in the state with the real path
       const finalItemIndex = appState.inventory.items.findIndex(
         i => i.id === itemData.id
       );
       if (finalItemIndex !== -1) {
         appState.inventory.items[finalItemIndex].imagePath = itemData.imagePath;
-        // Update the cache with the real path for future loads
         appState.imageCache.set(itemData.imagePath, blobUrl);
       }
     }
     
-    // The rest of the optimistic UI updates happen here
     saveLocalData();
-    filterAndRenderItems(true); // This re-renders other data, but image is already updated
+    filterAndRenderItems(true);
     renderCategoryFilter();
 
     await api.saveInventory();
@@ -460,7 +459,15 @@ async function handleItemFormSubmit(e) {
     filterAndRenderItems(true);
     renderCategoryFilter();
     hideStatus(syncToastId);
-    showStatus("فشلت المزامنة! تم استرجاع البيانات.", "error");
+
+    if (error instanceof api.ConflictError) {
+      showStatus("حدث تعارض قم بتحديث الصفحة اولاً.", "error", {
+        duration: 0,
+        showRefreshButton: true,
+      });
+    } else {
+      showStatus("فشلت المزامنة! تم استرجاع البيانات.", "error");
+    }
   } finally {
     saveButton.disabled = false;
     appState.selectedImageFile = null;
@@ -775,7 +782,14 @@ export function setupModalListeners(elements) {
         saveLocalData();
         filterAndRenderItems(true);
         hideStatus(syncToastId);
-        showStatus(`فشل الحذف: ${error.message}`, "error");
+        if (error instanceof api.ConflictError) {
+          showStatus("حدث تعارض قم بتحديث الصفحة اولاً.", "error", {
+            duration: 0,
+            showRefreshButton: true,
+          });
+        } else {
+          showStatus(`فشل الحذف: ${error.message}`, "error");
+        }
       }
     }
   });
