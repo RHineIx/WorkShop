@@ -3,6 +3,14 @@ import { appState } from "./state.js";
 import { getImage, storeImage } from "./db.js";
 import { updateRateLimitDisplay } from "./ui.js";
 
+// Custom error for handling data conflicts
+export class ConflictError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "ConflictError";
+  }
+}
+
 async function apiFetch(url, options = {}) {
   if (!appState.syncConfig || !appState.syncConfig.pat) {
     throw new Error("GitHub PAT is not configured.");
@@ -25,6 +33,13 @@ async function apiFetch(url, options = {}) {
     updateRateLimitDisplay();
   }
 
+  // Check for 409 Conflict status
+  if (response.status === 409) {
+    throw new ConflictError(
+      "File has been updated on the server since last fetch."
+    );
+  }
+
   return response;
 }
 
@@ -42,6 +57,7 @@ const b64toBlob = (b64Data, contentType = "", sliceSize = 512) => {
   }
   return new Blob(byteArrays, { type: contentType });
 };
+
 const toBase64 = file =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -49,6 +65,7 @@ const toBase64 = file =>
     reader.onload = () => resolve(reader.result.split(",")[1]);
     reader.onerror = error => reject(error);
   });
+
 async function fetchJsonFromGitHub(filePath, defaultValue) {
   if (!appState.syncConfig) return null;
   const { username, repo } = appState.syncConfig;
@@ -93,7 +110,6 @@ async function saveJsonToGitHub(filePath, dataObject, sha, commitMessage) {
     body: JSON.stringify(body),
   });
   if (!response.ok) {
-    // This will catch real commit errors, but not the 409 conflict we are now ignoring.
     throw new Error(`Failed to save '${filePath}': ${response.statusText}`);
   }
 
@@ -101,8 +117,8 @@ async function saveJsonToGitHub(filePath, dataObject, sha, commitMessage) {
   return responseData.content.sha;
 }
 
-// REFACTORED: Centralized "Last Write Wins" save logic
-async function forceSave(filePath, dataObject, commitMessage) {
+// This function now forces an overwrite. Use with caution.
+async function forceSaveJsonToGitHub(filePath, dataObject, commitMessage) {
   const { sha } = await fetchJsonFromGitHub(filePath, dataObject);
   const newSha = await saveJsonToGitHub(
     filePath,
@@ -113,35 +129,43 @@ async function forceSave(filePath, dataObject, commitMessage) {
   return newSha;
 }
 
+// --- NEW SAVE LOGIC WITH CONFLICT DETECTION ---
 export const saveInventory = async () => {
-  appState.fileSha = await forceSave(
+  const newSha = await saveJsonToGitHub(
     "inventory.json",
     appState.inventory,
+    appState.fileSha,
     "Update inventory data"
   );
+  appState.fileSha = newSha;
 };
 export const saveSales = async () => {
-  appState.salesFileSha = await forceSave(
+  const newSha = await saveJsonToGitHub(
     "sales.json",
     appState.sales,
+    appState.salesFileSha,
     "Update sales data"
   );
+  appState.salesFileSha = newSha;
 };
 export const saveSuppliers = async () => {
-  appState.suppliersFileSha = await forceSave(
+  const newSha = await saveJsonToGitHub(
     "suppliers.json",
     appState.suppliers,
+    appState.suppliersFileSha,
     "Update suppliers data"
   );
+  appState.suppliersFileSha = newSha;
 };
 export const saveAuditLog = async () => {
-  appState.auditLogFileSha = await forceSave(
+  const newSha = await saveJsonToGitHub(
     "audit-log.json",
     appState.auditLog,
+    appState.auditLogFileSha,
     "Update audit log"
   );
+  appState.auditLogFileSha = newSha;
 };
-// --- IMAGE AND OTHER FUNCTIONS (UNCHANGED) ---
 
 export const triggerBackupWorkflow = async () => {
   if (!appState.syncConfig) {

@@ -14,10 +14,7 @@
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://rhineix.github.io/WorkShop/" />
     <meta property="og:title" content="MASTER KEY" />
-    <meta
-      property="og:description"
-      content="تطبيق ويب لإدارة مخزون الورشة"
-    />
+    <meta property="og:description" content="تطبيق ويب لإدارة مخزون الورشة" />
     <meta
       property="og:image"
       content="https://raw.githubusercontent.com/RHineIx/WorkShop/refs/heads/main/social-preview.jpg"
@@ -156,6 +153,7 @@
                 <input
                   type="text"
                   id="search-bar"
+                  autocomplete="off"
                   placeholder="ابحث في المنتجات..."
                 />
               </div>
@@ -235,22 +233,22 @@
           <div class="activity-log-header">
             <h2>سجل نشاطات المخزون</h2>
             <div class="activity-log-actions">
-                <select id="activity-log-filter">
-                    <option value="all">كل النشاطات</option>
-                    <option value="sale">المبيعات</option>
-                    <option value="quantity">تعديلات الكمية</option>
-                    <option value="lifecycle">أضافه / حذف</option>
-                    <option value="other">تحديثات أخرى</option>
-                </select>
-                <button
-                  id="clear-log-btn"
-                  class="icon-btn"
-                  title="تنظيف سجل النشاطات"
-                >
-                  <iconify-icon
-                    icon="material-symbols:delete-outline-rounded"
-                  ></iconify-icon>
-                </button>
+              <select id="activity-log-filter">
+                <option value="all">كل النشاطات</option>
+                <option value="sale">المبيعات</option>
+                <option value="quantity">تعديلات الكمية</option>
+                <option value="lifecycle">أضافه / حذف</option>
+                <option value="other">تحديثات أخرى</option>
+              </select>
+              <button
+                id="clear-log-btn"
+                class="icon-btn"
+                title="تنظيف سجل النشاطات"
+              >
+                <iconify-icon
+                  icon="material-symbols:delete-outline-rounded"
+                ></iconify-icon>
+              </button>
             </div>
           </div>
           <div id="audit-log-list" class="log-list"></div>
@@ -429,13 +427,13 @@
             <div class="fieldset-content">
               <div class="form-group">
                 <label for="item-name">اسم المنتج</label>
-                <input type="text" id="item-name" required />
+                <input type="text" autocomplete="off" id="item-name" required />
               </div>
               <div class="form-row">
                 <div class="form-group">
                   <label for="item-sku">SKU (رقم المنتج)</label>
                   <div class="sku-container">
-                    <input type="text" id="item-sku" required />
+                    <input type="text" autocomplete="off" id="item-sku" required />
                     <button
                       type="button"
                       id="regenerate-sku-btn"
@@ -456,6 +454,7 @@
                   <input
                     type="text"
                     id="item-oem-pn"
+                    autocomplete="off"
                     placeholder="e.g., 95440-S1000"
                     dir="ltr"
                   />
@@ -467,6 +466,7 @@
                   <input
                     type="text"
                     id="item-compatible-pn"
+                    autocomplete="off"
                     placeholder="e.g., 95440-S2000, 95440-F2000"
                     dir="ltr"
                   />
@@ -474,25 +474,46 @@
               </div>
             </div>
           </fieldset>
-          
+
           <fieldset>
             <legend>الفئات</legend>
             <div class="fieldset-content">
-                <div class="form-group">
-                    <div id="category-input-container" class="category-input-container">
-                        <div id="selected-categories-container" class="selected-categories"></div>
-                        <div class="input-area">
-                            <input type="text" id="category-input-field" placeholder="اكتب فئة جديدة...">
-                            <button type="button" id="add-category-btn" title="إضافة فئة">
-                                <iconify-icon icon="material-symbols:add"></iconify-icon>
-                            </button>
-                        </div>
-                        <div id="available-categories-container" class="available-categories-container">
-                            <p>الفئات المقترحة:</p>
-                            <div id="available-categories-list" class="available-categories-list"></div>
-                        </div>
-                    </div>
+              <div class="form-group">
+                <div
+                  id="category-input-container"
+                  class="category-input-container"
+                >
+                  <div
+                    id="selected-categories-container"
+                    class="selected-categories"
+                  ></div>
+                  <div class="input-area">
+                    <input
+                      type="text"
+                      id="category-input-field"
+                      autocomplete="off"
+                      placeholder="اكتب فئة جديدة..."
+                    />
+                    <button
+                      type="button"
+                      id="add-category-btn"
+                      title="إضافة فئة"
+                    >
+                      <iconify-icon icon="material-symbols:add"></iconify-icon>
+                    </button>
+                  </div>
+                  <div
+                    id="available-categories-container"
+                    class="available-categories-container"
+                  >
+                    <p>الفئات المقترحة:</p>
+                    <div
+                      id="available-categories-list"
+                      class="available-categories-list"
+                    ></div>
+                  </div>
                 </div>
+              </div>
             </div>
           </fieldset>
 
@@ -611,9 +632,7 @@
 
         <hr class="maintenance-divider" />
 
-        <p>
-          سيتم حفظ بياناتك في ملفات JSON داخل مستودع GitHub خاص.
-        </p>
+        <p>سيتم حفظ بياناتك في ملفات JSON داخل مستودع GitHub خاص.</p>
 
         <div class="form-group">
           <label for="github-username">اسم المستخدم في GitHub</label>
@@ -773,8 +792,8 @@
         <input type="hidden" id="sale-item-id" />
 
         <div class="sale-item-info">
-            <p>تأكيد تفاصيل البيع للمنتج التالي:</p>
-            <strong id="sale-item-name" class="sale-item-name-display"></strong>
+          <p>تأكيد تفاصيل البيع للمنتج التالي:</p>
+          <strong id="sale-item-name" class="sale-item-name-display"></strong>
         </div>
 
         <div class="sale-details-grid">
@@ -816,13 +835,13 @@
         <hr class="maintenance-divider" />
 
         <div class="form-group">
-            <label for="sale-date">تاريخ البيع</label>
-            <input type="date" id="sale-date" required />
+          <label for="sale-date">تاريخ البيع</label>
+          <input type="date" id="sale-date" required />
         </div>
 
         <div class="form-group">
-            <label for="sale-notes">ملاحظات على البيع</label>
-            <textarea id="sale-notes" rows="3"></textarea>
+          <label for="sale-notes">ملاحظات على البيع</label>
+          <textarea id="sale-notes" rows="3"></textarea>
         </div>
 
         <div class="modal-actions">
@@ -963,31 +982,52 @@
     </div>
 
     <dialog id="bulk-category-modal">
-        <form id="bulk-category-form">
-            <h3>تغيير فئة العناصر المحددة</h3>
-            <p>
-                القائمة الجديدة التي تبنيها هنا ستحل محل (تستبدل) جميع الفئات القديمة للمنتجات المحددة.
-            </p>
-            <div class="form-group">
-                <div id="bulk-category-input-container" class="category-input-container">
-                    <div id="bulk-selected-categories-container" class="selected-categories"></div>
-                    <div class="input-area">
-                        <input type="text" id="bulk-category-input-field" placeholder="اكتب فئة جديدة...">
-                        <button type="button" id="bulk-add-category-btn" title="إضافة فئة">
-                            <iconify-icon icon="material-symbols:add"></iconify-icon>
-                        </button>
-                    </div>
-                    <div id="bulk-available-categories-container" class="available-categories-container">
-                        <p>الفئات المقترحة:</p>
-                        <div id="bulk-available-categories-list" class="available-categories-list"></div>
-                    </div>
-                </div>
+      <form id="bulk-category-form">
+        <h3>تغيير فئة العناصر المحددة</h3>
+        <p>
+          القائمة الجديدة التي تبنيها هنا ستحل محل (تستبدل) جميع الفئات القديمة
+          للمنتجات المحددة.
+        </p>
+        <div class="form-group">
+          <div
+            id="bulk-category-input-container"
+            class="category-input-container"
+          >
+            <div
+              id="bulk-selected-categories-container"
+              class="selected-categories"
+            ></div>
+            <div class="input-area">
+              <input
+                type="text"
+                id="bulk-category-input-field"
+                placeholder="اكتب فئة جديدة..."
+              />
+              <button
+                type="button"
+                id="bulk-add-category-btn"
+                title="إضافة فئة"
+              >
+                <iconify-icon icon="material-symbols:add"></iconify-icon>
+              </button>
             </div>
-            <div class="modal-actions">
-                <button type="submit">حفظ التغييرات</button>
-                <button type="button" data-close>إلغاء</button>
+            <div
+              id="bulk-available-categories-container"
+              class="available-categories-container"
+            >
+              <p>الفئات المقترحة:</p>
+              <div
+                id="bulk-available-categories-list"
+                class="available-categories-list"
+              ></div>
             </div>
-        </form>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="submit">حفظ التغييرات</button>
+          <button type="button" data-close>إلغاء</button>
+        </div>
+      </form>
     </dialog>
 
     <dialog id="bulk-supplier-modal">
@@ -1029,7 +1069,12 @@
     <dialog id="reason-modal">
       <form
         id="reason-form"
-        style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem"
+        style="
+          padding: 1.5rem;
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        "
       >
         <h3>سبب تغيير الكمية (اختياري)</h3>
         <div class="form-group">
@@ -1103,14 +1148,14 @@
         </div>
       </div>
     </template>
-    
+
     <template id="category-pill-template">
-        <div class="category-pill">
-            <button class="remove-pill-btn" title="إزالة">
-                <iconify-icon icon="material-symbols:close-small"></iconify-icon>
-            </button>
-            <span class="pill-text"></span>
-        </div>
+      <div class="category-pill">
+        <button class="remove-pill-btn" title="إزالة">
+          <iconify-icon icon="material-symbols:close-small"></iconify-icon>
+        </button>
+        <span class="pill-text"></span>
+      </div>
     </template>
 
     <template id="day-group-template">
@@ -1136,8 +1181,13 @@
             <div class="meta-value meta-price"></div>
           </div>
           <div>
-            <button class="icon-btn danger-btn delete-sale-btn" title="حذف السجل">
-              <iconify-icon icon="material-symbols:delete-outline-rounded"></iconify-icon>
+            <button
+              class="icon-btn danger-btn delete-sale-btn"
+              title="حذف السجل"
+            >
+              <iconify-icon
+                icon="material-symbols:delete-outline-rounded"
+              ></iconify-icon>
             </button>
           </div>
           <div class="sale-datetime"></div>
@@ -1151,7 +1201,7 @@
               </div>
               <span class="value profit-value"></span>
             </li>
-            <li class="notes-item" style="display: none;">
+            <li class="notes-item" style="display: none">
               <div class="detail-label-group">
                 <iconify-icon icon="solar:notes-outline"></iconify-icon>
                 <span class="label">ملاحظات</span>
