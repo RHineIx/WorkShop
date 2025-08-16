@@ -1,6 +1,5 @@
 // js/ui_helpers.js
-import { getDOMElements, openModal } from "./ui.js";
-
+import { elements, openModal } from "./ui.js";
 export function showConfirmationModal({
   title,
   message,
@@ -9,7 +8,6 @@ export function showConfirmationModal({
   isDanger = true,
 }) {
   return new Promise(resolve => {
-    const elements = getDOMElements();
     const {
       confirmModal,
       confirmTitle,
@@ -43,7 +41,6 @@ export function showConfirmationModal({
       cleanup();
       resolve(false);
     };
-
     const cleanup = () => {
       confirmOkBtn.removeEventListener("click", onConfirm);
       confirmCancelBtn.removeEventListener("click", onCancel);
@@ -62,7 +59,6 @@ export function showConfirmationModal({
 // ADDED: New helper function for the reason modal
 export function getQuantityChangeReason() {
   return new Promise(resolve => {
-    const elements = getDOMElements();
     const { reasonModal, reasonForm, quantityChangeReasonInput } = elements;
 
     quantityChangeReasonInput.value = "";

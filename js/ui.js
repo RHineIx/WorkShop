@@ -11,9 +11,8 @@ import { showStatus } from "./notifications.js";
 import { pushState } from "./navigation.js";
 
 let countdownInterval = null;
-export function getDOMElements() {
-  return elements;
-}
+
+export { elements };
 
 export function displayVersionInfo(versionData) {
   if (versionData && elements.appVersionDisplay) {

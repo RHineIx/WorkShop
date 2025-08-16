@@ -4,11 +4,9 @@ import * as api from "../api.js";
 import { saveConfig, initializeApp, saveLocalData } from "../app.js";
 import { sanitizeHTML } from "../utils.js";
 import { showStatus, hideStatus } from "../notifications.js";
-import { getDOMElements, openModal } from "../ui.js";
+import { elements, openModal } from "../ui.js";
 import { showConfirmationModal } from "../ui_helpers.js";
-
 function populateSyncModal() {
-  const elements = getDOMElements();
   if (appState.currentUser) {
     elements.currentUserInput.value = appState.currentUser;
   }
@@ -30,7 +28,7 @@ function generateMagicLink() {
     showStatus("يجب حفظ الإعدادات أولاً.", "error");
     return;
   }
-  const { magicLinkContainer, magicLinkOutput } = getDOMElements();
+  const { magicLinkContainer, magicLinkOutput } = elements;
   const configJson = JSON.stringify(appState.syncConfig);
   const encodedData = btoa(configJson);
   const url = `${window.location.origin}${window.location.pathname}#setup=${encodedData}`;
@@ -368,7 +366,7 @@ export function setupSyncListeners(elements) {
     populateSyncModal();
     document.getElementById("sync-modal-title").focus();
 
-    const { magicLinkContainer } = getDOMElements();
+    const { magicLinkContainer } = elements;
     magicLinkContainer.classList.add("view-hidden");
 
     const display = document.getElementById("live-exchange-rate-display");
@@ -391,7 +389,6 @@ export function setupSyncListeners(elements) {
       }
     });
   });
-
   elements.cancelSyncBtn.addEventListener("click", () =>
     elements.syncModal.close()
   );
@@ -411,7 +408,6 @@ export function setupSyncListeners(elements) {
     elements.syncModal.close();
     await initializeApp();
   });
-
   const advancedSettingsToggle = document.getElementById(
     "advanced-settings-toggle"
   );
@@ -441,7 +437,6 @@ export function setupSyncListeners(elements) {
     .addEventListener("click", () =>
       document.getElementById("archive-browser-modal").close()
     );
-
   document
     .getElementById("archive-list-container")
     .addEventListener("click", async e => {

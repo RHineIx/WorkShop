@@ -1,5 +1,5 @@
 // js/eventSetup.js
-import { getDOMElements } from "./ui.js";
+import { elements } from "./ui.js";
 import {
   setupGeneralListeners,
   setupViewToggleListeners,
@@ -13,8 +13,6 @@ import { setupBulkActionListeners } from "./handlers/bulkActionHandlers.js";
 import { setupActivityLogListeners } from "./handlers/activityLogHandlers.js";
 
 export function setupEventListeners() {
-  const elements = getDOMElements();
-
   setupGeneralListeners(elements);
   setupViewToggleListeners(elements);
   setupInventoryListeners(elements);

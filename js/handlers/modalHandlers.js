@@ -8,7 +8,7 @@ import {
   getQuantityChangeReason,
 } from "../ui_helpers.js";
 import {
-  getDOMElements,
+  elements,
   openModal,
   updateSaleTotal,
   openDetailsModal,
@@ -28,7 +28,6 @@ let cropperPadding = 0.1;
 let cropperBgColor = "#FFFFFF";
 let categoryInputManager = null;
 function setupCategoryInput(currentItemCategories = []) {
-  const elements = getDOMElements();
   const {
     selectedCategoriesContainer,
     availableCategoriesList,
@@ -202,7 +201,7 @@ async function handleSaleFormSubmit(e) {
 
   saveLocalData();
   filterAndRenderItems(true);
-  getDOMElements().saleModal.close();
+  elements.saleModal.close();
   try {
     await api.saveInventory();
     await api.saveSales();
@@ -240,7 +239,6 @@ async function handleSaleFormSubmit(e) {
 }
 
 export function openItemModal(itemId = null) {
-  const elements = getDOMElements();
   elements.itemForm.reset();
   appState.selectedImageFile = null;
   elements.imagePreview.src = "#";
@@ -300,7 +298,6 @@ export function openItemModal(itemId = null) {
 }
 
 export function openSaleModal(itemId) {
-  const elements = getDOMElements();
   const item = appState.inventory.items.find(i => i.id === itemId);
   if (!item) return;
   elements.saleForm.reset();
@@ -380,7 +377,7 @@ async function handleItemFormSubmit(e) {
     appState.inventory.items.push(itemData);
   }
 
-  getDOMElements().itemModal.close();
+  elements.itemModal.close();
   try {
     if (appState.selectedImageFile) {
       const compressedImageBlob = await compressImage(
@@ -483,7 +480,7 @@ function handleImageSelection(file) {
   const reader = new FileReader();
   reader.onload = event => {
     const { cropperModal, cropperImage, paddingDisplay, bgColorInput } =
-      getDOMElements();
+      elements;
     cropperPadding = 0.1;
     cropperBgColor = "#FFFFFF";
     paddingDisplay.textContent = `${Math.round(cropperPadding * 100)}%`;
@@ -567,7 +564,7 @@ export function setupModalListeners(elements) {
     }
   });
   document.getElementById("cancel-crop-btn").addEventListener("click", () => {
-    getDOMElements().cropperModal.close();
+    elements.cropperModal.close();
     if (cropper) {
       cropper.destroy();
       cropper = null;
@@ -593,7 +590,7 @@ export function setupModalListeners(elements) {
     );
     finalCanvas.toBlob(
       blob => {
-        const { imagePreview, imagePlaceholder } = getDOMElements();
+        const { imagePreview, imagePlaceholder } = elements;
         const file = new File([blob], "cropped_image.webp", {
           type: "image/webp",
         });
@@ -601,7 +598,7 @@ export function setupModalListeners(elements) {
         imagePreview.src = URL.createObjectURL(file);
         imagePreview.classList.remove("image-preview-hidden");
         imagePlaceholder.style.display = "none";
-        getDOMElements().cropperModal.close();
+        elements.cropperModal.close();
         cropper.destroy();
         cropper = null;
       },
