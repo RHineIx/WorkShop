@@ -265,7 +265,7 @@ dialog::backdrop {
   font-size: 0.875rem; /* 14px */
   color: var(--text-secondary);
   margin-bottom: var(--spacing-md);
-  font-weight: 500;
+  font-weight: 600;
 }
 .details-price-grid {
   display: grid;
@@ -593,4 +593,21 @@ dialog::backdrop {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
+}
+
+/* --- Details Modal Category Tags --- */
+.details-category-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.details-category-tag {
+  background-color: var(--accent-soft-bg);
+  color: var(--accent-soft-text);
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 700;
 }

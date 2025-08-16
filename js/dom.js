@@ -49,6 +49,7 @@ export const elements = {
   detailsImagePlaceholder: document.getElementById("details-image-placeholder"),
   detailsName: document.getElementById("details-name"),
   detailsSku: document.getElementById("details-sku"),
+  detailsCategoryTags: document.getElementById("details-category-tags"),
   detailsPnGridContainer: document.getElementById("details-pn-grid-container"),
   detailsQuantityValue: document.getElementById("details-quantity-value"),
   detailsDecreaseBtn: document.getElementById("details-decrease-btn"),

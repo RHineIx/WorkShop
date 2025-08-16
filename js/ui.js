@@ -205,6 +205,17 @@ export function openDetailsModal(itemId) {
     item.sellPriceUsd || 0
   ).toLocaleString()}`;
   elements.detailsNotesContent.textContent = item.notes || "لا توجد ملاحظات.";
+
+  elements.detailsCategoryTags.innerHTML = "";
+  if (item.categories && item.categories.length > 0) {
+    item.categories.forEach(category => {
+      const tag = document.createElement("span");
+      tag.className = "details-category-tag";
+      tag.textContent = category;
+      elements.detailsCategoryTags.appendChild(tag);
+    });
+  }
+
   const pnContainer = elements.detailsPnGridContainer;
   pnContainer.innerHTML = "";
   pnContainer.classList.add("view-hidden");
