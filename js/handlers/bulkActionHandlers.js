@@ -6,6 +6,7 @@ import { saveLocalData } from "../app.js";
 import { pushState } from "../navigation.js";
 import * as renderer from "../renderer.js";
 import * as notifications from "../notifications.js";
+import { logAction, ACTION_TYPES } from "../logger.js";
 
 let bulkCategoryInputManager = null;
 function setupBulkCategoryInput() {
@@ -128,8 +129,9 @@ async function handleBulkCategoryChange(e) {
       return;
   };
   const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
+  const selectedIds = Array.from(appState.selectedItemIds);
 
-  appState.selectedItemIds.forEach(id => {
+  selectedIds.forEach(id => {
     const item = appState.inventory.items.find(i => i.id === id);
     if (item) item.categories = newCategories;
   });
@@ -144,6 +146,26 @@ async function handleBulkCategoryChange(e) {
     await api.saveInventory();
     notifications.hideStatus(syncToastId);
     notifications.showStatus("تم حفظ تغيير الفئات ومزامنتها بنجاح!", "success");
+
+    const loggingPromises = selectedIds.map(id => {
+        const originalItem = originalInventory.items.find(i => i.id === id);
+        const updatedItem = appState.inventory.items.find(i => i.id === id);
+        if (originalItem && updatedItem) {
+            return logAction({
+                action: ACTION_TYPES.CATEGORY_UPDATED,
+                targetId: id,
+                targetName: updatedItem.name,
+                details: { from: originalItem.categories || [], to: updatedItem.categories }
+            });
+        }
+        return Promise.resolve();
+    });
+    
+    Promise.all(loggingPromises).catch(logError => {
+        console.error("Bulk category logging failed:", logError);
+        notifications.showStatus("تم حفظ التغييرات، لكن فشل تحديث سجل النشاط.", "warning");
+    });
+
   } catch (error) {
     console.error("Bulk category sync failed, rolling back:", error);
     appState.inventory = originalInventory;
@@ -161,7 +183,9 @@ async function handleBulkSupplierChange(e) {
   if (!newSupplierId) return;
 
   const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
-  appState.selectedItemIds.forEach(id => {
+  const selectedIds = Array.from(appState.selectedItemIds);
+
+  selectedIds.forEach(id => {
     const item = appState.inventory.items.find(i => i.id === id);
     if (item) item.supplierId = newSupplierId;
   });
@@ -175,6 +199,34 @@ async function handleBulkSupplierChange(e) {
     await api.saveInventory();
     notifications.hideStatus(syncToastId);
     notifications.showStatus("تم حفظ تغيير المورّد ومزامنته بنجاح!", "success");
+
+    const getSupplierName = (supplierId) => {
+        if (!supplierId) return "بلا مورّد";
+        const supplier = appState.suppliers.find(s => s.id === supplierId);
+        return supplier ? supplier.name : "مورّد محذوف";
+    };
+
+    const loggingPromises = selectedIds.map(id => {
+        const originalItem = originalInventory.items.find(i => i.id === id);
+        const updatedItem = appState.inventory.items.find(i => i.id === id);
+        if (originalItem && updatedItem) {
+            const fromSupplierName = getSupplierName(originalItem.supplierId);
+            const toSupplierName = getSupplierName(updatedItem.supplierId);
+            return logAction({
+                action: ACTION_TYPES.SUPPLIER_UPDATED,
+                targetId: id,
+                targetName: updatedItem.name,
+                details: { from: fromSupplierName, to: toSupplierName }
+            });
+        }
+        return Promise.resolve();
+    });
+
+    Promise.all(loggingPromises).catch(logError => {
+        console.error("Bulk supplier logging failed:", logError);
+        notifications.showStatus("تم حفظ التغييرات، لكن فشل تحديث سجل النشاط.", "warning");
+    });
+
   } catch (error) {
     console.error("Bulk supplier sync failed, rolling back:", error);
     appState.inventory = originalInventory;
@@ -216,4 +268,4 @@ export function setupBulkActionListeners(elements) {
   elements.bulkSupplierModal
     .querySelector("[data-close]")
     .addEventListener("click", () => elements.bulkSupplierModal.close());
-}
+    }
