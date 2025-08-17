@@ -1,9 +1,11 @@
 // js/sw.js
-const CACHE_NAME = "workshop-v5.39.2";
-// IMPORTANT: Remember to bump this version number with every new deployment
+const CACHE_NAME = "workshop-v1.1.0";
+const DATA_CACHE_NAME = "workshop-data-v1";
+
 const URLS_TO_CACHE = [
   "/",
   "/index.html",
+  "/offline.html",
   "/css/style.css",
   "/js/main.js",
   "/js/api.js",
@@ -13,15 +15,16 @@ const URLS_TO_CACHE = [
   "/js/utils.js",
   "https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js",
   "https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Roboto+Mono:wght@500&display=swap",
+  "/icons/icon-192x192.png"
 ];
 
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
+      console.log("Service Worker: Caching app shell");
       return cache.addAll(URLS_TO_CACHE);
     })
   );
-  // We removed self.skipWaiting() from here to allow the user to control the update.
 });
 
 self.addEventListener("activate", event => {
@@ -29,7 +32,7 @@ self.addEventListener("activate", event => {
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
+          if (cacheName !== CACHE_NAME && cacheName !== DATA_CACHE_NAME) {
             console.log("Service Worker: Deleting old cache:", cacheName);
             return caches.delete(cacheName);
           }
@@ -37,11 +40,9 @@ self.addEventListener("activate", event => {
       );
     })
   );
-  // Take control of all open tabs immediately.
   return self.clients.claim();
 });
 
-// Listen for a message from the client to skip waiting.
 self.addEventListener("message", event => {
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
@@ -49,39 +50,64 @@ self.addEventListener("message", event => {
 });
 
 self.addEventListener("fetch", event => {
-  // We only want to cache GET requests.
-  if (event.request.method !== "GET") {
+  const { request } = event;
+
+  // Ignore non-GET requests
+  if (request.method !== "GET") {
     return;
   }
 
-  // For API calls to GitHub, always go to the network.
-  if (event.request.url.includes("api.github.com")) {
-    event.respondWith(fetch(event.request));
+  // Strategy for API data (Network-First, Cache-Fallback)
+  if (request.url.includes("api.github.com/repos")) {
+    event.respondWith(
+      fetch(request)
+        .then(networkResponse => {
+          // If we get a valid response, cache it and return it
+          if (networkResponse.ok) {
+            return caches.open(DATA_CACHE_NAME).then(cache => {
+              cache.put(request, networkResponse.clone());
+              return networkResponse;
+            });
+          }
+          // If the server returns an error, try the cache
+          return caches.match(request);
+        })
+        .catch(() => {
+          // If the network request fails (offline), try to get it from the cache
+          console.log("Service Worker: Network failed, trying cache for", request.url);
+          return caches.match(request);
+        })
+    );
     return;
   }
 
-  // For other requests, use a cache-first strategy.
+  // Strategy for App Shell & other assets (Cache-First, Network-Fallback)
   event.respondWith(
-    caches.match(event.request).then(response => {
-      // Cache hit - return response.
-      if (response) {
-        return response;
+    caches.match(request).then(cachedResponse => {
+      // Return the cached response if it exists
+      if (cachedResponse) {
+        return cachedResponse;
       }
 
-      return fetch(event.request).then(response => {
-        // Check if we received a valid response.
-        if (!response || response.status !== 200 || response.type !== "basic") {
-          return response;
-        }
-
-        const responseToCache = response.clone();
-
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, responseToCache);
+      // If not in cache, fetch from the network
+      return fetch(request).then(networkResponse => {
+          // Don't cache opaque responses (e.g., from CDNs without CORS)
+          if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+              return networkResponse;
+          }
+          // Cache the new response
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then(cache => {
+              cache.put(request, responseToCache);
+          });
+          return networkResponse;
+        })
+        .catch(() => {
+          // If both cache and network fail, show the offline page for navigation requests
+          if (request.mode === 'navigate') {
+            return caches.match('/offline.html');
+          }
         });
-
-        return response;
-      });
     })
   );
 });

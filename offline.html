@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>غير متصل بالإنترنت</title>
+    <style>
+      :root {
+        --bg-color: #f4f7f9;
+        --text-primary: #1a202c;
+        --text-secondary: #718096;
+        --accent-color: #2a69c7;
+        --font-family: "Cairo", sans-serif;
+      }
+      body {
+        font-family: var(--font-family);
+        background-color: var(--bg-color);
+        color: var(--text-primary);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        text-align: center;
+      }
+      .container {
+        max-width: 400px;
+        padding: 2rem;
+      }
+      iconify-icon {
+        font-size: 5rem;
+        color: var(--accent-color);
+        opacity: 0.5;
+        margin-bottom: 1rem;
+      }
+      h1 {
+        font-size: 1.75rem;
+        margin-bottom: 0.5rem;
+      }
+      p {
+        color: var(--text-secondary);
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <iconify-icon icon="material-symbols:wifi-off-rounded"></iconify-icon>
+      <h1>أنت غير متصل بالإنترنت</h1>
+      <p>
+        يبدو أنك غير متصل بالإنترنت حاليًا. سيتم عرض البيانات المحفوظة محليًا
+        إن وجدت. يرجى التحقق من اتصالك بالشبكة لعرض أحدث البيانات.
+      </p>
+    </div>
+    <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+  </body>
+</html>

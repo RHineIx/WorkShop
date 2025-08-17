@@ -10,7 +10,6 @@ import {
   exitSelectionMode,
   toggleSelection,
 } from "./bulkActionHandlers.js";
-
 // State for pointer interactions to detect clicks vs. drags vs. long presses
 let pointerDownTime = 0;
 let pointerDownX = 0;
@@ -97,10 +96,8 @@ function handlePointerDown(e) {
  */
 function handlePointerMove(e) {
   if (isDragging || pointerDownTime === 0) return;
-
   const deltaX = Math.abs(e.clientX - pointerDownX);
   const deltaY = Math.abs(e.clientY - pointerDownY);
-
   if (deltaX > MOVE_THRESHOLD || deltaY > MOVE_THRESHOLD) {
     isDragging = true;
     pointerDownTime = 0; // Reset to cancel click/long-press
@@ -121,7 +118,6 @@ function handlePointerUp(e) {
 
   const pressDuration = Date.now() - pointerDownTime;
   pointerDownTime = 0;
-
   if (pressDuration >= LONG_PRESS_DURATION) {
     handleCardLongPress(card, e);
   } else {
@@ -130,6 +126,8 @@ function handlePointerUp(e) {
 }
 
 export function setupInventoryListeners(elements) {
+  const clearSearchBtn = document.getElementById("clear-search-btn");
+
   // --- Event Delegation for the entire inventory grid ---
   elements.inventoryGrid.addEventListener("pointerdown", handlePointerDown);
   elements.inventoryGrid.addEventListener("pointermove", handlePointerMove);
@@ -138,14 +136,24 @@ export function setupInventoryListeners(elements) {
   elements.inventoryGrid.addEventListener("contextmenu", e =>
     e.preventDefault()
   );
-
   elements.searchBar.addEventListener(
     "input",
     debounce(e => {
+      const hasValue = e.target.value.trim() !== "";
+      clearSearchBtn.classList.toggle("visible", hasValue);
       appState.searchTerm = e.target.value;
       filterAndRenderItems(true);
     }, 300)
   );
+
+  clearSearchBtn.addEventListener("click", () => {
+    elements.searchBar.value = "";
+    appState.searchTerm = "";
+    clearSearchBtn.classList.remove("visible");
+    filterAndRenderItems(true);
+    elements.searchBar.focus();
+  });
+
   elements.sortOptions.addEventListener("change", e => {
     appState.currentSortOption = e.target.value;
     filterAndRenderItems(true);
@@ -157,6 +165,7 @@ export function setupInventoryListeners(elements) {
 
     appState.searchTerm = "";
     elements.searchBar.value = "";
+    clearSearchBtn.classList.remove("visible");
 
     if (card.classList.contains("low-stock-alert")) {
       appState.activeFilter =
@@ -172,16 +181,27 @@ export function setupInventoryListeners(elements) {
     const chip = e.target.closest(".category-chip");
     if (!chip) return;
 
-    const category = chip.dataset.category;
-    if (appState.selectedCategory === category) return;
+    let category = chip.dataset.category;
+
+    // If the clicked category is already active, reset to 'all'
+    if (appState.selectedCategory === category) {
+      category = "all";
+    }
 
     appState.selectedCategory = category;
 
+    // Visually update the chips
     const currentActive = elements.categoryFilterBar.querySelector(".active");
     if (currentActive) {
       currentActive.classList.remove("active");
     }
-    chip.classList.add("active");
+    // Find the new chip to activate (which might be the "all" chip)
+    const newActiveChip = elements.categoryFilterBar.querySelector(
+      `[data-category="${category}"]`
+    );
+    if (newActiveChip) {
+      newActiveChip.classList.add("active");
+    }
 
     filterAndRenderItems(true);
   });

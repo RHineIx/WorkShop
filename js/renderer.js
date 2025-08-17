@@ -178,7 +178,6 @@ export function renderInventory(itemsToRender) {
     const quantityBadge = cardClone.querySelector(".quantity-badge");
     quantityBadge.textContent = badgeText;
     quantityBadge.className = `quantity-badge ${badgeClass}`;
-
     const imageContainer = cardClone.querySelector(".card-image-container");
     const placeholder = cardClone.querySelector(".card-image-placeholder");
 
@@ -213,7 +212,6 @@ export function renderInventory(itemsToRender) {
     cardClone.querySelector(".card-sku").textContent = `SKU: ${sanitizeHTML(
       item.sku || ""
     )}`;
-
     const isIQD = appState.activeCurrency === "IQD";
     const price = isIQD ? item.sellPriceIqd || 0 : item.sellPriceUsd || 0;
     const symbol = isIQD ? "د.ع" : "$";
@@ -230,11 +228,9 @@ export function renderInventory(itemsToRender) {
   elements.inventoryGrid
     .querySelectorAll(".card-image[data-src]")
     .forEach(img => imageObserver.observe(img));
-
   elements.inventoryGrid
     .querySelectorAll(".product-card")
     .forEach(card => animationObserver.observe(card));
-
   if (appState.visibleItemCount < itemsToRender.length) {
     elements.loadMoreTrigger.style.display = "block";
     loadMoreObserver.observe(elements.loadMoreTrigger);
@@ -251,7 +247,6 @@ export function updateProductCardImage(itemId, newImageBlobUrl) {
 
   const imageContainer = card.querySelector(".card-image-container");
   if (!imageContainer) return;
-
   const existingImage = imageContainer.querySelector(".card-image");
   if (existingImage) existingImage.remove();
 
@@ -259,7 +254,6 @@ export function updateProductCardImage(itemId, newImageBlobUrl) {
     ".card-image-placeholder"
   );
   if (existingPlaceholder) existingPlaceholder.remove();
-
   const newImg = document.createElement("img");
   newImg.className = "card-image";
   newImg.src = newImageBlobUrl;
@@ -344,7 +338,6 @@ export function renderCategoryFilter() {
     allButton.classList.add("active");
   }
   fragment.appendChild(allButton);
-
   categories.forEach(category => {
     const chipButton = document.createElement("button");
     chipButton.className = "category-chip";
@@ -362,7 +355,6 @@ export function renderCategoryFilter() {
 function renderSalesLog(filteredSales) {
   const { salesLogContent } = elements;
   salesLogContent.innerHTML = "";
-
   if (filteredSales.length === 0) {
     salesLogContent.innerHTML =
       "<div><p>لا توجد مبيعات في هذه الفترة.</p></div>";
@@ -371,18 +363,15 @@ function renderSalesLog(filteredSales) {
 
   const isIQD = appState.activeCurrency === "IQD";
   const symbol = isIQD ? "د.ع" : "$";
-
   const salesByDay = filteredSales.reduce((acc, sale) => {
     const date = sale.saleDate;
     if (!acc[date]) acc[date] = [];
     acc[date].push(sale);
     return acc;
   }, {});
-
   const dayGroupTemplate = document.getElementById("day-group-template");
   const saleItemTemplate = document.getElementById("sale-item-template");
   const mainFragment = document.createDocumentFragment();
-
   for (const [date, sales] of Object.entries(salesByDay)) {
     const dayGroupClone = dayGroupTemplate.content.cloneNode(true);
     const dayGroupElement = dayGroupClone.querySelector(".day-group");
@@ -430,7 +419,6 @@ function renderSalesLog(filteredSales) {
       profitItem.querySelector(
         ".profit-value"
       ).textContent = `${profit.toLocaleString()} ${symbol}`;
-
       if (sale.notes) {
         const notesItem = saleItemElement.querySelector(".notes-item");
         notesItem.style.display = "flex";
@@ -480,7 +468,6 @@ export const renderDashboard = () => {
       return saleDate >= startDate && saleDate <= now;
     })
     .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
   const isIQD = appState.activeCurrency === "IQD";
   const totalSales = filteredSales.reduce(
     (sum, sale) =>
@@ -501,7 +488,6 @@ export const renderDashboard = () => {
   filteredSales.forEach(sale => {
     itemSales[sale.itemId] = (itemSales[sale.itemId] || 0) + sale.quantitySold;
   });
-
   const sortedBestsellers = Object.entries(itemSales)
     .map(([itemId, count]) => {
       const item = appState.inventory.items.find(i => i.id === itemId);
@@ -509,7 +495,6 @@ export const renderDashboard = () => {
     })
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
-
   elements.bestsellersList.innerHTML = "";
   if (sortedBestsellers.length > 0) {
     sortedBestsellers.forEach(item => {
@@ -526,7 +511,6 @@ export const renderDashboard = () => {
 
   renderSalesLog(filteredSales);
 };
-
 export function renderSupplierList() {
   elements.supplierListContainer.innerHTML = "";
   if (appState.suppliers.length === 0) {
@@ -545,7 +529,7 @@ export function renderSupplierList() {
         <button class="icon-btn edit-supplier-btn" data-id="${
           supplier.id
         }" title="تعديل المورّد">
-           <iconify-icon icon="material-symbols:edit-outline-rounded"></iconify-icon>
+          <iconify-icon icon="material-symbols:edit-outline-rounded"></iconify-icon>
         </button>
         <button class="icon-btn danger-btn delete-supplier-btn" data-id="${
           supplier.id
@@ -589,18 +573,15 @@ const formatRelativeTime = date => {
   const minutes = Math.round(seconds / 60);
   const hours = Math.round(minutes / 60);
   const days = Math.round(hours / 24);
-
   if (seconds < 60) return `قبل لحظات`;
   if (minutes < 60) return `قبل ${minutes} دقيقة`;
   if (hours < 24) return `قبل ${hours} ساعة`;
   if (days < 30) return `قبل ${days} يوم`;
   return date.toLocaleString("ar-EG");
 };
-
 const getActionDetails = log => {
   const name = `<strong>${sanitizeHTML(log.targetName)}</strong>`;
   const details = log.details;
-
   const formatCategories = cats => {
     if (!Array.isArray(cats))
       return `"${sanitizeHTML(String(cats ?? "")) || "بلا فئة"}"`;
@@ -612,13 +593,13 @@ const getActionDetails = log => {
   const to = details.to;
 
   switch (log.action) {
-    case "ITEM_CREATED":
+    case ACTION_TYPES.ITEM_CREATED:
       return {
         icon: "material-symbols:add-box-outline",
         class: "create",
         description: `تم إنشاء منتج جديد: ${name}.`,
       };
-    case "PRICE_UPDATED":
+    case ACTION_TYPES.PRICE_UPDATED:
       return {
         icon: "material-symbols:price-change-outline",
         class: "update",
@@ -628,7 +609,7 @@ const getActionDetails = log => {
           to
         ).toLocaleString()}</span>.`,
       };
-    case "QUANTITY_UPDATED":
+    case ACTION_TYPES.QUANTITY_UPDATED:
       let qtyDescription = `تم تعديل كمية ${name} من ${sanitizeHTML(
         String(from)
       )} إلى ${sanitizeHTML(String(to))}.`;
@@ -640,19 +621,19 @@ const getActionDetails = log => {
         class: "update",
         description: qtyDescription,
       };
-    case "SALE_RECORDED":
+    case ACTION_TYPES.SALE_RECORDED:
       return {
         icon: "material-symbols:shopping-cart-outline",
         class: "sale",
         description: `تم بيع ${details.quantity} قطعة من ${name}.`,
       };
-    case "ITEM_DELETED":
+    case ACTION_TYPES.ITEM_DELETED:
       return {
         icon: "material-symbols:delete-outline",
         class: "delete",
         description: `تم حذف المنتج: ${name}.`,
       };
-    case "NAME_UPDATED":
+    case ACTION_TYPES.NAME_UPDATED:
       return {
         icon: "material-symbols:edit-outline",
         class: "update",
@@ -660,7 +641,7 @@ const getActionDetails = log => {
           String(from)
         )}" إلى "${sanitizeHTML(String(to))}".`,
       };
-    case "SKU_UPDATED":
+    case ACTION_TYPES.SKU_UPDATED:
       return {
         icon: "material-symbols:qr-code-2",
         class: "update",
@@ -668,7 +649,7 @@ const getActionDetails = log => {
           String(from)
         )}" إلى "${sanitizeHTML(String(to))}".`,
       };
-    case "CATEGORY_UPDATED":
+    case ACTION_TYPES.CATEGORY_UPDATED:
       return {
         icon: "material-symbols:folder-open-outline",
         class: "update",
@@ -676,11 +657,25 @@ const getActionDetails = log => {
           from
         )} إلى ${formatCategories(to)}.`,
       };
-    case "NOTES_UPDATED":
+    case ACTION_TYPES.NOTES_UPDATED:
       return {
         icon: "material-symbols:note-stack-add-outline",
         class: "update",
         description: `تم تحديث الملاحظات للمنتج ${name}.`,
+      };
+    case ACTION_TYPES.IMAGE_UPDATED:
+      return {
+        icon: "material-symbols:add-photo-alternate-outline",
+        class: "update",
+        description: `تم تحديث صورة المنتج ${name}.`,
+      };
+    case ACTION_TYPES.SUPPLIER_UPDATED:
+      return {
+        icon: "material-symbols:business-center-outline",
+        class: "update",
+        description: `تم تغيير مورّد المنتج ${name} من "${sanitizeHTML(
+          String(from)
+        )}" إلى "${sanitizeHTML(String(to))}".`,
       };
     default:
       return {
@@ -757,4 +752,4 @@ export function renderAuditLog() {
     fragment.appendChild(clone);
   });
   elements.auditLogList.appendChild(fragment);
-}
+        }
