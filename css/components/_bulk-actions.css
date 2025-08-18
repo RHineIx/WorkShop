@@ -10,7 +10,8 @@
   padding: var(--spacing-md);
   padding-bottom: calc(
     var(--spacing-md) + env(safe-area-inset-bottom)
-  ); /* iOS Safe Area */
+  );
+  /* iOS Safe Area */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -62,15 +63,6 @@
 
 .bulk-actions-bar .action-btn.primary:hover {
   background-color: var(--accent-color-hover);
-}
-
-/* NEW: Consistent styling for bulk modal forms */
-#bulk-category-form,
-#bulk-supplier-form {
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
 }
 
 #bulk-category-form p {

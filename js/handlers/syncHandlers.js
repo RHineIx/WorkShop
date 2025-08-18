@@ -6,6 +6,7 @@ import { sanitizeHTML } from "../utils.js";
 import { showStatus, hideStatus } from "../notifications.js";
 import { elements, openModal } from "../ui.js";
 import { showConfirmationModal } from "../ui_helpers.js";
+
 function populateSyncModal() {
   if (appState.currentUser) {
     elements.currentUserInput.value = appState.currentUser;
@@ -230,35 +231,73 @@ async function openArchiveBrowser() {
 }
 
 async function handleDownloadBackup() {
-  const syncToastId = showStatus("جاري تجهيز النسخة الاحتياطية...", "syncing");
-  try {
-    const zip = new JSZip();
-    zip.file("inventory.json", JSON.stringify(appState.inventory, null, 2));
-    zip.file("sales.json", JSON.stringify(appState.sales, null, 2));
-    zip.file("suppliers.json", JSON.stringify(appState.suppliers, null, 2));
-    zip.file("audit-log.json", JSON.stringify(appState.auditLog, null, 2));
-    const blob = await zip.generateAsync({ type: "blob" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    const timestamp = new Date()
-      .toISOString()
-      .slice(0, 19)
-      .replace(/[:T]/g, "-");
-    link.download = `workshop-backup-${timestamp}.zip`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(link.href);
+    let syncToastId = showStatus("جاري تجهيز النسخة الاحتياطية...", "syncing");
 
-    hideStatus(syncToastId);
-    showStatus("تم تنزيل النسخة الاحتياطية بنجاح!", "success");
-  } catch (error) {
-    console.error("Backup failed:", error);
-    hideStatus(syncToastId);
-    showStatus(`فشل إنشاء النسخة الاحتياطية: ${error.message}`, "error", {
-      duration: 5000,
-    });
-  }
+    try {
+        const zip = new JSZip();
+
+        zip.file("inventory.json", JSON.stringify(appState.inventory, null, 2));
+        zip.file("sales.json", JSON.stringify(appState.sales, null, 2));
+        zip.file("suppliers.json", JSON.stringify(appState.suppliers, null, 2));
+        zip.file("audit-log.json", JSON.stringify(appState.auditLog, null, 2));
+
+        const usedImagePaths = [
+            ...new Set(
+                appState.inventory.items
+                .map(item => item.imagePath)
+                .filter(path => path && !path.startsWith("http"))
+            ),
+        ];
+
+        if (usedImagePaths.length > 0) {
+            hideStatus(syncToastId);
+            const totalImages = usedImagePaths.length;
+            syncToastId = showStatus(`جاري تحميل الصور... (0/${totalImages})`, "syncing", { duration: 0 });
+
+            const imgFolder = zip.folder("images");
+            let downloadedCount = 0;
+
+            for (const path of usedImagePaths) {
+                try {
+                    const blob = await api.fetchGitHubFileAsBlob(path);
+                    if (blob) {
+                        const filename = path.split("/").pop();
+                        imgFolder.file(filename, blob);
+                    }
+                } catch (error) {
+                    console.error(`Failed to download image ${path} for backup, skipping:`, error);
+                }
+                downloadedCount++;
+                hideStatus(syncToastId);
+                syncToastId = showStatus(`جاري تحميل الصور... (${downloadedCount}/${totalImages})`, "syncing", { duration: 0 });
+            }
+        }
+        
+        hideStatus(syncToastId);
+        syncToastId = showStatus("جاري ضغط الملفات...", "syncing", { duration: 0 });
+
+        const blob = await zip.generateAsync({ type: "blob" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        const timestamp = new Date()
+            .toISOString()
+            .slice(0, 19)
+            .replace(/[:T]/g, "-");
+        link.download = `workshop-backup-${timestamp}.zip`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+
+        hideStatus(syncToastId);
+        showStatus("تم تنزيل النسخة الاحتياطية بنجاح!", "success");
+    } catch (error) {
+        console.error("Backup failed:", error);
+        hideStatus(syncToastId);
+        showStatus(`فشل إنشاء النسخة الاحتياطية: ${error.message}`, "error", {
+            duration: 5000,
+        });
+    }
 }
 
 async function handleBackupToTelegram() {
@@ -307,7 +346,13 @@ async function handleRestoreBackup(event) {
     return;
   }
 
-  const syncToastId = showStatus("جاري استعادة النسخة الاحتياطية...", "syncing");
+  if (!appState.syncConfig) {
+      showStatus("فشل الاستعادة: إعدادات المزامنة غير موجودة. يرجى إعدادها أولاً.", "error", { duration: 6000 });
+      event.target.value = "";
+      return;
+  }
+
+  let syncToastId = showStatus("جاري استعادة النسخة الاحتياطية...", "syncing");
   try {
     const zip = await JSZip.loadAsync(file);
     const inventoryFile = zip.file("inventory.json");
@@ -334,22 +379,54 @@ async function handleRestoreBackup(event) {
     ) {
       throw new Error("محتوى ملف النسخة الاحتياطية غير صالح.");
     }
+    
+    hideStatus(syncToastId);
+    syncToastId = showStatus("جاري المزامنة مع المستودع للحصول على بصمات الملفات...", "syncing");
+
+    try {
+        const [inventoryResult, salesResult, suppliersResult, auditLogResult] = await Promise.all([
+            api.fetchFromGitHub(),
+            api.fetchSales(),
+            api.fetchSuppliers(),
+            api.fetchAuditLog()
+        ]);
+
+        appState.fileSha = inventoryResult ? inventoryResult.sha : null;
+        appState.salesFileSha = salesResult ? salesResult.sha : null;
+        appState.suppliersFileSha = suppliersResult ? suppliersResult.sha : null;
+        appState.auditLogFileSha = auditLogResult ? auditLogResult.sha : null;
+
+    } catch (fetchError) {
+        console.error("Failed to fetch SHAs from remote repo:", fetchError);
+        hideStatus(syncToastId);
+        showStatus(`فشل الاتصال بالمستودع: ${fetchError.message}`, "error", { duration: 8000 });
+        return;
+    }
 
     appState.inventory = inventoryData;
     appState.sales = salesData;
     appState.suppliers = suppliersData;
     appState.auditLog = auditLogData;
-
     saveLocalData();
+
+    hideStatus(syncToastId);
+    syncToastId = showStatus("تمت الاستعادة محلياً. جاري الرفع للمستودع...", "syncing");
+
+    await api.saveInventory();
+    await api.saveSales();
+    await api.saveSuppliers();
+    await api.saveAuditLog();
+
     hideStatus(syncToastId);
     showStatus(
-      "تمت استعادة البيانات بنجاح! سيتم إعادة تحميل التطبيق.",
+      "تمت استعادة ورفع النسخة الاحتياطية بنجاح! سيتم إعادة تحميل التطبيق.",
       "success",
       { duration: 4000 }
     );
     setTimeout(() => {
       location.reload();
     }, 4000);
+
   } catch (error) {
     console.error("Restore failed:", error);
     hideStatus(syncToastId);

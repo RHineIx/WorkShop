@@ -294,6 +294,19 @@ export const createGitHubFile = async (path, content, message) => {
   }
 };
 
+export const fetchGitHubFileAsBlob = async (path) => {
+    if (!appState.syncConfig) return null;
+    const { username, repo } = appState.syncConfig;
+    const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
+    const response = await apiFetch(apiUrl, { cache: "no-cache" });
+    if (!response.ok) {
+        throw new Error(`Failed to fetch file blob from GitHub: ${path}`);
+    }
+    const data = await response.json();
+    const contentType = data.name.endsWith('.png') ? 'image/png' : 'image/webp';
+    return b64toBlob(data.content, contentType);
+};
+
 export const fetchGitHubFile = async path => {
   const result = await fetchJsonFromGitHub(path, null);
   return result ? result.data : null;

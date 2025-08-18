@@ -13,7 +13,6 @@
   color: var(--text-secondary);
 }
 
-/* CHANGED: Added selectors for bulk modal inputs */
 #item-form input,
 #item-form textarea,
 #item-form select,
@@ -21,8 +20,9 @@
 #sale-form input,
 #sale-form textarea,
 #supplier-form input,
-#bulk-category-form input, /* Added this */
-#bulk-supplier-form select, /* Added this */
+#bulk-category-form input,
+#bulk-supplier-form select,
+#category-edit-form input,
 #quantity-change-reason {
   width: 100%;
   padding: 0.75rem var(--spacing-md); /* 12px */
@@ -31,12 +31,10 @@
   border-radius: var(--border-radius-sm);
   background-color: var(--surface-color);
   color: var(--text-primary);
-  /* This rule will now apply correctly */
   font-size: 1rem; /* 16px */
   transition: all var(--transition-speed);
 }
 
-/* CHANGED: Added selectors for bulk modal inputs focus state */
 #item-form input:focus,
 #item-form textarea:focus,
 #item-form select:focus,
@@ -44,8 +42,9 @@
 #sale-form input:focus,
 #sale-form textarea:focus,
 #supplier-form input:focus,
-#bulk-category-form input:focus, /* Added this */
-#bulk-supplier-form select:focus, /* Added this */
+#bulk-category-form input:focus,
+#bulk-supplier-form select:focus,
+#category-edit-form input:focus,
 #quantity-change-reason:focus {
   outline: none;
   border-color: var(--accent-color);
@@ -238,7 +237,8 @@ select {
 #sale-form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem; /* Consistent vertical spacing */
+  gap: 1.25rem;
+  /* Consistent vertical spacing */
 }
 
 #sale-form .form-group label {
@@ -288,7 +288,8 @@ select {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 1.125rem; /* 18px */
+  font-size: 1.125rem;
+  /* 18px */
 }
 
 .total-label {
@@ -299,11 +300,20 @@ select {
 .total-value {
   font-weight: bold;
   color: var(--accent-color);
-  font-size: 1.25rem; /* 20px */
+  font-size: 1.25rem;
+  /* 20px */
 }
 
 @media (max-width: 30rem) {
   .sale-details-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* --- Reusable Modal Form Container --- */
+.modal-form {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }

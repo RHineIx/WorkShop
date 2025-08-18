@@ -17,6 +17,7 @@ import {
   exitSelectionMode,
   toggleSelection,
 } from "./bulkActionHandlers.js";
+import { getNewCategoryName } from "../ui_helpers.js";
 
 // --- Unified State for Pointer Interactions ---
 let pointerDownTime = 0;
@@ -105,7 +106,7 @@ function clickAwayHandler(e) {
 
 async function handleCategoryRename(chip) {
   const oldName = chip.dataset.category;
-  const newName = prompt("أدخل الاسم الجديد للفئة:", oldName);
+  const newName = await getNewCategoryName(oldName);
 
   deactivateCategoryEditMode();
 
@@ -135,7 +136,6 @@ async function handleCategoryRename(chip) {
       );
     }
   });
-
   saveLocalData();
   renderCategoryFilter();
   filterAndRenderItems(true);
@@ -163,7 +163,8 @@ async function handleCategoryRename(chip) {
 }
 
 function activateCategoryEditMode(chip) {
-  deactivateCategoryEditMode(); // Deactivate any other active chip first
+  deactivateCategoryEditMode();
+  // Deactivate any other active chip first
   chip.classList.add("edit-active");
 
   const editBtn = document.createElement("button");
@@ -175,7 +176,6 @@ function activateCategoryEditMode(chip) {
     e.stopPropagation();
     handleCategoryRename(chip);
   });
-
   chip.appendChild(editBtn);
   setTimeout(() => document.addEventListener("click", clickAwayHandler), 0);
 }
@@ -214,7 +214,6 @@ function handlePointerUp(e) {
 
   const card = e.target.closest(".product-card");
   const chip = e.target.closest(".category-chip");
-
   if (pressDuration >= LONG_PRESS_DURATION) {
     if (card) handleCardLongPress(card);
     if (chip) handleCategoryLongPress(chip);
@@ -244,7 +243,6 @@ export function setupInventoryListeners(elements) {
   elements.categoryFilterBar.addEventListener("contextmenu", e =>
     e.preventDefault()
   );
-
   // --- Other Control Listeners ---
   elements.searchBar.addEventListener(
     "input",
@@ -255,7 +253,6 @@ export function setupInventoryListeners(elements) {
       filterAndRenderItems(true);
     }, 300)
   );
-
   clearSearchBtn.addEventListener("click", () => {
     elements.searchBar.value = "";
     appState.searchTerm = "";
@@ -263,12 +260,10 @@ export function setupInventoryListeners(elements) {
     filterAndRenderItems(true);
     elements.searchBar.focus();
   });
-
   elements.sortOptions.addEventListener("change", e => {
     appState.currentSortOption = e.target.value;
     filterAndRenderItems(true);
   });
-
   elements.statsContainer.addEventListener("click", e => {
     const card = e.target.closest(".stat-card");
     if (!card) return;
