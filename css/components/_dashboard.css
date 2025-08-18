@@ -1,4 +1,3 @@
-
 /* css/components/_dashboard.css */
 
 .dashboard-header {
@@ -53,12 +52,13 @@
   border: none;
   cursor: pointer;
   font-family: var(--font-family);
+  text-align: right;
 }
 
-.collapsible-header h3 {
-  margin: 0;
+.collapsible-header .collapsible-title {
   font-size: 18px;
   color: var(--text-primary);
+  font-weight: 700;
 }
 
 .collapsible-header iconify-icon {
@@ -246,4 +246,4 @@
 }
 .details-list .profit-negative .value {
   color: var(--danger-color);
-  }
+}

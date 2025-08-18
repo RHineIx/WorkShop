@@ -79,7 +79,7 @@
           title="إعدادات المزامنة"
           class="control-button"
         >
-          <div class="rate-limit-indicator"></div>
+          <span class="rate-limit-indicator"></span>
           <iconify-icon
             icon="material-symbols:cloud-sync-outline-rounded"
           ></iconify-icon>
@@ -102,7 +102,8 @@
 
     <main class="main-container">
       <div id="inventory-view-container">
-        <section id="stats-cards" class="stats-container">
+        <section id="stats-cards" class="stats-container" aria-labelledby="stats-heading">
+          <h2 id="stats-heading" class="visually-hidden">إحصائيات المخزون</h2>
           <div class="stat-card">
             <div class="card-icon">
               <iconify-icon
@@ -127,9 +128,9 @@
           </div>
         </section>
 
-        <section class="inventory-container">
+        <section class="inventory-container" aria-labelledby="inventory-heading">
           <div class="inventory-header">
-            <h2>قائمة المنتجات</h2>
+            <h2 id="inventory-heading">قائمة المنتجات</h2>
 
             <div class="inventory-actions">
               <div class="sort-container">
@@ -162,7 +163,7 @@
                   aria-label="مسح البحث"
                 >
                   <iconify-icon
-                    icon="mingcute:close-fill"
+                    icon="material-symbols:close-rounded"
                   ></iconify-icon>
                 </button>
               </div>
@@ -177,9 +178,9 @@
       </div>
 
       <div id="dashboard-view-container" class="view-hidden">
-        <section class="dashboard-container">
+        <section class="dashboard-container" aria-labelledby="dashboard-heading">
           <div class="dashboard-header">
-            <h2>لوحة المعلومات</h2>
+            <h2 id="dashboard-heading">لوحة المعلومات</h2>
             <div id="time-filter-controls" class="time-filter-controls">
               <button class="time-filter-btn active" data-period="today">
                 يومي
@@ -218,8 +219,9 @@
             <button
               class="collapsible-header"
               data-target="bestsellers-content"
+              aria-expanded="true"
             >
-              <h3>الأكثر مبيعًا</h3>
+              <span class="collapsible-title">الأكثر مبيعًا</span>
               <iconify-icon icon="material-symbols:expand-less"></iconify-icon>
             </button>
             <div id="bestsellers-content" class="collapsible-content">
@@ -228,8 +230,8 @@
           </div>
 
           <div class="collapsible-section">
-            <button class="collapsible-header" data-target="sales-log-content">
-              <h3>سجل المبيعات</h3>
+            <button class="collapsible-header" data-target="sales-log-content" aria-expanded="true">
+              <span class="collapsible-title">سجل المبيعات</span>
               <iconify-icon icon="material-symbols:expand-less"></iconify-icon>
             </button>
             <div id="sales-log-content" class="collapsible-content"></div>
@@ -238,9 +240,9 @@
       </div>
 
       <div id="activity-log-view-container" class="view-hidden">
-        <section class="activity-log-container">
+        <section class="activity-log-container" aria-labelledby="activity-heading">
           <div class="activity-log-header">
-            <h2>سجل نشاطات المخزون</h2>
+            <h2 id="activity-heading">سجل نشاطات المخزون</h2>
             <div class="activity-log-actions">
               <select id="activity-log-filter">
                 <option value="all">كل النشاطات</option>
@@ -277,7 +279,7 @@
 
         <div class="details-layout">
           <div class="details-image-container">
-            <img id="details-image" src="" alt="صورة المنتج" />
+            <img id="details-image" alt="صورة المنتج" />
             <div id="details-image-placeholder" class="item-image-details">
               <iconify-icon icon="material-symbols:key"></iconify-icon>
             </div>
@@ -941,7 +943,7 @@
       </div>
       <div class="cropper-modal-body">
         <div class="cropper-image-container">
-          <img id="cropper-image" src="" alt="صورة للاقتصاص" />
+          <img id="cropper-image" alt="صورة للاقتصاص" />
         </div>
         <div class="cropper-controls">
           <div class="control-set">
