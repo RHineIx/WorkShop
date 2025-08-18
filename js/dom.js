@@ -169,9 +169,7 @@ export const elements = {
   confirmMessage: document.getElementById("confirm-message"),
   confirmOkBtn: document.getElementById("confirm-ok-btn"),
   confirmCancelBtn: document.getElementById("confirm-cancel-btn"),
-  confirmModalIcon: document.querySelector(
-    "#confirm-modal .confirm-modal-icon"
-  ),
+  confirmModalIcon: document.getElementById("confirm-modal-icon"),
 
   // Reason Modal Elements
   reasonModal: document.getElementById("reason-modal"),

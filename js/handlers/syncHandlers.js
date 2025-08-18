@@ -476,9 +476,10 @@ export function setupSyncListeners(elements) {
       const detailsContainer = document.getElementById(
         "archive-details-container"
       );
-      const container = item.parentElement;
-      if (container.querySelector(".active")) {
-        container.querySelector(".active").classList.remove("active");
+      const listContainer = document.getElementById("archive-list-container");
+      const currentActive = listContainer.querySelector(".archive-item.active");
+      if (currentActive) {
+        currentActive.classList.remove("active");
       }
       item.classList.add("active");
       detailsContainer.innerHTML = "<p>جاري تحميل البيانات...</p>";
