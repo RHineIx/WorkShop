@@ -185,7 +185,7 @@
               <button class="time-filter-btn active" data-period="today">
                 يومي
               </button>
-              <button class="time-filter-btn" data-period="week">أسبوعي</button>
+              <button class="time-filter-btn" data-requiredweek">أسبوعي</button>
               <button class="time-filter-btn" data-period="month">شهري</button>
             </div>
           </div>
@@ -446,7 +446,7 @@
                 <div class="form-group">
                   <label for="item-sku">SKU (رقم المنتج)</label>
                   <div class="sku-container">
-                    <input type="text" autocomplete="off" id="item-sku" required />
+                    <input type="text" autocomplete="off" id="item-sku" required dir="ltr" />
                     <button
                       type="button"
                       id="regenerate-sku-btn"
@@ -578,6 +578,7 @@
                     type="number"
                     id="item-cost-price-iqd"
                     value="0"
+                    dir="ltr"
                     step="any"
                     min="0"
                   />
@@ -588,6 +589,7 @@
                     type="number"
                     id="item-sell-price-iqd"
                     value="0"
+                    dir="ltr"
                     step="any"
                     min="0"
                   />
@@ -598,6 +600,7 @@
                     type="number"
                     id="item-cost-price-usd"
                     value="0"
+                    dir="ltr"
                     step="any"
                     min="0"
                   />
@@ -608,6 +611,7 @@
                     type="number"
                     id="item-sell-price-usd"
                     value="0"
+                    dir="ltr"
                     step="any"
                     min="0"
                   />
@@ -628,7 +632,7 @@
     </dialog>
 
     <dialog id="sync-modal">
-      <form id="sync-form">
+      <form id="sync-form" class="modal-form">
         <h3 id="sync-modal-title" tabindex="-1">إعدادات المزامنة والتطبيق</h3>
 
         <span id="rate-limit-display" class="rate-limit-display"></span>
@@ -800,7 +804,7 @@
     </dialog>
 
     <dialog id="sale-modal">
-      <form id="sale-form">
+      <form id="sale-form" class="modal-form">
         <h3>تأكيد عملية البيع</h3>
         <input type="hidden" id="sale-item-id" />
 
@@ -880,7 +884,7 @@
         </div>
 
         <div id="supplier-list-container" class="supplier-list"></div>
-        <form id="supplier-form">
+        <form id="supplier-form" class="modal-form">
           <h4 id="supplier-form-title">إضافة مورّد جديد</h4>
           <input type="hidden" id="supplier-id" />
           <div class="form-row">
@@ -995,7 +999,7 @@
     </div>
 
     <dialog id="bulk-category-modal">
-      <form id="bulk-category-form">
+      <form id="bulk-category-form" class="modal-form">
         <h3>تغيير فئة العناصر المحددة</h3>
         <p>
           القائمة الجديدة التي تبنيها هنا ستحل محل (تستبدل) جميع الفئات القديمة
@@ -1044,7 +1048,7 @@
     </dialog>
 
     <dialog id="bulk-supplier-modal">
-      <form id="bulk-supplier-form">
+      <form id="bulk-supplier-form" class="modal-form">
         <h3>تغيير مورّد العناصر المحددة</h3>
         <div class="form-group">
           <label for="bulk-item-supplier">المورّد الجديد</label>
@@ -1059,9 +1063,29 @@
       </form>
     </dialog>
 
+    <dialog id="category-edit-modal">
+      <form id="category-edit-form" class="modal-form">
+        <h3>تعديل اسم الفئة</h3>
+        <div class="form-group">
+          <label for="new-category-name">الاسم الجديد للفئة</label>
+          <input
+            type="text"
+            id="new-category-name"
+            required
+            autocomplete="off"
+            placeholder="أدخل الاسم الجديد..."
+          />
+        </div>
+        <div class="modal-actions">
+          <button type="submit">حفظ التغييرات</button>
+          <button type="button" data-close>إلغاء</button>
+        </div>
+      </form>
+    </dialog>
+    
     <dialog id="confirm-modal">
       <div class="confirm-modal-content">
-        <div class="confirm-modal-icon">
+        <div class="confirm-modal-icon" id="confirm-modal-icon">
           <iconify-icon
             icon="material-symbols:delete-outline-rounded"
           ></iconify-icon>
@@ -1080,15 +1104,7 @@
     </dialog>
 
     <dialog id="reason-modal">
-      <form
-        id="reason-form"
-        style="
-          padding: 1.5rem;
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        "
-      >
+      <form id="reason-form" class="modal-form">
         <h3>سبب تغيير الكمية (اختياري)</h3>
         <div class="form-group">
           <label for="quantity-change-reason" class="visually-hidden"

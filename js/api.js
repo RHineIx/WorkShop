@@ -2,6 +2,7 @@
 import { appState } from "./state.js";
 import { getImage, storeImage } from "./db.js";
 import { updateRateLimitDisplay } from "./ui.js";
+import { b64toBlob, toBase64 } from "./utils.js";
 
 // Custom error for handling data conflicts
 export class ConflictError extends Error {
@@ -42,29 +43,6 @@ async function apiFetch(url, options = {}) {
 
   return response;
 }
-
-const b64toBlob = (b64Data, contentType = "", sliceSize = 512) => {
-  const byteCharacters = atob(b64Data);
-  const byteArrays = [];
-  for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-    const slice = byteCharacters.slice(offset, offset + sliceSize);
-    const byteNumbers = new Array(slice.length);
-    for (let i = 0; i < slice.length; i++) {
-      byteNumbers[i] = slice.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    byteArrays.push(byteArray);
-  }
-  return new Blob(byteArrays, { type: contentType });
-};
-
-const toBase64 = file =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result.split(",")[1]);
-    reader.onerror = error => reject(error);
-  });
 
 async function fetchJsonFromGitHub(filePath, defaultValue) {
   if (!appState.syncConfig) return null;
@@ -115,18 +93,6 @@ async function saveJsonToGitHub(filePath, dataObject, sha, commitMessage) {
 
   const responseData = await response.json();
   return responseData.content.sha;
-}
-
-// This function now forces an overwrite. Use with caution.
-async function forceSaveJsonToGitHub(filePath, dataObject, commitMessage) {
-  const { sha } = await fetchJsonFromGitHub(filePath, dataObject);
-  const newSha = await saveJsonToGitHub(
-    filePath,
-    dataObject,
-    sha,
-    commitMessage
-  );
-  return newSha;
 }
 
 // --- NEW SAVE LOGIC WITH CONFLICT DETECTION ---
@@ -326,6 +292,19 @@ export const createGitHubFile = async (path, content, message) => {
       throw new Error(`Failed to create file ${path}: ${response.statusText}`);
     }
   }
+};
+
+export const fetchGitHubFileAsBlob = async (path) => {
+    if (!appState.syncConfig) return null;
+    const { username, repo } = appState.syncConfig;
+    const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
+    const response = await apiFetch(apiUrl, { cache: "no-cache" });
+    if (!response.ok) {
+        throw new Error(`Failed to fetch file blob from GitHub: ${path}`);
+    }
+    const data = await response.json();
+    const contentType = data.name.endsWith('.png') ? 'image/png' : 'image/webp';
+    return b64toBlob(data.content, contentType);
 };
 
 export const fetchGitHubFile = async path => {

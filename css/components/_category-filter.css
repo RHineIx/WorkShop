@@ -9,16 +9,19 @@
   margin-bottom: var(--spacing-md);
   /* Hide scrollbar for a cleaner look */
   scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  -ms-overflow-style: none;
+  /* IE and Edge */
 }
 .category-filter-bar::-webkit-scrollbar {
   display: none; /* Chrome, Safari, and Opera */
 }
 
 .category-chip {
+  position: relative;
   font-family: var(--font-family);
   padding: 0.5rem 1rem; /* 8px 16px */
-  border-radius: 2rem; /* a large value for a pill shape */
+  border-radius: 2rem;
+  /* a large value for a pill shape */
   border: 1px solid var(--border-color);
   background-color: var(--surface-color);
   color: var(--text-secondary);
@@ -27,6 +30,7 @@
   transition: all var(--transition-speed) ease;
   font-size: 0.875rem;
   font-weight: 700;
+  user-select: none;
 }
 
 .category-chip:hover {
@@ -45,4 +49,45 @@
 
 body.theme-light .category-chip.active {
     box-shadow: 0 2px 8px rgba(42, 105, 199, 0.4);
+}
+
+.category-chip.edit-active {
+  border-color: var(--accent-color);
+  background-color: var(--accent-soft-bg);
+  transform: scale(1.05);
+}
+
+.category-edit-btn {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background-color: var(--accent-color);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-strong);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+  animation: popIn 0.3s ease-out;
+}
+
+.category-edit-btn:hover {
+  transform: scale(1.1);
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }

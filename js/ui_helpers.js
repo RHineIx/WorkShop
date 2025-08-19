@@ -1,5 +1,6 @@
 // js/ui_helpers.js
 import { elements, openModal } from "./ui.js";
+
 export function showConfirmationModal({
   title,
   message,
@@ -47,7 +48,6 @@ export function showConfirmationModal({
       confirmModal.removeEventListener("close", onModalClose);
       if (confirmModal.open) confirmModal.close();
     };
-
     confirmOkBtn.addEventListener("click", onConfirm, { once: true });
     confirmCancelBtn.addEventListener("click", onCancel, { once: true });
     confirmModal.addEventListener("close", onModalClose, { once: true });
@@ -98,5 +98,48 @@ export function getQuantityChangeReason() {
     reasonModal.addEventListener("close", onModalClose, { once: true });
 
     openModal(reasonModal);
+  });
+}
+
+export function getNewCategoryName(oldName = "") {
+  return new Promise(resolve => {
+    const { categoryEditModal, categoryEditForm, newCategoryNameInput } = elements;
+
+    newCategoryNameInput.value = oldName;
+
+    const onSubmit = e => {
+      e.preventDefault();
+      const newName = newCategoryNameInput.value.trim();
+      cleanup();
+      resolve(newName);
+    };
+
+    const onCancel = () => {
+      cleanup();
+      resolve(null);
+    };
+
+    const onModalClose = () => {
+      cleanup();
+      resolve(null);
+    };
+
+    const cleanup = () => {
+      categoryEditForm.removeEventListener("submit", onSubmit);
+      categoryEditModal.querySelector("[data-close]").removeEventListener("click", onCancel);
+      categoryEditModal.removeEventListener("close", onModalClose);
+      if (categoryEditModal.open) categoryEditModal.close();
+    };
+
+    categoryEditForm.addEventListener("submit", onSubmit, { once: true });
+    categoryEditModal.querySelector("[data-close]").addEventListener("click", onCancel, { once: true });
+    categoryEditModal.addEventListener("close", onModalClose, { once: true });
+
+    openModal(categoryEditModal);
+
+    setTimeout(() => {
+      newCategoryNameInput.focus();
+      newCategoryNameInput.select();
+    }, 100);
   });
 }

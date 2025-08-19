@@ -2,37 +2,40 @@
 import { appState } from "../state.js";
 import { debounce } from "../utils.js";
 import { openDetailsModal } from "../ui.js";
-import { showStatus } from "../notifications.js";
-import { filterAndRenderItems, renderCategoryFilter } from "../renderer.js";
+import { showStatus, hideStatus } from "../notifications.js";
+import * as api from "../api.js";
+import { saveLocalData } from "../app.js";
+import { logAction, ACTION_TYPES } from "../logger.js";
+import {
+  filterAndRenderItems,
+  renderCategoryFilter,
+  getAllUniqueCategories,
+} from "../renderer.js";
 import { openSaleModal } from "./modalHandlers.js";
 import {
   enterSelectionMode,
   exitSelectionMode,
   toggleSelection,
 } from "./bulkActionHandlers.js";
-// State for pointer interactions to detect clicks vs. drags vs. long presses
+import { getNewCategoryName } from "../ui_helpers.js";
+
+// --- Unified State for Pointer Interactions ---
 let pointerDownTime = 0;
 let pointerDownX = 0;
 let pointerDownY = 0;
 let isDragging = false;
 
-// Configuration thresholds
-const MOVE_THRESHOLD = 16; // Pixels
+// --- Configuration Thresholds ---
+const MOVE_THRESHOLD = 10; // Pixels
 const LONG_PRESS_DURATION = 600; // Milliseconds
 
-/**
- * Handles the logic for a short click on a product card.
- * @param {HTMLElement} card The product card element that was clicked.
- * @param {EventTarget} target The specific element that was the click target.
- */
+// --- Handlers for Product Cards ---
 function handleCardClick(card, target) {
   if (appState.isSelectionModeActive) {
-    // In selection mode, any click (that isn't a button) toggles selection.
     if (!target.closest(".icon-btn")) {
       toggleSelection(card);
     }
   } else {
-    // In normal mode, clicks trigger actions.
     const itemId = card.dataset.id;
     if (target.closest(".sell-btn")) {
       const item = appState.inventory.items.find(i => i.id === itemId);
@@ -44,45 +47,144 @@ function handleCardClick(card, target) {
     } else if (target.closest(".details-btn")) {
       openDetailsModal(itemId);
     } else {
-      // A click anywhere else on the card opens details.
       openDetailsModal(itemId);
     }
   }
 }
 
-/**
- * Handles the logic for a long press on a product card.
- * @param {HTMLElement} card The product card element.
- * @param {Event} event The original pointer event.
- */
-function handleCardLongPress(card, event) {
-  // Long press shouldn't trigger if it's on an action button.
-  if (event.target.closest(".icon-btn")) {
-    return;
-  }
-
+function handleCardLongPress(card) {
   if (navigator.vibrate) {
     navigator.vibrate(50);
   }
-
   if (!appState.isSelectionModeActive) {
     enterSelectionMode(card);
   } else {
     toggleSelection(card);
   }
-
-  // Prevent any further events like context menu, etc.
-  event.preventDefault();
-  event.stopPropagation();
 }
 
-/**
- * Initializes the pointer state on pointerdown.
- * @param {PointerEvent} e The pointer event.
- */
+// --- Handlers for Category Chips ---
+function handleCategoryClick(chip) {
+  let category = chip.dataset.category;
+  if (appState.selectedCategory === category) {
+    category = "all";
+  }
+  appState.selectedCategory = category;
+  const currentActive = document.querySelector(".category-filter-bar .active");
+  if (currentActive) currentActive.classList.remove("active");
+
+  const newActiveChip = document.querySelector(
+    `.category-filter-bar [data-category="${category}"]`
+  );
+  if (newActiveChip) newActiveChip.classList.add("active");
+
+  filterAndRenderItems(true);
+}
+
+function handleCategoryLongPress(chip) {
+  if (chip.dataset.category === "all") return;
+  if (navigator.vibrate) navigator.vibrate(50);
+  activateCategoryEditMode(chip);
+}
+
+// --- Category Edit Logic ---
+function deactivateCategoryEditMode() {
+  const activeChip = document.querySelector(".category-chip.edit-active");
+  if (activeChip) {
+    const editBtn = activeChip.querySelector(".category-edit-btn");
+    if (editBtn) editBtn.remove();
+    activeChip.classList.remove("edit-active");
+  }
+  document.removeEventListener("click", clickAwayHandler);
+}
+
+function clickAwayHandler(e) {
+  if (!e.target.closest(".category-chip.edit-active")) {
+    deactivateCategoryEditMode();
+  }
+}
+
+async function handleCategoryRename(chip) {
+  const oldName = chip.dataset.category;
+  const newName = await getNewCategoryName(oldName);
+
+  deactivateCategoryEditMode();
+
+  if (!newName || newName.trim() === "" || newName === oldName) {
+    return;
+  }
+
+  const trimmedNewName = newName.trim();
+  const allCategories = getAllUniqueCategories();
+  if (
+    allCategories.some(
+      c =>
+        c.toLowerCase() === trimmedNewName.toLowerCase() &&
+        c.toLowerCase() !== oldName.toLowerCase()
+    )
+  ) {
+    showStatus("اسم الفئة هذا موجود بالفعل.", "error");
+    return;
+  }
+
+  const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
+
+  appState.inventory.items.forEach(item => {
+    if (item.categories && item.categories.includes(oldName)) {
+      item.categories = item.categories.map(c =>
+        c === oldName ? trimmedNewName : c
+      );
+    }
+  });
+  saveLocalData();
+  renderCategoryFilter();
+  filterAndRenderItems(true);
+
+  const syncToastId = showStatus("جاري تعديل الفئة...", "syncing");
+  try {
+    await api.saveInventory();
+    await logAction({
+      action: ACTION_TYPES.CATEGORY_RENAMED,
+      targetId: "categories",
+      targetName: "All Categories",
+      details: { from: oldName, to: trimmedNewName },
+    });
+    hideStatus(syncToastId);
+    showStatus("تم تعديل الفئة بنجاح!", "success");
+  } catch (error) {
+    console.error("Category rename sync failed, rolling back:", error);
+    appState.inventory = originalInventory;
+    saveLocalData();
+    renderCategoryFilter();
+    filterAndRenderItems(true);
+    hideStatus(syncToastId);
+    showStatus("فشل تعديل الفئة! تم استرجاع البيانات.", "error");
+  }
+}
+
+function activateCategoryEditMode(chip) {
+  deactivateCategoryEditMode();
+  // Deactivate any other active chip first
+  chip.classList.add("edit-active");
+
+  const editBtn = document.createElement("button");
+  editBtn.className = "category-edit-btn";
+  editBtn.title = "تعديل الاسم";
+  editBtn.innerHTML = `<iconify-icon icon="material-symbols:edit-outline-rounded" style="font-size: 16px;"></iconify-icon>`;
+
+  editBtn.addEventListener("click", e => {
+    e.stopPropagation();
+    handleCategoryRename(chip);
+  });
+  chip.appendChild(editBtn);
+  setTimeout(() => document.addEventListener("click", clickAwayHandler), 0);
+}
+
+// --- Generic Pointer Event Handlers ---
 function handlePointerDown(e) {
   if (e.pointerType === "mouse" && e.button !== 0) return;
-  if (!e.target.closest(".product-card")) return;
+  if (!e.target.closest(".product-card") && !e.target.closest(".category-chip"))
+    return;
 
   isDragging = false;
   pointerDownTime = Date.now();
@@ -90,52 +192,58 @@ function handlePointerDown(e) {
   pointerDownY = e.clientY;
 }
 
-/**
- * Detects if the pointer is being dragged.
- * @param {PointerEvent} e The pointer event.
- */
 function handlePointerMove(e) {
-  if (isDragging || pointerDownTime === 0) return;
+  if (pointerDownTime === 0 || isDragging) return;
   const deltaX = Math.abs(e.clientX - pointerDownX);
   const deltaY = Math.abs(e.clientY - pointerDownY);
+
   if (deltaX > MOVE_THRESHOLD || deltaY > MOVE_THRESHOLD) {
     isDragging = true;
-    pointerDownTime = 0; // Reset to cancel click/long-press
+    pointerDownTime = 0; // Invalidate press
   }
 }
 
-/**
- * The main event handler for pointerup, which orchestrates the interaction logic.
- * @param {PointerEvent} e The pointer event.
- */
 function handlePointerUp(e) {
-  const card = e.target.closest(".product-card");
-  if (!card || isDragging || pointerDownTime === 0) {
-    pointerDownTime = 0;
+  if (isDragging || pointerDownTime === 0) {
     isDragging = false;
+    pointerDownTime = 0;
     return;
   }
 
   const pressDuration = Date.now() - pointerDownTime;
-  pointerDownTime = 0;
+
+  const card = e.target.closest(".product-card");
+  const chip = e.target.closest(".category-chip");
   if (pressDuration >= LONG_PRESS_DURATION) {
-    handleCardLongPress(card, e);
+    if (card) handleCardLongPress(card);
+    if (chip) handleCategoryLongPress(chip);
   } else {
-    handleCardClick(card, e.target);
+    if (card) handleCardClick(card, e.target);
+    if (chip) handleCategoryClick(chip);
   }
+
+  pointerDownTime = 0;
 }
 
 export function setupInventoryListeners(elements) {
   const clearSearchBtn = document.getElementById("clear-search-btn");
 
-  // --- Event Delegation for the entire inventory grid ---
+  // --- Main Grid Listeners ---
   elements.inventoryGrid.addEventListener("pointerdown", handlePointerDown);
   elements.inventoryGrid.addEventListener("pointermove", handlePointerMove);
   elements.inventoryGrid.addEventListener("pointerup", handlePointerUp);
-  // Prevent context menu on long press (especially on mobile)
   elements.inventoryGrid.addEventListener("contextmenu", e =>
     e.preventDefault()
   );
+
+  // --- Category Bar Listeners ---
+  elements.categoryFilterBar.addEventListener("pointerdown", handlePointerDown);
+  elements.categoryFilterBar.addEventListener("pointermove", handlePointerMove);
+  elements.categoryFilterBar.addEventListener("pointerup", handlePointerUp);
+  elements.categoryFilterBar.addEventListener("contextmenu", e =>
+    e.preventDefault()
+  );
+  // --- Other Control Listeners ---
   elements.searchBar.addEventListener(
     "input",
     debounce(e => {
@@ -145,7 +253,6 @@ export function setupInventoryListeners(elements) {
       filterAndRenderItems(true);
     }, 300)
   );
-
   clearSearchBtn.addEventListener("click", () => {
     elements.searchBar.value = "";
     appState.searchTerm = "";
@@ -153,7 +260,6 @@ export function setupInventoryListeners(elements) {
     filterAndRenderItems(true);
     elements.searchBar.focus();
   });
-
   elements.sortOptions.addEventListener("change", e => {
     appState.currentSortOption = e.target.value;
     filterAndRenderItems(true);
@@ -175,34 +281,6 @@ export function setupInventoryListeners(elements) {
       appState.selectedCategory = "all";
       renderCategoryFilter();
     }
-    filterAndRenderItems(true);
-  });
-  elements.categoryFilterBar.addEventListener("click", e => {
-    const chip = e.target.closest(".category-chip");
-    if (!chip) return;
-
-    let category = chip.dataset.category;
-
-    // If the clicked category is already active, reset to 'all'
-    if (appState.selectedCategory === category) {
-      category = "all";
-    }
-
-    appState.selectedCategory = category;
-
-    // Visually update the chips
-    const currentActive = elements.categoryFilterBar.querySelector(".active");
-    if (currentActive) {
-      currentActive.classList.remove("active");
-    }
-    // Find the new chip to activate (which might be the "all" chip)
-    const newActiveChip = elements.categoryFilterBar.querySelector(
-      `[data-category="${category}"]`
-    );
-    if (newActiveChip) {
-      newActiveChip.classList.add("active");
-    }
-
     filterAndRenderItems(true);
   });
 }

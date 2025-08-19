@@ -154,11 +154,15 @@ export const elements = {
   bulkSupplierModal: document.getElementById("bulk-supplier-modal"),
   bulkSupplierForm: document.getElementById("bulk-supplier-form"),
   bulkSupplierSelect: document.getElementById("bulk-item-supplier"),
-  // NEW: Elements for the interactive bulk category modal
   bulkSelectedCategoriesContainer: document.getElementById("bulk-selected-categories-container"),
   bulkCategoryInputField: document.getElementById("bulk-category-input-field"),
   bulkAddCategoryBtn: document.getElementById("bulk-add-category-btn"),
   bulkAvailableCategoriesList: document.getElementById("bulk-available-categories-list"),
+
+  // Category Edit Modal
+  categoryEditModal: document.getElementById("category-edit-modal"),
+  categoryEditForm: document.getElementById("category-edit-form"),
+  newCategoryNameInput: document.getElementById("new-category-name"),
 
   // Floating Action Buttons
   scrollToTopBtn: document.getElementById("scroll-to-top-btn"),
@@ -169,9 +173,7 @@ export const elements = {
   confirmMessage: document.getElementById("confirm-message"),
   confirmOkBtn: document.getElementById("confirm-ok-btn"),
   confirmCancelBtn: document.getElementById("confirm-cancel-btn"),
-  confirmModalIcon: document.querySelector(
-    "#confirm-modal .confirm-modal-icon"
-  ),
+  confirmModalIcon: document.getElementById("confirm-modal-icon"),
 
   // Reason Modal Elements
   reasonModal: document.getElementById("reason-modal"),

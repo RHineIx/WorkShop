@@ -2,7 +2,6 @@
 import { appState } from './state.js';
 import * as api from './api.js';
 import { saveLocalData } from './app.js';
-
 export const ACTION_TYPES = {
     ITEM_CREATED: 'ITEM_CREATED',
     ITEM_DELETED: 'ITEM_DELETED',
@@ -15,8 +14,8 @@ export const ACTION_TYPES = {
     NOTES_UPDATED: 'NOTES_UPDATED',
     IMAGE_UPDATED: 'IMAGE_UPDATED',
     SUPPLIER_UPDATED: 'SUPPLIER_UPDATED',
+    CATEGORY_RENAMED: 'CATEGORY_RENAMED',
 };
-
 /**
  * Creates a log entry and saves it.
  * This function will now throw an error if the remote save fails.
@@ -36,7 +35,6 @@ export async function logAction({ action, targetId, targetName, details = {} }) 
         targetName,
         details,
     };
-
     appState.auditLog.push(newLogEntry);
     
     saveLocalData();
