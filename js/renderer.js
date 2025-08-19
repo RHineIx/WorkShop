@@ -440,7 +440,12 @@ function renderSalesLog(filteredSales) {
     });
     mainFragment.appendChild(dayGroupElement);
   }
-  salesLogContent.appendChild(mainFragment);
+  
+  const wrapperDiv = document.createElement("div");
+  wrapperDiv.appendChild(mainFragment);
+  
+  salesLogContent.innerHTML = "";
+  salesLogContent.appendChild(wrapperDiv);
 }
 
 export const renderDashboard = () => {
@@ -752,4 +757,4 @@ export function renderAuditLog() {
     fragment.appendChild(clone);
   });
   elements.auditLogList.appendChild(fragment);
-        }
+}
