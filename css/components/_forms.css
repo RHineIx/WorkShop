@@ -2,10 +2,7 @@
 
 /* --- All Form & Input Styles --- */
 
-#item-form label,
-#sync-form label,
-#sale-form label,
-#supplier-form label {
+.modal-form label {
   display: block;
   font-size: 0.875rem; /* 14px */
   font-weight: 600;
@@ -13,17 +10,9 @@
   color: var(--text-secondary);
 }
 
-#item-form input,
-#item-form textarea,
-#item-form select,
-#sync-form input,
-#sale-form input,
-#sale-form textarea,
-#supplier-form input,
-#bulk-category-form input,
-#bulk-supplier-form select,
-#category-edit-form input,
-#quantity-change-reason {
+.modal-form input,
+.modal-form textarea,
+.modal-form select {
   width: 100%;
   padding: 0.75rem var(--spacing-md); /* 12px */
   font-family: var(--font-family);
@@ -35,27 +24,16 @@
   transition: all var(--transition-speed);
 }
 
-#item-form input:focus,
-#item-form textarea:focus,
-#item-form select:focus,
-#sync-form input:focus,
-#sale-form input:focus,
-#sale-form textarea:focus,
-#supplier-form input:focus,
-#bulk-category-form input:focus,
-#bulk-supplier-form select:focus,
-#category-edit-form input:focus,
-#quantity-change-reason:focus {
+.modal-form input:focus,
+.modal-form textarea:focus,
+.modal-form select:focus {
   outline: none;
   border-color: var(--accent-color);
   box-shadow: 0 0 0 0.1875rem var(--accent-soft-bg); /* 3px */
 }
 
-#item-form textarea,
-#sale-form textarea,
-#quantity-change-reason {
-  min-height: 5rem;
-  /* 80px */
+.modal-form textarea {
+  min-height: 5rem; /* 80px */
   width: 100%;
   resize: vertical;
 }
@@ -134,8 +112,7 @@ legend {
 }
 
 .image-preview-wrapper {
-  width: 7.5rem;
-  /* 120px */
+  width: 7.5rem; /* 120px */
   height: 7.5rem; /* 120px */
   border-radius: 50%;
   position: relative;
@@ -159,8 +136,7 @@ legend {
   color: var(--text-secondary);
 }
 #image-placeholder iconify-icon {
-  font-size: 3.125rem;
-  /* 50px */
+  font-size: 3.125rem; /* 50px */
 }
 
 .quantity-controls input[type="number"] {
@@ -209,8 +185,7 @@ select {
 
 .currency-symbol {
   position: absolute;
-  left: 0.75rem;
-  /* 12px */
+  left: 0.75rem; /* 12px */
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-secondary);
@@ -218,8 +193,7 @@ select {
 }
 
 .input-with-currency input {
-  padding-left: 2.8125rem !important;
-  /* 45px */
+  padding-left: 2.8125rem !important; /* 45px */
 }
 
 #sale-date::-webkit-calendar-picker-indicator {
@@ -229,16 +203,14 @@ select {
 
 #sale-date {
   text-align: center;
-  padding-left: 0.75rem;
-  /* 12px */
+  padding-left: 0.75rem; /* 12px */
 }
 
 /* --- REFACTORED: Sale Modal Layout --- */
 #sale-form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  /* Consistent vertical spacing */
+  gap: 1.25rem; /* Consistent vertical spacing */
 }
 
 #sale-form .form-group label {
@@ -288,8 +260,7 @@ select {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 1.125rem;
-  /* 18px */
+  font-size: 1.125rem; /* 18px */
 }
 
 .total-label {
@@ -300,8 +271,7 @@ select {
 .total-value {
   font-weight: bold;
   color: var(--accent-color);
-  font-size: 1.25rem;
-  /* 20px */
+  font-size: 1.25rem; /* 20px */
 }
 
 @media (max-width: 30rem) {
