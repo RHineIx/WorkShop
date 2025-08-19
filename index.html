@@ -185,7 +185,7 @@
               <button class="time-filter-btn active" data-period="today">
                 يومي
               </button>
-              <button class="time-filter-btn" data-period="week">أسبوعي</button>
+              <button class="time-filter-btn" data-requiredweek">أسبوعي</button>
               <button class="time-filter-btn" data-period="month">شهري</button>
             </div>
           </div>
@@ -446,7 +446,7 @@
                 <div class="form-group">
                   <label for="item-sku">SKU (رقم المنتج)</label>
                   <div class="sku-container">
-                    <input type="text" autocomplete="off" id="item-sku" required />
+                    <input type="text" autocomplete="off" id="item-sku" required dir="ltr" />
                     <button
                       type="button"
                       id="regenerate-sku-btn"
@@ -578,6 +578,7 @@
                     type="number"
                     id="item-cost-price-iqd"
                     value="0"
+                    dir="ltr"
                     step="any"
                     min="0"
                   />
@@ -588,6 +589,7 @@
                     type="number"
                     id="item-sell-price-iqd"
                     value="0"
+                    dir="ltr"
                     step="any"
                     min="0"
                   />
@@ -598,6 +600,7 @@
                     type="number"
                     id="item-cost-price-usd"
                     value="0"
+                    dir="ltr"
                     step="any"
                     min="0"
                   />
@@ -608,6 +611,7 @@
                     type="number"
                     id="item-sell-price-usd"
                     value="0"
+                    dir="ltr"
                     step="any"
                     min="0"
                   />
