@@ -82,7 +82,10 @@ function handleCategoryClick(chip) {
 }
 
 function handleCategoryLongPress(chip) {
-  if (chip.dataset.category === "all") return;
+  const category = chip.dataset.category;
+  if (category === "all" || category === "_uncategorized_") {
+    return;
+  }
   if (navigator.vibrate) navigator.vibrate(50);
   activateCategoryEditMode(chip);
 }
@@ -283,4 +286,4 @@ export function setupInventoryListeners(elements) {
     }
     filterAndRenderItems(true);
   });
-}
+                                                              }
