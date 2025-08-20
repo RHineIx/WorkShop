@@ -144,10 +144,10 @@ function handleUrlShortcuts() {
   }, 100);
 }
 
-function registerServiceWorker() {
+function registerServiceWorker(version = "latest") {
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker
-      .register("./sw.js")
+      .register(`./sw.js?v=${version}`)
       .then(registration => {
         console.log("ServiceWorker registration successful.");
 
@@ -191,7 +191,19 @@ function registerServiceWorker() {
 export async function initializeApp() {
   console.log("Initializing Inventory Management App...");
 
-  registerServiceWorker();
+  // Fetch version info first to use it for Service Worker registration
+  let versionData = { hash: new Date().getTime() }; // Fallback to timestamp
+  try {
+    const response = await fetch(`version.json?t=${new Date().getTime()}`);
+    if (response.ok) {
+      versionData = await response.json();
+      displayVersionInfo(versionData);
+    }
+  } catch (error) {
+    console.error("Could not fetch version info:", error);
+  }
+
+  registerServiceWorker(versionData.hash);
 
   const magicLinkProcessed = handleMagicLink();
 
@@ -204,15 +216,6 @@ export async function initializeApp() {
   const savedCurrency = localStorage.getItem("inventoryAppCurrency") || "IQD";
   appState.activeCurrency = savedCurrency;
   setTheme(savedTheme);
-  try {
-    const response = await fetch("version.json?t=" + Date.now());
-    if (response.ok) {
-      const versionData = await response.json();
-      displayVersionInfo(versionData);
-    }
-  } catch (error) {
-    console.error("Could not fetch version info:", error);
-  }
 
   renderInventorySkeleton();
   if (appState.syncConfig) {
