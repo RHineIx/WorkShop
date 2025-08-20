@@ -346,12 +346,10 @@ export function renderCategoryFilter() {
     allButton.classList.add("active");
   }
   fragment.appendChild(allButton);
-
   // "Uncategorized" button
   const hasUncategorized = appState.inventory.items.some(
     item => !item.categories || item.categories.length === 0
   );
-
   if (hasUncategorized) {
     const uncategorizedButton = document.createElement("button");
     uncategorizedButton.className = "category-chip";
@@ -456,6 +454,7 @@ function renderSalesLog(filteredSales) {
         hour: "numeric",
         minute: "numeric",
         hour12: true,
+        numberingSystem: "latn",
       });
       saleItemElement.querySelector(
         ".sale-datetime"
@@ -465,10 +464,10 @@ function renderSalesLog(filteredSales) {
     });
     mainFragment.appendChild(dayGroupElement);
   }
-  
+
   const wrapperDiv = document.createElement("div");
   wrapperDiv.appendChild(mainFragment);
-  
+
   salesLogContent.innerHTML = "";
   salesLogContent.appendChild(wrapperDiv);
 }
@@ -541,7 +540,6 @@ export const renderDashboard = () => {
 
   renderSalesLog(filteredSales);
 };
-
 export function renderSupplierList() {
   elements.supplierListContainer.innerHTML = "";
   if (appState.suppliers.length === 0) {
@@ -560,7 +558,7 @@ export function renderSupplierList() {
         <button class="icon-btn edit-supplier-btn" data-id="${
           supplier.id
         }" title="تعديل المورّد">
-          <iconify-icon icon="material-symbols:edit-outline-rounded"></iconify-icon>
+           <iconify-icon icon="material-symbols:edit-outline-rounded"></iconify-icon>
         </button>
         <button class="icon-btn danger-btn delete-supplier-btn" data-id="${
           supplier.id
@@ -783,4 +781,4 @@ export function renderAuditLog() {
     fragment.appendChild(clone);
   });
   elements.auditLogList.appendChild(fragment);
-      }
+}
