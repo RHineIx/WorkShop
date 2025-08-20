@@ -105,18 +105,15 @@ self.addEventListener("fetch", event => {
     event.respondWith(
       fetch(request)
         .then(networkResponse => {
-          // If we get a valid response, cache it and return it
           if (networkResponse.ok) {
             return caches.open(DATA_CACHE_NAME).then(cache => {
               cache.put(request, networkResponse.clone());
               return networkResponse;
             });
           }
-          // If the server returns an error, try the cache
           return caches.match(request);
         })
         .catch(() => {
-          // If the network request fails (offline), try to get it from the cache
           console.log("Service Worker: Network failed, trying cache for", request.url);
           return caches.match(request);
         })
@@ -124,21 +121,18 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // Strategy for App Shell & other assets (Cache-First, Network-Fallback)
+  // Strategy for App Shell & other assets (Cache-First, Network-Fallback with App Shell Fallback)
   event.respondWith(
     caches.match(request).then(cachedResponse => {
-      // Return the cached response if it exists
       if (cachedResponse) {
         return cachedResponse;
       }
 
-      // If not in cache, fetch from the network
-      return fetch(request).then(networkResponse => {
-          // Don't cache opaque responses (e.g., from CDNs without CORS)
+      return fetch(request)
+        .then(networkResponse => {
           if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
               return networkResponse;
           }
-          // Cache the new response
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then(cache => {
               cache.put(request, responseToCache);
@@ -146,9 +140,16 @@ self.addEventListener("fetch", event => {
           return networkResponse;
         })
         .catch(() => {
-          // If both cache and network fail, show the offline page for navigation requests
+          // If network fails, and it's a navigation request, try to serve the main app shell.
           if (request.mode === 'navigate') {
-            return caches.match('/offline.html');
+            return caches.match('/index.html').then(appShellResponse => {
+              // If the app shell is cached, return it.
+              if (appShellResponse) {
+                return appShellResponse;
+              }
+              // As a last resort, if even the app shell isn't cached, show the generic offline page.
+              return caches.match('/offline.html');
+            });
           }
         });
     })
