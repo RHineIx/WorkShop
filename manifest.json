@@ -1,11 +1,11 @@
 {
-  "name": "إدارة مخزون ورشة المفاتيح",
-  "short_name": "إدارة المخزون",
+  "name": "MASTER KEY",
+  "short_name": "M-KEY",
   "description": "تطبيق ويب لإدارة مخزون الورشة",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#f4f7f9",
-  "theme_color": "#2a69c7",
+  "theme_color": "#3a3e42",
   "icons": [
     {
       "src": "icons/icon-192x192.png",
