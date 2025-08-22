@@ -1,7 +1,7 @@
 // js/handlers/modalHandlers.js
 import { appState } from "../state.js";
 import * as api from "../api.js";
-import { generateUniqueSKU, compressImage } from "../utils.js";
+import { generateUniqueSKU, compressImage, debounce } from "../utils.js";
 import { saveLocalData } from "../app.js";
 import {
   showConfirmationModal,
@@ -177,6 +177,7 @@ async function handleSaleFormSubmit(e) {
     document.getElementById("sale-quantity").value,
     10
   );
+
   if (!item || item.quantity < quantityToSell || quantityToSell <= 0) {
     showStatus("خطأ في البيانات أو الكمية غير متوفرة.", "error");
     saveButton.disabled = false;
@@ -202,6 +203,7 @@ async function handleSaleFormSubmit(e) {
     notes: document.getElementById("sale-notes").value,
     timestamp: new Date().toISOString(),
   };
+
   const syncToastId = showStatus("جاري تسجيل البيع...", "syncing");
 
   item.quantity -= quantityToSell;
@@ -210,6 +212,7 @@ async function handleSaleFormSubmit(e) {
   saveLocalData();
   filterAndRenderItems(true);
   elements.saleModal.close();
+
   try {
     await api.saveInventory();
     await api.saveSales();
@@ -508,6 +511,7 @@ export function openItemModal(itemId = null) {
         item.sellPriceUsd || 0;
       document.getElementById("item-notes").value = item.notes;
       populateSupplierDropdown(item.supplierId);
+
       if (item.imagePath) {
         if (item.imagePath.startsWith("http")) {
           elements.imagePreview.src = item.imagePath;
@@ -541,16 +545,20 @@ export function openSaleModal(itemId) {
   elements.saleForm.reset();
   elements.saleItemIdInput.value = item.id;
   elements.saleItemName.textContent = item.name;
+
   const saleQuantityInput = document.getElementById("sale-quantity");
   const salePriceInput = document.getElementById("sale-price");
+
   const isIQD = appState.activeCurrency === "IQD";
   const price = isIQD ? item.sellPriceIqd || 0 : item.sellPriceUsd || 0;
   const symbol = isIQD ? "د.ع" : "$";
+
   elements.salePriceCurrency.textContent = symbol;
   salePriceInput.value = price;
   salePriceInput.step = isIQD ? "250" : "0.01";
   saleQuantityInput.value = 1;
   saleQuantityInput.max = item.quantity;
+
   const today = new Date();
   const year = today.getFullYear();
   const month = String(today.getMonth() + 1).padStart(2, "0");
@@ -571,6 +579,7 @@ function handleImageSelection(file) {
   reader.onload = event => {
     const { cropperModal, cropperImage, paddingDisplay, bgColorInput } =
       elements;
+
     cropperPadding = 0.1;
     cropperBgColor = "#FFFFFF";
     paddingDisplay.textContent = `${Math.round(cropperPadding * 100)}%`;
@@ -578,6 +587,7 @@ function handleImageSelection(file) {
 
     cropperImage.src = event.target.result;
     openModal(cropperModal);
+
     if (cropper) {
       cropper.destroy();
     }
@@ -586,7 +596,7 @@ function handleImageSelection(file) {
       aspectRatio: 1,
       viewMode: 1,
       background: false,
-      autoCropArea: 0.8,
+      autoCropArea: 1,
     });
   };
   reader.readAsDataURL(file);
@@ -611,19 +621,23 @@ export function setupModalListeners(elements) {
       categoryInputManager = null;
     }
   });
+
   elements.cancelItemBtn.addEventListener("click", () =>
     elements.itemModal.close()
   );
+
   elements.regenerateSkuBtn.addEventListener("click", () => {
     const existingSkus = new Set(
       appState.inventory.items.map(item => item.sku)
     );
     document.getElementById("item-sku").value = generateUniqueSKU(existingSkus);
   });
+
   elements.imageUploadInput.addEventListener("change", e => {
     handleImageSelection(e.target.files[0]);
     e.target.value = "";
   });
+
   elements.pasteImageBtn.addEventListener("click", async () => {
     try {
       if (!navigator.clipboard?.read) {
@@ -653,6 +667,14 @@ export function setupModalListeners(elements) {
       showStatus(`فشل لصق الصورة: ${error.message}`, "error");
     }
   });
+
+  const cropperContainer = elements.cropperModal.querySelector(
+    ".cropper-image-container"
+  );
+  if (cropperContainer) {
+    cropperContainer.addEventListener("contextmenu", e => e.preventDefault());
+  }
+
   document.getElementById("cancel-crop-btn").addEventListener("click", () => {
     elements.cropperModal.close();
     if (cropper) {
@@ -660,6 +682,7 @@ export function setupModalListeners(elements) {
       cropper = null;
     }
   });
+
   document.getElementById("crop-image-btn").addEventListener("click", () => {
     if (!cropper) return;
     const croppedCanvas = cropper.getCroppedCanvas();
@@ -696,6 +719,7 @@ export function setupModalListeners(elements) {
       0.8
     );
   });
+
   elements.decreasePaddingBtn.addEventListener("click", () => {
     if (cropperPadding > 0) {
       cropperPadding = Math.max(0, cropperPadding - 0.05);
@@ -704,6 +728,7 @@ export function setupModalListeners(elements) {
       )}%`;
     }
   });
+
   elements.increasePaddingBtn.addEventListener("click", () => {
     if (cropperPadding < 0.4) {
       cropperPadding = Math.min(0.4, cropperPadding + 0.05);
@@ -712,6 +737,7 @@ export function setupModalListeners(elements) {
       )}%`;
     }
   });
+
   elements.bgColorInput.addEventListener(
     "input",
     e => (cropperBgColor = e.target.value)
@@ -721,12 +747,14 @@ export function setupModalListeners(elements) {
   const costUsdInput = document.getElementById("item-cost-price-usd");
   const sellIqdInput = document.getElementById("item-sell-price-iqd");
   const sellUsdInput = document.getElementById("item-sell-price-usd");
+
   costIqdInput.addEventListener("input", () =>
     handlePriceConversion(costIqdInput, costUsdInput)
   );
   sellIqdInput.addEventListener("input", () =>
     handlePriceConversion(sellIqdInput, sellUsdInput)
   );
+
   elements.detailsIncreaseBtn.addEventListener("click", () => {
     const item = appState.inventory.items.find(
       i => i.id === appState.currentItemId
@@ -739,6 +767,7 @@ export function setupModalListeners(elements) {
       item.quantity = qty;
     }
   });
+
   elements.detailsDecreaseBtn.addEventListener("click", () => {
     const item = appState.inventory.items.find(
       i => i.id === appState.currentItemId
@@ -753,6 +782,7 @@ export function setupModalListeners(elements) {
       }
     }
   });
+
   elements.detailsQuantityValue.addEventListener("change", e => {
     const item = appState.inventory.items.find(
       i => i.id === appState.currentItemId
@@ -767,6 +797,7 @@ export function setupModalListeners(elements) {
       }
     }
   });
+
   elements.closeDetailsModalBtn.addEventListener("click", async () => {
     const itemBeforeEdit = appState.itemStateBeforeEdit;
     const currentItem = appState.inventory.items.find(
@@ -806,10 +837,12 @@ export function setupModalListeners(elements) {
     appState.currentItemId = null;
     elements.detailsModal.close();
   });
+
   elements.detailsEditBtn.addEventListener("click", () => {
     elements.detailsModal.close();
     openItemModal(appState.currentItemId);
   });
+
   elements.detailsDeleteBtn.addEventListener("click", async () => {
     const itemToDelete = appState.inventory.items.find(
       item => item.id === appState.currentItemId
@@ -886,6 +919,7 @@ export function setupModalListeners(elements) {
   elements.cancelSaleBtn.addEventListener("click", () =>
     elements.saleModal.close()
   );
+
   elements.saleIncreaseBtn.addEventListener("click", () => {
     const quantityInput = elements.saleQuantityInput;
     const max = parseInt(quantityInput.max, 10);
@@ -903,6 +937,7 @@ export function setupModalListeners(elements) {
       updateSaleTotal();
     }
   });
+
   elements.saleQuantityInput.addEventListener("input", updateSaleTotal);
   document
     .getElementById("sale-price")
