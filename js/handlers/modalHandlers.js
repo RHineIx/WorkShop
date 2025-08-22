@@ -1,7 +1,7 @@
 // js/handlers/modalHandlers.js
 import { appState } from "../state.js";
 import * as api from "../api.js";
-import { generateUniqueSKU, compressImage } from "../utils.js";
+import { generateUniqueSKU, compressImage, debounce } from "../utils.js";
 import { saveLocalData } from "../app.js";
 import {
   showConfirmationModal,
@@ -27,6 +27,7 @@ let cropper = null;
 let cropperPadding = 0.1;
 let cropperBgColor = "#FFFFFF";
 let categoryInputManager = null;
+
 function setupCategoryInput(currentItemCategories = []) {
   const {
     selectedCategoriesContainer,
@@ -35,15 +36,19 @@ function setupCategoryInput(currentItemCategories = []) {
     addCategoryBtn,
     categoryPillTemplate,
   } = elements;
+
   let selectedCategories = new Set(currentItemCategories);
   const allCategories = new Set(getAllUniqueCategories());
+
   const render = () => {
     selectedCategoriesContainer.innerHTML = "";
     availableCategoriesList.innerHTML = "";
+
     selectedCategories.forEach(text => {
       const pill = createPill(text, true);
       selectedCategoriesContainer.appendChild(pill);
     });
+
     allCategories.forEach(text => {
       if (!selectedCategories.has(text)) {
         const pill = createPill(text, false);
@@ -76,15 +81,18 @@ function setupCategoryInput(currentItemCategories = []) {
       render();
     }
   };
+
   const removeCategory = text => {
     selectedCategories.delete(text);
     render();
   };
+
   const handleAddAction = () => {
     addCategory(categoryInputField.value);
     categoryInputField.value = "";
     categoryInputField.focus();
   };
+
   const handleEnterKey = e => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -169,6 +177,7 @@ async function handleSaleFormSubmit(e) {
     document.getElementById("sale-quantity").value,
     10
   );
+
   if (!item || item.quantity < quantityToSell || quantityToSell <= 0) {
     showStatus("خطأ في البيانات أو الكمية غير متوفرة.", "error");
     saveButton.disabled = false;
@@ -194,6 +203,7 @@ async function handleSaleFormSubmit(e) {
     notes: document.getElementById("sale-notes").value,
     timestamp: new Date().toISOString(),
   };
+
   const syncToastId = showStatus("جاري تسجيل البيع...", "syncing");
 
   item.quantity -= quantityToSell;
@@ -202,6 +212,7 @@ async function handleSaleFormSubmit(e) {
   saveLocalData();
   filterAndRenderItems(true);
   elements.saleModal.close();
+
   try {
     await api.saveInventory();
     await api.saveSales();
@@ -238,6 +249,235 @@ async function handleSaleFormSubmit(e) {
   }
 }
 
+function _getItemDataFromForm(itemId) {
+  const categories = categoryInputManager.getSelectedCategories();
+  return {
+    id: itemId || `item_${Date.now()}`,
+    sku: document.getElementById("item-sku").value,
+    name: document.getElementById("item-name").value,
+    categories: categories,
+    oemPartNumber: document.getElementById("item-oem-pn").value.trim(),
+    compatiblePartNumber: document
+      .getElementById("item-compatible-pn")
+      .value.trim(),
+    quantity: parseInt(document.getElementById("item-quantity").value, 10) || 0,
+    alertLevel:
+      parseInt(document.getElementById("item-alert-level").value, 10) || 5,
+    costPriceIqd:
+      parseFloat(document.getElementById("item-cost-price-iqd").value) || 0,
+    sellPriceIqd:
+      parseFloat(document.getElementById("item-sell-price-iqd").value) || 0,
+    costPriceUsd:
+      parseFloat(document.getElementById("item-cost-price-usd").value) || 0,
+    sellPriceUsd:
+      parseFloat(document.getElementById("item-sell-price-usd").value) || 0,
+    notes: document.getElementById("item-notes").value,
+    supplierId: document.getElementById("item-supplier").value || null,
+  };
+}
+
+async function _handleImageUploadAndUpdateState(itemData) {
+  if (!appState.selectedImageFile) {
+    return itemData;
+  }
+
+  const compressedBlob = await compressImage(appState.selectedImageFile);
+  const blobUrl = URL.createObjectURL(compressedBlob);
+  updateProductCardImage(itemData.id, blobUrl);
+
+  const imagePath = await api.uploadImageToGitHub(
+    compressedBlob,
+    appState.selectedImageFile.name
+  );
+  itemData.imagePath = imagePath;
+
+  const finalItemIndex = appState.inventory.items.findIndex(
+    i => i.id === itemData.id
+  );
+  if (finalItemIndex !== -1) {
+    appState.inventory.items[finalItemIndex].imagePath = imagePath;
+    appState.imageCache.set(imagePath, blobUrl);
+  }
+
+  return itemData;
+}
+
+function _logItemChanges(originalItem, updatedItem) {
+  const loggingPromises = [];
+
+  if (!originalItem) {
+    loggingPromises.push(
+      logAction({
+        action: ACTION_TYPES.ITEM_CREATED,
+        targetId: updatedItem.id,
+        targetName: updatedItem.name,
+      })
+    );
+    return;
+  }
+
+  if (originalItem.name !== updatedItem.name) {
+    loggingPromises.push(
+      logAction({
+        action: ACTION_TYPES.NAME_UPDATED,
+        targetId: updatedItem.id,
+        targetName: updatedItem.name,
+        details: { from: originalItem.name, to: updatedItem.name },
+      })
+    );
+  }
+  if (originalItem.sku !== updatedItem.sku) {
+    loggingPromises.push(
+      logAction({
+        action: ACTION_TYPES.SKU_UPDATED,
+        targetId: updatedItem.id,
+        targetName: updatedItem.name,
+        details: { from: originalItem.sku, to: updatedItem.sku },
+      })
+    );
+  }
+  if (
+    JSON.stringify(originalItem.categories || []) !==
+    JSON.stringify(updatedItem.categories)
+  ) {
+    loggingPromises.push(
+      logAction({
+        action: ACTION_TYPES.CATEGORY_UPDATED,
+        targetId: updatedItem.id,
+        targetName: updatedItem.name,
+        details: {
+          from: originalItem.categories || [],
+          to: updatedItem.categories,
+        },
+      })
+    );
+  }
+  if (originalItem.quantity !== updatedItem.quantity) {
+    loggingPromises.push(
+      logAction({
+        action: ACTION_TYPES.QUANTITY_UPDATED,
+        targetId: updatedItem.id,
+        targetName: updatedItem.name,
+        details: {
+          from: originalItem.quantity,
+          to: updatedItem.quantity,
+          reason: "تعديل مباشر",
+        },
+      })
+    );
+  }
+  if (originalItem.sellPriceIqd !== updatedItem.sellPriceIqd) {
+    loggingPromises.push(
+      logAction({
+        action: ACTION_TYPES.PRICE_UPDATED,
+        targetId: updatedItem.id,
+        targetName: updatedItem.name,
+        details: {
+          from: `${originalItem.sellPriceIqd} د.ع`,
+          to: `${updatedItem.sellPriceIqd} د.ع`,
+        },
+      })
+    );
+  }
+  if (originalItem.notes !== updatedItem.notes) {
+    loggingPromises.push(
+      logAction({
+        action: ACTION_TYPES.NOTES_UPDATED,
+        targetId: updatedItem.id,
+        targetName: updatedItem.name,
+      })
+    );
+  }
+  if (originalItem.imagePath !== updatedItem.imagePath) {
+    loggingPromises.push(
+      logAction({
+        action: ACTION_TYPES.IMAGE_UPDATED,
+        targetId: updatedItem.id,
+        targetName: updatedItem.name,
+      })
+    );
+  }
+  if (originalItem.supplierId !== updatedItem.supplierId) {
+    loggingPromises.push(
+      logAction({
+        action: ACTION_TYPES.SUPPLIER_UPDATED,
+        targetId: updatedItem.id,
+        targetName: updatedItem.name,
+      })
+    );
+  }
+
+  if (loggingPromises.length > 0) {
+    Promise.all(loggingPromises).catch(logError => {
+      console.error("Audit log sync failed:", logError);
+      showStatus("تم حفظ المنتج، لكن فشل تحديث سجل النشاط.", "warning");
+    });
+  }
+}
+
+async function handleItemFormSubmit(e) {
+  e.preventDefault();
+  const saveButton = document.getElementById("save-item-btn");
+  saveButton.disabled = true;
+
+  const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
+  const itemId = document.getElementById("item-id").value;
+  const itemIndex = appState.inventory.items.findIndex(i => i.id === itemId);
+  const originalItemForLog =
+    itemIndex !== -1 ? { ...appState.inventory.items[itemIndex] } : null;
+
+  let itemData = _getItemDataFromForm(itemId);
+  if (originalItemForLog) {
+    itemData.imagePath = originalItemForLog.imagePath;
+  }
+
+  const syncToastId = showStatus(
+    appState.selectedImageFile ? "جاري رفع الصورة..." : "جاري حفظ المنتج...",
+    "syncing"
+  );
+
+  if (itemIndex !== -1) {
+    appState.inventory.items[itemIndex] = itemData;
+  } else {
+    appState.inventory.items.push(itemData);
+  }
+
+  elements.itemModal.close();
+
+  try {
+    itemData = await _handleImageUploadAndUpdateState(itemData);
+
+    saveLocalData();
+    filterAndRenderItems(true);
+    renderCategoryFilter();
+
+    await api.saveInventory();
+    hideStatus(syncToastId);
+    showStatus("تم الحفظ والمزامنة بنجاح!", "success");
+
+    _logItemChanges(originalItemForLog, itemData);
+  } catch (error) {
+    console.error("Item form sync failed, rolling back:", error);
+    appState.inventory = originalInventory;
+    saveLocalData();
+    filterAndRenderItems(true);
+    renderCategoryFilter();
+    hideStatus(syncToastId);
+
+    if (error instanceof api.ConflictError) {
+      showStatus("حدث تعارض قم بتحديث الصفحة اولاً.", "error", {
+        duration: 0,
+        showRefreshButton: true,
+      });
+    } else {
+      showStatus("فشلت المزامنة! تم استرجاع البيانات.", "error");
+    }
+  } finally {
+    saveButton.disabled = false;
+    appState.selectedImageFile = null;
+  }
+}
+
 export function openItemModal(itemId = null) {
   elements.itemForm.reset();
   appState.selectedImageFile = null;
@@ -245,6 +485,7 @@ export function openItemModal(itemId = null) {
   elements.imagePreview.classList.add("image-preview-hidden");
   elements.imagePlaceholder.style.display = "flex";
   elements.regenerateSkuBtn.style.display = "none";
+
   if (itemId) {
     const item = appState.inventory.items.find(i => i.id === itemId);
     if (item) {
@@ -270,6 +511,7 @@ export function openItemModal(itemId = null) {
         item.sellPriceUsd || 0;
       document.getElementById("item-notes").value = item.notes;
       populateSupplierDropdown(item.supplierId);
+
       if (item.imagePath) {
         if (item.imagePath.startsWith("http")) {
           elements.imagePreview.src = item.imagePath;
@@ -303,16 +545,20 @@ export function openSaleModal(itemId) {
   elements.saleForm.reset();
   elements.saleItemIdInput.value = item.id;
   elements.saleItemName.textContent = item.name;
+
   const saleQuantityInput = document.getElementById("sale-quantity");
   const salePriceInput = document.getElementById("sale-price");
+
   const isIQD = appState.activeCurrency === "IQD";
   const price = isIQD ? item.sellPriceIqd || 0 : item.sellPriceUsd || 0;
   const symbol = isIQD ? "د.ع" : "$";
+
   elements.salePriceCurrency.textContent = symbol;
   salePriceInput.value = price;
   salePriceInput.step = isIQD ? "250" : "0.01";
   saleQuantityInput.value = 1;
   saleQuantityInput.max = item.quantity;
+
   const today = new Date();
   const year = today.getFullYear();
   const month = String(today.getMonth() + 1).padStart(2, "0");
@@ -321,154 +567,6 @@ export function openSaleModal(itemId) {
 
   openModal(elements.saleModal);
   updateSaleTotal();
-}
-
-async function handleItemFormSubmit(e) {
-  e.preventDefault();
-  const saveButton = document.getElementById("save-item-btn");
-  saveButton.disabled = true;
-
-  const originalInventory = JSON.parse(JSON.stringify(appState.inventory));
-  const itemId = document.getElementById("item-id").value;
-  const existingItemIndex = appState.inventory.items.findIndex(
-    i => i.id === itemId
-  );
-  const originalItemForLog =
-    existingItemIndex !== -1
-      ? { ...appState.inventory.items[existingItemIndex] }
-      : null;
-  const categories = categoryInputManager.getSelectedCategories();
-  const itemData = {
-    id: itemId || `item_${Date.now()}`,
-    sku: document.getElementById("item-sku").value,
-    name: document.getElementById("item-name").value,
-    categories: categories,
-    oemPartNumber: document.getElementById("item-oem-pn").value.trim(),
-    compatiblePartNumber: document
-      .getElementById("item-compatible-pn")
-      .value.trim(),
-    quantity: parseInt(document.getElementById("item-quantity").value, 10) || 0,
-    alertLevel:
-      parseInt(document.getElementById("item-alert-level").value, 10) || 5,
-    costPriceIqd:
-      parseFloat(document.getElementById("item-cost-price-iqd").value) || 0,
-    sellPriceIqd:
-      parseFloat(document.getElementById("item-sell-price-iqd").value) || 0,
-    costPriceUsd:
-      parseFloat(document.getElementById("item-cost-price-usd").value) || 0,
-    sellPriceUsd:
-      parseFloat(document.getElementById("item-sell-price-usd").value) || 0,
-    notes: document.getElementById("item-notes").value,
-    imagePath: originalItemForLog ? originalItemForLog.imagePath : null,
-    supplierId: document.getElementById("item-supplier").value || null,
-  };
-  delete itemData.category;
-
-  let syncToastId;
-  if (appState.selectedImageFile) {
-    syncToastId = showStatus("جاري ضغط ورفع الصورة...", "syncing");
-  } else {
-    syncToastId = showStatus("جاري حفظ المنتج...", "syncing");
-  }
-
-  if (existingItemIndex !== -1) {
-    appState.inventory.items[existingItemIndex] = itemData;
-  } else {
-    appState.inventory.items.push(itemData);
-  }
-
-  elements.itemModal.close();
-  try {
-    if (appState.selectedImageFile) {
-      const compressedImageBlob = await compressImage(
-        appState.selectedImageFile
-      );
-      const blobUrl = URL.createObjectURL(compressedImageBlob);
-      updateProductCardImage(itemData.id, blobUrl);
-
-      itemData.imagePath = await api.uploadImageToGitHub(
-        compressedImageBlob,
-        appState.selectedImageFile.name
-      );
-      const finalItemIndex = appState.inventory.items.findIndex(
-        i => i.id === itemData.id
-      );
-      if (finalItemIndex !== -1) {
-        appState.inventory.items[finalItemIndex].imagePath = itemData.imagePath;
-        appState.imageCache.set(itemData.imagePath, blobUrl);
-      }
-    }
-    
-    saveLocalData();
-    filterAndRenderItems(true);
-    renderCategoryFilter();
-
-    await api.saveInventory();
-
-    hideStatus(syncToastId);
-    showStatus("تم الحفظ والمزامنة بنجاح!", "success");
-
-    const loggingPromises = [];
-    if (originalItemForLog) {
-        if (originalItemForLog.name !== itemData.name) {
-            loggingPromises.push(logAction({ action: ACTION_TYPES.NAME_UPDATED, targetId: itemData.id, targetName: itemData.name, details: { from: originalItemForLog.name, to: itemData.name } }));
-        }
-        if (originalItemForLog.sku !== itemData.sku) {
-            loggingPromises.push(logAction({ action: ACTION_TYPES.SKU_UPDATED, targetId: itemData.id, targetName: itemData.name, details: { from: originalItemForLog.sku, to: itemData.sku } }));
-        }
-        if (JSON.stringify(originalItemForLog.categories || []) !== JSON.stringify(itemData.categories)) {
-            loggingPromises.push(logAction({ action: ACTION_TYPES.CATEGORY_UPDATED, targetId: itemData.id, targetName: itemData.name, details: { from: originalItemForLog.categories || [], to: itemData.categories } }));
-        }
-        if (originalItemForLog.quantity !== itemData.quantity) {
-            loggingPromises.push(logAction({ action: ACTION_TYPES.QUANTITY_UPDATED, targetId: itemData.id, targetName: itemData.name, details: { from: originalItemForLog.quantity, to: itemData.quantity, reason: "تعديل مباشر" } }));
-        }
-        if (originalItemForLog.sellPriceIqd !== itemData.sellPriceIqd) {
-            loggingPromises.push(logAction({ action: ACTION_TYPES.PRICE_UPDATED, targetId: itemData.id, targetName: itemData.name, details: { from: `${originalItemForLog.sellPriceIqd} د.ع`, to: `${itemData.sellPriceIqd} د.ع` } }));
-        }
-        if (originalItemForLog.notes !== itemData.notes) {
-            loggingPromises.push(logAction({ action: ACTION_TYPES.NOTES_UPDATED, targetId: itemData.id, targetName: itemData.name }));
-        }
-        if (appState.selectedImageFile) {
-            loggingPromises.push(logAction({ action: ACTION_TYPES.IMAGE_UPDATED, targetId: itemData.id, targetName: itemData.name }));
-        }
-        if (originalItemForLog.supplierId !== itemData.supplierId) {
-            loggingPromises.push(logAction({ action: ACTION_TYPES.SUPPLIER_UPDATED, targetId: itemData.id, targetName: itemData.name }));
-        }
-    } else {
-      loggingPromises.push(logAction({
-        action: ACTION_TYPES.ITEM_CREATED,
-        targetId: itemData.id,
-        targetName: itemData.name,
-      }));
-    }
-    
-    if (loggingPromises.length > 0) {
-      Promise.all(loggingPromises).catch(logError => {
-        console.error("Audit log sync failed, but inventory was saved:", logError);
-        showStatus("تم حفظ المنتج، لكن فشل تحديث سجل النشاط.", "warning");
-      });
-    }
-
-  } catch (error) {
-    console.error("Item form sync failed, rolling back:", error);
-    appState.inventory = originalInventory;
-    saveLocalData();
-    filterAndRenderItems(true);
-    renderCategoryFilter();
-    hideStatus(syncToastId);
-
-    if (error instanceof api.ConflictError) {
-      showStatus("حدث تعارض قم بتحديث الصفحة اولاً.", "error", {
-        duration: 0,
-        showRefreshButton: true,
-      });
-    } else {
-      showStatus("فشلت المزامنة! تم استرجاع البيانات.", "error");
-    }
-  } finally {
-    saveButton.disabled = false;
-    appState.selectedImageFile = null;
-  }
 }
 
 function handleImageSelection(file) {
@@ -481,6 +579,7 @@ function handleImageSelection(file) {
   reader.onload = event => {
     const { cropperModal, cropperImage, paddingDisplay, bgColorInput } =
       elements;
+
     cropperPadding = 0.1;
     cropperBgColor = "#FFFFFF";
     paddingDisplay.textContent = `${Math.round(cropperPadding * 100)}%`;
@@ -488,6 +587,7 @@ function handleImageSelection(file) {
 
     cropperImage.src = event.target.result;
     openModal(cropperModal);
+
     if (cropper) {
       cropper.destroy();
     }
@@ -496,7 +596,7 @@ function handleImageSelection(file) {
       aspectRatio: 1,
       viewMode: 1,
       background: false,
-      autoCropArea: 0.8,
+      autoCropArea: 1,
     });
   };
   reader.readAsDataURL(file);
@@ -521,19 +621,23 @@ export function setupModalListeners(elements) {
       categoryInputManager = null;
     }
   });
+
   elements.cancelItemBtn.addEventListener("click", () =>
     elements.itemModal.close()
   );
+
   elements.regenerateSkuBtn.addEventListener("click", () => {
     const existingSkus = new Set(
       appState.inventory.items.map(item => item.sku)
     );
     document.getElementById("item-sku").value = generateUniqueSKU(existingSkus);
   });
+
   elements.imageUploadInput.addEventListener("change", e => {
     handleImageSelection(e.target.files[0]);
     e.target.value = "";
   });
+
   elements.pasteImageBtn.addEventListener("click", async () => {
     try {
       if (!navigator.clipboard?.read) {
@@ -563,6 +667,14 @@ export function setupModalListeners(elements) {
       showStatus(`فشل لصق الصورة: ${error.message}`, "error");
     }
   });
+
+  const cropperContainer = elements.cropperModal.querySelector(
+    ".cropper-image-container"
+  );
+  if (cropperContainer) {
+    cropperContainer.addEventListener("contextmenu", e => e.preventDefault());
+  }
+
   document.getElementById("cancel-crop-btn").addEventListener("click", () => {
     elements.cropperModal.close();
     if (cropper) {
@@ -570,6 +682,7 @@ export function setupModalListeners(elements) {
       cropper = null;
     }
   });
+
   document.getElementById("crop-image-btn").addEventListener("click", () => {
     if (!cropper) return;
     const croppedCanvas = cropper.getCroppedCanvas();
@@ -615,6 +728,7 @@ export function setupModalListeners(elements) {
       )}%`;
     }
   });
+
   elements.increasePaddingBtn.addEventListener("click", () => {
     if (cropperPadding < 0.4) {
       cropperPadding = Math.min(0.4, cropperPadding + 0.05);
@@ -623,6 +737,7 @@ export function setupModalListeners(elements) {
       )}%`;
     }
   });
+
   elements.bgColorInput.addEventListener(
     "input",
     e => (cropperBgColor = e.target.value)
@@ -632,50 +747,57 @@ export function setupModalListeners(elements) {
   const costUsdInput = document.getElementById("item-cost-price-usd");
   const sellIqdInput = document.getElementById("item-sell-price-iqd");
   const sellUsdInput = document.getElementById("item-sell-price-usd");
+
   costIqdInput.addEventListener("input", () =>
     handlePriceConversion(costIqdInput, costUsdInput)
   );
   sellIqdInput.addEventListener("input", () =>
     handlePriceConversion(sellIqdInput, sellUsdInput)
   );
+
   elements.detailsIncreaseBtn.addEventListener("click", () => {
     const item = appState.inventory.items.find(
       i => i.id === appState.currentItemId
     );
     const quantityInput = elements.detailsQuantityValue;
     if (item) {
-        let qty = parseInt(quantityInput.value, 10) || 0;
-        qty++;
-        quantityInput.value = qty;
-        item.quantity = qty;
+      let qty = parseInt(quantityInput.value, 10) || 0;
+      qty++;
+      quantityInput.value = qty;
+      item.quantity = qty;
     }
   });
+
   elements.detailsDecreaseBtn.addEventListener("click", () => {
     const item = appState.inventory.items.find(
       i => i.id === appState.currentItemId
     );
     const quantityInput = elements.detailsQuantityValue;
     if (item) {
-        let qty = parseInt(quantityInput.value, 10) || 0;
-        if (qty > 0) {
-            qty--;
-            quantityInput.value = qty;
-            item.quantity = qty;
-        }
+      let qty = parseInt(quantityInput.value, 10) || 0;
+      if (qty > 0) {
+        qty--;
+        quantityInput.value = qty;
+        item.quantity = qty;
+      }
     }
   });
-  elements.detailsQuantityValue.addEventListener('change', (e) => {
-    const item = appState.inventory.items.find(i => i.id === appState.currentItemId);
+
+  elements.detailsQuantityValue.addEventListener("change", e => {
+    const item = appState.inventory.items.find(
+      i => i.id === appState.currentItemId
+    );
     if (item) {
-        const newQty = parseInt(e.target.value, 10) || 0;
-        if (newQty < 0) {
-            e.target.value = 0;
-            item.quantity = 0;
-        } else {
-            item.quantity = newQty;
-        }
+      const newQty = parseInt(e.target.value, 10) || 0;
+      if (newQty < 0) {
+        e.target.value = 0;
+        item.quantity = 0;
+      } else {
+        item.quantity = newQty;
+      }
     }
   });
+
   elements.closeDetailsModalBtn.addEventListener("click", async () => {
     const itemBeforeEdit = appState.itemStateBeforeEdit;
     const currentItem = appState.inventory.items.find(
@@ -715,10 +837,12 @@ export function setupModalListeners(elements) {
     appState.currentItemId = null;
     elements.detailsModal.close();
   });
+
   elements.detailsEditBtn.addEventListener("click", () => {
     elements.detailsModal.close();
     openItemModal(appState.currentItemId);
   });
+
   elements.detailsDeleteBtn.addEventListener("click", async () => {
     const itemToDelete = appState.inventory.items.find(
       item => item.id === appState.currentItemId
@@ -795,6 +919,7 @@ export function setupModalListeners(elements) {
   elements.cancelSaleBtn.addEventListener("click", () =>
     elements.saleModal.close()
   );
+
   elements.saleIncreaseBtn.addEventListener("click", () => {
     const quantityInput = elements.saleQuantityInput;
     const max = parseInt(quantityInput.max, 10);
@@ -812,6 +937,7 @@ export function setupModalListeners(elements) {
       updateSaleTotal();
     }
   });
+
   elements.saleQuantityInput.addEventListener("input", updateSaleTotal);
   document
     .getElementById("sale-price")

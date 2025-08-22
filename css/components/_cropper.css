@@ -1,14 +1,13 @@
 /* css/components/_cropper.css */
 
 #cropper-modal {
-  /* Inherits display:flex and flex-direction:column from the main dialog styles */
   padding: 0;
 }
 
 .cropper-modal-header {
   padding: var(--spacing-md) var(--spacing-lg);
   border-bottom: 1px solid var(--border-color);
-  flex-shrink: 0; /* Prevents header from shrinking */
+  flex-shrink: 0;
   text-align: center;
 }
 
@@ -18,8 +17,8 @@
 }
 
 .cropper-modal-body {
-  flex-grow: 1; /* Allows body to take up available space */
-  overflow-y: auto; /* Enables scrolling ONLY for the body */
+  flex-grow: 1;
+  overflow-y: auto;
   padding: var(--spacing-md);
   display: flex;
   flex-direction: column;
@@ -28,7 +27,7 @@
 
 .cropper-image-container {
   width: 100%;
-  min-height: 40vh; /* Give it a minimum height */
+  min-height: 40vh;
   background-color: var(--bg-color);
   border: 1px solid var(--border-color);
 }
@@ -44,7 +43,7 @@
   align-items: center;
   gap: var(--spacing-lg);
   padding: var(--spacing-md) 0;
-  flex-shrink: 0; /* Prevents controls from shrinking */
+  flex-shrink: 0;
 }
 
 .control-set {
@@ -93,10 +92,9 @@
   border: 2px solid var(--border-color);
 }
 
-/* Ensure modal actions are a direct child of the dialog for this to work */
 #cropper-modal .modal-actions {
   margin-top: 0;
   padding: var(--spacing-md);
   border-top: 1px solid var(--border-color);
-  flex-shrink: 0; /* Prevents footer from shrinking */
+  flex-shrink: 0;
 }

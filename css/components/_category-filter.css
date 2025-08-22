@@ -5,12 +5,15 @@
   align-items: center;
   gap: var(--spacing-sm);
   overflow-x: auto;
-  padding: var(--spacing-sm) 0;
+  padding: var(--spacing-sm) 25px; /* Increased horizontal padding */
   margin-bottom: var(--spacing-md);
   /* Hide scrollbar for a cleaner look */
   scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none;
-  /* IE and Edge */
+  -ms-overflow-style: none; /* IE and Edge */
+
+  /* Add fade effect on horizontal edges */
+  -webkit-mask-image: linear-gradient(to left, transparent, black 25px, black calc(100% - 25px), transparent);
+  mask-image: linear-gradient(to left, transparent, black 25px, black calc(100% - 25px), transparent);
 }
 .category-filter-bar::-webkit-scrollbar {
   display: none; /* Chrome, Safari, and Opera */
@@ -20,8 +23,7 @@
   position: relative;
   font-family: var(--font-family);
   padding: 0.5rem 1rem; /* 8px 16px */
-  border-radius: 2rem;
-  /* a large value for a pill shape */
+  border-radius: 2rem; /* a large value for a pill shape */
   border: 1px solid var(--border-color);
   background-color: var(--surface-color);
   color: var(--text-secondary);
@@ -60,7 +62,7 @@ body.theme-light .category-chip.active {
 .category-edit-btn {
   position: absolute;
   top: -8px;
-  left: -8px;
+  right: -8px; /* Changed from left to right for RTL layout */
   width: 28px;
   height: 28px;
   border-radius: 50%;

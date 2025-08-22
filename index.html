@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
-    <title>إدارة مخزون ورشة المفاتيح</title>
+    <title>MASTER KEY</title>
 
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#2a69c7" />
@@ -185,7 +185,7 @@
               <button class="time-filter-btn active" data-period="today">
                 يومي
               </button>
-              <button class="time-filter-btn" data-requiredweek">أسبوعي</button>
+              <button class="time-filter-btn" data-period="week">أسبوعي</button>
               <button class="time-filter-btn" data-period="month">شهري</button>
             </div>
           </div>
@@ -221,7 +221,7 @@
               data-target="bestsellers-content"
               aria-expanded="true"
             >
-              <span class="collapsible-title">الأكثر مبيعًا</span>
+              <span class="collapsible-title">أفضل 5 منتجات مبيعًا</span>
               <iconify-icon icon="material-symbols:expand-less"></iconify-icon>
             </button>
             <div id="bestsellers-content" class="collapsible-content">
@@ -389,7 +389,7 @@
     </dialog>
 
     <dialog id="item-modal">
-      <form id="item-form">
+      <form id="item-form" class="modal-form">
         <h3 id="modal-title">إضافة منتج جديد</h3>
         <input type="hidden" id="item-id" />
         <div class="form-content-scrollable">
@@ -956,7 +956,7 @@
               <button id="decrease-padding-btn" class="icon-btn" title="إنقاص">
                 <iconify-icon icon="material-symbols:remove"></iconify-icon>
               </button>
-              <span id="padding-display">10%</span>
+              <span id="padding-display">5%</span>
               <button id="increase-padding-btn" class="icon-btn" title="زيادة">
                 <iconify-icon icon="material-symbols:add"></iconify-icon>
               </button>

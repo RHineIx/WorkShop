@@ -539,7 +539,7 @@ dialog::backdrop {
   width: 100%;
   padding: 0.5rem;
   /* 8px */
-  font-family: "Roboto Mono", monospace;
+  font-family: var(--font-family);
   font-size: 0.75rem; /* 12px */
   direction: ltr;
   text-align: left;

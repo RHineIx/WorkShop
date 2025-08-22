@@ -69,11 +69,19 @@ function getFilteredItems() {
   if (appState.activeFilter === "low_stock") {
     items = items.filter(item => item.quantity <= item.alertLevel);
   }
+
   if (appState.selectedCategory && appState.selectedCategory !== "all") {
-    items = items.filter(item =>
-      (item.categories || []).includes(appState.selectedCategory)
-    );
+    if (appState.selectedCategory === "_uncategorized_") {
+      items = items.filter(
+        item => !item.categories || item.categories.length === 0
+      );
+    } else {
+      items = items.filter(item =>
+        (item.categories || []).includes(appState.selectedCategory)
+      );
+    }
   }
+
   if (appState.searchTerm) {
     const searchTerms = appState.searchTerm
       .toLowerCase()
@@ -329,15 +337,31 @@ export function renderCategoryFilter() {
   categoryFilterBar.innerHTML = "";
   const fragment = document.createDocumentFragment();
 
+  // "All" button
   const allButton = document.createElement("button");
   allButton.className = "category-chip";
   allButton.textContent = "عرض الكل";
   allButton.dataset.category = "all";
-
   if (appState.selectedCategory === "all") {
     allButton.classList.add("active");
   }
   fragment.appendChild(allButton);
+  // "Uncategorized" button
+  const hasUncategorized = appState.inventory.items.some(
+    item => !item.categories || item.categories.length === 0
+  );
+  if (hasUncategorized) {
+    const uncategorizedButton = document.createElement("button");
+    uncategorizedButton.className = "category-chip";
+    uncategorizedButton.textContent = "غير مصنف";
+    uncategorizedButton.dataset.category = "_uncategorized_";
+    if (appState.selectedCategory === "_uncategorized_") {
+      uncategorizedButton.classList.add("active");
+    }
+    fragment.appendChild(uncategorizedButton);
+  }
+
+  // All other category buttons
   categories.forEach(category => {
     const chipButton = document.createElement("button");
     chipButton.className = "category-chip";
@@ -351,7 +375,6 @@ export function renderCategoryFilter() {
   categoryFilterBar.appendChild(fragment);
 }
 
-// --- REFACTORED FUNCTION ---
 function renderSalesLog(filteredSales) {
   const { salesLogContent } = elements;
   salesLogContent.innerHTML = "";
@@ -431,6 +454,7 @@ function renderSalesLog(filteredSales) {
         hour: "numeric",
         minute: "numeric",
         hour12: true,
+        numberingSystem: "latn",
       });
       saleItemElement.querySelector(
         ".sale-datetime"
@@ -440,7 +464,12 @@ function renderSalesLog(filteredSales) {
     });
     mainFragment.appendChild(dayGroupElement);
   }
-  salesLogContent.appendChild(mainFragment);
+
+  const wrapperDiv = document.createElement("div");
+  wrapperDiv.appendChild(mainFragment);
+
+  salesLogContent.innerHTML = "";
+  salesLogContent.appendChild(wrapperDiv);
 }
 
 export const renderDashboard = () => {
@@ -529,7 +558,7 @@ export function renderSupplierList() {
         <button class="icon-btn edit-supplier-btn" data-id="${
           supplier.id
         }" title="تعديل المورّد">
-          <iconify-icon icon="material-symbols:edit-outline-rounded"></iconify-icon>
+           <iconify-icon icon="material-symbols:edit-outline-rounded"></iconify-icon>
         </button>
         <button class="icon-btn danger-btn delete-supplier-btn" data-id="${
           supplier.id
@@ -752,4 +781,4 @@ export function renderAuditLog() {
     fragment.appendChild(clone);
   });
   elements.auditLogList.appendChild(fragment);
-        }
+}
