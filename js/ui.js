@@ -13,46 +13,66 @@ import { pushState } from "./navigation.js";
 let countdownInterval = null;
 
 export { elements };
+
 export function displayVersionInfo(versionData) {
-  if (versionData && elements.appVersionDisplay) {
+  const versionDisplay = document.getElementById("app-version-display");
+  if (versionData && versionDisplay) {
     const { hash, branch } = versionData;
-    elements.appVersionDisplay.textContent = `الإصدار: ${hash} - الفرع (${branch})`;
+    versionDisplay.textContent = `الإصدار: ${hash} (${branch})`;
   }
 }
 
 export function updateRateLimitDisplay() {
   const { limit, remaining, reset } = appState.rateLimit;
   const indicator = document.querySelector(".rate-limit-indicator");
-  if (limit === null || remaining === null) {
-    indicator.classList.remove("visible", "high", "medium", "low");
-    if (elements.rateLimitDisplay) elements.rateLimitDisplay.textContent = "";
+  const remainingDisplay = document.getElementById(
+    "rate-limit-remaining-display"
+  );
+  const resetDisplay = document.getElementById("rate-limit-reset-display");
+
+  if (!remainingDisplay || !resetDisplay) {
     return;
   }
 
-  indicator.classList.add("visible");
-  const percentage = (remaining / limit) * 100;
+  if (limit === null || remaining === null) {
+    if (indicator) indicator.classList.remove("visible", "high", "medium", "low");
+    remainingDisplay.innerHTML = `الطلبات المتبقية: <strong>--/--</strong>`;
+    resetDisplay.textContent = "إعادة التعيين: --:--";
+    return;
+  }
 
-  indicator.classList.remove("high", "medium", "low");
-  if (percentage > 50) {
-    indicator.classList.add("high");
-  } else if (percentage > 10) {
-    indicator.classList.add("medium");
-  } else {
-    indicator.classList.add("low");
+  if (indicator) {
+    indicator.classList.add("visible");
+    const percentage = (remaining / limit) * 100;
+
+    indicator.classList.remove("high", "medium", "low");
+    if (percentage > 50) {
+      indicator.classList.add("high");
+    } else if (percentage > 10) {
+      indicator.classList.add("medium");
+    } else {
+      indicator.classList.add("low");
+    }
   }
 
   const updateDisplay = () => {
     const now = Math.floor(Date.now() / 1000);
     const secondsUntilReset = reset - now;
+
+    remainingDisplay.innerHTML = `الطلبات المتبقية: <strong>${remaining}/${limit}</strong>`;
+
     if (secondsUntilReset <= 0) {
-      elements.rateLimitDisplay.textContent = `${remaining}/${limit} طلبات متبقية.`;
+      resetDisplay.textContent = `إعادة التعيين: الآن`;
       clearInterval(countdownInterval);
     } else {
       const minutes = Math.floor(secondsUntilReset / 60);
       const seconds = secondsUntilReset % 60;
-      elements.rateLimitDisplay.textContent = `${remaining}/${limit} طلبات متبقية | إعادة التعيين بعد ${minutes}د ${seconds}ث`;
+      resetDisplay.textContent = `إعادة التعيين بعد ${minutes}د ${seconds
+        .toString()
+        .padStart(2, "0")}ث`;
     }
   };
+
   clearInterval(countdownInterval);
   updateDisplay();
   countdownInterval = setInterval(updateDisplay, 1000);

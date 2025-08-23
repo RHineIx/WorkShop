@@ -1,5 +1,5 @@
 // js/sw.js
-const CACHE_NAME = "workshop-v5.43.2";
+const CACHE_NAME = "workshop-v5.44.0";
 const DATA_CACHE_NAME = "workshop-data-v1";
 
 const URLS_TO_CACHE = [

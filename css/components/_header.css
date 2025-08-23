@@ -50,24 +50,23 @@
   box-shadow: 0 0 0.5rem #dc3545;
 }
 
-/* --- REFACTORED: Floating Inventory Header --- */
+/* --- REFINED: Floating Inventory Header --- */
 .inventory-header {
   display: flex;
   align-items: center;
-  gap: var(--spacing-lg); /* Gap between title and actions */
-  padding: var(--spacing-sm) var(--spacing-md);
+  gap: var(--spacing-lg);
+  padding: var(--spacing-md) var(--spacing-lg);
   margin-bottom: var(--spacing-md);
   position: sticky;
   z-index: 50;
   width: auto;
   border-radius: 0.75rem;
-  box-shadow: var(--shadow-strong);
-  background-color: rgba(var(--surface-color-rgb), 0.8);
-  backdrop-filter: blur(0.625rem);
-  -webkit-backdrop-filter: blur(0.625rem);
+  box-shadow: var(--shadow-light);
+  background-color: rgba(var(--surface-color-rgb), 0.75);
+  backdrop-filter: blur(1rem);
+  -webkit-backdrop-filter: blur(1rem);
   border: 1px solid var(--border-color);
-  transition: top 0.3s ease;
-  /* top property is now set dynamically by js/layout.js */
+  transition: top 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .inventory-header h2 {
@@ -133,11 +132,11 @@ body.theme-dark .inventory-header h2 {
   flex-grow: 1; /* This is key: search bar takes space within the actions group */
 }
 
-
 /* --- Responsive Adjustments for Header --- */
 
 /* On tablets and phones, hide the title for a cleaner look */
-@media (max-width: 48rem) { /* 768px */
+@media (max-width: 48rem) {
+  /* 768px */
   .inventory-header h2 {
     display: none;
   }
@@ -145,7 +144,8 @@ body.theme-dark .inventory-header h2 {
 
 /* On small phones, convert sort dropdown to an icon button AND adjust page controls */
 /* UNIFIED BREAKPOINT */
-@media (max-width: 30rem) { /* 480px */
+@media (max-width: 30rem) {
+  /* 480px */
   #sort-options {
     width: 2.75rem;
     height: 2.75rem;
@@ -161,7 +161,7 @@ body.theme-dark .inventory-header h2 {
     font-size: 1.5rem;
     color: var(--text-primary);
   }
-  
+
   .page-controls {
     flex-wrap: nowrap;
     gap: var(--spacing-sm);
@@ -191,4 +191,4 @@ body.theme-dark .inventory-header h2 {
 body.theme-dark #sort-options option {
   background-color: #1e1e1e;
   color: #e0e0e0;
-  }
+}
