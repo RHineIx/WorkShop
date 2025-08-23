@@ -10,8 +10,7 @@
   padding: var(--spacing-md);
   padding-bottom: calc(
     var(--spacing-md) + env(safe-area-inset-bottom)
-  );
-  /* iOS Safe Area */
+  ); /* iOS Safe Area */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -70,4 +69,11 @@
   line-height: 1.6;
   color: var(--text-secondary);
   margin: -8px 0 8px 0;
+}
+
+/* Hide UI elements during print or long screenshots */
+@media print {
+  .bulk-actions-bar {
+    display: none !important;
+  }
 }

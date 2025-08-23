@@ -22,6 +22,7 @@
         height: 100vh;
         margin: 0;
         text-align: center;
+        transition: background-color 0.3s ease;
       }
       .container {
         max-width: 400px;
@@ -32,6 +33,7 @@
         color: var(--accent-color);
         opacity: 0.5;
         margin-bottom: 1rem;
+        transition: color 0.3s ease, transform 0.3s ease;
       }
       h1 {
         font-size: 1.75rem;
@@ -41,17 +43,86 @@
         color: var(--text-secondary);
         line-height: 1.6;
       }
+      .reconnect-btn {
+        margin-top: 1.5rem;
+        padding: 0.75rem 1.5rem;
+        font-family: var(--font-family);
+        font-weight: 700;
+        font-size: 1rem;
+        background-color: var(--accent-color);
+        color: white;
+        border: none;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+      }
+      .reconnect-btn:hover {
+        background-color: #2558a5;
+      }
+      body.online {
+        background-color: #e6fffa;
+        --accent-color: #2f855a;
+      }
+      body.online .reconnect-btn {
+        display: none;
+      }
+      body.online iconify-icon {
+        transform: scale(1.1);
+      }
     </style>
   </head>
   <body>
     <div class="container">
-      <iconify-icon icon="material-symbols:wifi-off-rounded"></iconify-icon>
-      <h1>أنت غير متصل بالإنترنت</h1>
-      <p>
-        يبدو أنك غير متصل بالإنترنت حاليًا. سيتم عرض البيانات المحفوظة محليًا
-        إن وجدت. يرجى التحقق من اتصالك بالشبكة لعرض أحدث البيانات.
+      <iconify-icon
+        id="status-icon"
+        icon="material-symbols:wifi-off-rounded"
+      ></iconify-icon>
+      <h1 id="status-title">أنت غير متصل بالإنترنت</h1>
+      <p id="status-message">
+        يرجى التحقق من اتصالك بالشبكة. سيتم تحديث الصفحة تلقائيًا عند عودة
+        الاتصال.
       </p>
+      <button id="reconnect-btn" class="reconnect-btn">
+        محاولة إعادة الاتصال
+      </button>
     </div>
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+    <script>
+      const statusIcon = document.getElementById("status-icon");
+      const statusTitle = document.getElementById("status-title");
+      const statusMessage = document.getElementById("status-message");
+      const reconnectBtn = document.getElementById("reconnect-btn");
+      const body = document.body;
+
+      function goOnline() {
+        body.classList.add("online");
+        statusIcon.setAttribute("icon", "material-symbols:wifi-rounded");
+        statusTitle.textContent = "تم استعادة الاتصال!";
+        statusMessage.textContent = "جاري إعادة توجيهك إلى التطبيق...";
+
+        // Redirect back to the main app after a short delay
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 1500);
+      }
+
+      function checkStatus() {
+        if (navigator.onLine) {
+          goOnline();
+        }
+      }
+
+      // Check status immediately on load
+      checkStatus();
+
+      // Listen for online events
+      window.addEventListener("online", goOnline);
+
+      // Allow manual reconnection attempt
+      reconnectBtn.addEventListener("click", checkStatus);
+
+      // Periodically check status every 5 seconds as a fallback
+      setInterval(checkStatus, 5000);
+    </script>
   </body>
 </html>
