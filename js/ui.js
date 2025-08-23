@@ -13,7 +13,6 @@ import { pushState } from "./navigation.js";
 let countdownInterval = null;
 
 export { elements };
-
 export function displayVersionInfo(versionData) {
   if (versionData && elements.appVersionDisplay) {
     const { hash, branch } = versionData;
@@ -94,7 +93,10 @@ export function openModal(dialogElement) {
 export function toggleView(viewToShow) {
   if (appState.currentView !== "inventory" && viewToShow === "inventory") {
     // This case is handled by the back button popstate, so we don't push a new state.
-  } else if (appState.currentView !== viewToShow && viewToShow !== "inventory") {
+  } else if (
+    appState.currentView !== viewToShow &&
+    viewToShow !== "inventory"
+  ) {
     pushState();
   }
 
@@ -124,19 +126,22 @@ export function toggleView(viewToShow) {
   }
 }
 
-export function setTheme(themeName) {
+export function setTheme(themeName, isInitialLoad = false) {
   const overlay = elements.themeTransitionOverlay;
   if (!overlay || document.body.classList.contains(`theme-${themeName}`)) {
+    const icon = elements.themeToggleBtn.querySelector("iconify-icon");
+    if (icon) {
+      icon.setAttribute(
+        "icon",
+        themeName === "dark"
+          ? "material-symbols:dark-mode-outline-rounded"
+          : "material-symbols:light-mode-outline-rounded"
+      );
+    }
     return;
   }
-  if (overlay.dataset.transitioning === "true") {
-    return;
-  }
-  overlay.dataset.transitioning = "true";
-  const oldBgColor = getComputedStyle(document.body).backgroundColor;
-  overlay.style.backgroundColor = oldBgColor;
-  overlay.classList.add("visible");
-  setTimeout(() => {
+
+  const applyTheme = () => {
     document.body.className = `theme-${themeName}`;
     const icon = elements.themeToggleBtn.querySelector("iconify-icon");
     if (icon) {
@@ -148,11 +153,16 @@ export function setTheme(themeName) {
       );
     }
     localStorage.setItem("inventoryAppTheme", themeName);
-    overlay.classList.remove("visible");
-  }, 300);
-  setTimeout(() => {
-    overlay.dataset.transitioning = "false";
-  }, 600);
+  };
+
+  if (isInitialLoad || !document.startViewTransition) {
+    applyTheme();
+    return;
+  }
+
+  const transition = document.startViewTransition(() => {
+    applyTheme();
+  });
 }
 
 export function updateCurrencyDisplay() {
@@ -177,8 +187,7 @@ export function updateCurrencyDisplay() {
 export function updateSaleTotal() {
   const quantity = parseInt(elements.saleQuantityInput.value, 10) || 0;
   const unitPrice =
-    parseFloat(document.getElementById("sale-price").value) ||
-    0;
+    parseFloat(document.getElementById("sale-price").value) || 0;
   const totalPrice = quantity * unitPrice;
   const symbol = appState.activeCurrency === "IQD" ? "د.ع" : "$";
   elements.saleTotalPrice.textContent = `${totalPrice.toLocaleString()} ${symbol}`;
@@ -205,7 +214,6 @@ export function openDetailsModal(itemId) {
     item.sellPriceUsd || 0
   ).toLocaleString()}`;
   elements.detailsNotesContent.textContent = item.notes || "لا توجد ملاحظات.";
-
   elements.detailsCategoryTags.innerHTML = "";
   if (item.categories && item.categories.length > 0) {
     item.categories.forEach(category => {
@@ -219,7 +227,6 @@ export function openDetailsModal(itemId) {
   const pnContainer = elements.detailsPnGridContainer;
   pnContainer.innerHTML = "";
   pnContainer.classList.add("view-hidden");
-
   const handleTagClick = tagElement => {
     if (tagElement.classList.contains("copied")) return;
     const originalText = tagElement.textContent;

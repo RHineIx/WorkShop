@@ -25,14 +25,30 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;800&family=Roboto+Mono:wght@500&display=swap"
       rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;800&family=Roboto+Mono:wght@500&display=swap"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;800&family=Roboto+Mono:wght@500&display=swap"
+      />
+    </noscript>
 
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css"
+      />
+    </noscript>
 
     <link rel="stylesheet" href="css/style.css" />
   </head>
@@ -102,7 +118,11 @@
 
     <main class="main-container">
       <div id="inventory-view-container">
-        <section id="stats-cards" class="stats-container" aria-labelledby="stats-heading">
+        <section
+          id="stats-cards"
+          class="stats-container"
+          aria-labelledby="stats-heading"
+        >
           <h2 id="stats-heading" class="visually-hidden">إحصائيات المخزون</h2>
           <div class="stat-card">
             <div class="card-icon">
@@ -128,7 +148,10 @@
           </div>
         </section>
 
-        <section class="inventory-container" aria-labelledby="inventory-heading">
+        <section
+          class="inventory-container"
+          aria-labelledby="inventory-heading"
+        >
           <div class="inventory-header">
             <h2 id="inventory-heading">قائمة المنتجات</h2>
 
@@ -157,11 +180,7 @@
                   autocomplete="off"
                   placeholder="ابحث في المنتجات..."
                 />
-                <button
-                  id="clear-search-btn"
-                  class="clear-search-btn"
-                  aria-label="مسح البحث"
-                >
+                <button id="clear-search-btn" class="clear-search-btn">
                   <iconify-icon
                     icon="material-symbols:close-rounded"
                   ></iconify-icon>
@@ -178,7 +197,10 @@
       </div>
 
       <div id="dashboard-view-container" class="view-hidden">
-        <section class="dashboard-container" aria-labelledby="dashboard-heading">
+        <section
+          class="dashboard-container"
+          aria-labelledby="dashboard-heading"
+        >
           <div class="dashboard-header">
             <h2 id="dashboard-heading">لوحة المعلومات</h2>
             <div id="time-filter-controls" class="time-filter-controls">
@@ -230,7 +252,11 @@
           </div>
 
           <div class="collapsible-section">
-            <button class="collapsible-header" data-target="sales-log-content" aria-expanded="true">
+            <button
+              class="collapsible-header"
+              data-target="sales-log-content"
+              aria-expanded="true"
+            >
               <span class="collapsible-title">سجل المبيعات</span>
               <iconify-icon icon="material-symbols:expand-less"></iconify-icon>
             </button>
@@ -240,7 +266,10 @@
       </div>
 
       <div id="activity-log-view-container" class="view-hidden">
-        <section class="activity-log-container" aria-labelledby="activity-heading">
+        <section
+          class="activity-log-container"
+          aria-labelledby="activity-heading"
+        >
           <div class="activity-log-header">
             <h2 id="activity-heading">سجل نشاطات المخزون</h2>
             <div class="activity-log-actions">
@@ -269,11 +298,7 @@
 
     <dialog id="details-modal">
       <div class="details-modal-content">
-        <button
-          id="close-details-modal-btn"
-          class="close-modal-btn"
-          aria-label="إغلاق"
-        >
+        <button id="close-details-modal-btn" class="close-modal-btn">
           <iconify-icon icon="material-symbols:close"></iconify-icon>
         </button>
 
@@ -288,7 +313,10 @@
             <h2 id="details-name"></h2>
             <p id="details-sku" class="details-sku"></p>
 
-            <div id="details-category-tags" class="details-category-container"></div>
+            <div
+              id="details-category-tags"
+              class="details-category-container"
+            ></div>
 
             <div
               id="details-pn-grid-container"
@@ -317,19 +345,11 @@
             <div class="details-quantity">
               <span>الكمية:</span>
               <div class="quantity-controls">
-                <button
-                  class="quantity-btn"
-                  id="details-decrease-btn"
-                  aria-label="إنقاص الكمية"
-                >
+                <button class="quantity-btn" id="details-decrease-btn">
                   -
                 </button>
                 <input type="number" id="details-quantity-value" min="0" />
-                <button
-                  class="quantity-btn"
-                  id="details-increase-btn"
-                  aria-label="زيادة الكمية"
-                >
+                <button class="quantity-btn" id="details-increase-btn">
                   +
                 </button>
               </div>
@@ -446,13 +466,18 @@
                 <div class="form-group">
                   <label for="item-sku">SKU (رقم المنتج)</label>
                   <div class="sku-container">
-                    <input type="text" autocomplete="off" id="item-sku" required dir="ltr" />
+                    <input
+                      type="text"
+                      autocomplete="off"
+                      id="item-sku"
+                      required
+                      dir="ltr"
+                    />
                     <button
                       type="button"
                       id="regenerate-sku-btn"
                       class="icon-btn"
                       title="توليد SKU جديد"
-                      aria-label="توليد SKU جديد"
                     >
                       <iconify-icon
                         icon="material-symbols:refresh"
@@ -817,21 +842,11 @@
           <div class="form-group">
             <label for="sale-quantity">الكمية المباعة</label>
             <div class="quantity-controls">
-              <button
-                type="button"
-                id="sale-decrease-btn"
-                class="quantity-btn"
-                aria-label="إنقاص الكمية"
-              >
+              <button type="button" id="sale-decrease-btn" class="quantity-btn">
                 -
               </button>
               <input type="number" id="sale-quantity" value="1" min="1" />
-              <button
-                type="button"
-                id="sale-increase-btn"
-                class="quantity-btn"
-                aria-label="زيادة الكمية"
-              >
+              <button type="button" id="sale-increase-btn" class="quantity-btn">
                 +
               </button>
             </div>
@@ -874,11 +889,7 @@
       <div class="supplier-manager-content">
         <div class="modal-header">
           <h3 id="supplier-modal-title">إدارة المورّدين</h3>
-          <button
-            id="close-supplier-manager-btn"
-            class="icon-btn"
-            aria-label="إغلاق"
-          >
+          <button id="close-supplier-manager-btn" class="icon-btn">
             <iconify-icon icon="material-symbols:close"></iconify-icon>
           </button>
         </div>
@@ -923,11 +934,7 @@
       <div class="archive-browser-content">
         <div class="archive-header">
           <h3>أرشيف المبيعات</h3>
-          <button
-            id="close-archive-browser-btn"
-            class="icon-btn"
-            aria-label="إغلاق"
-          >
+          <button id="close-archive-browser-btn" class="icon-btn">
             <iconify-icon icon="material-symbols:close"></iconify-icon>
           </button>
         </div>
@@ -1082,7 +1089,7 @@
         </div>
       </form>
     </dialog>
-    
+
     <dialog id="confirm-modal">
       <div class="confirm-modal-content">
         <div class="confirm-modal-icon" id="confirm-modal-icon">
@@ -1128,7 +1135,6 @@
     <button
       id="scroll-to-top-btn"
       class="scroll-to-top-btn"
-      aria-label="العودة للأعلى"
       title="العودة للأعلى"
     >
       <iconify-icon
@@ -1242,9 +1248,18 @@
       </div>
     </template>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
-    <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"
+      defer
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"
+      defer
+    ></script>
+    <script
+      src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"
+      defer
+    ></script>
     <script type="module" src="js/main.js"></script>
   </body>
 </html>

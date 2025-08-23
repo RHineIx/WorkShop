@@ -286,4 +286,4 @@ export function setupInventoryListeners(elements) {
     }
     filterAndRenderItems(true);
   });
-                                                              }
+}
