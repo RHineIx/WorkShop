@@ -13,11 +13,13 @@ import {
   filterAndRenderItems,
   renderCategoryFilter,
   renderAuditLog,
+  renderDashboard,
 } from "./renderer.js";
 import { showStatus, hideSyncStatus } from "./notifications.js";
 import { setupEventListeners } from "./eventSetup.js";
 import { setupLayoutAdjustments } from "./layout.js";
 import { initNavigationListener } from "./navigation.js";
+
 function migrateDataModelIfNeeded() {
   let isDataUpdated = false;
   if (appState.inventory && appState.inventory.items) {
@@ -188,11 +190,78 @@ function registerServiceWorker(version = "latest") {
   }
 }
 
+async function syncRemoteData() {
+  if (!appState.syncConfig) {
+    return;
+  }
+
+  const syncToastId = showStatus("جاري مزامنة أحدث البيانات...", "syncing", {
+    duration: 0,
+  });
+
+  try {
+    const [inventoryResult, salesResult, suppliersResult, auditLogResult] =
+      await Promise.all([
+        api.fetchFromGitHub(),
+        api.fetchSales(),
+        api.fetchSuppliers(),
+        api.fetchAuditLog(),
+      ]);
+
+    hideSyncStatus();
+
+    let needsUIRefresh = false;
+
+    if (inventoryResult && inventoryResult.sha !== appState.fileSha) {
+      needsUIRefresh = true;
+      appState.inventory = inventoryResult.data;
+      appState.fileSha = inventoryResult.sha;
+    }
+    if (salesResult && salesResult.sha !== appState.salesFileSha) {
+      needsUIRefresh = true;
+      appState.sales = salesResult.data;
+      appState.salesFileSha = salesResult.sha;
+    }
+    if (suppliersResult && suppliersResult.sha !== appState.suppliersFileSha) {
+      needsUIRefresh = true;
+      appState.suppliers = suppliersResult.data;
+      appState.suppliersFileSha = suppliersResult.sha;
+    }
+    if (auditLogResult && auditLogResult.sha !== appState.auditLogFileSha) {
+      needsUIRefresh = true;
+      appState.auditLog = auditLogResult.data;
+      appState.auditLogFileSha = auditLogResult.sha;
+    }
+
+    if (migrateDataModelIfNeeded()) {
+      showStatus("جاري تحديث هيكل البيانات...", "syncing");
+      await api.saveInventory();
+      needsUIRefresh = true;
+      showStatus("تم تحديث هيكل البيانات بنجاح!", "success");
+    }
+
+    saveLocalData();
+
+    if (needsUIRefresh) {
+      showStatus("تم تحديث البيانات بنجاح!", "success");
+      filterAndRenderItems();
+      renderCategoryFilter();
+      if (appState.currentView === "dashboard") renderDashboard();
+      if (appState.currentView === "activity-log") renderAuditLog();
+    } else {
+      showStatus("البيانات محدثة بالفعل.", "info");
+    }
+  } catch (error) {
+    hideSyncStatus();
+    showStatus(`خطأ في المزامنة: ${error.message}`, "error", {
+      duration: 5000,
+    });
+  }
+}
+
 export async function initializeApp() {
   console.log("Initializing Inventory Management App...");
-
-  // Fetch version info first to use it for Service Worker registration
-  let versionData = { hash: new Date().getTime() }; // Fallback to timestamp
+  let versionData = { hash: new Date().getTime() };
   try {
     const response = await fetch(`version.json?t=${new Date().getTime()}`);
     if (response.ok) {
@@ -204,7 +273,6 @@ export async function initializeApp() {
   }
 
   registerServiceWorker(versionData.hash);
-
   const magicLinkProcessed = handleMagicLink();
 
   setupEventListeners();
@@ -215,68 +283,17 @@ export async function initializeApp() {
   const savedTheme = localStorage.getItem("inventoryAppTheme") || "light";
   const savedCurrency = localStorage.getItem("inventoryAppCurrency") || "IQD";
   appState.activeCurrency = savedCurrency;
-  setTheme(savedTheme);
+  setTheme(savedTheme, true); // Set theme instantly without transition
 
-  renderInventorySkeleton();
-  if (appState.syncConfig) {
-    showStatus("جاري مزامنة البيانات...", "syncing");
-    try {
-      const [inventoryResult, salesResult, suppliersResult, auditLogResult] =
-        await Promise.all([
-          api.fetchFromGitHub(),
-          api.fetchSales(),
-          api.fetchSuppliers(),
-          api.fetchAuditLog(),
-        ]);
-      if (inventoryResult) {
-        appState.inventory = inventoryResult.data;
-        appState.fileSha = inventoryResult.sha;
-      }
-      if (salesResult) {
-        appState.sales = salesResult.data;
-        appState.salesFileSha = salesResult.sha;
-      }
-      if (suppliersResult) {
-        appState.suppliers = suppliersResult.data;
-        appState.suppliersFileSha = suppliersResult.sha;
-      }
-      if (auditLogResult) {
-        appState.auditLog = auditLogResult.data;
-        appState.auditLogFileSha = auditLogResult.sha;
-      }
-
-      if (migrateDataModelIfNeeded()) {
-        showStatus("جاري تحديث هيكل البيانات...", "syncing");
-        await api.saveInventory();
-        saveLocalData();
-        showStatus("تم تحديث هيكل البيانات بنجاح!", "success");
-      } else {
-        saveLocalData();
-      }
-
-      hideSyncStatus();
-      if (!magicLinkProcessed) {
-        showStatus("تمت المزامنة بنجاح!", "success");
-      }
-    } catch (error) {
-      hideSyncStatus();
-      showStatus(`خطأ في المزامنة: ${error.message}`, "error", {
-        duration: 5000,
-      });
-      loadLocalData();
-      if (migrateDataModelIfNeeded()) {
-        saveLocalData();
-        console.log("Local data model migrated.");
-      }
-    }
-  } else {
-    loadLocalData();
-    if (migrateDataModelIfNeeded()) {
-      saveLocalData();
-      console.log("Local data model migrated.");
-    }
+  // --- LOCAL FIRST STRATEGY ---
+  // 1. Load local data immediately
+  loadLocalData();
+  if (migrateDataModelIfNeeded()) {
+    saveLocalData();
+    console.log("Local data model migrated.");
   }
 
+  // 2. Render the UI immediately with local data
   const { updateLastArchiveDateDisplay } = await import(
     "./handlers/syncHandlers.js"
   );
@@ -286,6 +303,12 @@ export async function initializeApp() {
   renderAuditLog();
   updateCurrencyDisplay();
   handleUrlShortcuts();
+
+  // 3. Sync with remote data in the background
+  if (!magicLinkProcessed) {
+    // Don't sync immediately after a magic link setup
+    syncRemoteData();
+  }
 
   console.log("App Initialized Successfully.");
 }
