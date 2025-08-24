@@ -10,7 +10,6 @@ import { filterAndRenderItems, renderDashboard } from "../renderer.js";
 function setupTabNavigation() {
   const tabContainer = document.querySelector("#sync-modal .tab-navigation");
   if (!tabContainer) return;
-
   tabContainer.addEventListener("click", e => {
     const clickedTab = e.target.closest(".tab-btn");
     if (!clickedTab || clickedTab.classList.contains("active")) return;
@@ -43,7 +42,6 @@ function openSyncModal() {
   }
   elements.exchangeRateInput.value = appState.exchangeRate || "";
   elements.currentUserInput.value = appState.currentUser || "المستخدم";
-
   // Reset to the first tab every time the modal is opened
   const tabContainer = document.querySelector("#sync-modal .tab-navigation");
   const tabPanels = document.querySelectorAll("#sync-modal .tab-panel");
@@ -83,7 +81,6 @@ export function updateLastArchiveDateDisplay() {
     "last-archive-date-display"
   );
   if (!lastArchiveDisplay) return;
-
   const timestamp = appState.inventory.lastArchiveTimestamp;
   if (timestamp && typeof timestamp === "number") {
     const date = new Date(timestamp);
@@ -103,12 +100,10 @@ export function updateLastArchiveDateDisplay() {
 async function handleManualArchive() {
   const threeMonthsAgo = new Date();
   threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-
   const salesToArchive = appState.sales.filter(sale => {
     const saleDate = new Date(sale.saleDate);
     return saleDate < threeMonthsAgo;
   });
-
   if (salesToArchive.length === 0) {
     showStatus("لا توجد مبيعات قديمة (أقدم من 3 أشهر) للأرشفة.", "info");
     return;
@@ -120,11 +115,9 @@ async function handleManualArchive() {
     confirmText: "نعم، أرشف",
     isDanger: false,
   });
-
   if (!confirmed) return;
 
   const syncToastId = showStatus("جاري أرشفة المبيعات...", "syncing");
-
   try {
     const archiveFileName = `archive/sales_${new Date()
       .toISOString()
@@ -134,7 +127,6 @@ async function handleManualArchive() {
       JSON.stringify(salesToArchive, null, 2),
       `Archive sales data up to ${new Date().toISOString()}`
     );
-
     appState.sales = appState.sales.filter(
       sale => new Date(sale.saleDate) >= threeMonthsAgo
     );
@@ -181,21 +173,17 @@ async function handleCleanupImages() {
       "سيقوم هذا الإجراء بفحص جميع الصور في المستودع وحذف أي صورة غير مرتبطة بأي منتج حالي. هل أنت متأكد؟",
     confirmText: "نعم، قم بالتنظيف",
   });
-
   if (!confirmed) return;
 
   const syncToastId = showStatus("جاري البحث عن الصور غير المستخدمة...", "syncing");
-
   try {
     const repoImages = await api.getGitHubDirectoryListing("images");
     const usedImagePaths = new Set(
       appState.inventory.items.map(item => item.imagePath).filter(Boolean)
     );
-
     const unusedImages = repoImages.filter(
       file => !usedImagePaths.has(file.path)
     );
-
     if (unusedImages.length === 0) {
       hideStatus(syncToastId);
       showStatus("لا توجد صور غير مستخدمة ليتم حذفها.", "info");
@@ -208,7 +196,6 @@ async function handleCleanupImages() {
       message: `تم العثور على ${unusedImages.length} صورة غير مستخدمة. هل تريد حذفها نهائياً؟`,
       confirmText: `نعم، حذف ${unusedImages.length} صور`,
     });
-
     if (!deleteConfirmed) return;
 
     const deletionToastId = showStatus(
@@ -296,17 +283,14 @@ async function handleBackupDownload() {
 
 async function handleRestoreFromFile(file) {
   if (!file) return;
-
   const confirmed = await showConfirmationModal({
     title: "استعادة نسخة احتياطية",
     message:
       "سيتم استبدال جميع البيانات الحالية (المنتجات، المبيعات، الموردون) بالبيانات الموجودة في الملف. هل أنت متأكد من المتابعة؟",
     confirmText: "نعم، قم بالاستعادة",
   });
-
   if (!confirmed) return;
   const syncToastId = showStatus("جاري استعادة البيانات...", "syncing");
-
   try {
     const { default: JSZip } = await import(
       "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"
@@ -333,7 +317,6 @@ async function handleRestoreFromFile(file) {
       api.saveSuppliers(),
       api.saveAuditLog(),
     ]);
-
     hideStatus(syncToastId);
     showStatus("تم استعادة البيانات ومزامنتها بنجاح!", "success");
     filterAndRenderItems(true);
@@ -362,7 +345,13 @@ function handleGenerateMagicLink() {
 export function setupSyncListeners(elements) {
   setupTabNavigation();
 
-  elements.syncSettingsBtn.addEventListener("click", openSyncModal);
+  elements.syncSettingsBtn.addEventListener("click", () => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        openSyncModal();
+      });
+    });
+  });
   elements.syncForm.addEventListener("submit", handleSyncFormSubmit);
 
   const closeBtn = document.getElementById("close-sync-modal-btn");
@@ -387,7 +376,6 @@ export function setupSyncListeners(elements) {
       handleLiveExchangeRateClick();
     }
   });
-
   elements.cleanupImagesBtn.addEventListener("click", handleCleanupImages);
   elements.downloadBackupBtn.addEventListener("click", handleBackupDownload);
   elements.restoreBackupInput.addEventListener("change", e =>
@@ -402,11 +390,9 @@ export function setupSyncListeners(elements) {
     navigator.clipboard.writeText(e.target.value);
     showStatus("تم نسخ الرابط إلى الحافظة.", "success");
   });
-
   document
     .getElementById("manual-archive-btn")
     .addEventListener("click", handleManualArchive);
-
   document
     .getElementById("view-archives-btn")
     .addEventListener("click", async () => {
@@ -443,7 +429,6 @@ export function setupSyncListeners(elements) {
   elements.closeArchiveBrowserBtn.addEventListener("click", () =>
     elements.archiveBrowserModal.close()
   );
-
   document
     .getElementById("archive-list-container")
     .addEventListener("click", async e => {

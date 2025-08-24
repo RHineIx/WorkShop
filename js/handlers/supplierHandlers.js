@@ -116,8 +116,12 @@ async function handleDeleteSupplier(supplierId) {
 
 export function setupSupplierListeners(elements) {
   elements.manageSuppliersBtn.addEventListener("click", () => {
-    renderSupplierList();
-    openModal(elements.supplierManagerModal);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        renderSupplierList();
+        openModal(elements.supplierManagerModal);
+      });
+    });
   });
   elements.closeSupplierManagerBtn.addEventListener("click", () => {
     elements.supplierManagerModal.close();

@@ -40,14 +40,20 @@ function handleCardClick(card, target) {
     if (target.closest(".sell-btn")) {
       const item = appState.inventory.items.find(i => i.id === itemId);
       if (item && item.quantity > 0) {
-        openSaleModal(itemId);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => openSaleModal(itemId));
+        });
       } else {
         showStatus("هذا المنتج نافد من المخزون.", "error");
       }
     } else if (target.closest(".details-btn")) {
-      openDetailsModal(itemId);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => openDetailsModal(itemId));
+      });
     } else {
-      openDetailsModal(itemId);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => openDetailsModal(itemId));
+      });
     }
   }
 }
@@ -166,8 +172,7 @@ async function handleCategoryRename(chip) {
 }
 
 function activateCategoryEditMode(chip) {
-  deactivateCategoryEditMode();
-  // Deactivate any other active chip first
+  deactivateCategoryEditMode(); // Deactivate any other active chip first
   chip.classList.add("edit-active");
 
   const editBtn = document.createElement("button");
@@ -207,6 +212,8 @@ function handlePointerMove(e) {
 }
 
 function handlePointerUp(e) {
+  e.preventDefault(); // Prevent default actions like firing a synthetic click event
+
   if (isDragging || pointerDownTime === 0) {
     isDragging = false;
     pointerDownTime = 0;
