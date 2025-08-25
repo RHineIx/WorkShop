@@ -238,7 +238,7 @@ dialog::backdrop {
   flex-shrink: 0;
 }
 .modal-actions {
-  margin-top: var(--spacing-lg);
+  margin-top: var(--spacing-sm);
   display: flex;
   justify-content: flex-end;
   gap: var(--spacing-sm);

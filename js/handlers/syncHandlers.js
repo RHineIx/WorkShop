@@ -84,13 +84,22 @@ export function updateLastArchiveDateDisplay() {
   const timestamp = appState.inventory.lastArchiveTimestamp;
   if (timestamp && typeof timestamp === "number") {
     const date = new Date(timestamp);
-    const formattedDate = date.toLocaleString("ar-IQ", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    
+    const day = date.getDate();
+    const year = date.getFullYear();
+    const month = date.toLocaleString('ar-EG', { month: 'long' });
+
+    let hour = date.getHours();
+    const minute = date.getMinutes();
+    const period = hour >= 12 ? 'م' : 'ص';
+    
+    hour = hour % 12;
+    hour = hour ? hour : 12; // the hour '0' should be '12'
+    
+    const minutePadded = minute.toString().padStart(2, '0');
+
+    const formattedDate = `${day} ${month} ${year} | ${hour}:${minutePadded} ${period}`;
+
     lastArchiveDisplay.textContent = `آخر أرشفة: ${formattedDate}`;
   } else {
     lastArchiveDisplay.textContent = "آخر أرشفة: لم تتم بعد";
