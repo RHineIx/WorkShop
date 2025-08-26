@@ -86,9 +86,7 @@ function handleModalClose(event) {
       // Restore scroll position after the modal is fully closed
       requestAnimationFrame(() => {
         const savedScrollPosition = appState.scrollPositions[appState.currentView] || 0;
-        appContainer.style.scrollBehavior = 'auto';
         appContainer.scrollTop = savedScrollPosition;
-        appContainer.style.scrollBehavior = '';
       });
     }
     document.body.appendChild(elements.toastContainer);
@@ -157,11 +155,9 @@ export function toggleView(viewToShow) {
   }
 
   if (appContainer) {
-    // Restore the scroll position of the view we are entering, but do it instantly
+    // Restore the scroll position of the view we are entering
     const newScrollTop = appState.scrollPositions[viewToShow] || 0;
-    appContainer.style.scrollBehavior = 'auto';
     appContainer.scrollTop = newScrollTop;
-    appContainer.style.scrollBehavior = ''; // Revert to CSS-defined behavior (smooth)
   }
 }
 

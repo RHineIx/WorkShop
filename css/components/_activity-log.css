@@ -86,6 +86,15 @@
   background-color: var(--bg-color);
 }
 
+.log-entry--clickable {
+  cursor: pointer;
+}
+
+.log-entry--clickable:hover {
+  background-color: var(--accent-soft-bg);
+}
+
+
 .log-icon {
   flex-shrink: 0;
   width: 40px;
@@ -138,4 +147,4 @@
 .log-meta .log-user {
   color: var(--accent-color);
   font-weight: 700;
-  }
+}
