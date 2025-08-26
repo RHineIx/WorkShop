@@ -56,245 +56,258 @@
     <div id="theme-transition-overlay"></div>
     <div id="toast-container" class="toast-container"></div>
 
-    <header class="page-controls">
-      <div class="control-group">
-        <h1 id="inventory-toggle-btn" class="app-title active-view-btn">
-          MASTER KEY
-        </h1>
-      </div>
-      <div class="control-group">
-        <button
-          id="add-item-btn"
-          title="إضافة منتج جديد"
-          class="control-button primary-action"
-        >
-          <iconify-icon icon="material-symbols:add"></iconify-icon>
-          <span class="btn-text">إضافة منتج</span>
-        </button>
+    <div id="app-container">
+      <header class="page-controls">
+        <div class="control-group">
+          <h1 id="inventory-toggle-btn" class="app-title active-view-btn">
+            MASTER KEY
+          </h1>
+        </div>
+        <div class="control-group">
+          <button
+            id="add-item-btn"
+            title="إضافة منتج جديد"
+            class="control-button primary-action"
+          >
+            <iconify-icon icon="material-symbols:add"></iconify-icon>
+            <span class="btn-text">إضافة منتج</span>
+          </button>
 
-        <button
-          id="dashboard-toggle-btn"
-          title="لوحة المعلومات"
-          class="control-button"
-        >
-          <iconify-icon
-            icon="material-symbols:monitoring-rounded"
-          ></iconify-icon>
-        </button>
+          <button
+            id="dashboard-toggle-btn"
+            title="لوحة المعلومات"
+            class="control-button"
+          >
+            <iconify-icon
+              icon="material-symbols:monitoring-rounded"
+            ></iconify-icon>
+          </button>
 
-        <button
-          id="activity-log-toggle-btn"
-          title="سجل النشاط"
-          class="control-button"
-        >
-          <iconify-icon icon="material-symbols:history-rounded"></iconify-icon>
-        </button>
+          <button
+            id="activity-log-toggle-btn"
+            title="سجل النشاط"
+            class="control-button"
+          >
+            <iconify-icon icon="material-symbols:history-rounded"></iconify-icon>
+          </button>
 
-        <button
-          id="sync-settings-btn"
-          title="إعدادات المزامنة"
-          class="control-button"
-        >
-          <span class="rate-limit-indicator"></span>
-          <iconify-icon
-            icon="material-symbols:cloud-sync-outline-rounded"
-          ></iconify-icon>
-        </button>
+          <button
+            id="sync-settings-btn"
+            title="إعدادات المزامنة"
+            class="control-button"
+          >
+            <span class="rate-limit-indicator"></span>
+            <iconify-icon
+              icon="material-symbols:cloud-sync-outline-rounded"
+            ></iconify-icon>
+          </button>
 
-        <button
-          id="currency-toggle-btn"
-          title="تبديل العملة"
-          class="control-button"
-        ></button>
-        <button
-          id="theme-toggle-btn"
-          title="تبديل الثيم"
-          class="control-button"
-        >
-          <iconify-icon icon="material-symbols:light-mode"></iconify-icon>
-        </button>
-      </div>
-    </header>
+          <button
+            id="currency-toggle-btn"
+            title="تبديل العملة"
+            class="control-button"
+          ></button>
+          <button
+            id="theme-toggle-btn"
+            title="تبديل الثيم"
+            class="control-button"
+          >
+            <iconify-icon icon="material-symbols:light-mode"></iconify-icon>
+          </button>
+        </div>
+      </header>
 
-    <main class="main-container">
-      <div id="inventory-view-container">
-        <section
-          id="stats-cards"
-          class="stats-container"
-          aria-labelledby="stats-heading"
-        >
-          <h2 id="stats-heading" class="visually-hidden">إحصائيات المخزون</h2>
-          <div class="stat-card">
-            <div class="card-icon">
-              <iconify-icon
-                icon="material-symbols:inventory-2-outline-rounded"
-              ></iconify-icon>
-            </div>
-            <div class="card-details">
-              <div class="card-title">إجمالي المنتجات</div>
-              <div id="total-items-stat" class="card-value">0</div>
-            </div>
-          </div>
-          <div class="stat-card low-stock-alert">
-            <div class="card-icon">
-              <iconify-icon
-                icon="material-symbols:warning-outline-rounded"
-              ></iconify-icon>
-            </div>
-            <div class="card-details">
-              <div class="card-title">تنبيهات انخفاض المخزون</div>
-              <div id="low-stock-stat" class="card-value">0</div>
-            </div>
-          </div>
-        </section>
-
-        <section
-          class="inventory-container"
-          aria-labelledby="inventory-heading"
-        >
-          <div class="inventory-header">
-            <h2 id="inventory-heading">قائمة المنتجات</h2>
-
-            <div class="inventory-actions">
-              <div class="sort-container">
-                <label for="sort-options" class="visually-hidden"
-                  >فرز حسب</label
-                >
-                <select id="sort-options">
-                  <option value="default">فرز افتراضي</option>
-                  <option value="date_desc">الأحدث أولاً</option>
-                  <option value="name_asc">الاسم (أ - ي)</option>
-                  <option value="quantity_asc">الكمية (الأقل أولاً)</option>
-                  <option value="quantity_desc">الكمية (الأكثر أولاً)</option>
-                </select>
+      <main class="main-container">
+        <div id="inventory-view-container">
+          <section
+            id="stats-cards"
+            class="stats-container"
+            aria-labelledby="stats-heading"
+          >
+            <h2 id="stats-heading" class="visually-hidden">إحصائيات المخزون</h2>
+            <div class="stat-card">
+              <div class="card-icon">
                 <iconify-icon
-                  class="sort-icon"
-                  icon="material-symbols:swap-vert"
+                  icon="material-symbols:inventory-2-outline-rounded"
                 ></iconify-icon>
               </div>
+              <div class="card-details">
+                <div class="card-title">إجمالي المنتجات</div>
+                <div id="total-items-stat" class="card-value">0</div>
+              </div>
+            </div>
+            <div class="stat-card low-stock-alert">
+              <div class="card-icon">
+                <iconify-icon
+                  icon="material-symbols:warning-outline-rounded"
+                ></iconify-icon>
+              </div>
+              <div class="card-details">
+                <div class="card-title">تنبيهات انخفاض المخزون</div>
+                <div id="low-stock-stat" class="card-value">0</div>
+              </div>
+            </div>
+          </section>
 
-              <div id="search-container" class="search-container">
-                <input
-                  type="text"
-                  id="search-bar"
-                  autocomplete="off"
-                  placeholder="ابحث في المنتجات..."
-                />
-                <button id="clear-search-btn" class="clear-search-btn">
+          <section
+            class="inventory-container"
+            aria-labelledby="inventory-heading"
+          >
+            <div class="inventory-header" id="inventory-header">
+              <h2 id="inventory-heading">قائمة المنتجات</h2>
+              <div class="inventory-actions">
+                <div id="search-container" class="search-container">
+                  <input
+                    type="text"
+                    id="search-bar"
+                    autocomplete="off"
+                    placeholder="ابحث في المنتجات..."
+                  />
+                  <iconify-icon icon="material-symbols:search-rounded" class="search-icon"></iconify-icon>
+                  <button id="clear-search-btn" class="clear-search-btn">
+                    <iconify-icon
+                      icon="material-symbols:close-rounded"
+                    ></iconify-icon>
+                  </button>
+                </div>
+                <div class="sort-container">
+                    <button id="sort-btn" class="sort-btn">
+                        <span>فرز افتراضي</span>
+                        <iconify-icon class="sort-chevron" icon="material-symbols:expand-more"></iconify-icon>
+                    </button>
+                    <ul id="sort-menu" class="sort-menu">
+                        <li class="sort-option" data-value="default">
+                            <iconify-icon icon="material-symbols:sort-rounded"></iconify-icon>
+                            <span>فرز افتراضي</span>
+                        </li>
+                        <li class="sort-option" data-value="date_desc">
+                            <iconify-icon icon="material-symbols:schedule-rounded"></iconify-icon>
+                            <span>الأحدث أولاً</span>
+                        </li>
+                        <li class="sort-option" data-value="name_asc">
+                            <iconify-icon icon="material-symbols:sort-by-alpha-rounded"></iconify-icon>
+                            <span>الاسم (أ - ي)</span>
+                        </li>
+                        <li class="sort-option" data-value="quantity_asc">
+                            <iconify-icon icon="material-symbols:arrow-downward-alt-rounded"></iconify-icon>
+                            <span>الكمية (الأقل أولاً)</span>
+                        </li>
+                        <li class="sort-option" data-value="quantity_desc">
+                            <iconify-icon icon="material-symbols:arrow-upward-alt-rounded"></iconify-icon>
+                            <span>الكمية (الأكثر أولاً)</span>
+                        </li>
+                    </ul>
+                </div>
+              </div>
+            </div>
+
+            <div id="category-filter-bar" class="category-filter-bar"></div>
+
+            <div id="inventory-grid" class="inventory-grid"></div>
+            <div id="load-more-trigger"></div>
+          </section>
+        </div>
+
+        <div id="dashboard-view-container" class="view-hidden">
+          <section
+            class="dashboard-container"
+            aria-labelledby="dashboard-heading"
+          >
+            <div class="dashboard-header">
+              <h2 id="dashboard-heading">لوحة المعلومات</h2>
+              <div id="time-filter-controls" class="time-filter-controls">
+                <button class="time-filter-btn active" data-period="today">
+                  يومي
+                </button>
+                <button class="time-filter-btn" data-period="week">أسبوعي</button>
+                <button class="time-filter-btn" data-period="month">شهري</button>
+              </div>
+            </div>
+
+            <div id="dashboard-stats" class="stats-container">
+              <div class="stat-card">
+                <div class="card-icon">
                   <iconify-icon
-                    icon="material-symbols:close-rounded"
+                    icon="material-symbols:point-of-sale"
+                  ></iconify-icon>
+                </div>
+                <div class="card-details">
+                  <div class="card-title">إجمالي المبيعات</div>
+                  <div id="total-sales-stat" class="card-value">0</div>
+                </div>
+              </div>
+              <div class="stat-card profit">
+                <div class="card-icon">
+                  <iconify-icon
+                    icon="material-symbols:trending-up-rounded"
+                  ></iconify-icon>
+                </div>
+                <div class="card-details">
+                  <div class="card-title">إجمالي الأرباح</div>
+                  <div id="total-profit-stat" class="card-value">0</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="collapsible-section">
+              <button
+                class="collapsible-header"
+                data-target="bestsellers-content"
+                aria-expanded="true"
+              >
+                <span class="collapsible-title">أفضل 5 منتجات مبيعًا</span>
+                <iconify-icon icon="material-symbols:expand-less"></iconify-icon>
+              </button>
+              <div id="bestsellers-content" class="collapsible-content">
+                <div id="bestsellers-list" class="bestsellers-list"></div>
+              </div>
+            </div>
+
+            <div class="collapsible-section">
+              <button
+                class="collapsible-header"
+                data-target="sales-log-content"
+                aria-expanded="true"
+              >
+                <span class="collapsible-title">سجل المبيعات</span>
+                <iconify-icon icon="material-symbols:expand-less"></iconify-icon>
+              </button>
+              <div id="sales-log-content" class="collapsible-content"></div>
+            </div>
+          </section>
+        </div>
+
+        <div id="activity-log-view-container" class="view-hidden">
+          <section
+            class="activity-log-container"
+            aria-labelledby="activity-heading"
+          >
+            <div class="activity-log-header">
+              <h2 id="activity-heading">سجل نشاطات المخزون</h2>
+              <div class="activity-log-actions">
+                <select id="activity-log-filter">
+                  <option value="all">كل النشاطات</option>
+                  <option value="sale">المبيعات</option>
+                  <option value="quantity">تعديلات الكمية</option>
+                  <option value="lifecycle">أضافه / حذف</option>
+                  <option value="other">تحديثات أخرى</option>
+                </select>
+                <button
+                  id="clear-log-btn"
+                  class="icon-btn"
+                  title="تنظيف سجل النشاطات"
+                >
+                  <iconify-icon
+                    icon="material-symbols:delete-outline-rounded"
                   ></iconify-icon>
                 </button>
               </div>
             </div>
-          </div>
-
-          <div id="category-filter-bar" class="category-filter-bar"></div>
-
-          <div id="inventory-grid" class="inventory-grid"></div>
-          <div id="load-more-trigger"></div>
-        </section>
-      </div>
-
-      <div id="dashboard-view-container" class="view-hidden">
-        <section
-          class="dashboard-container"
-          aria-labelledby="dashboard-heading"
-        >
-          <div class="dashboard-header">
-            <h2 id="dashboard-heading">لوحة المعلومات</h2>
-            <div id="time-filter-controls" class="time-filter-controls">
-              <button class="time-filter-btn active" data-period="today">
-                يومي
-              </button>
-              <button class="time-filter-btn" data-period="week">أسبوعي</button>
-              <button class="time-filter-btn" data-period="month">شهري</button>
-            </div>
-          </div>
-
-          <div id="dashboard-stats" class="stats-container">
-            <div class="stat-card">
-              <div class="card-icon">
-                <iconify-icon
-                  icon="material-symbols:point-of-sale"
-                ></iconify-icon>
-              </div>
-              <div class="card-details">
-                <div class="card-title">إجمالي المبيعات</div>
-                <div id="total-sales-stat" class="card-value">0</div>
-              </div>
-            </div>
-            <div class="stat-card profit">
-              <div class="card-icon">
-                <iconify-icon
-                  icon="material-symbols:trending-up-rounded"
-                ></iconify-icon>
-              </div>
-              <div class="card-details">
-                <div class="card-title">إجمالي الأرباح</div>
-                <div id="total-profit-stat" class="card-value">0</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="collapsible-section">
-            <button
-              class="collapsible-header"
-              data-target="bestsellers-content"
-              aria-expanded="true"
-            >
-              <span class="collapsible-title">أفضل 5 منتجات مبيعًا</span>
-              <iconify-icon icon="material-symbols:expand-less"></iconify-icon>
-            </button>
-            <div id="bestsellers-content" class="collapsible-content">
-              <div id="bestsellers-list" class="bestsellers-list"></div>
-            </div>
-          </div>
-
-          <div class="collapsible-section">
-            <button
-              class="collapsible-header"
-              data-target="sales-log-content"
-              aria-expanded="true"
-            >
-              <span class="collapsible-title">سجل المبيعات</span>
-              <iconify-icon icon="material-symbols:expand-less"></iconify-icon>
-            </button>
-            <div id="sales-log-content" class="collapsible-content"></div>
-          </div>
-        </section>
-      </div>
-
-      <div id="activity-log-view-container" class="view-hidden">
-        <section
-          class="activity-log-container"
-          aria-labelledby="activity-heading"
-        >
-          <div class="activity-log-header">
-            <h2 id="activity-heading">سجل نشاطات المخزون</h2>
-            <div class="activity-log-actions">
-              <select id="activity-log-filter">
-                <option value="all">كل النشاطات</option>
-                <option value="sale">المبيعات</option>
-                <option value="quantity">تعديلات الكمية</option>
-                <option value="lifecycle">أضافه / حذف</option>
-                <option value="other">تحديثات أخرى</option>
-              </select>
-              <button
-                id="clear-log-btn"
-                class="icon-btn"
-                title="تنظيف سجل النشاطات"
-              >
-                <iconify-icon
-                  icon="material-symbols:delete-outline-rounded"
-                ></iconify-icon>
-              </button>
-            </div>
-          </div>
-          <div id="audit-log-list" class="log-list"></div>
-        </section>
-      </div>
-    </main>
+            <div id="audit-log-list" class="log-list"></div>
+          </section>
+        </div>
+      </main>
+    </div>
 
     <dialog id="details-modal">
       <div class="details-modal-content">
@@ -657,175 +670,218 @@
     </dialog>
 
     <dialog id="sync-modal">
-      <form id="sync-form" class="modal-form">
-        <h3 id="sync-modal-title" tabindex="-1">إعدادات المزامنة والتطبيق</h3>
-
-        <span id="rate-limit-display" class="rate-limit-display"></span>
-
-        <div class="form-group">
-          <label for="current-user">اسم المستخدم (للسجلات)</label>
-          <input
-            type="text"
-            id="current-user"
-            placeholder="أسمك"
-            autocomplete="off"
-          />
-        </div>
-
-        <hr class="maintenance-divider" />
-
-        <p>سيتم حفظ بياناتك في ملفات JSON داخل مستودع GitHub خاص.</p>
-
-        <div class="form-group">
-          <label for="github-username">اسم المستخدم في GitHub</label>
-          <input
-            type="text"
-            id="github-username"
-            required
-            placeholder="e.g., my-username"
-          />
-        </div>
-        <div class="form-group">
-          <label for="github-repo">اسم المستودع (Repository)</label>
-          <input
-            type="text"
-            id="github-repo"
-            required
-            placeholder="e.g., key-inventory-data"
-          />
-        </div>
-        <div class="form-group">
-          <label for="github-pat"
-            >مفتاح الوصول الشخصي (Personal Access Token)</label
-          >
-          <input
-            type="password"
-            id="github-pat"
-            required
-            placeholder="يبدأ بـ ghp_..."
-          />
-        </div>
-
-        <div class="modal-actions">
-          <button type="submit">حفظ الإعدادات</button>
-          <button type="button" id="cancel-sync-btn">إلغاء</button>
-        </div>
-
-        <div id="app-version-display" class="app-version"></div>
-
-        <hr class="maintenance-divider" />
-
-        <button
-          type="button"
-          id="advanced-settings-toggle"
-          class="advanced-settings-toggle"
-        >
-          <span>الإعدادات المتقدمة</span>
-          <iconify-icon icon="material-symbols:expand-more"></iconify-icon>
+      <div class="modal-header">
+        <h3 id="sync-modal-title">إعدادات المزامنة والتطبيق</h3>
+        <button id="close-sync-modal-btn" class="icon-btn">
+          <iconify-icon icon="material-symbols:close"></iconify-icon>
         </button>
+      </div>
 
-        <div
-          id="advanced-settings-container"
-          class="advanced-settings-container"
-        >
-          <div class="advanced-settings-wrapper">
-            <div class="form-group-inline">
-              <label for="exchange-rate">سعر صرف الدولار (مقابل 1 دولار)</label>
-              <small
-                id="live-exchange-rate-display"
-                title="اضغط لاستخدام هذا السعر"
-                >جاري التحميل...</small
-              >
+      <div class="sync-modal-content">
+        <div class="tab-navigation">
+          <button class="tab-btn active" data-tab="general-settings-tab-content">
+            الإعدادات العامة
+          </button>
+          <button class="tab-btn" data-tab="data-management-tab-content">
+            إدارة البيانات
+          </button>
+          <button class="tab-btn" data-tab="sync-tab-content">
+            المزامنة
+          </button>
+        </div>
+
+        <form id="sync-form" class="modal-form">
+          <div class="tab-content-wrapper">
+            <div id="general-settings-tab-content" class="tab-panel active">
+              <div class="form-group">
+                <label for="current-user">اسم المستخدم (للسجلات)</label>
+                <input
+                  type="text"
+                  id="current-user"
+                  placeholder="أسمك"
+                  autocomplete="name"
+                />
+              </div>
+              <div class="form-group">
+                <div class="form-group-inline">
+                  <label for="exchange-rate"
+                    >سعر صرف الدولار (مقابل 1 دولار)</label
+                  >
+                  <small
+                    id="live-exchange-rate-display"
+                    title="اضغط لاستخدام هذا السعر"
+                    >جاري التحميل...</small
+                  >
+                </div>
+                <input
+                  type="number"
+                  id="exchange-rate"
+                  placeholder="e.g., 1460"
+                />
+              </div>
             </div>
-            <input type="number" id="exchange-rate" placeholder="e.g., 1460" />
 
-            <div class="maintenance-actions">
-              <hr class="maintenance-divider" />
-              <button
-                type="button"
-                id="generate-magic-link-btn"
-                class="cleanup-btn archive-btn"
-              >
-                <iconify-icon
-                  icon="material-symbols:magic-button"
-                ></iconify-icon>
-                إنشاء رابط الإعداد السحري
-              </button>
-              <p
-                id="magic-link-container"
-                class="magic-link-container view-hidden"
-              >
-                <span class="magic-link-warning"
-                  >هذا الرابط سري للغاية، تعامل معه ككلمة مرور.</span
-                >
-                <input type="text" id="magic-link-output" readonly />
-              </p>
-              <hr class="maintenance-divider" />
-
-              <button
-                type="button"
-                id="manual-archive-btn"
-                class="cleanup-btn archive-btn"
-              >
-                <iconify-icon
-                  icon="material-symbols:archive-outline-rounded"
-                ></iconify-icon>
-                أرشفة المبيعات القديمة
-              </button>
-
-              <p id="last-archive-date-display" class="last-archive-text">
-                آخر أرشفة: لم تتم بعد
-              </p>
-
-              <hr class="maintenance-divider" />
-              <button
-                type="button"
-                id="view-archives-btn"
-                class="cleanup-btn archive-btn"
-              >
-                <iconify-icon icon="solar:inbox-archive-outline"></iconify-icon>
-                عرض أرشيف المبيعات
-              </button>
-              <button type="button" id="cleanup-images-btn" class="cleanup-btn">
-                <iconify-icon
-                  icon="streamline-plump:clean-broom-wipe"
-                ></iconify-icon>
-                تنظيف الصور غير المستخدمة
-              </button>
-
-              <hr class="maintenance-divider" />
-              <div class="backup-actions-group">
+            <div id="data-management-tab-content" class="tab-panel">
+              <fieldset>
+                <legend>الإعداد والمشاركة</legend>
                 <button
                   type="button"
-                  id="download-backup-btn"
+                  id="generate-magic-link-btn"
                   class="cleanup-btn archive-btn"
                 >
-                  <iconify-icon icon="mage:archive"></iconify-icon>
-                  تنزيل نسخة احتياطية محلية
+                  <iconify-icon
+                    icon="material-symbols:magic-button"
+                  ></iconify-icon>
+                  إنشاء رابط الإعداد السحري
+                </button>
+                <p
+                  id="magic-link-container"
+                  class="magic-link-container view-hidden"
+                >
+                  <span class="magic-link-warning"
+                    >هذا الرابط سري للغاية، تعامل معه ككلمة مرور.</span
+                  >
+                  <input type="text" id="magic-link-output" readonly />
+                </p>
+              </fieldset>
+
+              <fieldset>
+                <legend>صيانة البيانات</legend>
+                <button
+                  type="button"
+                  id="manual-archive-btn"
+                  class="cleanup-btn archive-btn"
+                >
+                  <iconify-icon
+                    icon="material-symbols:archive-outline-rounded"
+                  ></iconify-icon>
+                  أرشفة المبيعات القديمة
+                </button>
+                <p id="last-archive-date-display" class="last-archive-text">
+                  آخر أرشفة: لم تتم بعد
+                </p>
+                <button
+                  type="button"
+                  id="view-archives-btn"
+                  class="cleanup-btn archive-btn"
+                >
+                  <iconify-icon
+                    icon="solar:inbox-archive-outline"
+                  ></iconify-icon>
+                  عرض أرشيف المبيعات
                 </button>
                 <button
                   type="button"
-                  id="backup-to-telegram-btn"
-                  class="icon-btn telegram-btn"
-                  title="إرسال إلى تليجرام"
+                  id="cleanup-images-btn"
+                  class="cleanup-btn"
                 >
-                  <iconify-icon icon="mingcute:telegram-fill"></iconify-icon>
+                  <iconify-icon
+                    icon="streamline-plump:clean-broom-wipe"
+                  ></iconify-icon>
+                  تنظيف الصور غير المستخدمة
                 </button>
+              </fieldset>
+
+              <fieldset>
+                <legend>النسخ الاحتياطي والاستعادة</legend>
+                <div class="backup-actions-group">
+                  <button
+                    type="button"
+                    id="download-backup-btn"
+                    class="cleanup-btn archive-btn"
+                  >
+                    <iconify-icon icon="mage:archive"></iconify-icon>
+                    تنزيل نسخة احتياطية محلية
+                  </button>
+                  <button
+                    type="button"
+                    id="backup-to-telegram-btn"
+                    class="icon-btn telegram-btn"
+                    title="إرسال إلى تليجرام"
+                  >
+                    <iconify-icon icon="mingcute:telegram-fill"></iconify-icon>
+                  </button>
+                </div>
+                <input
+                  type="file"
+                  id="restore-backup-input"
+                  class="visually-hidden"
+                  accept=".zip"
+                />
+                <label
+                  for="restore-backup-input"
+                  class="cleanup-btn archive-btn"
+                >
+                  <iconify-icon icon="hugeicons:zip-02"></iconify-icon>
+                  استعادة من نسخة احتياطية
+                </label>
+              </fieldset>
+            </div>
+            
+            <div id="sync-tab-content" class="tab-panel">
+              <p>سيتم حفظ بياناتك في ملفات JSON داخل مستودع GitHub خاص.</p>
+              <div class="form-group">
+                <label for="github-username">اسم المستخدم في GitHub</label>
+                <input
+                  type="text"
+                  id="github-username"
+                  required
+                  placeholder="e.g., my-username"
+                  autocomplete="username"
+                />
               </div>
-              <input
-                type="file"
-                id="restore-backup-input"
-                class="visually-hidden"
-                accept=".zip"
-              />
-              <label for="restore-backup-input" class="cleanup-btn archive-btn">
-                <iconify-icon icon="hugeicons:zip-02"></iconify-icon>
-                استعادة من نسخة احتياطية
-              </label>
+              <div class="form-group">
+                <label for="github-repo">اسم المستودع (Repository)</label>
+                <input
+                  type="text"
+                  id="github-repo"
+                  required
+                  placeholder="e.g., key-inventory-data"
+                  autocomplete="off"
+                />
+              </div>
+              <div class="form-group">
+                <label for="github-pat"
+                  >مفتاح الوصول الشخصي (Personal Access Token)</label
+                >
+                <input
+                  type="password"
+                  id="github-pat"
+                  required
+                  placeholder="يبدأ بـ ghp_..."
+                  autocomplete="current-password"
+                />
+              </div>
             </div>
           </div>
+        </form>
+      </div>
+
+      <div class="sync-modal-footer">
+        <div class="modal-actions">
+          <button type="submit" form="sync-form">حفظ الإعدادات</button>
+          <button type="button" id="cancel-sync-btn">إلغاء</button>
         </div>
-      </form>
+        <div class="modal-info-footer">
+          <div class="info-item" id="rate-limit-info">
+            <iconify-icon
+              icon="material-symbols:api-outline-rounded"
+            ></iconify-icon>
+            <div class="info-item-text">
+              <span id="rate-limit-remaining-display"
+                >الطلبات المتبقية: --/--</span
+              >
+              <small id="rate-limit-reset-display">إعادة التعيين: --:--</small>
+            </div>
+          </div>
+          <div class="info-item" id="app-version-info">
+            <iconify-icon
+              icon="material-symbols:info-outline-rounded"
+            ></iconify-icon>
+            <div id="app-version-display" class="info-item-text"></div>
+          </div>
+        </div>
+      </div>
     </dialog>
 
     <dialog id="sale-modal">

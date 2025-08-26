@@ -1,4 +1,4 @@
-/* css/_base.css */
+/* css/base.css */
 
 /* --- Global Reset & Box Sizing --- */
 * {
@@ -11,8 +11,14 @@ html {
   /* Set base font size for REM calculations (16px default = 100%) */
   font-size: 100%;
   -webkit-text-size-adjust: 100%;
-  /* Enable smooth scrolling behavior */
-  scroll-behavior: smooth;
+}
+
+/* NEW: Set body and html to full height and disable their scrolling */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  position: relative;
 }
 
 /* --- Body Defaults --- */

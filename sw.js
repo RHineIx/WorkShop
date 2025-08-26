@@ -1,7 +1,6 @@
 // js/sw.js
-const CACHE_NAME = "workshop-v5.43.1";
+const CACHE_NAME = "workshop-v5.46.0";
 const DATA_CACHE_NAME = "workshop-data-v1";
-
 const URLS_TO_CACHE = [
   "/",
   "/index.html",
@@ -9,6 +8,8 @@ const URLS_TO_CACHE = [
   "/manifest.json",
   "/version.json",
   "Box.svg",
+  
+  // CSS files
   "/css/style.css",
   "/css/variables.css",
   "/css/base.css",
@@ -29,6 +30,8 @@ const URLS_TO_CACHE = [
   "/css/components/_search.css",
   "/css/components/_theme-transition.css",
   "/css/components/_utilities.css",
+
+  // JS files
   "/js/main.js",
   "/js/app.js",
   "/js/api.js",
@@ -52,8 +55,18 @@ const URLS_TO_CACHE = [
   "/js/handlers/modalHandlers.js",
   "/js/handlers/supplierHandlers.js",
   "/js/handlers/syncHandlers.js",
+  "/js/handlers/modals/cropperModalHandler.js",
+  "/js/handlers/modals/detailsModalHandler.js",
+  "/js/handlers/modals/itemFormHandler.js",
+  "/js/handlers/modals/saleModalHandler.js",
+
+  // Icon files
   "/icons/icon-192x192.png",
   "/icons/icon-512x512.png",
+  "/icons/add.png",
+  "/icons/dashboard.png",
+
+  // External Libraries (CDNs)
   "https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css",
   "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js",
   "https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js",
@@ -135,7 +148,7 @@ self.addEventListener("fetch", event => {
           }
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then(cache => {
-              cache.put(request, responseToCache);
+            cache.put(request, responseToCache);
           });
           return networkResponse;
         })

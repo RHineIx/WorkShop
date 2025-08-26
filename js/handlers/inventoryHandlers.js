@@ -1,7 +1,7 @@
 // js/handlers/inventoryHandlers.js
 import { appState } from "../state.js";
 import { debounce } from "../utils.js";
-import { openDetailsModal } from "../ui.js";
+import { openDetailsModal, elements } from "../ui.js";
 import { showStatus, hideStatus } from "../notifications.js";
 import * as api from "../api.js";
 import { saveLocalData } from "../app.js";
@@ -40,14 +40,20 @@ function handleCardClick(card, target) {
     if (target.closest(".sell-btn")) {
       const item = appState.inventory.items.find(i => i.id === itemId);
       if (item && item.quantity > 0) {
-        openSaleModal(itemId);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => openSaleModal(itemId));
+        });
       } else {
         showStatus("هذا المنتج نافد من المخزون.", "error");
       }
     } else if (target.closest(".details-btn")) {
-      openDetailsModal(itemId);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => openDetailsModal(itemId));
+      });
     } else {
-      openDetailsModal(itemId);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => openDetailsModal(itemId));
+      });
     }
   }
 }
@@ -166,8 +172,7 @@ async function handleCategoryRename(chip) {
 }
 
 function activateCategoryEditMode(chip) {
-  deactivateCategoryEditMode();
-  // Deactivate any other active chip first
+  deactivateCategoryEditMode(); // Deactivate any other active chip first
   chip.classList.add("edit-active");
 
   const editBtn = document.createElement("button");
@@ -207,6 +212,8 @@ function handlePointerMove(e) {
 }
 
 function handlePointerUp(e) {
+  e.preventDefault(); // Prevent default actions like firing a synthetic click event
+
   if (isDragging || pointerDownTime === 0) {
     isDragging = false;
     pointerDownTime = 0;
@@ -263,10 +270,40 @@ export function setupInventoryListeners(elements) {
     filterAndRenderItems(true);
     elements.searchBar.focus();
   });
-  elements.sortOptions.addEventListener("change", e => {
-    appState.currentSortOption = e.target.value;
-    filterAndRenderItems(true);
+
+  // --- NEW SORT LOGIC ---
+  const { sortBtn, sortMenu } = elements;
+  const sortBtnText = sortBtn.querySelector('span');
+
+  sortBtn.addEventListener('click', (event) => {
+    event.stopPropagation();
+    sortMenu.classList.toggle('is-open');
+    sortBtn.classList.toggle('is-open');
   });
+
+  sortMenu.addEventListener('click', (event) => {
+    const option = event.target.closest('.sort-option');
+    if (option) {
+      const selectedValue = option.dataset.value;
+      const selectedText = option.querySelector('span').textContent;
+
+      appState.currentSortOption = selectedValue;
+      filterAndRenderItems(true);
+      
+      sortBtnText.textContent = selectedText;
+      sortMenu.classList.remove('is-open');
+      sortBtn.classList.remove('is-open');
+    }
+  });
+
+  document.addEventListener('click', () => {
+    if (sortMenu.classList.contains('is-open')) {
+      sortMenu.classList.remove('is-open');
+      sortBtn.classList.remove('is-open');
+    }
+  });
+
+
   elements.statsContainer.addEventListener("click", e => {
     const card = e.target.closest(".stat-card");
     if (!card) return;

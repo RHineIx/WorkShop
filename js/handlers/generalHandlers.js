@@ -16,8 +16,11 @@ export function setupGeneralListeners(elements) {
   });
 
   if (elements.scrollToTopBtn) {
-    window.addEventListener("scroll", () => {
-      if (window.scrollY > 300) {
+    const appContainer = document.getElementById("app-container");
+    if (!appContainer) return;
+
+    appContainer.addEventListener("scroll", () => {
+      if (appContainer.scrollTop > 300) {
         elements.scrollToTopBtn.classList.add("visible");
       } else {
         elements.scrollToTopBtn.classList.remove("visible");
@@ -25,7 +28,7 @@ export function setupGeneralListeners(elements) {
     });
 
     elements.scrollToTopBtn.addEventListener("click", () => {
-      window.scrollTo({
+      appContainer.scrollTo({
         top: 0,
         behavior: "smooth",
       });

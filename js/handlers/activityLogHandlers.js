@@ -5,6 +5,7 @@ import { saveLocalData } from "../app.js";
 import { showConfirmationModal } from "../ui_helpers.js";
 import { showStatus, hideStatus } from "../notifications.js";
 import { renderAuditLog } from "../renderer.js";
+import { openDetailsModal } from "../ui.js";
 
 async function handleLogCleanup() {
   if (!appState.auditLog || appState.auditLog.length === 0) {
@@ -55,5 +56,22 @@ export function setupActivityLogListeners(elements) {
           appState.activityLogFilter = e.target.value;
           renderAuditLog();
       });
+  }
+
+  if (elements.auditLogList) {
+    elements.auditLogList.addEventListener('click', e => {
+      const logEntry = e.target.closest('.log-entry--clickable');
+      if (!logEntry) return;
+
+      const itemId = logEntry.dataset.id;
+      if (itemId) {
+        const itemExists = appState.inventory.items.some(i => i.id === itemId);
+        if (itemExists) {
+          openDetailsModal(itemId);
+        } else {
+          showStatus("لم يعد هذا المنتج موجودًا في المخزون.", "warning");
+        }
+      }
+    });
   }
 }

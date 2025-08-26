@@ -35,5 +35,9 @@ export const appState = {
   isSelectionModeActive: false,
   selectedItemIds: new Set(),
   visibleItemCount: 20,
-  scrollPosition: 0,
+  scrollPositions: {
+    inventory: 0,
+    dashboard: 0,
+    'activity-log': 0,
+  },
 };

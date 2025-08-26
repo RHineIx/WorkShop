@@ -198,7 +198,6 @@ async function syncRemoteData() {
   const syncToastId = showStatus("جاري مزامنة أحدث البيانات...", "syncing", {
     duration: 0,
   });
-
   try {
     const [inventoryResult, salesResult, suppliersResult, auditLogResult] =
       await Promise.all([
@@ -207,7 +206,6 @@ async function syncRemoteData() {
         api.fetchSuppliers(),
         api.fetchAuditLog(),
       ]);
-
     hideSyncStatus();
 
     let needsUIRefresh = false;
@@ -241,7 +239,6 @@ async function syncRemoteData() {
     }
 
     saveLocalData();
-
     if (needsUIRefresh) {
       showStatus("تم تحديث البيانات بنجاح!", "success");
       filterAndRenderItems();

@@ -3,7 +3,6 @@
 :root {
   /* Typography */
   --font-family: "Cairo", sans-serif;
-
   /* Sizing & Spacing (Stable REM values, fluidity from root font-size) */
   --spacing-xs: 0.25rem; /* 4px at base font-size */
   --spacing-sm: 0.5rem; /* 8px at base font-size */
@@ -23,6 +22,7 @@
 body.theme-light {
   --bg-color: #f4f7f9;
   --surface-color: #ffffff;
+  --surface-color-rgb: 255, 255, 255;
   --border-color: #e2e8f0;
   --fieldset-bg: #f8fafc;
   --text-primary: #1a202c;
@@ -44,6 +44,7 @@ body.theme-light {
 body.theme-dark {
   --bg-color: #121212;
   --surface-color: #1e1e1e;
+  --surface-color-rgb: 30, 30, 30;
   --border-color: #333333;
   --fieldset-bg: #232323;
   --text-primary: #e0e0e0;

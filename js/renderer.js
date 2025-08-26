@@ -558,7 +558,7 @@ export function renderSupplierList() {
         <button class="icon-btn edit-supplier-btn" data-id="${
           supplier.id
         }" title="تعديل المورّد">
-           <iconify-icon icon="material-symbols:edit-outline-rounded"></iconify-icon>
+          <iconify-icon icon="material-symbols:edit-outline-rounded"></iconify-icon>
         </button>
         <button class="icon-btn danger-btn delete-supplier-btn" data-id="${
           supplier.id
@@ -764,6 +764,7 @@ export function renderAuditLog() {
 
   sortedLog.forEach(logItem => {
     const clone = elements.logEntryTemplate.content.cloneNode(true);
+    const logEntryElement = clone.querySelector(".log-entry");
     const iconElement = clone.querySelector(".log-icon");
     const iconify = iconElement.querySelector("iconify-icon");
     const descriptionElement = clone.querySelector(".log-description");
@@ -777,6 +778,14 @@ export function renderAuditLog() {
     metaElement.innerHTML = `بواسطة <span class="log-user">${sanitizeHTML(
       logItem.user
     )}</span> • ${formatRelativeTime(new Date(logItem.timestamp))}`;
+
+    const isItemLog = logItem.targetId && logItem.targetId.startsWith('item_');
+    const itemExists = isItemLog && appState.inventory.items.find(i => i.id === logItem.targetId);
+
+    if (itemExists) {
+        logEntryElement.classList.add('log-entry--clickable');
+        logEntryElement.dataset.id = logItem.targetId;
+    }
 
     fragment.appendChild(clone);
   });

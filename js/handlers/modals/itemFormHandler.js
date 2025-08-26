@@ -121,7 +121,8 @@ function _getItemDataFromForm(itemId) {
     compatiblePartNumber: document
       .getElementById("item-compatible-pn")
       .value.trim(),
-    quantity: parseInt(document.getElementById("item-quantity").value, 10) || 0,
+    quantity:
+      parseInt(document.getElementById("item-quantity").value, 10) || 0,
     alertLevel:
       parseInt(document.getElementById("item-alert-level").value, 10) || 5,
     costPriceIqd:
@@ -402,11 +403,16 @@ export function setupItemFormModalListeners() {
   handleImageSelection = setupCropperModalListeners();
 
   elements.addItemBtn.addEventListener("click", () => {
-    openItemModal();
-    const existingSkus = new Set(
-      appState.inventory.items.map(item => item.sku)
-    );
-    document.getElementById("item-sku").value = generateUniqueSKU(existingSkus);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        openItemModal();
+        const existingSkus = new Set(
+          appState.inventory.items.map(item => item.sku)
+        );
+        document.getElementById("item-sku").value =
+          generateUniqueSKU(existingSkus);
+      });
+    });
   });
   elements.itemForm.addEventListener("submit", handleItemFormSubmit);
 
@@ -462,7 +468,6 @@ export function setupItemFormModalListeners() {
       showStatus(`فشل لصق الصورة: ${error.message}`, "error");
     }
   });
-
   const costIqdInput = document.getElementById("item-cost-price-iqd");
   const costUsdInput = document.getElementById("item-cost-price-usd");
   const sellIqdInput = document.getElementById("item-sell-price-iqd");

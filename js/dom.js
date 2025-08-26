@@ -11,7 +11,8 @@ export const elements = {
   toastContainer: document.getElementById("toast-container"),
   searchContainer: document.getElementById("search-container"),
   categoryFilterBar: document.getElementById("category-filter-bar"),
-  sortOptions: document.getElementById("sort-options"),
+  sortBtn: document.getElementById("sort-btn"),
+  sortMenu: document.getElementById("sort-menu"),
   loadMoreTrigger: document.getElementById("load-more-trigger"),
 
   // Header
