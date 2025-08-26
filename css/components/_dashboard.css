@@ -241,6 +241,13 @@
 .details-list .value {
   font-weight: 500;
 }
+
+.details-list .notes-value {
+  white-space: pre-wrap;
+  word-break: break-word;
+  text-align: left;
+}
+
 .details-list .profit-positive .value {
   color: var(--success-color);
 }
