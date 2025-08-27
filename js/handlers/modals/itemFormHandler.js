@@ -124,7 +124,7 @@ function _getItemDataFromForm(itemId) {
     quantity:
       parseInt(document.getElementById("item-quantity").value, 10) || 0,
     alertLevel:
-      parseInt(document.getElementById("item-alert-level").value, 10) || 5,
+      parseInt(document.getElementById("item-alert-level").value, 10) || 0,
     costPriceIqd:
       parseFloat(document.getElementById("item-cost-price-iqd").value) || 0,
     sellPriceIqd:
