@@ -81,19 +81,13 @@
   gap: var(--spacing-md);
   padding: var(--spacing-md);
   transition: background-color var(--transition-speed);
+  cursor: pointer; /* Make it obvious it's clickable */
+  -webkit-user-select: none; /* Prevent text selection flash */
+  user-select: none; /* Prevent text selection flash */
 }
 .log-entry:hover {
   background-color: var(--bg-color);
 }
-
-.log-entry--clickable {
-  cursor: pointer;
-}
-
-.log-entry--clickable:hover {
-  background-color: var(--accent-soft-bg);
-}
-
 
 .log-icon {
   flex-shrink: 0;
