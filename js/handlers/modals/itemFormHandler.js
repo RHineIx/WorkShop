@@ -26,8 +26,10 @@ function setupCategoryInput(currentItemCategories = []) {
     addCategoryBtn,
     categoryPillTemplate,
   } = elements;
+
   let selectedCategories = new Set(currentItemCategories);
   const allCategories = new Set(getAllUniqueCategories());
+
   const render = () => {
     selectedCategoriesContainer.innerHTML = "";
     availableCategoriesList.innerHTML = "";
@@ -67,15 +69,18 @@ function setupCategoryInput(currentItemCategories = []) {
       render();
     }
   };
+
   const removeCategory = text => {
     selectedCategories.delete(text);
     render();
   };
+
   const handleAddAction = () => {
     addCategory(categoryInputField.value);
     categoryInputField.value = "";
     categoryInputField.focus();
   };
+
   const handleEnterKey = e => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -259,12 +264,23 @@ function _logItemChanges(originalItem, updatedItem) {
       })
     );
   }
+  // FIXED: Add correct details for supplier update logging
   if (originalItem.supplierId !== updatedItem.supplierId) {
+    const getSupplierName = supplierId => {
+      if (!supplierId) return "بلا مورّد";
+      const supplier = appState.suppliers.find(s => s.id === supplierId);
+      return supplier ? supplier.name : "مورّد محذوف";
+    };
+
+    const fromSupplierName = getSupplierName(originalItem.supplierId);
+    const toSupplierName = getSupplierName(updatedItem.supplierId);
+
     loggingPromises.push(
       logAction({
         action: ACTION_TYPES.SUPPLIER_UPDATED,
         targetId: updatedItem.id,
         targetName: updatedItem.name,
+        details: { from: fromSupplierName, to: toSupplierName },
       })
     );
   }
@@ -297,6 +313,7 @@ async function handleItemFormSubmit(e) {
     appState.selectedImageFile ? "جاري رفع الصورة..." : "جاري حفظ المنتج...",
     "syncing"
   );
+
   if (itemIndex !== -1) {
     appState.inventory.items[itemIndex] = itemData;
   } else {
@@ -414,6 +431,7 @@ export function setupItemFormModalListeners() {
       });
     });
   });
+
   elements.itemForm.addEventListener("submit", handleItemFormSubmit);
 
   elements.itemModal.addEventListener("close", () => {
@@ -425,6 +443,7 @@ export function setupItemFormModalListeners() {
       categoryInputManager = null;
     }
   });
+
   elements.cancelItemBtn.addEventListener("click", () =>
     elements.itemModal.close()
   );
@@ -435,10 +454,12 @@ export function setupItemFormModalListeners() {
     );
     document.getElementById("item-sku").value = generateUniqueSKU(existingSkus);
   });
+
   elements.imageUploadInput.addEventListener("change", e => {
     handleImageSelection(e.target.files[0]);
     e.target.value = "";
   });
+
   elements.pasteImageBtn.addEventListener("click", async () => {
     try {
       if (!navigator.clipboard?.read) {
@@ -468,10 +489,12 @@ export function setupItemFormModalListeners() {
       showStatus(`فشل لصق الصورة: ${error.message}`, "error");
     }
   });
+
   const costIqdInput = document.getElementById("item-cost-price-iqd");
   const costUsdInput = document.getElementById("item-cost-price-usd");
   const sellIqdInput = document.getElementById("item-sell-price-iqd");
   const sellUsdInput = document.getElementById("item-sell-price-usd");
+
   costIqdInput.addEventListener("input", () =>
     handlePriceConversion(costIqdInput, costUsdInput)
   );

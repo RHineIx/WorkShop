@@ -6,6 +6,7 @@ import { elements } from "./dom.js";
 import { ACTION_TYPES } from "./logger.js";
 
 const ITEMS_PER_PAGE = 20;
+
 const imageObserver = new IntersectionObserver(
   (entries, observer) => {
     entries.forEach(entry => {
@@ -33,6 +34,7 @@ const imageObserver = new IntersectionObserver(
   },
   { rootMargin: "0px 0px 200px 0px" }
 );
+
 const animationObserver = new IntersectionObserver(
   (entries, observer) => {
     entries.forEach(entry => {
@@ -44,6 +46,7 @@ const animationObserver = new IntersectionObserver(
   },
   { threshold: 0.1 }
 );
+
 const loadMoreObserver = new IntersectionObserver(
   entries => {
     const entry = entries[0];
@@ -54,6 +57,7 @@ const loadMoreObserver = new IntersectionObserver(
   },
   { rootMargin: "0px 0px 400px 0px" }
 );
+
 export function getAllUniqueCategories() {
   return [
     ...new Set(
@@ -156,6 +160,7 @@ export function renderInventory(itemsToRender) {
 
   const fragment = document.createDocumentFragment();
   const cardTemplate = elements.productCardTemplate;
+
   itemsToDisplay.forEach(item => {
     const cardClone = cardTemplate.content.cloneNode(true);
     const cardElement = cardClone.querySelector(".product-card");
@@ -186,6 +191,7 @@ export function renderInventory(itemsToRender) {
     const quantityBadge = cardClone.querySelector(".quantity-badge");
     quantityBadge.textContent = badgeText;
     quantityBadge.className = `quantity-badge ${badgeClass}`;
+
     const imageContainer = cardClone.querySelector(".card-image-container");
     const placeholder = cardClone.querySelector(".card-image-placeholder");
 
@@ -220,12 +226,14 @@ export function renderInventory(itemsToRender) {
     cardClone.querySelector(".card-sku").textContent = `SKU: ${sanitizeHTML(
       item.sku || ""
     )}`;
+
     const isIQD = appState.activeCurrency === "IQD";
     const price = isIQD ? item.sellPriceIqd || 0 : item.sellPriceUsd || 0;
     const symbol = isIQD ? "د.ع" : "$";
     cardClone.querySelector(
       ".card-price"
     ).textContent = `${price.toLocaleString()} ${symbol}`;
+
     cardClone.querySelector(".sell-btn").disabled = isOutOfStock;
 
     fragment.appendChild(cardClone);
@@ -236,9 +244,11 @@ export function renderInventory(itemsToRender) {
   elements.inventoryGrid
     .querySelectorAll(".card-image[data-src]")
     .forEach(img => imageObserver.observe(img));
+
   elements.inventoryGrid
     .querySelectorAll(".product-card")
     .forEach(card => animationObserver.observe(card));
+
   if (appState.visibleItemCount < itemsToRender.length) {
     elements.loadMoreTrigger.style.display = "block";
     loadMoreObserver.observe(elements.loadMoreTrigger);
@@ -255,6 +265,7 @@ export function updateProductCardImage(itemId, newImageBlobUrl) {
 
   const imageContainer = card.querySelector(".card-image-container");
   if (!imageContainer) return;
+
   const existingImage = imageContainer.querySelector(".card-image");
   if (existingImage) existingImage.remove();
 
@@ -262,6 +273,7 @@ export function updateProductCardImage(itemId, newImageBlobUrl) {
     ".card-image-placeholder"
   );
   if (existingPlaceholder) existingPlaceholder.remove();
+
   const newImg = document.createElement("img");
   newImg.className = "card-image";
   newImg.src = newImageBlobUrl;
@@ -346,6 +358,7 @@ export function renderCategoryFilter() {
     allButton.classList.add("active");
   }
   fragment.appendChild(allButton);
+
   // "Uncategorized" button
   const hasUncategorized = appState.inventory.items.some(
     item => !item.categories || item.categories.length === 0
@@ -372,12 +385,14 @@ export function renderCategoryFilter() {
     }
     fragment.appendChild(chipButton);
   });
+
   categoryFilterBar.appendChild(fragment);
 }
 
 function renderSalesLog(filteredSales) {
   const { salesLogContent } = elements;
   salesLogContent.innerHTML = "";
+
   if (filteredSales.length === 0) {
     salesLogContent.innerHTML =
       "<div><p>لا توجد مبيعات في هذه الفترة.</p></div>";
@@ -386,15 +401,18 @@ function renderSalesLog(filteredSales) {
 
   const isIQD = appState.activeCurrency === "IQD";
   const symbol = isIQD ? "د.ع" : "$";
+
   const salesByDay = filteredSales.reduce((acc, sale) => {
     const date = sale.saleDate;
     if (!acc[date]) acc[date] = [];
     acc[date].push(sale);
     return acc;
   }, {});
+
   const dayGroupTemplate = document.getElementById("day-group-template");
   const saleItemTemplate = document.getElementById("sale-item-template");
   const mainFragment = document.createDocumentFragment();
+
   for (const [date, sales] of Object.entries(salesByDay)) {
     const dayGroupClone = dayGroupTemplate.content.cloneNode(true);
     const dayGroupElement = dayGroupClone.querySelector(".day-group");
@@ -442,6 +460,7 @@ function renderSalesLog(filteredSales) {
       profitItem.querySelector(
         ".profit-value"
       ).textContent = `${profit.toLocaleString()} ${symbol}`;
+
       if (sale.notes) {
         const notesItem = saleItemElement.querySelector(".notes-item");
         notesItem.style.display = "flex";
@@ -490,6 +509,7 @@ export const renderDashboard = () => {
       startDate = today;
       break;
   }
+
   const filteredSales = appState.sales
     .filter(sale => {
       const [year, month, day] = sale.saleDate.split("-").map(Number);
@@ -497,6 +517,7 @@ export const renderDashboard = () => {
       return saleDate >= startDate && saleDate <= now;
     })
     .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
   const isIQD = appState.activeCurrency === "IQD";
   const totalSales = filteredSales.reduce(
     (sum, sale) =>
@@ -540,6 +561,7 @@ export const renderDashboard = () => {
 
   renderSalesLog(filteredSales);
 };
+
 export function renderSupplierList() {
   elements.supplierListContainer.innerHTML = "";
   if (appState.suppliers.length === 0) {
@@ -558,7 +580,7 @@ export function renderSupplierList() {
         <button class="icon-btn edit-supplier-btn" data-id="${
           supplier.id
         }" title="تعديل المورّد">
-          <iconify-icon icon="material-symbols:edit-outline-rounded"></iconify-icon>
+           <iconify-icon icon="material-symbols:edit-outline-rounded"></iconify-icon>
         </button>
         <button class="icon-btn danger-btn delete-supplier-btn" data-id="${
           supplier.id
@@ -602,12 +624,14 @@ const formatRelativeTime = date => {
   const minutes = Math.round(seconds / 60);
   const hours = Math.round(minutes / 60);
   const days = Math.round(hours / 24);
+
   if (seconds < 60) return `قبل لحظات`;
   if (minutes < 60) return `قبل ${minutes} دقيقة`;
   if (hours < 24) return `قبل ${hours} ساعة`;
   if (days < 30) return `قبل ${days} يوم`;
   return date.toLocaleString("ar-EG");
 };
+
 const getActionDetails = log => {
   const name = `<strong>${sanitizeHTML(log.targetName)}</strong>`;
   const details = log.details;
@@ -628,15 +652,16 @@ const getActionDetails = log => {
         class: "create",
         description: `تم إنشاء منتج جديد: ${name}.`,
       };
+    // FIXED: Use the pre-formatted string directly instead of converting to Number
     case ACTION_TYPES.PRICE_UPDATED:
       return {
         icon: "material-symbols:price-change-outline",
         class: "update",
-        description: `تم تغيير سعر ${name} من <span class="old-value">${Number(
-          from
-        ).toLocaleString()}</span> إلى <span class="new-value">${Number(
-          to
-        ).toLocaleString()}</span>.`,
+        description: `تم تغيير سعر ${name} من <span class="old-value">${sanitizeHTML(
+          String(from)
+        )}</span> إلى <span class="new-value">${sanitizeHTML(
+          String(to)
+        )}</span>.`,
       };
     case ACTION_TYPES.QUANTITY_UPDATED:
       let qtyDescription = `تم تعديل كمية ${name} من ${sanitizeHTML(
