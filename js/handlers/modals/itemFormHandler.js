@@ -18,6 +18,49 @@ import { setupCropperModalListeners } from "./cropperModalHandler.js";
 let categoryInputManager = null;
 let handleImageSelection;
 
+/**
+ * Formats the value of a text input to include thousand separators.
+ * @param {HTMLInputElement} input The input element to format.
+ */
+function formatCurrencyInput(input) {
+  if (!input) return;
+  let originalValue = input.value;
+  let cursorPosition = input.selectionStart;
+
+  // Count commas before cursor
+  let commasBeforeCursor = (originalValue.substring(0, cursorPosition).match(/,/g) || []).length;
+
+  // Clean the value
+  let numericString = originalValue.replace(/[^0-9.]/g, '');
+  
+  // Prevent issues with multiple decimals
+  const parts = numericString.split('.');
+  if (parts.length > 2) {
+      numericString = parts[0] + '.' + parts.slice(1).join('');
+  }
+  
+  let [integerPart, decimalPart] = numericString.split('.');
+  
+  // Format the integer part
+  if (integerPart) {
+    const formattedInteger = parseInt(integerPart, 10).toLocaleString('en-US');
+    let formattedValue = formattedInteger;
+    if (decimalPart !== undefined) {
+      formattedValue += '.' + decimalPart;
+    }
+
+    // Set the new value and update cursor position
+    input.value = formattedValue;
+    
+    // Recalculate cursor position
+    let newCommasBeforeCursor = (formattedValue.substring(0, cursorPosition).match(/,/g) || []).length;
+    cursorPosition += (newCommasBeforeCursor - commasBeforeCursor);
+    input.setSelectionRange(cursorPosition, cursorPosition);
+  } else {
+    input.value = '';
+  }
+}
+
 function setupCategoryInput(currentItemCategories = []) {
   const {
     selectedCategoriesContainer,
@@ -105,18 +148,20 @@ function setupCategoryInput(currentItemCategories = []) {
 }
 
 function handlePriceConversion(sourceInput, targetInput) {
-  const sourceValue = parseFloat(sourceInput.value);
+  const sourceValue = parseFloat(sourceInput.value.replace(/,/g, ''));
   const rate = appState.exchangeRate;
   if (!isNaN(sourceValue) && sourceValue > 0 && rate > 0) {
     const usdValue = sourceValue / rate;
-    targetInput.value = usdValue.toFixed(2);
+    targetInput.value = usdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   } else {
-    targetInput.value = 0;
+    targetInput.value = "0";
   }
 }
 
 function _getItemDataFromForm(itemId) {
   const categories = categoryInputManager.getSelectedCategories();
+  const getNumericValue = (id) => parseFloat(document.getElementById(id).value.replace(/,/g, '')) || 0;
+
   return {
     id: itemId || `item_${Date.now()}`,
     sku: document.getElementById("item-sku").value,
@@ -130,14 +175,10 @@ function _getItemDataFromForm(itemId) {
       parseInt(document.getElementById("item-quantity").value, 10) || 0,
     alertLevel:
       parseInt(document.getElementById("item-alert-level").value, 10) || 0,
-    costPriceIqd:
-      parseFloat(document.getElementById("item-cost-price-iqd").value) || 0,
-    sellPriceIqd:
-      parseFloat(document.getElementById("item-sell-price-iqd").value) || 0,
-    costPriceUsd:
-      parseFloat(document.getElementById("item-cost-price-usd").value) || 0,
-    sellPriceUsd:
-      parseFloat(document.getElementById("item-sell-price-usd").value) || 0,
+    costPriceIqd: getNumericValue("item-cost-price-iqd"),
+    sellPriceIqd: getNumericValue("item-sell-price-iqd"),
+    costPriceUsd: getNumericValue("item-cost-price-usd"),
+    sellPriceUsd: getNumericValue("item-sell-price-usd"),
     notes: document.getElementById("item-notes").value,
     supplierId: document.getElementById("item-supplier").value || null,
   };
@@ -240,8 +281,8 @@ function _logItemChanges(originalItem, updatedItem) {
         targetId: updatedItem.id,
         targetName: updatedItem.name,
         details: {
-          from: `${originalItem.sellPriceIqd} د.ع`,
-          to: `${updatedItem.sellPriceIqd} د.ع`,
+          from: `${originalItem.sellPriceIqd.toLocaleString('en-US')} د.ع`,
+          to: `${updatedItem.sellPriceIqd.toLocaleString('en-US')} د.ع`,
         },
       })
     );
@@ -264,7 +305,6 @@ function _logItemChanges(originalItem, updatedItem) {
       })
     );
   }
-  // FIXED: Add correct details for supplier update logging
   if (originalItem.supplierId !== updatedItem.supplierId) {
     const getSupplierName = supplierId => {
       if (!supplierId) return "بلا مورّد";
@@ -379,14 +419,10 @@ export function openItemModal(itemId = null) {
         item.compatiblePartNumber || "";
       document.getElementById("item-quantity").value = item.quantity;
       document.getElementById("item-alert-level").value = item.alertLevel;
-      document.getElementById("item-cost-price-iqd").value =
-        item.costPriceIqd || 0;
-      document.getElementById("item-sell-price-iqd").value =
-        item.sellPriceIqd || 0;
-      document.getElementById("item-cost-price-usd").value =
-        item.costPriceUsd || 0;
-      document.getElementById("item-sell-price-usd").value =
-        item.sellPriceUsd || 0;
+      document.getElementById("item-cost-price-iqd").value = (item.costPriceIqd || 0).toLocaleString('en-US');
+      document.getElementById("item-sell-price-iqd").value = (item.sellPriceIqd || 0).toLocaleString('en-US');
+      document.getElementById("item-cost-price-usd").value = (item.costPriceUsd || 0).toLocaleString('en-US');
+      document.getElementById("item-sell-price-usd").value = (item.sellPriceUsd || 0).toLocaleString('en-US');
       document.getElementById("item-notes").value = item.notes;
       populateSupplierDropdown(item.supplierId);
       if (item.imagePath) {
@@ -489,11 +525,16 @@ export function setupItemFormModalListeners() {
       showStatus(`فشل لصق الصورة: ${error.message}`, "error");
     }
   });
-
+  
+  // Setup formatting for all currency inputs
   const costIqdInput = document.getElementById("item-cost-price-iqd");
   const costUsdInput = document.getElementById("item-cost-price-usd");
   const sellIqdInput = document.getElementById("item-sell-price-iqd");
   const sellUsdInput = document.getElementById("item-sell-price-usd");
+  
+  [costIqdInput, costUsdInput, sellIqdInput, sellUsdInput].forEach(input => {
+      input.addEventListener('input', () => formatCurrencyInput(input));
+  });
 
   costIqdInput.addEventListener("input", () =>
     handlePriceConversion(costIqdInput, costUsdInput)
