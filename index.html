@@ -88,7 +88,9 @@
             title="سجل النشاط"
             class="control-button"
           >
-            <iconify-icon icon="material-symbols:history-rounded"></iconify-icon>
+            <iconify-icon
+              icon="material-symbols:history-rounded"
+            ></iconify-icon>
           </button>
 
           <button
@@ -163,7 +165,10 @@
                     autocomplete="off"
                     placeholder="ابحث في المنتجات..."
                   />
-                  <iconify-icon icon="material-symbols:search-rounded" class="search-icon"></iconify-icon>
+                  <iconify-icon
+                    icon="material-symbols:search-rounded"
+                    class="search-icon"
+                  ></iconify-icon>
                   <button id="clear-search-btn" class="clear-search-btn">
                     <iconify-icon
                       icon="material-symbols:close-rounded"
@@ -171,32 +176,45 @@
                   </button>
                 </div>
                 <div class="sort-container">
-                    <button id="sort-btn" class="sort-btn">
-                        <span>فرز افتراضي</span>
-                        <iconify-icon class="sort-chevron" icon="material-symbols:expand-more"></iconify-icon>
-                    </button>
-                    <ul id="sort-menu" class="sort-menu">
-                        <li class="sort-option" data-value="default">
-                            <iconify-icon icon="material-symbols:sort-rounded"></iconify-icon>
-                            <span>فرز افتراضي</span>
-                        </li>
-                        <li class="sort-option" data-value="date_desc">
-                            <iconify-icon icon="material-symbols:schedule-rounded"></iconify-icon>
-                            <span>الأحدث أولاً</span>
-                        </li>
-                        <li class="sort-option" data-value="name_asc">
-                            <iconify-icon icon="material-symbols:sort-by-alpha-rounded"></iconify-icon>
-                            <span>الاسم (أ - ي)</span>
-                        </li>
-                        <li class="sort-option" data-value="quantity_asc">
-                            <iconify-icon icon="material-symbols:arrow-downward-alt-rounded"></iconify-icon>
-                            <span>الكمية (الأقل أولاً)</span>
-                        </li>
-                        <li class="sort-option" data-value="quantity_desc">
-                            <iconify-icon icon="material-symbols:arrow-upward-alt-rounded"></iconify-icon>
-                            <span>الكمية (الأكثر أولاً)</span>
-                        </li>
-                    </ul>
+                  <button id="sort-btn" class="sort-btn">
+                    <span>فرز افتراضي</span>
+                    <iconify-icon
+                      class="sort-chevron"
+                      icon="material-symbols:expand-more"
+                    ></iconify-icon>
+                  </button>
+                  <ul id="sort-menu" class="sort-menu">
+                    <li class="sort-option" data-value="default">
+                      <iconify-icon
+                        icon="material-symbols:sort-rounded"
+                      ></iconify-icon>
+                      <span>فرز افتراضي</span>
+                    </li>
+                    <li class="sort-option" data-value="date_desc">
+                      <iconify-icon
+                        icon="material-symbols:schedule-rounded"
+                      ></iconify-icon>
+                      <span>الأحدث أولاً</span>
+                    </li>
+                    <li class="sort-option" data-value="name_asc">
+                      <iconify-icon
+                        icon="material-symbols:sort-by-alpha-rounded"
+                      ></iconify-icon>
+                      <span>الاسم (أ - ي)</span>
+                    </li>
+                    <li class="sort-option" data-value="quantity_asc">
+                      <iconify-icon
+                        icon="material-symbols:arrow-downward-alt-rounded"
+                      ></iconify-icon>
+                      <span>الكمية (الأقل أولاً)</span>
+                    </li>
+                    <li class="sort-option" data-value="quantity_desc">
+                      <iconify-icon
+                        icon="material-symbols:arrow-upward-alt-rounded"
+                      ></iconify-icon>
+                      <span>الكمية (الأكثر أولاً)</span>
+                    </li>
+                  </ul>
                 </div>
               </div>
             </div>
@@ -219,8 +237,12 @@
                 <button class="time-filter-btn active" data-period="today">
                   يومي
                 </button>
-                <button class="time-filter-btn" data-period="week">أسبوعي</button>
-                <button class="time-filter-btn" data-period="month">شهري</button>
+                <button class="time-filter-btn" data-period="week">
+                  أسبوعي
+                </button>
+                <button class="time-filter-btn" data-period="month">
+                  شهري
+                </button>
               </div>
             </div>
 
@@ -256,7 +278,9 @@
                 aria-expanded="true"
               >
                 <span class="collapsible-title">أفضل 5 منتجات مبيعًا</span>
-                <iconify-icon icon="material-symbols:expand-less"></iconify-icon>
+                <iconify-icon
+                  icon="material-symbols:expand-less"
+                ></iconify-icon>
               </button>
               <div id="bestsellers-content" class="collapsible-content">
                 <div id="bestsellers-list" class="bestsellers-list"></div>
@@ -270,7 +294,9 @@
                 aria-expanded="true"
               >
                 <span class="collapsible-title">سجل المبيعات</span>
-                <iconify-icon icon="material-symbols:expand-less"></iconify-icon>
+                <iconify-icon
+                  icon="material-symbols:expand-less"
+                ></iconify-icon>
               </button>
               <div id="sales-log-content" class="collapsible-content"></div>
             </div>
@@ -386,7 +412,8 @@
                 معلومات المورّد
               </h3>
               <p>
-                <strong>الاسم:</strong> <span id="details-supplier-name"></span>
+                <strong>الاسم:</strong>
+                <span id="details-supplier-name"></span>
               </p>
               <p>
                 <strong>الهاتف:</strong>
@@ -613,45 +640,41 @@
                 <div class="form-group">
                   <label for="item-cost-price-iqd">تكلفة (دينار)</label>
                   <input
-                    type="number"
+                    type="text"
+                    inputmode="decimal"
                     id="item-cost-price-iqd"
                     value="0"
                     dir="ltr"
-                    step="any"
-                    min="0"
                   />
                 </div>
                 <div class="form-group">
                   <label for="item-sell-price-iqd">بيع (دينار)</label>
                   <input
-                    type="number"
+                    type="text"
+                    inputmode="decimal"
                     id="item-sell-price-iqd"
                     value="0"
                     dir="ltr"
-                    step="any"
-                    min="0"
                   />
                 </div>
                 <div class="form-group">
                   <label for="item-cost-price-usd">تكلفة (دولار)</label>
                   <input
-                    type="number"
+                    type="text"
+                    inputmode="decimal"
                     id="item-cost-price-usd"
                     value="0"
                     dir="ltr"
-                    step="any"
-                    min="0"
                   />
                 </div>
                 <div class="form-group">
                   <label for="item-sell-price-usd">بيع (دولار)</label>
                   <input
-                    type="number"
+                    type="text"
+                    inputmode="decimal"
                     id="item-sell-price-usd"
                     value="0"
                     dir="ltr"
-                    step="any"
-                    min="0"
                   />
                 </div>
               </div>
@@ -679,15 +702,16 @@
 
       <div class="sync-modal-content">
         <div class="tab-navigation">
-          <button class="tab-btn active" data-tab="general-settings-tab-content">
+          <button
+            class="tab-btn active"
+            data-tab="general-settings-tab-content"
+          >
             الإعدادات العامة
           </button>
           <button class="tab-btn" data-tab="data-management-tab-content">
             إدارة البيانات
           </button>
-          <button class="tab-btn" data-tab="sync-tab-content">
-            المزامنة
-          </button>
+          <button class="tab-btn" data-tab="sync-tab-content">المزامنة</button>
         </div>
 
         <form id="sync-form" class="modal-form">
@@ -817,7 +841,7 @@
                 </label>
               </fieldset>
             </div>
-            
+
             <div id="sync-tab-content" class="tab-panel">
               <p>سيتم حفظ بياناتك في ملفات JSON داخل مستودع GitHub خاص.</p>
               <div class="form-group">
@@ -910,7 +934,7 @@
           <div class="form-group">
             <label for="sale-price">سعر البيع للقطعة</label>
             <div class="input-with-currency">
-              <input type="number" id="sale-price" step="250" min="0" />
+              <input type="text" inputmode="decimal" id="sale-price" min="0" />
               <span id="sale-price-currency" class="currency-symbol"></span>
             </div>
           </div>
