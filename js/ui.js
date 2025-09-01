@@ -226,8 +226,7 @@ export function updateCurrencyDisplay() {
 export function updateSaleTotal() {
   const quantity = parseInt(elements.saleQuantityInput.value, 10) || 0;
   const unitPrice =
-    parseFloat(document.getElementById("sale-price").value) ||
-    0;
+    parseFloat(document.getElementById("sale-price").value) || 0;
   const totalPrice = quantity * unitPrice;
   const symbol = appState.activeCurrency === "IQD" ? "د.ع" : "$";
   elements.saleTotalPrice.textContent = `${totalPrice.toLocaleString()} ${symbol}`;
