@@ -11,6 +11,7 @@ import { setupSupplierListeners } from "./handlers/supplierHandlers.js";
 import { setupSyncListeners } from "./handlers/syncHandlers.js";
 import { setupBulkActionListeners } from "./handlers/bulkActionHandlers.js";
 import { setupActivityLogListeners } from "./handlers/activityLogHandlers.js";
+import { setupVehicleSearchListeners } from "./handlers/vehicleSearchHandler.js";
 
 export function setupEventListeners() {
   setupGeneralListeners(elements);
@@ -22,4 +23,5 @@ export function setupEventListeners() {
   setupSyncListeners(elements);
   setupBulkActionListeners(elements);
   setupActivityLogListeners(elements);
+  setupVehicleSearchListeners(elements);
 }

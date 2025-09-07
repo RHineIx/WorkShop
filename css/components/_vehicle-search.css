@@ -1,0 +1,150 @@
+/* css/components/_vehicle-search.css */
+
+.vehicle-search-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.vehicle-search-container h2 {
+  text-align: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.vehicle-filter-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background-color: var(--surface-color);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-light);
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.filter-group label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.filter-group select {
+  width: 100%;
+  padding: 0.75rem;
+  font-family: var(--font-family);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  background-color: var(--surface-color);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all var(--transition-speed);
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23718096' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left 0.75rem center;
+}
+
+.filter-group select:disabled {
+  background-color: var(--bg-color);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.filter-group select:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px var(--accent-soft-bg);
+}
+
+.vehicle-search-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.vehicle-result-card {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-md);
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+  box-shadow: var(--shadow-light);
+  transition: all var(--transition-speed) ease;
+}
+
+.vehicle-result-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-strong);
+  border-color: var(--accent-color);
+}
+
+.vr-card-icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: var(--accent-soft-bg);
+  color: var(--accent-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vr-card-icon iconify-icon {
+  font-size: 28px;
+}
+
+.vr-card-info {
+  flex-grow: 1;
+}
+
+.vr-card-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: var(--spacing-sm);
+}
+
+.vr-card-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-sm) var(--spacing-md);
+  font-size: 0.875rem;
+}
+
+.vr-detail-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: var(--text-secondary);
+}
+
+.vr-detail-item iconify-icon {
+  font-size: 18px;
+  color: var(--accent-color);
+  opacity: 0.8;
+}
+
+.vr-detail-item[data-field="fccId"] span,
+.vr-detail-item[data-field="partNo"] span {
+  font-family: "Roboto Mono", monospace;
+  font-weight: 500;
+  direction: ltr;
+  text-align: right;
+  color: var(--text-primary);
+}
+
+.vr-detail-item[data-field="year"] span,
+.vr-detail-item[data-field="yearRange"] span {
+  font-weight: 600;
+  color: var(--text-primary);
+}

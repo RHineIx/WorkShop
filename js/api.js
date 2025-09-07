@@ -309,5 +309,6 @@ export const fetchGitHubFileAsBlob = async (path) => {
 
 export const fetchGitHubFile = async path => {
   const result = await fetchJsonFromGitHub(path, null);
-  return result ? result.data : null;
+  return result ?
+    result.data : null;
 };

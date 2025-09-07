@@ -39,5 +39,14 @@ export const appState = {
     inventory: 0,
     dashboard: 0,
     'activity-log': 0,
+    'vehicle-search': 0,
+  },
+  // Vehicle Search State
+  vehicleIndex: null,
+  vehicleDataLoaded: false,
+  vehicleFilters: {
+    make: "",
+    model: "",
+    year: "",
   },
 };

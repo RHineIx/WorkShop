@@ -23,6 +23,7 @@ export const elements = {
   inventoryToggleBtn: document.getElementById("inventory-toggle-btn"),
   dashboardToggleBtn: document.getElementById("dashboard-toggle-btn"),
   activityLogToggleBtn: document.getElementById("activity-log-toggle-btn"),
+  vehicleSearchToggleBtn: document.getElementById("vehicle-search-toggle-btn"),
 
   // View Containers
   inventoryViewContainer: document.getElementById("inventory-view-container"),
@@ -30,6 +31,13 @@ export const elements = {
   activityLogViewContainer: document.getElementById(
     "activity-log-view-container"
   ),
+  vehicleSearchViewContainer: document.getElementById("vehicle-search-view-container"),
+
+  // Vehicle Search
+  vehicleMakeSelect: document.getElementById("vehicle-make-select"),
+  vehicleModelSelect: document.getElementById("vehicle-model-select"),
+  vehicleYearSelect: document.getElementById("vehicle-year-select"),
+  vehicleSearchResults: document.getElementById("vehicle-search-results"),
 
   // Dashboard Elements
   timeFilterControls: document.getElementById("time-filter-controls"),
@@ -185,6 +193,7 @@ export const elements = {
 
   // Templates
   productCardTemplate: document.getElementById("product-card-template"),
+  vehicleResultCardTemplate: document.getElementById("vehicle-result-card-template"),
   logEntryTemplate: document.getElementById("log-entry-template"),
   categoryPillTemplate: document.getElementById("category-pill-template"),
 };

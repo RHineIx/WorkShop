@@ -9,10 +9,12 @@ import {
 } from "./renderer.js";
 import { showStatus } from "./notifications.js";
 import { pushState } from "./navigation.js";
+import { initVehicleSearch } from "./handlers/vehicleSearchHandler.js";
 
 let countdownInterval = null;
 
 export { elements };
+
 export function displayVersionInfo(versionData) {
   const versionDisplay = document.getElementById("app-version-display");
   if (versionData && versionDisplay) {
@@ -117,7 +119,6 @@ export function openModal(dialogElement) {
 
 export function toggleView(viewToShow) {
   if (appState.currentView === viewToShow) return;
-
   if (appState.currentView !== "inventory" && viewToShow === "inventory") {
     // Handled by back button
   } else if (viewToShow !== "inventory") {
@@ -134,34 +135,44 @@ export function toggleView(viewToShow) {
   const isInventory = viewToShow === "inventory";
   const isDashboard = viewToShow === "dashboard";
   const isActivityLog = viewToShow === "activity-log";
+  const isVehicleSearch = viewToShow === "vehicle-search";
 
   elements.inventoryViewContainer.classList.toggle("view-hidden", !isInventory);
   elements.dashboardViewContainer.classList.toggle("view-hidden", !isDashboard);
-  elements.activityLogViewContainer.classList.toggle(
-    "view-hidden",
-    !isActivityLog
-  );
+  elements.activityLogViewContainer.classList.toggle("view-hidden", !isActivityLog);
+  elements.vehicleSearchViewContainer.classList.toggle("view-hidden", !isVehicleSearch);
 
-  elements.inventoryToggleBtn.classList.remove("active-view-btn");
-  elements.dashboardToggleBtn.classList.remove("active-view-btn");
-  elements.activityLogToggleBtn.classList.remove("active-view-btn");
+  // Deactivate all buttons first
+  document.querySelectorAll('.page-controls .active-view-btn').forEach(btn => {
+      btn.classList.remove('active-view-btn');
+  });
 
+  let activeButton;
   if (isInventory) {
-    elements.inventoryToggleBtn.classList.add("active-view-btn");
+    activeButton = elements.inventoryToggleBtn;
   } else if (isDashboard) {
-    elements.dashboardToggleBtn.classList.add("active-view-btn");
+    activeButton = elements.dashboardToggleBtn;
     renderDashboard();
   } else if (isActivityLog) {
-    elements.activityLogToggleBtn.classList.add("active-view-btn");
+    activeButton = elements.activityLogToggleBtn;
     renderAuditLog();
+  } else if (isVehicleSearch) {
+    activeButton = elements.vehicleSearchToggleBtn;
+    initVehicleSearch();
   }
+
+  if (activeButton) {
+      activeButton.classList.add('active-view-btn');
+  }
+
 
   if (appContainer) {
     // Restore the scroll position of the view we are entering, but do it instantly
     const newScrollTop = appState.scrollPositions[viewToShow] || 0;
     appContainer.style.scrollBehavior = 'auto';
     appContainer.scrollTop = newScrollTop;
-    appContainer.style.scrollBehavior = ''; // Revert to CSS-defined behavior (smooth)
+    appContainer.style.scrollBehavior = '';
+    // Revert to CSS-defined behavior (smooth)
   }
 }
 
@@ -333,7 +344,8 @@ export function openDetailsModal(itemId) {
   if (supplier) {
     elements.detailsSupplierName.textContent = supplier.name;
     elements.detailsSupplierPhone.textContent = supplier.phone
-      ? supplier.phone
+      ?
+      supplier.phone
       : "لا يوجد";
     if (supplier.phone) {
       elements.detailsSupplierWhatsapp.href = `https://wa.me/${supplier.phone.replace(
