@@ -8,17 +8,14 @@ export function setupGeneralListeners(elements) {
     const isLight = document.body.classList.contains("theme-light");
     setTheme(isLight ? "dark" : "light");
   });
-
   elements.currencyToggleBtn.addEventListener("click", () => {
     appState.activeCurrency = appState.activeCurrency === "IQD" ? "USD" : "IQD";
     localStorage.setItem("inventoryAppCurrency", appState.activeCurrency);
     updateCurrencyDisplay();
   });
-
   if (elements.scrollToTopBtn) {
     const appContainer = document.getElementById("app-container");
     if (!appContainer) return;
-
     appContainer.addEventListener("scroll", () => {
       if (appContainer.scrollTop > 300) {
         elements.scrollToTopBtn.classList.add("visible");
@@ -26,7 +23,6 @@ export function setupGeneralListeners(elements) {
         elements.scrollToTopBtn.classList.remove("visible");
       }
     });
-
     elements.scrollToTopBtn.addEventListener("click", () => {
       appContainer.scrollTo({
         top: 0,
@@ -41,15 +37,16 @@ export function setupViewToggleListeners(elements) {
     if (appState.isSelectionModeActive) exitSelectionMode();
     toggleView("inventory");
   });
-
   elements.dashboardToggleBtn.addEventListener("click", () => {
     if (appState.isSelectionModeActive) exitSelectionMode();
     toggleView("dashboard");
   });
-  
-  // ADDED
   elements.activityLogToggleBtn.addEventListener("click", () => {
     if (appState.isSelectionModeActive) exitSelectionMode();
     toggleView("activity-log");
+  });
+  elements.vehicleSearchToggleBtn.addEventListener("click", () => {
+    if (appState.isSelectionModeActive) exitSelectionMode();
+    toggleView("vehicle-search");
   });
 }

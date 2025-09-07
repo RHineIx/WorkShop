@@ -74,6 +74,16 @@
           </button>
 
           <button
+            id="vehicle-search-toggle-btn"
+            title="البحث بالمركبة"
+            class="control-button"
+          >
+            <iconify-icon
+              icon="material-symbols:directions-car-outline-rounded"
+            ></iconify-icon>
+          </button>
+
+          <button
             id="dashboard-toggle-btn"
             title="لوحة المعلومات"
             class="control-button"
@@ -223,6 +233,39 @@
 
             <div id="inventory-grid" class="inventory-grid"></div>
             <div id="load-more-trigger"></div>
+          </section>
+        </div>
+
+        <div id="vehicle-search-view-container" class="view-hidden">
+          <section
+            class="vehicle-search-container"
+            aria-labelledby="vehicle-search-heading"
+          >
+            <h2 id="vehicle-search-heading">البحث المتقدم بالمركبة</h2>
+            <div class="vehicle-filter-bar">
+              <div class="filter-group">
+                <label for="vehicle-make-select">الماركة</label>
+                <select id="vehicle-make-select">
+                  <option value="">اختر ماركة...</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label for="vehicle-model-select">الموديل</label>
+                <select id="vehicle-model-select" disabled>
+                  <option value="">اختر موديل...</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label for="vehicle-year-select">السنة</label>
+                <select id="vehicle-year-select" disabled>
+                  <option value="">اختر سنة...</option>
+                </select>
+              </div>
+            </div>
+            <div
+              id="vehicle-search-results"
+              class="vehicle-search-results"
+            ></div>
           </section>
         </div>
 
@@ -623,7 +666,7 @@
                     type="button"
                     id="manage-suppliers-btn"
                     class="icon-btn"
-                    title="إدارة المورّدين"
+                    title="إدارة المورّدِين"
                   >
                     <iconify-icon
                       icon="material-symbols:group-add-outline-rounded"
@@ -1246,6 +1289,41 @@
               <button class="icon-btn details-btn" title="عرض التفاصيل">
                 <iconify-icon icon="material-symbols:more-vert"></iconify-icon>
               </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template id="vehicle-result-card-template">
+      <div class="vehicle-result-card">
+        <div class="vr-card-icon">
+          <iconify-icon icon="material-symbols:key-outline"></iconify-icon>
+        </div>
+        <div class="vr-card-info">
+          <h3 class="vr-card-name"></h3>
+          <div class="vr-card-details">
+            <div class="vr-detail-item" data-field="fccId">
+              <iconify-icon
+                icon="material-symbols:radio-button-checked-outline"
+              ></iconify-icon>
+              <span></span>
+            </div>
+            <div class="vr-detail-item" data-field="partNo">
+              <iconify-icon icon="mdi:pound"></iconify-icon>
+              <span></span>
+            </div>
+            <div class="vr-detail-item" data-field="year">
+              <iconify-icon
+                icon="material-symbols:calendar-today-outline-rounded"
+              ></iconify-icon>
+              <span></span>
+            </div>
+            <div class="vr-detail-item" data-field="yearRange">
+              <iconify-icon
+                icon="material-symbols:date-range-outline-rounded"
+              ></iconify-icon>
+              <span></span>
             </div>
           </div>
         </div>
