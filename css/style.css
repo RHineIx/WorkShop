@@ -12,6 +12,7 @@
 /* 3. Components */
 @import "components/_header.css";
 @import "components/_buttons.css";
+@import "components/_fab.css";
 @import "components/_forms.css";
 @import "components/_category-input.css";
 @import "components/_search.css";

@@ -65,15 +65,6 @@
         </div>
         <div class="control-group">
           <button
-            id="add-item-btn"
-            title="إضافة منتج جديد"
-            class="control-button primary-action"
-          >
-            <iconify-icon icon="material-symbols:add"></iconify-icon>
-            <span class="btn-text">إضافة منتج</span>
-          </button>
-
-          <button
             id="vehicle-search-toggle-btn"
             title="البحث بالمركبة"
             class="control-button"
@@ -119,13 +110,6 @@
             title="تبديل العملة"
             class="control-button"
           ></button>
-          <button
-            id="theme-toggle-btn"
-            title="تبديل الثيم"
-            class="control-button"
-          >
-            <iconify-icon icon="material-symbols:light-mode"></iconify-icon>
-          </button>
         </div>
       </header>
 
@@ -738,9 +722,18 @@
     <dialog id="sync-modal">
       <div class="modal-header">
         <h3 id="sync-modal-title">إعدادات المزامنة والتطبيق</h3>
-        <button id="close-sync-modal-btn" class="icon-btn">
-          <iconify-icon icon="material-symbols:close"></iconify-icon>
-        </button>
+        <div class="modal-header-actions">
+          <button
+            id="theme-toggle-btn"
+            title="تبديل الثيم"
+            class="control-button"
+          >
+            <iconify-icon icon="material-symbols:light-mode"></iconify-icon>
+          </button>
+          <button id="close-sync-modal-btn" class="icon-btn">
+            <iconify-icon icon="material-symbols:close"></iconify-icon>
+          </button>
+        </div>
       </div>
 
       <div class="sync-modal-content">
@@ -1256,6 +1249,14 @@
     </dialog>
 
     <button
+      id="add-item-btn"
+      class="fab"
+      title="إضافة منتج جديد"
+    >
+      <iconify-icon icon="material-symbols:add"></iconify-icon>
+    </button>
+    
+    <button
       id="scroll-to-top-btn"
       class="scroll-to-top-btn"
       title="العودة للأعلى"
@@ -1302,30 +1303,18 @@
         </div>
         <div class="vr-card-info">
           <h3 class="vr-card-name"></h3>
-          <div class="vr-card-details">
-            <div class="vr-detail-item" data-field="fccId">
-              <iconify-icon
-                icon="material-symbols:radio-button-checked-outline"
-              ></iconify-icon>
+          <div class="vr-card-meta">
+            <span class="vr-meta-item" data-field="yearRange">
+              <iconify-icon icon="material-symbols:date-range-outline-rounded"></iconify-icon>
               <span></span>
-            </div>
-            <div class="vr-detail-item" data-field="partNo">
+            </span>
+            <span class="vr-meta-item" data-field="partNo">
               <iconify-icon icon="mdi:pound"></iconify-icon>
               <span></span>
-            </div>
-            <div class="vr-detail-item" data-field="year">
-              <iconify-icon
-                icon="material-symbols:calendar-today-outline-rounded"
-              ></iconify-icon>
-              <span></span>
-            </div>
-            <div class="vr-detail-item" data-field="yearRange">
-              <iconify-icon
-                icon="material-symbols:date-range-outline-rounded"
-              ></iconify-icon>
-              <span></span>
-            </div>
+            </span>
           </div>
+          <div class="vr-fcc-container" data-field="fccId">
+            </div>
         </div>
       </div>
     </template>
