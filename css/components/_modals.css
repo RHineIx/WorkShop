@@ -221,12 +221,18 @@ dialog::backdrop {
 
 /* FIX: Ensure modal headers have consistent padding */
 .modal-header {
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: var(--spacing-sm) var(--spacing-sm) var(--spacing-sm) var(--spacing-lg);
   flex-shrink: 0;
   border-bottom: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.modal-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
 }
 
 #item-form h3,
@@ -316,7 +322,7 @@ dialog::backdrop {
   flex-shrink: 0;
   display: flex; /* Center the image */
   justify-content: center; /* Center horizontally */
-  align-items: center; /* Center vertically */
+  align-items: center;
   padding: var(--spacing-md); /* Add some padding around the image */
 }
 #details-image {

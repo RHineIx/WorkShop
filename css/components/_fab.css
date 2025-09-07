@@ -1,0 +1,44 @@
+/* css/components/_fab.css */
+
+.fab {
+  position: fixed;
+  /* Use logical properties for better RTL/LTR support */
+  inset-inline-end: var(--spacing-lg); /* Changed to 'end' to place it on the left in RTL */
+  inset-block-end: calc(var(--spacing-lg) + env(safe-area-inset-bottom));
+  z-index: 150;
+  
+  width: 56px;
+  height: 56px;
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  background-color: var(--accent-color);
+  color: white;
+  
+  border: none;
+  border-radius: 50%;
+  
+  box-shadow: var(--shadow-strong);
+  cursor: pointer;
+  
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color var(--transition-speed) ease, visibility 0.2s;
+}
+
+.fab:hover {
+  background-color: var(--accent-color-hover);
+}
+
+.fab:active {
+  transform: scale(0.95);
+}
+
+.fab iconify-icon {
+  font-size: 28px;
+}
+
+/* Hide the FAB when bulk actions bar is visible to avoid overlap */
+.bulk-actions-bar.visible ~ .fab {
+  transform: translateY(-75px);
+}
