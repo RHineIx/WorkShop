@@ -3,7 +3,7 @@
 .fab {
   position: fixed;
   /* Use logical properties for better RTL/LTR support */
-  inset-inline-end: var(--spacing-lg); /* Changed to 'end' to place it on the left in RTL */
+  inset-inline-end: var(--spacing-lg);
   inset-block-end: calc(var(--spacing-lg) + env(safe-area-inset-bottom));
   z-index: 150;
   
@@ -40,5 +40,13 @@
 
 /* Hide the FAB when bulk actions bar is visible to avoid overlap */
 .bulk-actions-bar.visible ~ .fab {
-  transform: translateY(-75px);
+  transform: scale(0) translateY(-75px);
+  visibility: hidden;
+}
+
+/* New rule to hide the FAB on certain views */
+.fab.fab-hidden {
+  transform: scale(0);
+  visibility: hidden;
+  pointer-events: none;
 }
