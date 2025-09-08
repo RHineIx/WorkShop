@@ -76,15 +76,21 @@
   border-radius: var(--border-radius-sm);
   padding: var(--spacing-md);
   display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  box-shadow: var(--shadow-light);
+}
+
+.vr-card-header {
+  display: flex;
   gap: var(--spacing-md);
   align-items: center;
-  box-shadow: var(--shadow-light);
 }
 
 .vr-card-icon {
   flex-shrink: 0;
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   border-radius: var(--border-radius-sm);
   background-color: var(--bg-color);
   color: var(--text-primary);
@@ -95,14 +101,7 @@
 }
 
 .vr-card-icon iconify-icon {
-  font-size: 36px;
-}
-
-.vr-card-info {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md); /* Increased gap for better separation */
+  font-size: 32px;
 }
 
 .vr-card-name {
@@ -111,90 +110,101 @@
   line-height: 1.4;
 }
 
-.vr-card-meta {
+.vr-card-divider {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: var(--spacing-xs) 0;
+}
+
+.vr-card-body {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: var(--spacing-md);
-  color: var(--text-secondary);
-  font-size: 0.875rem;
 }
 
-.vr-meta-item {
+.vr-data-field {
   display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
+  flex-direction: column;
+  gap: var(--spacing-sm);
 }
 
-.vr-meta-item iconify-icon {
-  font-size: 16px;
+.vr-field-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
 }
 
-.vr-meta-item span {
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.vr-fcc-container,
-.vr-part-num-container {
+.vr-copy-tags-container {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-sm);
 }
 
-.vr-copy-fcc,
-.vr-copy-part-num {
+.vr-copy-tag {
   background-color: var(--bg-color);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-sm);
   padding: var(--spacing-sm) var(--spacing-md);
-  font-family: var(--font-family);
+  font-family: "Roboto Mono", monospace;
   font-size: 0.95rem;
   cursor: pointer;
   transition: all var(--transition-speed) ease;
-  display: inline-flex; /* Changed from flex */
+  display: inline-flex;
   align-items: center;
-  gap: var(--spacing-sm); /* Added gap for icon */
+  gap: var(--spacing-sm);
 }
 
-.vr-copy-fcc:hover,
-.vr-copy-part-num:hover {
+.vr-copy-tag:hover {
   border-color: var(--accent-color);
   background-color: var(--accent-soft-bg);
 }
 
-.vr-copy-fcc .fcc-text,
-.vr-copy-part-num .part-num-text {
+.vr-copy-tag .tag-text {
   color: var(--accent-soft-text);
   font-weight: bold;
 }
 
-.vr-copy-fcc .copy-icon,
-.vr-copy-part-num .copy-icon {
+.vr-copy-tag .copy-icon {
   color: var(--text-secondary);
   font-size: 18px;
   transition: all var(--transition-speed) ease;
 }
 
-.vr-copy-fcc:hover .copy-icon,
-.vr-copy-part-num:hover .copy-icon {
+.vr-copy-tag:hover .copy-icon {
   color: var(--accent-color);
 }
 
-.vr-copy-fcc.copied,
-.vr-copy-part-num.copied {
+.vr-copy-tag.copied {
   background-color: #28a74520;
   border-color: #28a745;
   cursor: default;
 }
 
-.vr-copy-fcc.copied .fcc-text,
-.vr-copy-part-num.copied .part-num-text {
+.vr-copy-tag.copied .tag-text {
   color: #22863a;
   font-family: var(--font-family);
 }
 
-.vr-copy-fcc.copied .copy-icon,
-.vr-copy-part-num.copied .copy-icon {
+.vr-copy-tag.copied .copy-icon {
   color: #22863a;
   transform: scale(1.2);
+}
+
+/* Responsive adjustments for mobile screens */
+@media (max-width: 480px) {
+  .vehicle-filter-bar {
+    grid-template-columns: 1fr 1fr; /* Two columns on mobile */
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+  }
+
+  .filter-group select {
+    padding: 0.6rem;
+    font-size: 0.9rem;
+    background-position: left 0.5rem center;
+  }
+  
+  .vehicle-search-results {
+    grid-template-columns: 1fr; /* Single column for results on small screens */
+  }
 }
