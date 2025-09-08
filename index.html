@@ -1298,21 +1298,24 @@
 
     <template id="vehicle-result-card-template">
       <div class="vehicle-result-card">
-        <div class="vr-card-icon">
-          <iconify-icon icon="material-symbols:key-outline"></iconify-icon>
-        </div>
-        <div class="vr-card-info">
-          <h3 class="vr-card-name"></h3>
-          <div class="vr-card-meta">
-            <span class="vr-meta-item" data-field="yearRange">
-              <iconify-icon icon="material-symbols:date-range-outline-rounded"></iconify-icon>
-              <span></span>
-            </span>
+        <div class="vr-card-header">
+          <div class="vr-card-icon">
+            <iconify-icon icon="material-symbols:key-outline"></iconify-icon>
           </div>
-          <div class="vr-part-num-container" data-field="partNum">
-            </div>
-          <div class="vr-fcc-container" data-field="fccId">
-            </div>
+          <h3 class="vr-card-name"></h3>
+        </div>
+        <hr class="vr-card-divider" />
+        <div class="vr-card-body">
+          <div class="vr-data-field" data-field="fccId">
+            <span class="vr-field-label">FCC ID</span>
+            <div class="vr-copy-tags-container">
+              </div>
+          </div>
+          <div class="vr-data-field" data-field="partNum">
+            <span class="vr-field-label">Part Num</span>
+            <div class="vr-copy-tags-container">
+              </div>
+          </div>
         </div>
       </div>
     </template>
