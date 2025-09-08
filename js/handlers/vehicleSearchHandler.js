@@ -148,6 +148,45 @@ async function handleYearChange(e) {
     await renderVehicleResults();
 }
 
+/**
+ * Creates a copyable tag button for FCC ID or Part Num.
+ * @param {string} text - The text content to display and copy.
+ * @param {string} cssClass - The CSS class for the button.
+ * @param {string} textClass - The CSS class for the text span.
+ * @returns {HTMLButtonElement}
+ */
+function createCopyButton(text, cssClass, textClass) {
+    const copyBtn = document.createElement('button');
+    copyBtn.className = cssClass;
+    copyBtn.title = `نسخ ${text}`;
+    copyBtn.innerHTML = `
+        <span class="${textClass}">${sanitizeHTML(text)}</span>
+        <iconify-icon class="copy-icon" icon="material-symbols:content-copy-outline-rounded"></iconify-icon>
+    `;
+
+    copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(text).then(() => {
+            const textEl = copyBtn.querySelector(`.${textClass}`);
+            const iconEl = copyBtn.querySelector('.copy-icon');
+            const originalIcon = iconEl.getAttribute('icon');
+            
+            copyBtn.classList.add('copied');
+            iconEl.setAttribute('icon', 'material-symbols:check-rounded');
+            textEl.textContent = "تم النسخ!";
+            
+            setTimeout(() => {
+                copyBtn.classList.remove('copied');
+                iconEl.setAttribute('icon', originalIcon);
+                textEl.textContent = sanitizeHTML(text);
+            }, 1500);
+        }).catch(err => {
+            showStatus("فشل النسخ.", "error");
+            console.error('Copy failed', err);
+        });
+    });
+    return copyBtn;
+}
+
 async function renderVehicleResults() {
     const { make, model, year } = appState.vehicleFilters;
     const resultsGrid = elements.vehicleSearchResults;
@@ -180,7 +219,6 @@ async function renderVehicleResults() {
             const clone = template.content.cloneNode(true);
             const card = clone.querySelector('.vehicle-result-card');
             
-            // Set Brand Icon
             const iconElement = card.querySelector('.vr-card-icon iconify-icon');
             const makeForIcon = (item.Make || '').split('/')[0].trim().toLowerCase().replace(/\s+/g, '-');
             if (makeForIcon) {
@@ -189,52 +227,32 @@ async function renderVehicleResults() {
 
             card.querySelector('.vr-card-name').textContent = item.Name || 'N/A';
             
-            const partNoEl = card.querySelector('.vr-meta-item[data-field="partNo"]');
-            const yearRangeEl = card.querySelector('.vr-meta-item[data-field="yearRange"]');
+            const partNumContainer = card.querySelector('.vr-part-num-container');
             const fccContainer = card.querySelector('.vr-fcc-container');
-            
-            if (item["Part Num"]) {
-                partNoEl.querySelector('span').textContent = item["Part Num"];
-            } else {
-                partNoEl.style.display = 'none';
-            }
+            const yearRangeEl = card.querySelector('.vr-meta-item[data-field="yearRange"]');
 
-            if (item["Years From"] && item["Years To"]) {
-                yearRangeEl.querySelector('span').textContent = `${item["Years From"]}-${item["Years To"]}`;
+            if (item["Part Num"]) {
+                const partNums = item["Part Num"].split('|').map(id => id.trim()).filter(id => id);
+                partNums.forEach(pn => {
+                    partNumContainer.appendChild(createCopyButton(pn, 'vr-copy-part-num', 'part-num-text'));
+                });
             } else {
-                yearRangeEl.style.display = 'none';
+                partNumContainer.style.display = 'none';
             }
             
             if (item["FCC ID"]) {
                 const fccIDs = item["FCC ID"].split('|').map(id => id.trim()).filter(id => id);
                 fccIDs.forEach(id => {
-                    const copyBtn = document.createElement('button');
-                    copyBtn.className = 'vr-copy-fcc';
-                    copyBtn.title = 'نسخ FCC ID';
-                    copyBtn.innerHTML = `
-                        <span class="vr-fcc-text">${sanitizeHTML(id)}</span>
-                        <iconify-icon class="copy-icon" icon="material-symbols:content-copy-outline-rounded"></iconify-icon>
-                    `;
-                    copyBtn.addEventListener('click', () => {
-                        navigator.clipboard.writeText(id).then(() => {
-                            const originalIcon = copyBtn.querySelector('.copy-icon').getAttribute('icon');
-                            copyBtn.classList.add('copied');
-                            copyBtn.querySelector('.copy-icon').setAttribute('icon', 'material-symbols:check-rounded');
-                            copyBtn.querySelector('.vr-fcc-text').textContent = "تم النسخ!";
-                            setTimeout(() => {
-                                copyBtn.classList.remove('copied');
-                                copyBtn.querySelector('.copy-icon').setAttribute('icon', originalIcon);
-                                copyBtn.querySelector('.vr-fcc-text').textContent = sanitizeHTML(id);
-                            }, 1500);
-                        }).catch(err => {
-                            showStatus("فشل النسخ.", "error");
-                            console.error('Copy failed', err);
-                        });
-                    });
-                    fccContainer.appendChild(copyBtn);
+                    fccContainer.appendChild(createCopyButton(id, 'vr-copy-fcc', 'fcc-text'));
                 });
             } else {
                 fccContainer.style.display = 'none';
+            }
+            
+            if (item["Years From"] && item["Years To"]) {
+                yearRangeEl.querySelector('span').textContent = `${item["Years From"]}-${item["Years To"]}`;
+            } else {
+                yearRangeEl.style.display = 'none';
             }
             
             fragment.appendChild(clone);
