@@ -165,6 +165,10 @@ export function toggleView(viewToShow) {
       activeButton.classList.add('active-view-btn');
   }
 
+  // Toggle FAB visibility based on the current view
+  if (elements.addItemBtn) {
+    elements.addItemBtn.classList.toggle('fab-hidden', !isInventory);
+  }
 
   if (appContainer) {
     // Restore the scroll position of the view we are entering, but do it instantly
