@@ -1,0 +1,104 @@
+/* css/components/_fab-group.css */
+
+.fab-container {
+  position: fixed;
+  /* Use logical properties for better RTL/LTR support */
+  inset-inline-start: var(--spacing-lg); /* Changed to 'start' to place it on the right in RTL */
+  inset-block-end: calc(var(--spacing-lg) + env(safe-area-inset-bottom));
+  z-index: 150;
+  
+  display: flex;
+  flex-direction: column; /* Stacks items vertically, with the last item at the bottom */
+  align-items: center;
+  gap: var(--spacing-sm);
+  
+  /* Prevents container from blocking clicks when empty */
+  pointer-events: none; 
+}
+
+/* Re-enable pointer events for the buttons themselves */
+.fab-container > button {
+  pointer-events: auto;
+}
+
+.fab {
+  width: 56px;
+  height: 56px;
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  background-color: var(--accent-color);
+  color: white;
+  
+  border: none;
+  border-radius: 50%;
+  
+  box-shadow: var(--shadow-strong);
+  cursor: pointer;
+  
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color var(--transition-speed) ease, visibility 0.2s;
+}
+
+.fab:hover {
+  background-color: var(--accent-color-hover);
+}
+
+.fab:active {
+  transform: scale(0.95);
+}
+
+.fab iconify-icon {
+  font-size: 28px;
+}
+
+.fab.fab-hidden {
+  transform: scale(0);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.scroll-to-top-btn {
+  width: 44px; /* Slightly smaller */
+  height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: var(--surface-color);
+  color: var(--accent-color);
+
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  
+  box-shadow: var(--shadow-light);
+  cursor: pointer;
+  
+  /* Hidden by default */
+  opacity: 0;
+  transform: scale(0);
+  visibility: hidden;
+  transition: all 0.2s ease-in-out;
+}
+
+.scroll-to-top-btn.visible {
+  opacity: 1;
+  transform: scale(1);
+  visibility: visible;
+}
+
+.scroll-to-top-btn:hover {
+  background-color: var(--bg-color);
+}
+
+.scroll-to-top-btn iconify-icon {
+  font-size: 24px;
+}
+
+/* Hide both buttons when bulk actions bar is visible */
+.bulk-actions-bar.visible ~ .fab-container {
+  transform: scale(0);
+  visibility: hidden;
+}
